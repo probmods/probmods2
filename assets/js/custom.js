@@ -6,7 +6,7 @@ var renderMath = function() {
     function(){
       var tex = $(this).text();
 
-      var rendered = katex.renderToString(tex);
+      var rendered;
       try {
         rendered = katex.renderToString(tex);
       } catch (e){
@@ -19,9 +19,15 @@ var renderMath = function() {
   $("script[type='math/tex; mode=display']").replaceWith(
     function(){
       var tex = $(this).text();
-      return "<div class=\"equation\">" +
-        katex.renderToString("\\displaystyle "+tex) +
-        "</div>";
+      var rendered;
+      try {
+        rendered = katex.renderToString(tex, {displayMode: true});
+      } catch (e){
+        console.log(e);
+        rendered = tex;
+      } finally {
+        return "<div class=\"equation\">" + rendered + "</div>";
+      }
     });
 }
 
