@@ -30,11 +30,12 @@ $(renderMath);
 // Code boxes
 function setupCodeBoxes(){
   // TODO: optimize this, (maybe have wpEditor.setup take a content option?)
-  $("pre:not(#bibtex)").map(function(i,el) {
+  $('pre > code:not(.language-norun)').map(function(i,el) {
     var firstLine = $(el).text().split("\n")[0];
     var language = (firstLine == '// language: javascript' ? 'javascript' : 'webppl');
 
-    wpEditor.setup(el, {language: language})
+    var preEl = $(el).parent()[0];
+    wpEditor.setup(preEl, {language: language})
   })
 }
 
