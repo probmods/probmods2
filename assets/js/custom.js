@@ -5,9 +5,15 @@ var renderMath = function() {
   $("script[type='math/tex']").replaceWith(
     function(){
       var tex = $(this).text();
-      return "<span class=\"inline-equation\">" +
-        katex.renderToString(tex) +
-        "</span>";
+
+      var rendered = katex.renderToString(tex);
+      try {
+        rendered = katex.renderToString(tex);
+      } catch (e){
+        rendered = tex;
+      } finally {
+        return "<span class=\"inline-equation\">" + rendered + "</span>";
+      }
     });
 
   $("script[type='math/tex; mode=display']").replaceWith(
