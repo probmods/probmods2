@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{{ page.title }}</title>
+
+    <link rel="stylesheet" href="{{ site.baseurl }}/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ site.baseurl }}/bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/custom.css">
+    <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/code.css">
+    <script src="{{ site.baseurl }}/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="{{ site.baseurl }}/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="{{ site.baseurl }}/bower_components/paper/dist/paper-full.js"></script>
+    <script src="{{ site.baseurl }}/bower_components/underscore/underscore.js"></script>
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    {% if layout.custom_css %}
+      {% for stylesheet in layout.custom_css %}
+      <link rel="stylesheet" href="{{ site.baseurl }}/{{ stylesheet }}" media="screen" type="text/css">
+      {% endfor %}
+    {% endif %}
+
+    {% if layout.custom_js %}
+      {% for js_file in layout.custom_js %}
+      <script src='{{ site.baseurl }}/{{ js_file }}' type="text/javascript"></script>
+      {% endfor %}
+      {% endif %}
+    {% if layout.custom_jsx %}
+      {% for jsx_file in layout.custom_jsx %}
+      <script src='{{ site.baseurl }}/{{ jsx_file }}' type="text/jsx"></script>
+      {% endfor %}
+    {% endif %}
+
+    <script src="{{ site.baseurl }}/assets/js/custom.js"></script>
+
+  </head>
+  <body>
+
+    <div class="navbar navbar-default navbar-static-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="{{ site.baseurl }}/"><strong>Probabilistic Models</strong> of <strong>Cognition</strong></a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="container">
+
+      {{ content }}
+
+    </div>
+
+  </body>
+</html>

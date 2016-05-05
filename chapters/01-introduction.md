@@ -1,0 +1,26 @@
+---
+layout: chapter
+title: Introduction
+description: Course overview and brief introduction.
+---
+
+Probabilistic programing languages (PPLs) unify techniques for formal description of computation with the representation and use of uncertain knowledge. These languages have seen recent interest from artificial intelligence, programming languages, cognitive science, and natural languages communities. 
+This course begins with an overview of the ideas and foundations of PPLs. We will illustrate these ideas with examples drawn from semantic parsing, pragmatics, and procedural graphics. We will then focus on algorithms and techniques for implementing universal probabilistic inference. 
+We will construct a simple javascript-based language, showing how to implement several inference algorithms including: priority-based enumeration with caching, and particle filtering. To implement these algorithms we will use continuations and coroutines.
+
+## Motivation and description [^1]
+
+[^1]: Parts of the following description of probabilistic programming languages are taken from [Goodman 2013](http://web.stanford.edu/~ngoodman/papers/POPL2013-abstract.pdf).
+
+
+Probabilities describe degrees of belief, and probabilistic inference describes rational reasoning under uncertainty. It is no wonder, then, that probabilistic models have exploded onto the scene of modern artificial intelligence, cognitive science, and applied statistics: these are all sciences of inference under uncertainty. But as probabilistic models have become more sophisticated, the tools to formally describe them and to perform probabilistic inference have wrestled with new complexity. Just as programming beyond the simplest algorithms requires tools for abstraction and composition, complex probabilistic modeling requires new progress in model representation---*probabilistic* programming languages (PPLs). These languages provide compositional means for describing complex probability distributions; implementations of these languages provide *generic* inference engines: tools for performing efficient probabilistic inference over an arbitrary program. This course introduces probabilistic programming and inference in PPLs to students with interests in computation, logic, and language. We introduce PPLs by describing a small probabilistic subset of javascript, WebPPL, and describing motivating examples from natural language semantics, pragmatics, and from procedural modeling in graphics. We will pay particular attention to inference algorithms that are suited to natural language modeling.
+
+In their simplest form, probabilistic programming languages extend a well-specified deterministic programming language with primitive constructs for random choice. 
+This is a relatively old idea, with foundational work by Giry, Kozen, Jones, Moggi, Saheb-Djahromi, Plotkin, and others (see e.g. Jones and Plotkin, 1989). Yet it has seen a resurgence thanks to new tools for probabilistic inference and new complexity of probabilistic modeling applications. There are a number of recent probabilistic programming languages embodying different tradeoffs in expressivity, efficiency, and perspicuity. 
+We will focus on a new language, WebPPL, that extends a purely functional subset of javascript with probabilistic primitives. It is heavily motivated by the Church language, which is a straightforward extension of the stochastic lambda calculus, but we chose to extend Javascript to enable easy integration with web-based tools and applications. For further references and examples using Church see [probmods.org](https://probmods.org) or [forestdb.org](http://forestdb.org).
+
+If we view the semantics of the underlying deterministic language as a map from programs to executions of the program, the semantics of a PPL built on it will be a map from programs to distributions over executions. When the program halts with probability one, this induces a proper distribution over return values. Indeed, *any* computable distribution can be represented as the distribution induced by a Church program in this way (see Freer and Roy, 2012, and citations therein).
+
+The critical obstacle to probabilistic programming as a practical tool is efficient implementation of the inference operator. An obvious implementation technique is to enumerate all execution paths of the program, for instance by using co-routines. To implement this approach cleanly we will introduce continuations and transform our program into continuation passing style. Unfortunately, naive enumeration takes time proportional to the number of executions, which grows exponentially in the number of random choices. This can be ameliorated in some cases by using dynamic programming and by priority-based queueing of continuations. Indeed it is possible to do inference for a number of useful models (e.g. models of natural language pragmatics) by using a dynamic programming approach. In the class we will explore in depth how to implement enumeration with caching and priority-queueing. We will then switch our focus to approximate inference technique based on Particle Filtering which can often scale much better in practice. 
+
+Next chapter: [Generative models](/chapters/02-generative-models.html)

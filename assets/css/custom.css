@@ -1,0 +1,114 @@
+/* Global layout adjustments */
+
+body {
+   background-color: #eee
+}
+
+body div.container {
+   max-width: 950px;
+   background-color: #fefefe;
+   box-shadow: 0 0 15px rgba(0, 0, 0, .3);
+   padding-left: 5em;
+   padding-right: 5em;
+   padding-bottom: 2em;
+}
+
+
+/* Navbar */
+
+.navbar {
+   margin-bottom: 0;
+}
+
+div.navbar {
+   background-image: linear-gradient(to bottom, #B00B30 0%, #8b0d25 100%);
+}
+
+.navbar a.navbar-brand {
+   color: #fff;
+}
+
+.navbar a.navbar-brand:hover {
+   color: #fff;
+}
+
+.navbar p.navbar-text {
+   color: #eee;
+}
+
+.navbar li.dropdown a.dropdown-toggle {
+   color: #fff
+}
+
+.navbar a.navbar-brand .fa {
+   margin-right: .2em
+}
+
+.navbar #cse-text {
+   width: 300px;
+}
+.navbar .tt-hint {
+   width: 300px;
+}
+
+body .navbar-default .navbar-nav li a {
+   color: #eee;
+}
+
+body .navbar-default .navbar-nav li a:hover {
+   color: #fff;
+}
+
+
+/* Headings */
+
+h1 {
+   margin-top: 1em;
+   font-size: 2.4em;
+}
+
+h2 {
+   margin-top: 1em;
+   font-size: 2em;
+}
+
+h3 {
+   font-size: 1.5em;
+}
+
+div.main {
+   text-align: center;
+   margin-top: 4em;
+   margin-bottom: 3.5em;
+}
+
+div.main h1 {
+   margin-bottom: .5em;
+   line-height: 1.4em;
+}
+
+div.main span.authors {
+   font-size: 1.35em;
+}
+
+a.navbar-brand {
+   font-weight: 100;
+}
+
+a.navbar-brand strong {
+   font-weight: 500;
+}
+
+
+/* Lists */
+
+div.container ul {
+   margin-bottom: 1em;
+}
+
+
+/* Bibtex */
+
+pre#bibtex {
+   display: none;
+}
