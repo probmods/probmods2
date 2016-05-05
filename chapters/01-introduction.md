@@ -4,23 +4,34 @@ title: Introduction
 description: Course overview and brief introduction.
 ---
 
-Probabilistic programing languages (PPLs) unify techniques for formal description of computation with the representation and use of uncertain knowledge. These languages have seen recent interest from artificial intelligence, programming languages, cognitive science, and natural languages communities. 
-This course begins with an overview of the ideas and foundations of PPLs. We will illustrate these ideas with examples drawn from semantic parsing, pragmatics, and procedural graphics. We will then focus on algorithms and techniques for implementing universal probabilistic inference. 
-We will construct a simple javascript-based language, showing how to implement several inference algorithms including: priority-based enumeration with caching, and particle filtering. To implement these algorithms we will use continuations and coroutines.
+What is thought?
+How can we describe the intelligent inferences made in everyday human reasoning and learning?
+How can we engineer intelligent machines?
+The computational theory of mind aims to answer these questions starting from the hypothesis that the mind is a computer, mental representations are computer programs, and thinking is a computational process -- running a computer program.
 
-## Motivation and description [^1]
+But what kind of program?
+A natural assumption is that these programs take the inputs -- percepts from the senses, facts from memory, etc -- and compute the outputs -- the intelligent behaviors.
+Thus the mental representations that lead to thinking are functions from inputs to outputs.
+However, this input-output view suffers from a combinatorial explosion: we must posit an input-output program for each task in which humans draw intelligent inferences.
+A different approach is to assume that mental representations are more like theories in science: pieces of knowledge that can support many inferences in many different situations.
+For instance, Newton's theory of motion makes predictions about infinitely many different configurations of objects and can be used to reason both forward in time and from final state of a physical system to the initial state.
+The *generative* approach to cognition posits that some mental representations are more like theories in this way: they capture general descriptions of how the world *works* -- these programs of the mind are models of the world that can be used to make many inferences (while other programs of the mind take these generative programs and actually draw inferences).
 
-[^1]: Parts of the following description of probabilistic programming languages are taken from [Goodman 2013](http://web.stanford.edu/~ngoodman/papers/POPL2013-abstract.pdf).
+A generative model describes a process, usually one by which observable data is generated. Generative models represent knowledge about the causal structure of the world -- simplified, "working models" of a domain.
+We can use these models may then be used to answer many different questions, by conditional inference.
+This contrasts to a more procedural or mechanistic approach in which knowledge represents the input-output mapping for a particular question directly.
+<!-- TODO: add some examples of cognitive capacities and the 'world models' they depend on... -->
+While such generative models often describe how we think the "actual world" works, there are many cases where it is useful to have a generative model even if there is no "fact of the matter".
+A prime example of the latter is in linguistics, where generative models of grammar can usefully describe the possible sentences in a language by describing a process for constructing sentences.
 
+It is possible to use deterministic generative models to describe possible ways a process could unfold, but due to sparsity of observations or actual randomness there will often be many ways that our observations could have been generated.
+How can we choose amongst them? Probability theory provides a system for reasoning under exactly this kind of uncertainty.
+Probabilistic generative models describe processes which unfold with some amount of randomness, and probabilistic inference describes ways to ask questions of such processes.
+This book is concerned with the knowledge that can be represented by probabilistic generative models and the inferences that can be drawn from them.
 
-Probabilities describe degrees of belief, and probabilistic inference describes rational reasoning under uncertainty. It is no wonder, then, that probabilistic models have exploded onto the scene of modern artificial intelligence, cognitive science, and applied statistics: these are all sciences of inference under uncertainty. But as probabilistic models have become more sophisticated, the tools to formally describe them and to perform probabilistic inference have wrestled with new complexity. Just as programming beyond the simplest algorithms requires tools for abstraction and composition, complex probabilistic modeling requires new progress in model representation---*probabilistic* programming languages (PPLs). These languages provide compositional means for describing complex probability distributions; implementations of these languages provide *generic* inference engines: tools for performing efficient probabilistic inference over an arbitrary program. This course introduces probabilistic programming and inference in PPLs to students with interests in computation, logic, and language. We introduce PPLs by describing a small probabilistic subset of javascript, WebPPL, and describing motivating examples from natural language semantics, pragmatics, and from procedural modeling in graphics. We will pay particular attention to inference algorithms that are suited to natural language modeling.
-
-In their simplest form, probabilistic programming languages extend a well-specified deterministic programming language with primitive constructs for random choice. 
-This is a relatively old idea, with foundational work by Giry, Kozen, Jones, Moggi, Saheb-Djahromi, Plotkin, and others (see e.g. Jones and Plotkin, 1989). Yet it has seen a resurgence thanks to new tools for probabilistic inference and new complexity of probabilistic modeling applications. There are a number of recent probabilistic programming languages embodying different tradeoffs in expressivity, efficiency, and perspicuity. 
-We will focus on a new language, WebPPL, that extends a purely functional subset of javascript with probabilistic primitives. It is heavily motivated by the Church language, which is a straightforward extension of the stochastic lambda calculus, but we chose to extend Javascript to enable easy integration with web-based tools and applications. For further references and examples using Church see [probmods.org](https://probmods.org) or [forestdb.org](http://forestdb.org).
-
-If we view the semantics of the underlying deterministic language as a map from programs to executions of the program, the semantics of a PPL built on it will be a map from programs to distributions over executions. When the program halts with probability one, this induces a proper distribution over return values. Indeed, *any* computable distribution can be represented as the distribution induced by a Church program in this way (see Freer and Roy, 2012, and citations therein).
-
-The critical obstacle to probabilistic programming as a practical tool is efficient implementation of the inference operator. An obvious implementation technique is to enumerate all execution paths of the program, for instance by using co-routines. To implement this approach cleanly we will introduce continuations and transform our program into continuation passing style. Unfortunately, naive enumeration takes time proportional to the number of executions, which grows exponentially in the number of random choices. This can be ameliorated in some cases by using dynamic programming and by priority-based queueing of continuations. Indeed it is possible to do inference for a number of useful models (e.g. models of natural language pragmatics) by using a dynamic programming approach. In the class we will explore in depth how to implement enumeration with caching and priority-queueing. We will then switch our focus to approximate inference technique based on Particle Filtering which can often scale much better in practice. 
+In order to make the idea of generative models precise we want a formal language that is designed to express the kinds of knowledge individuals have about the world.
+This language should be universal in the sense that it should be able to express any (computable) process.
+We build on the $$\lambda$$-calculus (as realized in functional programming languages) because the $$\lambda$$-calculus describes computational processes and captures the idea that what is important is causal dependence---in particular the $$\lambda$$-calculus does not focus on the sequence of time, but rather on which events influence which other events.
+We introduce randomness into this language to construct a stochastic $$\lambda$$-calculus, and describe conditional inferences in this language.
 
 Next chapter: [Generative models](/chapters/02-generative-models.html)
