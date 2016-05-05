@@ -1,20 +1,6 @@
 "use strict";
 
-var activeCodeBox;
-
-// Utils
-
-function euclideanDistance(v1, v2){
-  var i;
-  var d = 0;
-  for (i = 0; i < v1.length; i++) {
-    d += (v1[i] - v2[i])*(v1[i] - v2[i]);
-  }
-  return Math.sqrt(d);
-};
-
 var renderMath = function() {
-
   // HT https://xuc.me/blog/KaTeX-and-Jekyll/
   $("script[type='math/tex']").replaceWith(
     function(){
@@ -80,27 +66,6 @@ function setBibtex(){
 
 $(setBibtex)
 
-// Special functions for webppl code boxes
-
-var invertMap = function (store, k, a, obj) {
-
-  var newObj = {};
-
-  for (var prop in obj) {
-    if (obj.hasOwnProperty(prop)) {
-      var value = obj[prop];
-      if (newObj.hasOwnProperty(value)) {
-        newObj[value].push(prop);
-      } else {
-        newObj[value] = [prop];
-      }
-    }
-  }
-
-  return k(store, newObj);
-};
-
-//
 if (ERP) {
   ERP.prototype.__print__ = viz.print;
 }
