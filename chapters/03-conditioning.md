@@ -131,11 +131,13 @@ While many implementations of `query` are possible, and others are discussed lat
 ## Conditional Distributions
 
 The formal definition of *conditional probability* in probability theory is
+
 $$ P(A=a \mid B=b)=\frac{ P(A=a,B=b)}{P(B=b)} $$
-Here $P(A=a \mid B=b)$ is the probability that "event" $A$ has value $a$ given that $B$ has value $b$. (The meaning of events $A$ and $B$ must be given elsewhere in this notation, unlike a Church program, which contains the full model specification within the query.)
-The *joint probability*, $P(A=a,B=b)$,  is the probability that $A$ has value $a$ and $B$ has value $b$.
+
+Here $$P(A=a \mid B=b)$$ is the probability that "event" $$A$$ has value $$a$$ given that $$B$$ has value $$b$$. (The meaning of events $$A$$ and $$B$$ must be given elsewhere in this notation, unlike a Church program, which contains the full model specification within the query.)
+The *joint probability*, $$P(A=a,B=b)$$,  is the probability that $$A$$ has value $$a$$ and $$B$$ has value $$b$$.
 So the conditional probability is simply the ratio of the joint probability to the probability of the condition.
-In the case of a Church query, $A=a$ is the "event" of the query expression returning value $a$, while $B=b$ will be the conditioner returning true (so $b$ will be *True*).
+In the case of a Church query, $$A=a$$ is the "event" of the query expression returning value $$a$$, while $$B=b$$ will be the conditioner returning true (so $$b$$ will be *True*).
 
 The above definition of conditional distribution in terms of rejection sampling is equivalent to this mathematical definition, when both are well-defined. (There are special cases when only one definition makes sense. For instance, when continuous random choices are used it is possible to find situations where rejection sampling almost never returns a sample but the conditional distribution is still well defined. Why?)
 Indeed, we can use the process of rejection sampling to understand this alternative definition of the conditional probability $P(A=a \mid B=b)$. We imagine sampling many times, but only keeping those samples in which the condition is true. The frequency of the query expression returning a particular value $a$ (i.e. $A=a$) *given* that the condition is true, will be the number of times that $A=a$ **and** $B=True$ divided by the number of times that $B=True$. Since the frequency of the conditioner returning true will be $P(B=True)$ in the long run, and the frequency that the condition returns true *and* the query expression returns a given value $a$ will be $P(A=a, B=True)$, we get the above formula for the conditional probability.
@@ -147,9 +149,12 @@ Try using the above formula for conditional probability to compute the probabili
 ## Bayes Rule
 
 One of the most famous rules of probability is *Bayes' rule*, which states:
+
 $$P(h \mid d) = \frac{P(d \mid h)P(h)}{P(d)}$$
+
 It is first worth noting that this follows immediately from the definition of conditional probability:
-$$P(h \mid d) = \frac{P(h,d)}{P(d)} = \frac{\frac{P(d,h)P(h)}{P(h)}}{P(d)} = \frac{P(d \mid h)P(h)}{P(d)}$$
+
+$$P(h \mid d) = \frac{P(d,h)}{P(d)} = \frac{ P(d, h)P(h) }{ P(d)P(h)} = \frac{P(d \mid h)P(h)}{P(d)}$$
 
 Next we can ask what this rule means in terms of sampling processes. Consider the Church program:
 
@@ -236,7 +241,7 @@ Consider the following Church `query`:
 (hist samples "Value of A, given that the sum is greater than or equal to 2")
 ~~~~
 
-This query has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $P(A \mid B=b)$ we explicitly require $B = b$. In order to express the above query in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
+This query has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above query in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
 
 Writing models in Church allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `query` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
 
@@ -436,6 +441,7 @@ What is your intuition? Many people without training in statistical inference ju
 @Tversky1974 named this kind of judgment error *base rate neglect*, because in order to make the correct judgment, one must realize that the key contrast is between the *base rate* of the disease, 0.01 in this case, and the *false alarm rate* or probability of a positive mammogram given no breast cancer, 0.096.  The false alarm rate (or *FAR* for short) seems low compared to the probability of a positive mammogram given breast cancer (the *likelihood*), but what matters is that it is almost ten times higher than the base rate of the disease.  All three of these quantities are needed to compute the probability of having breast cancer given a positive mammogram using Bayes' rule for posterior conditional probability:
 
 $$P(\text{cancer} \mid \text{positive mammogram}) = \frac{P(\text{positive mammogram} \mid \text{cancer} ) \times P(\text{cancer})}{P(\text{ positive mammogram})}$$
+
 $$= \frac{0.8 \times 0.01}{0.8 \times 0.01 + 0.096 \times 0.99} = 0.078$$
 
 @Gigerenzer1995 showed that this kind of judgment can be made much more intuitive to untrained reasoners if the relevant probabilities are presented as "natural frequencies", or the sizes of subsets of relevant possible outcomes:
