@@ -604,6 +604,6 @@ viz.hist(repeat(10, runUnstableTower), 'unstable')
 // animatePhysics(1000, unstableWorld)
 ~~~~
 
-Test your knowledge: [Exercises](/exercises/02-generative-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/02-generative-models.html)
 
-Next chapter: [Conditioning](/chapters/03-conditioning.html)
+Next chapter: [Conditioning]({{site.baseurl}}/chapters/03-conditioning.html)

@@ -34,4 +34,4 @@ This language should be universal in the sense that it should be able to express
 We build on the $$\lambda$$-calculus (as realized in functional programming languages) because the $$\lambda$$-calculus describes computational processes and captures the idea that what is important is causal dependence---in particular the $$\lambda$$-calculus does not focus on the sequence of time, but rather on which events influence which other events.
 We introduce randomness into this language to construct a stochastic $$\lambda$$-calculus, and describe conditional inferences in this language.
 
-Next chapter: [Generative models](/chapters/02-generative-models.html)
+Next chapter: [Generative models]({{site.baseurl}}/chapters/02-generative-models.html)
