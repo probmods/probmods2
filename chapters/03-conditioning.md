@@ -26,11 +26,10 @@ When interacting with other people, we observe their actions, which result from 
 
 Suppose that we know some fixed fact, and we wish to consider hypotheses about how a generative model could have given rise to that fact.  In Church we can use a special function called  `query` with the following syntax:
 
-~~~~ {.norun}
-(query
-   generative-model
-   what-we-want-to-know
-   (condition what-we-know))
+~~~~ norun
+query(generative-model,
+      whatWeWantToKnow,
+      whatWeAlreadyKnow)
 ~~~~
 
 `query` takes three arguments. The first is some generative model expressed as a series of `define` statements. The second is an expression, called the *query expression*, which represents the aspects of the computation that we are interested in. The last argument is the condition that must be met; this may encode observations, data, or more general assumptions.  It is called the *conditioner.*
@@ -39,29 +38,25 @@ Suppose that we know some fixed fact, and we wish to consider hypotheses about h
 Consider the following simple generative process:
 
 ~~~~
-(define A (if (flip) 1 0))
-(define B (if (flip) 1 0))
-(define C (if (flip) 1 0))
-(define D (+ A B C))
+var A = flip() ? 1 : 0
+var B = flip() ? 1 : 0
+var C = flip() ? 1 : 0
+var D = A + B + C
 D
 ~~~~
 
 This process samples three digits `0`/`1` and adds the result. The value of the final expression here is either 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following Church query (which uses a particular implementation, rejection sampling, to be described shortly):
 
 ~~~~
-(define (take-sample)
-  (rejection-query
-
-   (define A (if (flip) 1 0))
-   (define B (if (flip) 1 0))
-   (define C (if (flip) 1 0))
-   (define D (+ A B C))
-
-   A
-
-   (condition (equal? D 3))))
-
-(hist (repeat 100 take-sample) "Value of A, given that D is 3")
+var dist = Rejection(function () {
+    var A = flip() ? 1 : 0
+    var B = flip() ? 1 : 0
+    var C = flip() ? 1 : 0
+    var D = A + B + C
+    condition(D == 3)
+    return A
+}, 100)
+viz.auto(dist, 'Value of A, given that D is 3')
 ~~~~
 
 The output of `rejection-query` is a "guess" about the likely value of `A`, conditioned on `D` being equal to 3.  (We use `repeat` to take 100 guesses, which are then turned into a bar graph representing relative probabilities using the `hist` function.)  Because `A` must necessarily equal `1`, the histogram shows 100% of the sampled values are `1`.
@@ -69,31 +64,18 @@ The output of `rejection-query` is a "guess" about the likely value of `A`, cond
 Now suppose that we condition on `D` being greater than or equal to 2.  Then `A` need not be 1, but it is more likely than not to be. (Why?) The corresponding histogram shows the appropriate distribution of "guesses" for `A` conditioned on this new fact:
 
 ~~~~
-(define (take-sample)
-  (rejection-query
-
-   (define A (if (flip) 1 0))
-   (define B (if (flip) 1 0))
-   (define C (if (flip) 1 0))
-   (define D (+ A B C))
-
-   A
-
-   (condition (>= D 2))))
-
-(hist (repeat 100 take-sample) "Value of A, given that D is greater than or equal to 2")
+var dist = Rejection(function () {
+    var A = flip() ? 1 : 0
+    var B = flip() ? 1 : 0
+    var C = flip() ? 1 : 0
+    var D = A + B + C
+    condition(D >= 2)
+    return A
+}, 100)
+viz.auto(dist, 'Value of A, given that D >= 2')
 ~~~~
 
 Predicting the outcome of a generative process is simply a special case of querying, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `(condition true)`.
-
-When the `condition` operator is the last expression in a query (which is typical) it can be dropped, and we often do this for simplicity:
-
-~~~~ {.norun}
-(query
-   generative-model
-   what-we-want-to-know
-   what-we-know)
-~~~~
 
 Going beyond the basic intuition of "hypothetical reasoning", the `query` operation can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical operation of *conditioning* a distribution.
 
@@ -102,20 +84,21 @@ Going beyond the basic intuition of "hypothetical reasoning", the `query` operat
 How can we imagine answering a hypothetical such as those above? We have already seen how to get a sample from a generative model, without constraint, by simply running the evaluation process "forward"  (i.e. simulating the process). We can get conditional samples by forward sampling the entire query, including both the query expression and conditioner, but only keeping the sample if the value returned by the conditioner expression is *true*. For instance, to sample from the above model "A given that D is greater than 2" we could:
 
 ~~~~
-(define (take-sample)
-   (define A (if (flip) 1 0))
-   (define B (if (flip) 1 0))
-   (define C (if (flip) 1 0))
-   (define D (+ A B C))
-   (if (>= D 2) A (take-sample)))
-
-(hist (repeat 100 take-sample) "Value of A, given that D is greater than or equal to 2")
+var takeSample = function () {
+    var A = flip() ? 1 : 0
+    var B = flip() ? 1 : 0
+    var C = flip() ? 1 : 0
+    var D = A + B + C
+    return D >= 2 ? A : takeSample()
+}
+viz.table(repeat(100, takeSample)) // TODO: get this working on hist
 ~~~~
 
 Notice that we have used a stochastic recursion to sample the definitions repeatedly until we get `(>= D 2)`, and we then return `A`: we generate and test until the condition is satisfied.
 This process is known as *rejection sampling*; we can use this technique to make a more general function that implements `query`---called `rejection-query`, schematically defined as:
 
-~~~~ {.norun}
+~~~~ norun
+;; TODO: cut? rewrite in js?
 (define (rejection-query ..defines.. ..query-expression.. ..conditioner..)
        ..defines..
        (define query-value ..query-expression..)
@@ -159,20 +142,16 @@ $$P(h \mid d) = \frac{P(d,h)}{P(d)} = \frac{ P(d, h)P(h) }{ P(d)P(h)} = \frac{P(
 Next we can ask what this rule means in terms of sampling processes. Consider the Church program:
 
 ~~~~
-(define observed-data true)
-
-(define (prior) (flip))
-
-(define (observe h) (if h (flip 0.9) (flip 0.1)))
-
-(rejection-query
-
- (define hypothesis (prior))
- (define data (observe hypothesis))
-
- hypothesis
-
- (equal? data observed-data))
+var observedData = true;
+var prior = function () { flip() }
+var observe = function (h) { h ? flip(0.9) : flip(0.1) }
+var dist = Rejection(function () {
+    var hypothesis = prior()
+    var data = observe(hypothesis)
+    condition(data == observedData)
+    return hypothesis
+}, 10)
+viz.auto(dist)
 ~~~~
 
 We have generated a value, the *hypothesis*, from some distribution called the *prior*, then used an observation function which generates data given this hypothesis, the probability of such an observation function is called the *likelihood*. Finally we have queried the hypothesis conditioned on the observation being equal to some observed data---this conditional distribution is called the *posterior*. This is a typical setup in which Bayes' rule is used. Notice that in this case the conditional distribution $$P(\text{data} \mid \text{hypothesis})$$ is just the probability distribution on return values from the `observe` function given an input value.
@@ -197,22 +176,16 @@ Several of these have been adapted into Church to give implementations of `query
 One implementation that we will often use is based on the *Metropolis Hastings* (MH) algorithm. This `mh-query` implementation takes two extra arguments and returns a list of samples (not just one sample):
 
 ~~~~
-(define baserate 0.1)
-
-(define samples
-  (mh-query 100 ;number of samples
-            100 ;lag
-
-   (define A (if (flip baserate) 1 0))
-   (define B (if (flip baserate) 1 0))
-   (define C (if (flip baserate) 1 0))
-   (define D (+ A B C))
-
-   A
-
-   (condition (>= D 2))))
-
-(hist samples "Value of A, given that D is greater than or equal to 2")
+var baserate = 0.1
+var dist = MCMC(function () {
+    var A = flip(baserate) ? 1 : 0
+    var B = flip(baserate) ? 1 : 0
+    var C = flip(baserate) ? 1 : 0
+    var D = A + B + C;
+    condition(D >= 2)
+    return A
+}, {kernel: 'MH', samples: 100, lag: 100})
+viz.auto(dist)
 ~~~~
 
 The first extra argument is the number of samples to take, and the second controls the "lag" (the number of internal random choices that the algorithm makes in a sequence of iterative steps between samples). The workings of MH will be explored in a later chapter, but very roughly: The algorithm implements a random walk or diffusion process (a *Markov chain*) in the space of possible program evaluations that lead to the conditioner being true.  Each MH iteration is one step of this random walk, and the process is specially designed to visit each program evaluation with a long-run frequency proportional to its conditional probability.
@@ -226,19 +199,14 @@ It is natural to condition a generative model on a value for one of the variable
 Consider the following Church `query`:
 
 ~~~~
-(define samples
-  (mh-query
-   100 100
-
-   (define A (if (flip) 1 0))
-   (define B (if (flip) 1 0))
-   (define C (if (flip) 1 0))
-
-   A
-
-   (condition (>= (+ A B C) 2))))
-
-(hist samples "Value of A, given that the sum is greater than or equal to 2")
+var dist = MCMC(function () {
+    var A = flip() ? 1 : 0
+    var B = flip() ? 1 : 0
+    var C = flip() ? 1 : 0
+    condition(A + B + C >= 2)
+    return A
+}, {kernel: 'MH', samples: 100, lag: 100})
+viz.auto(dist)
 ~~~~
 
 This query has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above query in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
@@ -250,29 +218,26 @@ Writing models in Church allows the flexibility to build complex random expressi
 Returning to the earlier example of a series of tug-of-war matches, we can use query to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
 ~~~~
-(define samples
-  (mh-query 1000 10
+// TODO: there's a webppl bug with cache..
+var dist = MCMC(function () {
+    var strength = cache(function (person) { gaussian(0, 1)})
+    var lazy = function (person) { flip(1/3) }
+    var totalPulling = function (team) {
+         sum(map(function (person) {
+            lazy(person) ? strength(person) / 2 : strength(person)
+        }, team))
+    }
+    var winner = function (team1, team2) {
+        totalPulling(team1) > totalPulling(team2) ? 'team1' : 'team2'
+    }
 
-    (define strength (mem (lambda (person) (gaussian 0 1))))
+    condition(winner(['bob', 'mary'], ['tom', 'sue']) == 'team1' &&
+              winner(['bob', 'sue'], ['tom', 'jim]) == 'team2')
 
-    (define lazy (lambda (person) (flip (/ 1 3))))
-
-    (define (total-pulling team)
-      (sum
-         (map
-          (lambda (person) (if (lazy person) (/ (strength person) 2) (strength person)))
-          team)))
-
-    (define (winner team1 team2)
-      (if (> (total-pulling team1) (total-pulling team2)) 'team1 'team2))
-
-    (strength 'bob)
-
-    (and (eq? 'team1 (winner '(bob mary) '(tom sue)))
-         (eq? 'team1 (winner '(bob sue) '(tom jim))))))
-
-(display (list "Expected strength: " (mean samples)))
-(density samples "Bob strength" true)
+    return strength('bob')
+}, {kernel: 'MH', samples: 100, lag: 100})
+print('Expected strength: ' + expectation(samples))
+viz.density(samples, 'Bob strength')
 ~~~~
 
 Try varying the number of different teams and teammates that Bob plays with. How does this change the estimate of Bob's strength?
@@ -281,56 +246,29 @@ Do these changes agree with your intuitions? Can you modify this example to make
 
 A model very similar to this was used in @Gerstenberg2012 to predict human judgements about the strength of players in ping-pong tournaments. It achieved very accurate quantitative predictions without many free parameters.
 
-<!-- [I don't think we need this:
-As an exercise, let's go back to the tug-of-war tournament described under [Generative Models](generative-models.html#example-bayesian-tug-of-war) and write a Church program to infer the probability that Alice is stronger than Bob, given a particular tournament outcome:
-
-~~~~
-(define samples
-  (mh-query 100 100
-    (define strength (mem (lambda (person) (if (flip) 10 5))))
-    (define lazy (lambda (person) (flip (/ 1 3))))
-
-    (define (total-pulling team)
-      (sum
-         (map (lambda (person) (if (lazy person) (/ (strength person) 2) (strength person)))
-               team)))
-
-    (define (winner team1 team2) (if (< (total-pulling team1) (total-pulling team2)) 'team2 'team1))
-
-    (> (strength 'alice) (strength 'bob))
-
-    (and (eq? 'team1 (winner '(alice bob) '(sue tom)))
-         (eq? 'team2 (winner '(alice bob) '(sue tom)))
-         (eq? 'team1 (winner '(alice sue) '(bob tom)))
-         (eq? 'team1 (winner '(alice sue) '(bob tom)))
-         (eq? 'team1 (winner '(alice tom) '(bob sue)))
-         (eq? 'team1 (winner '(alice tom) '(bob sue))))))
-
-(hist samples "Is alice stronger than bob?")
-~~~~
--->
 
 We can form many complex queries from this simple model. We could ask how likely a team of Bob and Mary is to win over a team of Jim and Sue, given that Mary is at least as strong as sue, and Bob was on a team that won against Jim previously:
 
 ~~~~
-(define samples
-  (mh-query 100 100
-    (define strength (mem (lambda (person) (gaussian 0 1))))
-    (define lazy (lambda (person) (flip (/ 1 3))))
+var dist = MCMC(function () {
+    var strength = cache(function (person) { gaussian(0, 1)})
+    var lazy = function (person) { flip(1/3) }
+    var totalPulling = function (team) {
+         sum(map(function (person) {
+            lazy(person) ? strength(person) / 2 : strength(person)
+        }, team))
+    }
+    var winner = function (team1, team2) {
+        totalPulling(team1) > totalPulling(team2) ? 'team1' : 'team2'
+    }
 
-    (define (total-pulling team)
-      (sum
-         (map (lambda (person) (if (lazy person) (/ (strength person) 2) (strength person)))
-               team)))
+    condition(strength(['mary']) >= strength('sue') &&
+              winner(['bob','francis'], ['tom','jim']) == 'team1')
 
-    (define (winner team1 team2) (if (< (total-pulling team1) (total-pulling team2)) 'team2 'team1))
-
-    (eq? 'team1 (winner '(bob mary) '(jim sue)))
-
-    (and (>= (strength 'mary) (strength 'sue))
-         (eq? 'team1 (winner '(bob francis) '(tom jim)))))
-)
-(hist samples "Do bob and mary win against jim and sue")
+    return winner(['bob','mary'], ['jim','sue']) == 'team1'
+}, {kernel: 'MH', samples: 100, lag: 100})
+print('Expected strength: ' + expectation(samples))
+viz.density(samples, 'Bob strength')
 ~~~~
 
 # Example: Inverse intuitive physics
@@ -339,7 +277,8 @@ We previously saw how a generative model of physics---a noisy, intuitive version
 
 Imagine that we drop a block from a random position at the top of a world with two fixed obstacles:
 
-~~~~
+~~~~ norun
+TODO: port
 ;set up some bins on a floor:
 (define (bins xmin xmax width)
   (if (< xmax (+ xmin width))
@@ -362,14 +301,10 @@ Imagine that we drop a block from a random position at the top of a world with t
 (animatePhysics 1000 (pair (random-block) world))
 ~~~~
 
-<!--
-We can use forward simulation to understand where a ball might come to rest if it starts at a particular initial position:
-
--->
-
 Assuming that the block comes to rest in the middle of the floor, where did it come from?
 
-~~~~
+~~~~ norun
+TODO: port
 ;;;fold: Set up the world, as above:
 ;set up some bins on a floor:
 (define (bins xmin xmax width)
@@ -424,18 +359,13 @@ This classic Bayesian inference task is a special case of conditioning. Kahneman
 What is your intuition? Many people without training in statistical inference judge the probability to be rather high, typically between 0.7 and 0.9. The correct answer is much lower, less than 0.1, as we can see by evaluating this Church query:
 
 ~~~~
-(define samples
- (mh-query 100 100
-   (define breast-cancer (flip 0.01))
-
-   (define positive-mammogram (if breast-cancer (flip 0.8) (flip 0.096)))
-
-   breast-cancer
-
-   positive-mammogram
- )
-)
-(hist samples "breast cancer")
+var samples = MCMC(function () {
+    var breastCancer = flip(0.01)
+    var positiveMammogram = breastCancer ? flip(0.8) : flip(0.096)
+    condition(positiveMammogram)
+    return breastCancer
+}, {kernel: 'MH', samples: 100, lag: 100})
+viz.hist(samples, 'breast cancer')
 ~~~~
 
 @Tversky1974 named this kind of judgment error *base rate neglect*, because in order to make the correct judgment, one must realize that the key contrast is between the *base rate* of the disease, 0.01 in this case, and the *false alarm rate* or probability of a positive mammogram given no breast cancer, 0.096.  The false alarm rate (or *FAR* for short) seems low compared to the probability of a positive mammogram given breast cancer (the *likelihood*), but what matters is that it is almost ten times higher than the base rate of the disease.  All three of these quantities are needed to compute the probability of having breast cancer given a positive mammogram using Bayes' rule for posterior conditional probability:
@@ -466,19 +396,14 @@ Indeed, @Krynski2007 have argued that human statistical judgment is fundamentall
 This question is easy for people to answer---empirically, just as easy as the frequency-based formulation given above.  We may conjecture this is because the relevant frequencies can be computed from a simple query on the following more intuitive causal model:
 
 ~~~~
-(define samples
- (mh-query 100 100
-   (define breast-cancer (flip 0.01))
-   (define benign-cyst (flip 0.2))
-
-   (define positive-mammogram (or (and breast-cancer (flip 0.8)) (and benign-cyst (flip 0.5))))
-
-   breast-cancer
-
-   positive-mammogram
- )
-)
-(hist samples "breast cancer")
+var samples = MCMC(function () {
+    var breastCancer = flip(0.01)
+    var benignCyst = flip(0.2)
+    var positiveMammogram = (breastCancer && flip(0.8)) || (benignCyst && flip(0.5))
+    condition(positiveMammogram)
+    return breastCancer
+}, {samples: 100, lag: 100})
+viz.auto(samples, 'breast cancer')
 ~~~~
 
 Because this causal model---this Church program---is more intuitive to people, they can imagine the appropriate situations, despite having been given percentages rather than frequencies.
@@ -487,27 +412,37 @@ What makes this causal model more intuitive than the one above with an explicitl
 A causal model framed in this way can scale up to significantly more complex situations.  Recall our more elaborate medical diagnosis network from the previous section, which was also framed in this way using noisy-logical functions to describe the dependence of symptoms on disease:
 
 ~~~~
-(define samples
-  (mh-query 1000 100
-    (define lung-cancer (flip 0.01))
-    (define TB (flip 0.005))
-    (define cold (flip 0.2))
-    (define stomach-flu (flip 0.1))
-    (define other (flip 0.1))
+var dist = MCMC(function () {
+    var lungCancer = flip(0.01)
+    var TB = flip(0.005)
+    var cold = flip(0.2)
+    var stomachFlu = flip(0.1)
+    var other = flip(0.1)
 
-    (define cough (or (and cold (flip 0.5)) (and lung-cancer (flip 0.3)) (and TB (flip 0.7)) (and other (flip 0.01))))
-    (define fever (or (and cold (flip 0.3)) (and stomach-flu (flip 0.5)) (and TB (flip 0.2)) (and other (flip 0.01))))
-    (define chest-pain (or (and lung-cancer (flip 0.4)) (and TB (flip 0.5)) (and other( flip 0.01))))
-    (define shortness-of-breath (or (and lung-cancer (flip 0.4)) (and TB (flip 0.5)) (and other (flip 0.01))))
+    var cough = or(and(cold, flip(0.5)),
+                   and(lungCancer, flip(0.3)),
+                   and(TB, flip(0.7)),
+                   and(other, flip(0.01)))
 
-    (list lung-cancer TB)
+    var fever = or(and(cold, flip(0.3)),
+                   and(stomachFlu, flip(0.5)),
+                   and(TB, flip(0.2)),
+                   and(other, flip(0.01)))
 
-    (and cough fever chest-pain shortness-of-breath)
+    var chestPain = or(and(lungCancer, flip(0.4)),
+                       and(TB, flip(0.5)),
+                       and(other, flip(0.01)))
 
-  )
-)
-(hist samples "Joint inferences for lung cancer and TB")
+    var shortnessOfBreath = or(and(lungCancer, flip(0.4)),
+                               and(TB, flip(0.5)),
+                               and(other, flip(0.01)))
+
+    condition(cough && fever && chestPain && shortnessOfBreath)
+    return {lungCancer: lungCancer, TB: TB}
+}, {samples: 1000, lag: 100})
+viz.auto(dist, 'Joint inferences for lung cancer and TB')
 ~~~~
+
 <!-- NOTE: this doesn't initialize well, because the condition is unlikely and it can't push the condition back through the refs. -->
 
 You can use this model to infer conditional probabilities for any subset of diseases conditioned on any pattern of symptoms.  Try varying the symptoms in the conditioning set or the diseases in the query, and see how the model's inferences compare with your intuitions.  For example, what happens to inferences about lung cancer and TB in the above model if you remove chest pain and shortness of breath as symptoms?  (Why?  Consider the alternative explanations.)  More generally, we can condition on any set of events -- any combination of symptoms and diseases -- and query any others.  We can also condition on the negation of an event using `(not ...)`: e.g., how does the probability of lung cancer (versus TB) change if we observe that the patient does *not* have a fever, does *not* have a cough, or does not have either symptom?
@@ -517,33 +452,38 @@ A Church program thus effectively encodes the answers to a very large number of 
 Expressing our knowledge as a probabilistic program of this form also makes it easy to add in new relevant knowledge we may acquire, without altering or interfering with what we already know.  For instance, suppose we decide to consider behavioral and demographic factors that might contribute causally to whether a patient has a given disease:
 
 ~~~~
-(define samples
-  (mh-query 1000 100
-    (define works-in-hospital (flip 0.01))
-    (define smokes (flip 0.2))
-
-    (define lung-cancer (or (flip 0.01) (and smokes (flip 0.02))))
-    (define TB (or (flip 0.005) (and works-in-hospital (flip 0.01))))
-    (define cold (or (flip 0.2) (and works-in-hospital (flip 0.25))))
-    (define stomach-flu (flip 0.1))
-    (define other (flip 0.1))
-
-    (define cough (or (and cold (flip 0.5)) (and lung-cancer (flip 0.3)) (and TB (flip 0.7)) (and other (flip 0.01))))
-    (define fever (or (and cold (flip 0.3)) (and stomach-flu (flip 0.5)) (and TB (flip 0.2)) (and other (flip 0.01))))
-    (define chest-pain (or (and lung-cancer (flip 0.4)) (and TB (flip 0.5)) (and other( flip 0.01))))
-    (define shortness-of-breath (or (and lung-cancer (flip 0.4)) (and TB (flip 0.5)) (and other (flip 0.01))))
-
-   (list lung-cancer TB)
-
-   (and cough chest-pain shortness-of-breath)
-
-  )
-)
-(hist samples "Joint inferences for lung cancer and TB")
+var dist = MCMC(function () {
+    var worksInHospital = flip(0.01)
+    var smokes = flip(0.2)
+    var lungCancer = or(flip(0.01),
+                        and(smokes, flip(0.02)))
+    var TB = or(flip(0.005),
+                and(worksInHospital, flip(0.01)))
+    var cold = or(flip(0.2),
+                  and(worksInHospital, flip(0.25)))
+    var stomachFlu = flip(0.1)
+    var other = flip(0.1)
+    var cough = or(and(cold, flip(0.5)),
+                   and(lungCancer, flip(0.3)),
+                   and(TB, flip(0.7)),
+                   and(other, flip(0.01)))
+    var fever = or(and(cold, flip(0.3)),
+                   and(stomachFlu, flip(0.5)),
+                   and(TB, flip(0.2)),
+                   and(other, flip(0.01)))
+    var chestPain = or(and(lungCancer, flip(0.4)),
+                       and(TB, flip(0.5)),
+                       and(other, flip(0.01)))
+    var shortnessOfBreath = or(and(lungCancer, flip(0.4)),
+                               and(TB, flip(0.5)),
+                               and(other, flip(0.01)))
+    condition(cough && chestPain && shortnessOfBreath)
+    return {lungCancer: lungCancer, TB: TB}
+}, {samples: 1000, lag: 100})
 ~~~~
 
 Under this model, a patient with coughing, chest pain and shortness of breath is likely to have either lung cancer or TB.  Modify the above code to see how these conditional inferences shift if you also know that the patient smokes or works in a hospital (where they could be exposed to various infections, including many worse infections than the typical person encounters).  More generally, the causal structure of knowledge representation in a probabilistic program allows us to model intuitive theories that can grow in complexity continually over a lifetime, adding new knowledge without bound.
 
-Test your knowledge: [Exercises](04-conditioning-exercises.html)
+Test your knowledge: [Exercises](03-conditioning-exercises.html)
 
-Next chapter: [Patterns of inference](04-patterns-of-inference.html)
+Next chapter: [Patterns of inference](03-patterns-of-inference.html)
