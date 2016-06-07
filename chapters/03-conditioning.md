@@ -2,6 +2,9 @@
 layout: chapter
 title: Conditioning
 description: Using generative models to ask questions
+custom_js:
+- assets/js/box2d.js
+- assets/js/phys.js
 ---
 
 # Cognition and conditioning
@@ -277,72 +280,74 @@ We previously saw how a generative model of physics---a noisy, intuitive version
 
 Imagine that we drop a block from a random position at the top of a world with two fixed obstacles:
 
-~~~~ norun
-TODO: port
-;set up some bins on a floor:
-(define (bins xmin xmax width)
-  (if (< xmax (+ xmin width))
-      ;the floor:
-      '( (("rect" #t (400 10)) (175 500)) )
-      ;add a bin, keep going:
-      (pair (list '("rect" #t (1 10)) (list xmin 490))
-            (bins (+ xmin width) xmax width))))
+~~~~
+var bins = function (xmin, xmax, width) { // makes a floor with evenly spaced buckets
+  return (
+    (xmax < xmin + width)
+    // floor
+    ? [[['rect', true, [400, 10]], [175, 500]]]
+    // bins
+    : [[['rect', true, [1, 10]], [xmin, 490]]].concat(bins(xmin + width, xmax, width))
+  )
+}
 
-;make a world with two fixed circles and bins:
-(define world (pair '(("circle" #t (60)) (60 200))
-                    (pair '(("circle" #t (30)) (300 300))
-                          (bins -1000 1000 25))))
+// add two fixed circles
+var world = [[['circle', true, [60]], [60, 200]],
+             [['circle', true, [30]], [300, 300]]].concat(bins(-1000, 1000, 25))
 
-;make a random block at the top:
-(define (random-block) (list (list "circle" #f '(10))
-                             (list (uniform 0 worldWidth) 0)))
+var randomBlock = function () {
+  return [['circle', false, [10]], [uniform(0, worldWidth), 0]]
+}
 
-;add a random block to world, then animate:
-(animatePhysics 1000 (pair (random-block) world))
+physics.animate(1000, [randomBlock()].concat(world))
 ~~~~
 
 Assuming that the block comes to rest in the middle of the floor, where did it come from?
 
-~~~~ norun
-TODO: port
-;;;fold: Set up the world, as above:
-;set up some bins on a floor:
-(define (bins xmin xmax width)
-  (if (< xmax (+ xmin width))
-      ;the floor:
-      '( (("rect" #t (400 10)) (175 500)) )
-      ;add a bin, keep going:
-      (pair (list '("rect" #t (1 10)) (list xmin 490))
-            (bins (+ xmin width) xmax width))))
+~~~~
+var bins = function (xmin, xmax, width) { // makes a floor with evenly spaced buckets
+  return (
+    (xmax < xmin + width)
+    // floor
+    ? [[['rect', true, [400, 10]], [175, 500]]]
+    // bins
+    : [[['rect', true, [1, 10]], [xmin, 490]]].concat(bins(xmin + width, xmax, width))
+  )
+}
 
-;make a world with two fixed circles and bins:
-(define world (pair '(("circle" #t (60)) (60 200))
-                    (pair '(("circle" #t (30)) (300 300))
-                          (bins -1000 1000 25))))
+// add two fixed circles
+var world = [[['circle', true, [60]], [60, 200]],
+             [['circle', true, [30]], [300, 300]]].concat(bins(-1000, 1000, 25))
 
-;make a random block at the top:
-(define (random-block) (list (list "circle" #f '(10))
-                             (list (uniform 0 worldWidth) 0)))
-;;;
+var randomBlock = function () {
+  return [['circle', false, [10]], [uniform(0, worldWidth), 0]]
+}
 
-;helper to get X position of the movable block:
-(define (getX world)
-  (if (second (first (first world)))
-      (getX (rest world))
-      (first (second (first world)))))
+var getBallX = function(world) {
+  var ball = filter(function(obj) {
+    // find the non-static object (the ball)
+    // TODO: last element of finalWorld is null (remove)
+    // TODO: change object representation from arrays to to property lists
+    return obj ? obj[0][1] === false: false
+  },world)[0];
+  return ball[1][0];
+}
 
-;given an observed final position, where did the block come from?
-(define observed-x 160)
+var observedX = 160;
 
-(define init-xs
-  (mh-query 100 10
-    (define init-state (pair (random-block) world))
-    (define final-state (runPhysics 1000 init-state))
-    (getX init-state)
-    (= (gaussian (getX final-state) 10) observed-x)))
+var initialXs = MCMC(function() {
+  var initState = [randomBlock()].concat(world);
+  var initX = getBallX(initState);
+  var finalState = physics.run(1000, initState);
+  var finalX = getBallX(finalState);
+  factor(Gaussian({mu: finalX, sigma: 10}).score(observedX))
+  return {initX: initX}
+}, {samples: 100,
+    lag: 10,
+    callbacks: [wpEditor.MCMCProgress()]
+   });
 
-
-(density init-xs "init state" true)
+viz.auto(initialXs)
 ~~~~
 
 What if the ball comes to rest at the left side, under the large circle (x about 60)? The right side?
