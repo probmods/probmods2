@@ -525,87 +525,95 @@ Thus our intuitions of stability are really stability given noise (or the expect
 We can realize this measure of stability as:
 
 ~~~~
+var listMin = function(xs) {
+  if (xs.length == 1) {
+    return xs[0]
+  } else {
+    return Math.min(xs[0], listMin(rest(xs)))
+  }
+}
+
 var getWidth = function (worldObj) { first(third(first(worldObj))) }
 var getHeight = function (worldObj) { second(third(first(worldObj))) }
 var getX = function (worldObj) { first(second(worldObj)) }
 var getY = function (worldObj) { second(second(worldObj)) }
-var is_static = function (worldObj) { second(first(worldObj)) }
+var isStatic = function (worldObj) { second(first(worldObj)) }
 var ground = [
-    ['rect', true, [worldWidth, 10]],
-    [worldWidth/2, worldHeight+6]
+  ['rect', true, [worldWidth, 10]],
+  [worldWidth/2, worldHeight+6]
 ]
 var stableWorld = [
-    ground,
-    [['rect', false, [60, 22]], [175, 473]],
-    [['rect', false, [50, 38]], [159.97995044874122, 413]],
-    [['rect', false, [40, 35]], [166.91912737427202, 340]],
-    [['rect', false, [30, 29]], [177.26195677111082, 276]],
-    [['rect', false, [11, 17]], [168.51354470809122, 230]]
+  ground,
+  [['rect', false, [60, 22]], [175, 473]],
+  [['rect', false, [50, 38]], [159.97995044874122, 413]],
+  [['rect', false, [40, 35]], [166.91912737427202, 340]],
+  [['rect', false, [30, 29]], [177.26195677111082, 276]],
+  [['rect', false, [11, 17]], [168.51354470809122, 230]]
 ]
 var almostUnstableWorld = [
-    ground,
-    [['rect', false, [24, 22]], [175, 473]],
-    [['rect', false, [15, 38]], [159.97995044874122, 413]],
-    [['rect', false, [11, 35]], [166.91912737427202, 340]],
-    [['rect', false, [11, 29]], [177.26195677111082, 276]],
-    [['rect', false, [11, 17]], [168.51354470809122, 230]]
+  ground,
+  [['rect', false, [24, 22]], [175, 473]],
+  [['rect', false, [15, 38]], [159.97995044874122, 413]],
+  [['rect', false, [11, 35]], [166.91912737427202, 340]],
+  [['rect', false, [11, 29]], [177.26195677111082, 276]],
+  [['rect', false, [11, 17]], [168.51354470809122, 230]]
 ]
 var unstableWorld = [
-    ground,
-    [['rect', false, [60, 22]], [175, 473]],
-    [['rect', false, [50, 38]], [90, 413]],
-    [['rect', false, [40, 35]], [140, 340]],
-    [['rect', false, [10, 29]], [177.26195677111082, 276]],
-    [['rect', false, [50, 17]], [140, 230]]
+  ground,
+  [['rect', false, [60, 22]], [175, 473]],
+  [['rect', false, [50, 38]], [90, 413]],
+  [['rect', false, [40, 35]], [140, 340]],
+  [['rect', false, [10, 29]], [177.26195677111082, 276]],
+  [['rect', false, [50, 17]], [140, 230]]
 ]
 var doesTowerFall = function (initialW, finalW) {
-    var highestY = function (world) {
-         Math.min.apply(null, map(getY, world))
-    }
+  var highestY = function (world) {
+    listMin(map(getY, world))
+  }
 
-    var eps = 1
+  var eps = 1
 
-    var approxEqual = function (a, b) {
-        Math.abs(a - b) < eps
-    }
-    !approxEqual(highestY(initialW), highestY(finalW))
+  var approxEqual = function (a, b) {
+    Math.abs(a - b) < eps
+  }
+  !approxEqual(highestY(initialW), highestY(finalW))
 }
 var noisify = function (world) {
-    var xNoise = function (worldObj) {
-        var noiseWidth = 10
-        var newX = function (x) { uniform(x - noiseWidth, x + noiseWidth) }
+  var xNoise = function (worldObj) {
+    var noiseWidth = 10
+    var newX = function (x) { uniform(x - noiseWidth, x + noiseWidth) }
 
-        isStatic(worldObj) ? worldObj : [
-            first(worldObj),
-            [newX(getX(worldObj)), getY(worldObj)]
-        ]
-    }
-     map(xNoise, world)
+    isStatic(worldObj) ? worldObj : [
+      first(worldObj),
+      [newX(getX(worldObj)), getY(worldObj)]
+    ]
+  }
+  map(xNoise, world)
 }
 var runStableTower = function () {
-    var initialWorld = noisify(stableWorld)
-    var finalWorld = runPhysics(1000, initialWorld)
-    doesTowerFall(initialWorld, finalWorld)
+  var initialWorld = noisify(stableWorld)
+  var finalWorld = physics.run(1000, initialWorld)
+  doesTowerFall(initialWorld, finalWorld)
 }
 var runAlmostUnstableTower = function () {
-    var initialWorld = noisify(almostUnstableWorld)
-    var finalWorld = runPhysics(1000, initialWorld)
-    doesTowerFall(initialWorld, finalWorld)
+  var initialWorld = noisify(almostUnstableWorld)
+  var finalWorld = physics.run(1000, initialWorld)
+  doesTowerFall(initialWorld, finalWorld)
 }
 var runUnstableTower = function () {
-    var initialWorld = noisify(unstableWorld)
-    var finalWorld = runPhysics(1000, initialWorld)
-    doesTowerFall(initialWorld, finalWorld)
+  var initialWorld = noisify(unstableWorld)
+  var finalWorld = physics.run(1000, initialWorld)
+  doesTowerFall(initialWorld, finalWorld)
 }
 
-viz.hist(repeat(10, runStableTower), 'stable')
-viz.hist(repeat(10, runAlmostUnstableTower), 'almost unstable')
-viz.hist(repeat(10, runUnstableTower), 'unstable')
+print(repeat(10, runStableTower))
+print(repeat(10, runAlmostUnstableTower))
+print(repeat(10, runUnstableTower))
 
 // uncomment any of these that you'd like to see for yourself
-// animatePhysics(1000, stableWorld)
-// animatePhysics(1000, almostUnstableWorld)
-// animatePhysics(1000, unstableWorld)
+// physics.animate(1000, stableWorld)
+// physics.animate(1000, almostUnstableWorld)
+// physics.animate(1000, unstableWorld)
 ~~~~
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/02-generative-models.html)

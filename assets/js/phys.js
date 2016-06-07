@@ -196,7 +196,8 @@ function churchWorld_from_bodyList(body) {
     worldList.push([ [shape, isStatic, dims], [x, y] ]);
     body = body.GetNext();
   }
-  return jsWorld_to_churchWorld(worldList);
+  //return jsWorld_to_churchWorld(worldList);
+  return worldList;
 }
 
 function getDynamicObjPositions(churchWorld) {
