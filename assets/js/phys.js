@@ -107,7 +107,6 @@ function clearWorld() {
 function applyWorld(initialWorld) {
   //var worldList = churchWorld_to_jsWorld(initialWorld);
   var worldList = initialWorld;
-  console.log(initialWorld);
   for (var i=0; i<worldList.length; i++) {
     var worldObj = worldList[i];
     var shapeProps = worldObj[0];
