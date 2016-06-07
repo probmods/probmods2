@@ -79,6 +79,6 @@ function setBibtex(){
 
 $(setBibtex)
 
-if (ERP) {
+if (typeof ERP !== 'undefined') {
   ERP.prototype.__print__ = viz.print;
 }
