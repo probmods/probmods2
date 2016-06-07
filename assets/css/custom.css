@@ -112,3 +112,14 @@ div.container ul {
 pre#bibtex {
    display: none;
 }
+
+/* Quotes */
+blockquote {
+    font-family: Georgia;
+    font-style: italic;
+    font-size: 15px;
+}
+
+blockquote em {
+    font-style: normal
+}
