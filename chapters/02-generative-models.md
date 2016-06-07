@@ -2,6 +2,9 @@
 layout: chapter
 title: Generative models
 description: Generative models
+custom_js:
+- assets/js/box2d.js
+- assets/js/phys.js
 ---
 
 # Models, simulation, and degrees of belief
@@ -466,7 +469,7 @@ var fallingWorld = [
     makeStaticShape(),
     makeStaticShape()
 ]
-animatePhysics(1000, fallingWorld);
+physics.animate(1000, fallingWorld);
 ~~~~
 
 There are many judgments that you could imagine making with such a physics simulator.
@@ -480,39 +483,40 @@ var getHeight = function (worldObj) { second(third(first(worldObj))) }
 var getX = function (worldObj) { first(second(worldObj)) }
 var getY = function (worldObj) { second(second(worldObj)) }
 var ground = [
-    ['rect', true, [worldWidth, 10]],
-    [worldWidth/2, worldHeight]
-]
-var dim = function () {
-     uniform(10, 50)
-}
-var xpos = function (prevBlock) {
-    var prevW = getWidth(prevBlock)
-    var prevX = getX(prevBlock)
-     uniform(minus(prevX, prevW), plus(prevX, prevW))
-}
-var ypos = function (prevBlock, h) {
-    var prevY = getY(prevBlock)
-    var prevH = getHeight(prevBlock)
-     minus(prevY, prevH, h)
-}
-var addBlock = function (prevBlock, is_first) {
-    var w = dim()
-    var h = dim()
-     [
-        ['rect', false, [w, h]],
-        [is_first ? xCenter : xpos(prevBlock), ypos(prevBlock, h)]
-    ]
-}
+  ['rect', true, [worldWidth, 10]],
+  [worldWidth/2, worldHeight]
+];
+var dim = function() {
+  uniform(10, 50)
+};
+var xpos = function(prevBlock) {
+  var prevW = getWidth(prevBlock)
+  var prevX = getX(prevBlock)
+  uniform(minus(prevX, prevW), plus(prevX, prevW))
+};
+var ypos = function(prevBlock, h) {
+  var prevY = getY(prevBlock)
+  var prevH = getHeight(prevBlock)
+  prevY - (prevH + h)
+};
+
+var addBlock = function(prevBlock, isFirst) {
+  var w = dim()
+  var h = dim()
+  return [['rect', false, [w, h]],
+          [isFirst ? xCenter : xpos(prevBlock), ypos(prevBlock, h)]]
+};
+
 var makeTowerWorld = function () {
-    var firstBlock = addBlock(ground, true)
-    var secondBlock = addBlock(firstBlock, false)
-    var thirdBlock = addBlock(secondBlock, false)
-    var fourthBlock = addBlock(thirdBlock, false)
-    var fifthBlock = addBlock(fourthBlock, false)
-     [ground, firstBlock, secondBlock, thirdBlock, fourthBlock, fifthBlock]
-}
-animatePhysics(1000, makeTowerWorld())
+  var firstBlock = addBlock(ground, true);
+  var secondBlock = addBlock(firstBlock, false);
+  var thirdBlock = addBlock(secondBlock, false);
+  var fourthBlock = addBlock(thirdBlock, false);
+  var fifthBlock = addBlock(fourthBlock, false);
+  return [ground, firstBlock, secondBlock, thirdBlock, fourthBlock, fifthBlock]
+};
+
+physics.animate(1000, makeTowerWorld())
 ~~~~
 
 Were you often right?
