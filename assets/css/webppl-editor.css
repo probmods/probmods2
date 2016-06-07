@@ -1,3 +1,7 @@
+.CodeMirrorError {
+    background-color: red;
+}
+
 .wpedit {
     font-family: Menlo, Courier;
 }
@@ -30,9 +34,11 @@
     height: auto;
     border: 1px solid black;
     border-radius: 2px;
+    max-height: 80%;
 }
 .wpedit .CodeMirror-scroll {
     height: auto;
+    max-height: 80%;
 }
 
 .wpedit button {
@@ -170,7 +176,7 @@
 }
 .cm-fat-cursor .CodeMirror-cursor {
   width: auto;
-  border: 0;
+  border: 0 !important;
   background: #7e7;
 }
 .cm-fat-cursor div.CodeMirror-cursors {
