@@ -5,6 +5,7 @@ description: Generative models
 custom_js:
 - assets/js/box2d.js
 - assets/js/phys.js
+- assets/js/plinko.js
 ---
 
 # Models, simulation, and degrees of belief
@@ -16,7 +17,6 @@ As an example take the Plinko machine: a box with uniformly spaced pegs, with bi
 Into this box we can drop marbles:
 
 <canvas id="plinkocanvas" width="10" height="10" style="background-color:#333333;"></canvas>
-<button id="makeplinko" onclick="plinkoinit(); jQuery('#makeplinko').hide();">Set-up Plinko!</button>
 
 The plinko machine is a 'working model' for many physical processes in which many small perturbations accumulate---for instance a leaf falling from a tree.
 It is an approximation to these systems because we use a discrete grid (the pegs) and discrete bins.
