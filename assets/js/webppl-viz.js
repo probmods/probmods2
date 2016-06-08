@@ -68538,13 +68538,13 @@ function samplesToErp(xs) {
     return global.categorical(probabilities, support);
   };
 
-  var ret = new global.ERP({
+  var ret = {
     sample: sampler,
     score: scorer,
     support: function () {
       return support;
     }
-  });
+  };
   return ret;
 }
 
@@ -69727,7 +69727,7 @@ function table(obj, options) {
   resultContainer.innerHTML = tableString;
 }
 
-global.viz = {
+var viz = {
   d3auto: require('./old').print,
   auto: auto,
   bar: barDispatch,
@@ -69738,6 +69738,16 @@ global.viz = {
   table: table,
   heatMap: heatMap
 };
+
+// behave both as a browser library and a node module
+if (typeof window === 'object') {
+  global.viz = viz;
+} else {
+  if (typeof module !== 'undefined' && module.exports) {
+    exports = module.exports = viz;
+  }
+  exports.viz = viz;
+}
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./old":385,"./stats":386,"d3":1,"fs":387,"jquery":2,"md5":3,"react":172,"react-dom":7,"underscore":173,"vega":237,"vega-lite":236}],385:[function(require,module,exports){
