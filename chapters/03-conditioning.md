@@ -58,7 +58,7 @@ var dist = Rejection(function () {
     var D = A + B + C
     condition(D == 3)
     return A
-}, 100)
+}, {samples: 100})
 viz.auto(dist, 'Value of A, given that D is 3')
 ~~~~
 
@@ -74,7 +74,7 @@ var dist = Rejection(function () {
     var D = A + B + C
     condition(D >= 2)
     return A
-}, 100)
+}, {samples: 100})
 viz.auto(dist, 'Value of A, given that D >= 2')
 ~~~~
 
@@ -153,14 +153,14 @@ var dist = Rejection(function () {
     var data = observe(hypothesis)
     condition(data == observedData)
     return hypothesis
-}, 10)
+}, {samples: 10})
 viz.auto(dist)
 ~~~~
 
 We have generated a value, the *hypothesis*, from some distribution called the *prior*, then used an observation function which generates data given this hypothesis, the probability of such an observation function is called the *likelihood*. Finally we have queried the hypothesis conditioned on the observation being equal to some observed data---this conditional distribution is called the *posterior*. This is a typical setup in which Bayes' rule is used. Notice that in this case the conditional distribution $$P(\text{data} \mid \text{hypothesis})$$ is just the probability distribution on return values from the `observe` function given an input value.
 
 <!--
-If we replace the conditioner with `true` in the code above, that is equivalent to observing no data.  Then query draws samples from the prior distribution, rather than the posterior.
+If we replace the conditioner with `true`in the code above, that is equivalent to observing no data.  Then query draws samples from the prior distribution, rather than the posterior.
 -->
 
 Bayes rule simply says that, in special situations where the model decomposes nicely into a part "before" the query-expression and a part "after" the query expression, then the conditional probability can be expressed in terms of these components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in terms of sampling.
@@ -221,7 +221,7 @@ Writing models in Church allows the flexibility to build complex random expressi
 Returning to the earlier example of a series of tug-of-war matches, we can use query to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
 ~~~~
-// TODO: there's a webppl bug with cache..
+// TODO: cache isn't mem
 var dist = MCMC(function () {
     var strength = cache(function (person) { gaussian(0, 1)})
     var lazy = function (person) { flip(1/3) }
@@ -235,12 +235,12 @@ var dist = MCMC(function () {
     }
 
     condition(winner(['bob', 'mary'], ['tom', 'sue']) == 'team1' &&
-              winner(['bob', 'sue'], ['tom', 'jim]) == 'team2')
+              winner(['bob', 'sue'], ['tom', 'jim']) == 'team2')
 
     return strength('bob')
 }, {kernel: 'MH', samples: 100, lag: 100})
-print('Expected strength: ' + expectation(samples))
-viz.density(samples, 'Bob strength')
+print('Expected strength: ' + expectation(dist))
+viz.table(dist)
 ~~~~
 
 Try varying the number of different teams and teammates that Bob plays with. How does this change the estimate of Bob's strength?
@@ -270,8 +270,8 @@ var dist = MCMC(function () {
 
     return winner(['bob','mary'], ['jim','sue']) == 'team1'
 }, {kernel: 'MH', samples: 100, lag: 100})
-print('Expected strength: ' + expectation(samples))
-viz.density(samples, 'Bob strength')
+print('Expected strength: ' + expectation(dist))
+viz.table(dist)
 ~~~~
 
 # Example: Inverse intuitive physics
@@ -485,6 +485,8 @@ var dist = MCMC(function () {
     condition(cough && chestPain && shortnessOfBreath)
     return {lungCancer: lungCancer, TB: TB}
 }, {samples: 1000, lag: 100})
+
+viz.auto(dist)
 ~~~~
 
 Under this model, a patient with coughing, chest pain and shortness of breath is likely to have either lung cancer or TB.  Modify the above code to see how these conditional inferences shift if you also know that the patient smokes or works in a hospital (where they could be exposed to various infections, including many worse infections than the typical person encounters).  More generally, the causal structure of knowledge representation in a probabilistic program allows us to model intuitive theories that can grow in complexity continually over a lifetime, adding new knowledge without bound.
