@@ -493,4 +493,4 @@ Under this model, a patient with coughing, chest pain and shortness of breath is
 
 Test your knowledge: [Exercises](03-conditioning-exercises.html)
 
-Next chapter: [Patterns of inference](03-patterns-of-inference.html)
+<!-- Next chapter: [Patterns of inference](03-patterns-of-inference.html) -->
