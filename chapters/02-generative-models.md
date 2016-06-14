@@ -570,13 +570,7 @@ var doesTowerFall = function (initialW, finalW) {
   var highestY = function (world) {
     listMin(map(getY, world))
   }
-
-  var eps = 1
-
-  var approxEqual = function (a, b) {
-    Math.abs(a - b) < eps
-  }
-  !approxEqual(highestY(initialW), highestY(finalW))
+  return !(Math.abs(highestY(initialW) - highestY(finalW)) < 1)
 }
 var noisify = function (world) {
   var xNoise = function (worldObj) {
