@@ -84,47 +84,33 @@ function clearWorld() {
   }
 }
 
-//take church world maker and apply it to the box2d world
 function applyWorld(initialWorld) {
-  //var worldList = churchWorld_to_jsWorld(initialWorld);
   var worldList = initialWorld;
-  for (var i=0; i<worldList.length; i++) {
-    var worldObj = worldList[i];
-    var shapeProps = worldObj[0];
-    var shape = shapeProps[0];
-    var isStatic = shapeProps[1];
-    var dims = shapeProps[2];
-    var position = worldObj[1];
-    if (worldObj.length > 2) {
-      var velocity = worldObj[2];
-    } else {
-      var velocity = [0,0];
+  _.each(
+    worldList,
+    function(obj){
+      var shape = obj.shape,
+          dims = obj.dims,
+          velocity = obj.velocity || [0,0];
+      bodyDef.type = obj.static ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
+      if (shape == "circle") {
+        var r = dims[0] / SCALE;
+        fixDef.shape = new b2CircleShape(r);
+      } else if (shape == "rect") {
+        var w = dims[0] / SCALE;
+        var h = dims[1] / SCALE;
+        fixDef.shape = new b2PolygonShape;
+        fixDef.shape.SetAsBox(w, h);
+      } else {
+        throw new Error('unknown shape' + shape);
+      }
+      bodyDef.position.x = obj.x / SCALE;
+      bodyDef.position.y = obj.y / SCALE;
+      bodyDef.linearVelocity.x = velocity[0] / SCALE;
+      bodyDef.linearVelocity.y = velocity[1] / SCALE;
+      world.CreateBody(bodyDef).CreateFixture(fixDef);
     }
-    if (isStatic) {
-      bodyDef.type = b2Body.b2_staticBody;
-    } else {
-      bodyDef.type = b2Body.b2_dynamicBody;
-    }
-    if (shape == "circle") {
-      var r = dims[0] / SCALE;
-      fixDef.shape = new b2CircleShape(r);
-    } else if (shape == "rect") {
-      var w = dims[0] / SCALE;
-      var h = dims[1] / SCALE;
-      fixDef.shape = new b2PolygonShape;
-      fixDef.shape.SetAsBox(w, h);
-    } else {
-      console.log("error 0");
-    }
-    bodyDef.position.x = position[0] / SCALE;
-    bodyDef.position.y = position[1] / SCALE;
-    bodyDef.linearVelocity.x = velocity[0] / SCALE;
-    bodyDef.linearVelocity.y = velocity[1] / SCALE;
-    world.CreateBody(bodyDef).CreateFixture(fixDef);
-    /*if (shape == "rect") {
-      console.log(myShape.GetBody().GetFixtureList().GetShape().GetVertices());
-    }*/
-  }
+  )
   return initialWorld;
 }
 
@@ -155,12 +141,7 @@ function churchWorld_to_jsWorld(world) {
 function churchWorld_from_bodyList(body) {
   var worldList = [];
   while (body) {
-    var isStatic;
-    if (body.GetType() == 2) {
-      var isStatic = false;
-    } else {
-      var isStatic = true;
-    }
+    var isStatic = !(body.GetType() == 2);
     var shapeInt = body.GetFixtureList().GetType();
     var shape;
     var dims;
@@ -169,12 +150,17 @@ function churchWorld_from_bodyList(body) {
       dims = [body.GetFixtureList().GetShape().GetRadius() * SCALE];
     } else {
       shape = "rect";
-      vertices = body.GetFixtureList().GetShape().GetVertices();
+      var vertices = body.GetFixtureList().GetShape().GetVertices();
       dims = [vertices[2].x * 2 * SCALE, vertices[2].y * 2 * SCALE];
     }
     var x = body.GetPosition().x * SCALE;
     var y = body.GetPosition().y * SCALE;
-    worldList.push([ [shape, isStatic, dims], [x, y] ]);
+    worldList.push({shape: shape,
+                    static: isStatic,
+                    dims: dims,
+                    x: x,
+                    y: y});
+    debugger;
     body = body.GetNext();
   }
   //return jsWorld_to_churchWorld(worldList);

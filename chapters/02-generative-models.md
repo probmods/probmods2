@@ -438,37 +438,24 @@ We can use this to imagine the outcome of various initial states, as in the Plin
 var dim = function () { uniform(5, 20) }
 var staticDim = function () { uniform(10, 50) }
 var shape = function () { flip() ? 'circle' : 'rect' }
-var xpos = function () { uniform(100, minus(worldWidth, 100)) }
-var ypos = function () { uniform(100, minus(worldHeight, 100)) }
-// an object in the word is a list of two things:
-//  shape properties: a list of SHAPE ("rect" or "circle"), IS_STATIC (#t or #f),
-//                    and dimensions (either (list WIDTH HEIGHT) for a rect or
-//                    (list RADIUS) for a circle
-//  position: (list X Y)
-var makeFallingShape = function () {
-    [
-        [shape(), false, [dim(), dim()]],
-        [xpos(), 0]
-    ]
+var xpos = function () { uniform(100, worldWidth - 100) }
+var ypos = function () { uniform(100, worldHeight - 100) }
+
+var ground = {shape: 'rect',
+              static: true,
+              dims: [worldWidth, 10],
+              x: worldWidth/2,
+              y: worldHeight}
+
+var falling = function () {
+  return {shape: shape(), static: false, dims: [dim(), dim()], x: xpos(), y: 0}
+};
+
+var fixed = function () {
+  return {shape: shape(), static: true, dims: [staticDim(), staticDim()], x: xpos(), y: ypos()}
 }
-var makeStaticShape = function () {
-    [
-        [shape(), true, [staticDim(), staticDim()] ],
-        [xpos(), ypos()]
-    ]
-}
-var ground = [
-    ['rect', true, [worldWidth, 10]],
-    [worldWidth/2, worldHeight]
-]
-var fallingWorld = [
-    ground,
-    makeFallingShape(),
-    makeFallingShape(),
-    makeFallingShape(),
-    makeStaticShape(),
-    makeStaticShape()
-]
+
+var fallingWorld = [ground, falling(), falling(), falling(), fixed(), fixed()]
 physics.animate(1000, fallingWorld);
 ~~~~
 
