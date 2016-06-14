@@ -215,27 +215,6 @@ function getDynamicObjPositions(churchWorld) {
 
 emptyWorld = arrayToList([]);
 
-//add a circle at specified position (x and y are between 0 and 1) and radius. return world with circle added.
-addCircle = function(churchWorld, x, y, r, isStatic, dx, dy) {
-  var dx=dx || 0;
-  var dy=dy || 0;
-  var jsWorld = churchWorld_to_jsWorld(churchWorld);
-  jsWorld.push( [ ["circle", isStatic, [r]],
-                    [x, y],
-                    [dx, dy] ] );
-  return jsWorld_to_churchWorld(jsWorld);
-}
-
-addRect = function(churchWorld, x, y, w, h, isStatic, dx, dy) {
-  var dx=dx || 0;
-  var dy=dy || 0;
-  var jsWorld = churchWorld_to_jsWorld(churchWorld);
-  jsWorld.push( [ ["rect", isStatic, [w, h]],
-                    [x, y],
-                    [dx, dy] ] );
-  return jsWorld_to_churchWorld(jsWorld);
-}
-
 //now in church
 /*_plinkoWhichBin = function(finalWorld, ncol) {
   var positions = getDynamicObjPositions(finalWorld);
