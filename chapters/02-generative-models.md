@@ -515,76 +515,58 @@ var listMin = function(xs) {
   }
 }
 
-var getWidth = function (worldObj) { first(third(first(worldObj))) }
-var getHeight = function (worldObj) { second(third(first(worldObj))) }
-var getX = function (worldObj) { first(second(worldObj)) }
-var getY = function (worldObj) { second(second(worldObj)) }
-var isStatic = function (worldObj) { second(first(worldObj)) }
-var ground = [
-  ['rect', true, [worldWidth, 10]],
-  [worldWidth/2, worldHeight+6]
-]
+var ground = {shape: 'rect', static: true, dims: [worldWidth, 10],
+              x: worldWidth/2, y: worldHeight+6};
+
 var stableWorld = [
   ground,
-  [['rect', false, [60, 22]], [175, 473]],
-  [['rect', false, [50, 38]], [159.97995044874122, 413]],
-  [['rect', false, [40, 35]], [166.91912737427202, 340]],
-  [['rect', false, [30, 29]], [177.26195677111082, 276]],
-  [['rect', false, [11, 17]], [168.51354470809122, 230]]
+  {shape: 'rect', static: false, dims: [60, 22], x: 175, y: 473},
+  {shape: 'rect', static: false, dims: [50, 38], x: 159.97995044874122, y: 413},
+  {shape: 'rect', static: false, dims: [40, 35], x: 166.91912737427202, y: 340},
+  {shape: 'rect', static: false, dims: [30, 29], x: 177.26195677111082, y: 276},
+  {shape: 'rect', static: false, dims: [11, 17], x: 168.51354470809122, y: 230}
 ]
+
 var almostUnstableWorld = [
   ground,
-  [['rect', false, [24, 22]], [175, 473]],
-  [['rect', false, [15, 38]], [159.97995044874122, 413]],
-  [['rect', false, [11, 35]], [166.91912737427202, 340]],
-  [['rect', false, [11, 29]], [177.26195677111082, 276]],
-  [['rect', false, [11, 17]], [168.51354470809122, 230]]
+  {shape: 'rect', static: false, dims: [24, 22], x: 175, y: 473},
+  {shape: 'rect', static: false, dims: [15, 38], x: 159.97995044874122, y: 413},
+  {shape: 'rect', static: false, dims: [11, 35], x: 166.91912737427202, y: 340},
+  {shape: 'rect', static: false, dims: [11, 29], x: 177.26195677111082, y: 276},
+  {shape: 'rect', static: false, dims: [11, 17], x: 168.51354470809122, y: 230}
 ]
+
 var unstableWorld = [
   ground,
-  [['rect', false, [60, 22]], [175, 473]],
-  [['rect', false, [50, 38]], [90, 413]],
-  [['rect', false, [40, 35]], [140, 340]],
-  [['rect', false, [10, 29]], [177.26195677111082, 276]],
-  [['rect', false, [50, 17]], [140, 230]]
+  {shape: 'rect', static: false, dims: [60, 22], x: 175, y: 473},
+  {shape: 'rect', static: false, dims: [50, 38], x: 90, y: 413},
+  {shape: 'rect', static: false, dims: [40, 35], x: 140, y: 340},
+  {shape: 'rect', static: false, dims: [10, 29], x: 177.26195677111082, y: 276},
+  {shape: 'rect', static: false, dims: [50, 17], x: 140, y: 230}
 ]
+
 var doesTowerFall = function (initialW, finalW) {
-  var highestY = function (world) {
-    listMin(map(getY, world))
-  }
-  return !(Math.abs(highestY(initialW) - highestY(finalW)) < 1)
+  var highestY = function (w) { listMin(map(function(obj) { return obj.y }, w)) }
+  var approxEqual = function (a, b) { Math.abs(a - b) < 1.0 }
+  !approxEqual(highestY(initialW), highestY(finalW))
 }
 var noisify = function (world) {
-  var xNoise = function (worldObj) {
+  var perturbX = function (obj) {
     var noiseWidth = 10
-    var newX = function (x) { uniform(x - noiseWidth, x + noiseWidth) }
-
-    isStatic(worldObj) ? worldObj : [
-      first(worldObj),
-      [newX(getX(worldObj)), getY(worldObj)]
-    ]
+    obj.static ? obj : _.extend({}, obj, {x: uniform(obj.x - noiseWidth, obj.x + noiseWidth) })
   }
-  map(xNoise, world)
+  map(perturbX, world)
 }
-var runStableTower = function () {
-  var initialWorld = noisify(stableWorld)
-  var finalWorld = physics.run(1000, initialWorld)
-  doesTowerFall(initialWorld, finalWorld)
-}
-var runAlmostUnstableTower = function () {
-  var initialWorld = noisify(almostUnstableWorld)
-  var finalWorld = physics.run(1000, initialWorld)
-  doesTowerFall(initialWorld, finalWorld)
-}
-var runUnstableTower = function () {
-  var initialWorld = noisify(unstableWorld)
+
+var run = function(world) {
+  var initialWorld = noisify(world)
   var finalWorld = physics.run(1000, initialWorld)
   doesTowerFall(initialWorld, finalWorld)
 }
 
-print(repeat(10, runStableTower))
-print(repeat(10, runAlmostUnstableTower))
-print(repeat(10, runUnstableTower))
+print(repeat(10, function() { run(stableWorld) }))
+print(repeat(10, function() { run(almostUnstableWorld) }))
+print(repeat(10, function() { run(unstableWorld) }))
 
 // uncomment any of these that you'd like to see for yourself
 // physics.animate(1000, stableWorld)
