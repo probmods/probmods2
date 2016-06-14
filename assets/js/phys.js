@@ -102,7 +102,7 @@ function applyWorld(initialWorld) {
         fixDef.shape = new b2PolygonShape;
         fixDef.shape.SetAsBox(w, h);
       } else {
-        throw new Error('unknown shape' + shape);
+        throw new Error('unknown shape ' + shape);
       }
       bodyDef.position.x = obj.x / SCALE;
       bodyDef.position.y = obj.y / SCALE;
@@ -160,10 +160,8 @@ function churchWorld_from_bodyList(body) {
                     dims: dims,
                     x: x,
                     y: y});
-    debugger;
     body = body.GetNext();
   }
-  //return jsWorld_to_churchWorld(worldList);
   return worldList;
 }
 
