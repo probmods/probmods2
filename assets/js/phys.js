@@ -27,8 +27,8 @@ function stopAnim() {
 }
 
 var SCALE = 30; // 1 meter = 30 pixels
-worldWidth = 350;
-worldHeight = 500;
+var worldWidth = 350;
+var worldHeight = 500;
 
 var  b2World = Box2D.Dynamics.b2World,
      b2Vec2 = Box2D.Common.Math.b2Vec2,
@@ -74,26 +74,7 @@ var arrayToList = function(arr, mutate) {
 	return arr;
 };
 
-
-// function listToArray(list, recurse) {
-// 	var array = [];
-// 	while (list.length > 0) {
-// 		var left = list[0];
-// 		array.push((Array.isArray(left) && recurse) ? listToArray(left) : left);
-// 		list = list[1];
-// 	}
-// 	return array;
-// }
-
 var the_empty_list = [];
-
-// function arrayToList(arr) {
-// 	if (arr.length == 0) {
-// 		return the_empty_list;
-// 	} else {
-// 		return [arr[0], arrayToList(arr.slice(1))];
-// 	}
-// }
 
 function clearWorld() {
   var count = world.GetBodyCount();
@@ -212,15 +193,6 @@ function getDynamicObjPositions(churchWorld) {
   }
   return positions;
 }
-
-emptyWorld = arrayToList([]);
-
-//now in church
-/*_plinkoWhichBin = function(finalWorld, ncol) {
-  var positions = getDynamicObjPositions(finalWorld);
-  var x = positions[0][0];
-  return Math.round(x / (_worldWidth / ncol));
-}*/
 
 plinkoWorld = function(nrow, ncol) {
   var pegRadius = 3;
