@@ -465,42 +465,37 @@ Look at several different random block towers; first judge whether you think the
 
 ~~~~
 var xCenter = worldWidth / 2
-var getWidth = function (worldObj) { first(third(first(worldObj))) }
-var getHeight = function (worldObj) { second(third(first(worldObj))) }
-var getX = function (worldObj) { first(second(worldObj)) }
-var getY = function (worldObj) { second(second(worldObj)) }
-var ground = [
-  ['rect', true, [worldWidth, 10]],
-  [worldWidth/2, worldHeight]
-];
-var dim = function() {
-  uniform(10, 50)
-};
+var ground = {shape: 'rect', static: true, dims: [worldWidth, 10], x: worldWidth/2, y: worldHeight}
+var dim = function() { uniform(10, 50) };
 var xpos = function(prevBlock) {
-  var prevW = getWidth(prevBlock)
-  var prevX = getX(prevBlock)
-  uniform(minus(prevX, prevW), plus(prevX, prevW))
+  var prevW = prevBlock.dims[0]
+  var prevX = prevBlock.x
+  uniform(prevX - prevW, prevX + prevW)
 };
+
 var ypos = function(prevBlock, h) {
-  var prevY = getY(prevBlock)
-  var prevH = getHeight(prevBlock)
+  var prevY = prevBlock.y
+  var prevH = prevBlock.dims[1]
   prevY - (prevH + h)
 };
 
 var addBlock = function(prevBlock, isFirst) {
   var w = dim()
   var h = dim()
-  return [['rect', false, [w, h]],
-          [isFirst ? xCenter : xpos(prevBlock), ypos(prevBlock, h)]]
+  return {shape: 'rect',
+          static: false,
+          dims: [w, h],
+          x: isFirst ? xCenter : xpos(prevBlock),
+          y: ypos(prevBlock, h)}
 };
 
 var makeTowerWorld = function () {
-  var firstBlock = addBlock(ground, true);
-  var secondBlock = addBlock(firstBlock, false);
-  var thirdBlock = addBlock(secondBlock, false);
-  var fourthBlock = addBlock(thirdBlock, false);
-  var fifthBlock = addBlock(fourthBlock, false);
-  return [ground, firstBlock, secondBlock, thirdBlock, fourthBlock, fifthBlock]
+  var block1 = addBlock(ground, true);
+  var block2 = addBlock(block1, false);
+  var block3 = addBlock(block2, false);
+  var block4 = addBlock(block3, false);
+  var block5 = addBlock(block4, false);
+  return [ground, block1, block2, block3, block4, block5]
 };
 
 physics.animate(1000, makeTowerWorld())
