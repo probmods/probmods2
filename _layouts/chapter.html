@@ -2,15 +2,21 @@
 layout: default
 custom_js:
 - bower_components/KaTeX/dist/katex.min.js
-- bower_components/d3/d3.min.js
-- assets/js/webppl-editor.js
-- assets/js/webppl.min.js
-- assets/js/webppl-viz.js
+
 custom_css:
 - bower_components/KaTeX/dist/katex.min.css
-- assets/css/webppl-editor.css
-- assets/css/webppl-viz.css
+
+external_js:
+- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-v0.9.1.js
+- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-editor-1.0.1.js
+- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-viz-0.7.6.js
+
+external_css:
+- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-viz-0.7.6.css
+- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-editor-1.0.1.css
 ---
+
+
 
 <div class="page-header">
   <h1>{{ page.title }}</h1>
