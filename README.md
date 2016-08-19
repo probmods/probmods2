@@ -1,3 +1,10 @@
+**setting up**
+
+```sh
+bower install
+```
+
+
 **compiling**
 
 ```sh
