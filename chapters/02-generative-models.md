@@ -55,8 +55,8 @@ This addition results in a powerful language for describing generative models.
 
 In Church, in addition to deterministic functions, we have a set of random functions implementing *random choices.*  These random primitive functions are called *Exchangeable Random Primitives* (XRPs).
 Application of an XRP results in a *sample* from the probability distribution defined by that XRP.
-For example, the simplest XRP is `flip` which results in either true or false -- it simulates a (possibly biased) coin toss.
-(Note that the return values `true` and `false` will look like this in the output: `#t` and `#f`.)
+For example, the simplest XRP is `Bernoulli`, which results in either true or false. 
+Because it simulates a (possibly biased) coin toss, we provide a convenient function called `flip` that draws a Bernoulli sample:
 
 ~~~~
 flip()
@@ -64,19 +64,19 @@ flip()
 
 Run this program a few times.
 You will get back a different sample on each execution.
-Also, notice the parentheses around `flip`.
-These are meaningful; they tell Church that you are asking for an application of the XRP `flip`---resulting in a sample.
-Without parentheses `flip` is a *procedure* object---a representation of the simulator itself, which can be used to get samples.
+Also, notice the parentheses after `flip`.
+These are meaningful; they tell WebPPL that you are calling the `flip` function---resulting in a sample.
+Without parentheses `flip` is a *function* object---a representation of the simulator itself, which can be used to get samples.
 
-In Church, each time you run a program you get a *sample* by simulating the computations and random choices that the program specifies.
+In WebPPL, each time you run a program you get a *sample* by simulating the computations and random choices that the program specifies.
 If you run the program many times, and collect the values in a histogram, you can see what a typical sample looks like:
 
 ~~~~
 viz.hist(repeat(1000,flip))
 ~~~~
 
-Here we have used the `repeat` procedure which takes a number of repetitions, $$K$$, and a random distribution (in this case `flip`) and returns a list of $$K$$ samples from that distribution.
-We have used the `hist` procedure to display the results of taking 1000 samples from `flip`.
+Here we have used the `repeat` procedure which takes a number of repetitions, $$K$$, and a function (in this case `flip`) and returns a list of $$K$$ samples from that function.
+We have used the `viz.hist` function to visualize the results of calling the `flip` function 1000 times.
 As you can see, the result is an approximately uniform distribution over `true` and `false`.
 
 An important idea here is that `flip` can be thought of in two different ways.
@@ -84,25 +84,25 @@ From one perspective, `flip` is a procedure which returns a sample from a fair c
 That is, it's a *sampler* or *simulator*.
 From another perspective, `flip` is *itself* a characterization of the distribution over `true` and `false`.
 When we think about probabilistic programs we will often move back and forth between these two views, emphasizing either the sampling perspective or the distributional perspective.
-(With suitable restrictions this duality is complete: any Church program implicitly represents a distribution and any distribution can be represented by a Church program; see e.g., @Ackerman2011 for more details on this duality.)
+(With suitable restrictions this duality is complete: any WebPPL program implicitlyWebPPL represents a distribution and any distribution can be represented by a WebPPL program; see e.g., @Ackerman2011 for more details on this duality.)
 We return to this relationship between probability and simulation below.
 
-The `flip` function is the simplest XRP in Church, but you will find other XRPs corresponding to familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.
-Using these XRPs we can construct more complex expressions that describe more complicated sampling processes. For instance here we describe a process that samples a number by multiplying two samples from a gaussian distribution:
+The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.
+Using these distributions we can construct more complex expressions that describe more complicated sampling processes. For instance here we describe a process that samples a number by multiplying two samples from a gaussian distribution:
 
 ~~~~
 gaussian(0,1) * gaussian(0,1)
 ~~~~
 
 What if we want to invoke this sampling process multiple times? We would like to construct a stochastic function that multiplies two Gaussians each time it is called.
-We can use `lambda` to construct such complex stochastic functions from the primitive ones.
+We can use `function` to construct such complex stochastic functions from the primitive ones.
 
 ~~~~
 var twoGaussians = function() { return gaussian(0,1) * gaussian(0,1) }
 viz.density(repeat(100, twoGaussians))
 ~~~~
 
-A lambda expression with an empty argument list, `(lambda () ...)`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `(flip)`. A thunk is an object that represents a whole *probability distribution*.
+A function expression with an empty argument list, `function () {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`. A thunk is an object that represents a whole *probability distribution*.
 Complex functions can also have arguments. Here is a stochastic function that will only sometimes double its input:
 
 ~~~~
@@ -156,11 +156,11 @@ var bentCoin = bend(fairCoin)
 viz.hist(repeat(100,bentCoin))
 ~~~~
 
-Make sure you understand how the `bend` function works! Why are there an "extra" pair of parentheses outside each `make-coin` statement?
+Make sure you understand how the `bend` function works! Why are there an "extra" pair of parentheses after each `make-coin` statement?
 
 Higher-order functions like `repeat`, `map`, and `apply` can be quite useful.
 Here we use them to visualize the number of heads we expect to see if we flip a weighted coin (weight = 0.8) 10 times.
-We'll repeat this experiment 1000 times and then use `hist` to visualize the results.
+We'll repeat this experiment 1000 times and then use `viz.hist` to visualize the results.
 Try varying the coin weight or the number of repetitions to see how the expected distribution changes.
 
 ~~~~
@@ -175,12 +175,12 @@ viz.hist(data, {xLabel: 'foo'}) // TODO: add xLabel option
 # Example: Causal Models in Medical Diagnosis
 
 Generative knowledge is often *causal* knowledge that describes how events or states of the world are related to each other.
-As an example of how causal knowledge can be encoded in Church expressions, consider a simplified medical scenario:
+As an example of how causal knowledge can be encoded in WebPPL expressions, consider a simplified medical scenario:
 
 ~~~~
 var lungCancer = flip(0.01);
 var cold = flip(0.2);
-var cough = or(cold, lungCancer);
+var cough = cold || lungCancer;
 cough;
 ~~~~
 
@@ -197,34 +197,34 @@ var stomachFlu = flip(0.1);
 var cold = flip(0.2);
 var other = flip(0.1);
 
-// TODO:  (saccharine-scheme didn't do the best job)
-var cough = or(
-    and(cold, flip(0.5)),
-    and(lungCancer, flip(0.3)),
-    and(TB, flip(0.7)),
-    and(other, flip(0.01)))
+var cough = (
+    (cold && flip(0.5)) ||
+    (lungCancer && flip(0.3)) ||
+    (TB && flip(0.7)) ||
+    (other && flip(0.01)))
 
-var fever = or(
-    and(cold, flip(0.3)),
-    and(stomachFlu, flip(0.5)),
-    and(TB, flip(0.1)),
-    and(other, flip(0.01)))
+var fever = (
+    (cold && flip(0.3)) ||
+    (stomachFlu && flip(0.5)) ||
+    (TB && flip(0.1)) ||
+    (other && flip(0.01)))
 
-var chestPain = or(
-    and(lungCancer, flip(0.5)),
-    and(TB, flip(0.5)),
-    and(other, flip(0.01)))
+var chestPain = (
+    (lungCancer && flip(0.5)) ||
+    (TB && flip(0.5)) ||
+    (other && flip(0.01)))
 
-var shortnessOfBreath = or(
-    and(lungCancer, flip(0.5)),
-    and(TB, flip(0.2)),
-    and(other, flip(0.01)))
+var shortnessOfBreath = (
+    (lungCancer && flip(0.5)) ||
+    (TB && flip(0.2)) ||
+    (other && flip(0.01)))
 
-var symptoms = {cough: cough,
-         fever: fever,
-         chestPain: chestPain,
-         shortnessOfBreath: shortnessOfBreath
-        };
+var symptoms = {
+  cough: cough,
+  fever: fever,
+  chestPain: chestPain,
+  shortnessOfBreath: shortnessOfBreath
+};
 
 symptoms
 ~~~~
@@ -233,13 +233,13 @@ Now there are four possible diseases and four symptoms.
 Each disease causes a different pattern of symptoms.
 The causal relations are now probabilistic: Only some patients with a cold have a cough (50%), or a fever (30%).
 There is also a catch-all disease category "other", which has a low probability of causing any symptom.
-*Noisy logical* functions, or functions built from `and`, `or`, and `flip`, provide a simple but expressive way to describe probabilistic causal dependencies between Boolean (true-false valued) variables.
+*Noisy logical* functions, or functions built from **and** (`&&`), **or** (`||`), and `flip`, provide a simple but expressive way to describe probabilistic causal dependencies between Boolean (true-false valued) variables.
 
 When you run the above code, the program generates a list of symptoms for a hypothetical patient.
 Most likely all the symptoms will be false, as (thankfully) each of these diseases is rare.
 Experiment with running the program multiple times.
-Now try modifying the `define` statement for one of the diseases, setting it to be true, to simulate only patients known to have that disease.
-For example, replace `(define lung-cancer (flip 0.01))` with `(define lung-cancer true)`.
+Now try modifying the `var` statement for one of the diseases, setting it to be true, to simulate only patients known to have that disease.
+For example, replace `var lungCancer = flip(0.01)` with `var lungCancer = true`.
 Run the program several times to observe the characteristic patterns of symptoms for that disease.
 
 # Prediction, Simulation, and Probabilities
@@ -251,9 +251,9 @@ Suppose that we flip two fair coins, and return the list of their values:
 ~~~~
 
 How can we predict the return value of this program?
-For instance, how likely is it that we will see `(#t #f)`?
-A **probability** is a number between 0 and 1 that expresses the answer to such a question: it is a degree of belief that we will see a given outcome, such as `(#t #f)`.
-The probability of an event $$A$$ (such as the above program returning `(#t #f)`) is usually written as: $$P(A)$$.
+For instance, how likely is it that we will see `[true, false]`?
+A **probability** is a number between 0 and 1 that expresses the answer to such a question: it is a degree of belief that we will see a given outcome, such as `[true, false]`.
+The probability of an event $$A$$ (such as the above program returning `[true, false]`) is usually written as: $$P(A)$$.
 
 As we did above, we can sample many times and examine the histogram of return values:
 
@@ -262,15 +262,15 @@ var randomPair = function () { return [flip(), flip()]; };
 viz.hist(repeat(1000, randomPair), 'return values');
 ~~~~
 
-We see by examining this histogram that `(#t #f)` comes out about 25% of the time.
-We may define the **probability** of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `(#t #f)` from the above program is 0.25.
+We see by examining this histogram that `[true, false]` comes out about 25% of the time.
+We may define the **probability** of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `[true, false]` from the above program is 0.25.
 
 Even for very complicated programs we can predict the probability of different outcomes by simulating (sampling from) the program.
 It is also often useful to compute these probabilities directly by reasoning about the sampling process.
 
 ## Product Rule
 
-In the above example we take three steps to compute the output value: we sample from the first `(flip)`, then from the second, then we make a list from these values.
+In the above example we take three steps to compute the output value: we sample from the first `flip()`, then from the second, then we make a list from these values.
 To make this more clear let us re-write the program as:
 
 ~~~~
@@ -280,12 +280,12 @@ var C = [A, B];
 C;
 ~~~~
 
-We can directly observe (as we did above) that the probability of `#t` for `A` is 0.5, and the probability of `#f` from `B` is 0.5. Can we use these two probabilities to arrive at the probability of 0.25 for the overall outcome `C` = `(#t #f)`? Yes, using the *product rule* of probabilities:
+We can directly observe (as we did above) that the probability of `true` for `A` is 0.5, and the probability of `false` from `B` is 0.5. Can we use these two probabilities to arrive at the probability of 0.25 for the overall outcome `C` = `[true, false]`? Yes, using the *product rule* of probabilities:
 The probability of two random choices is the product of their individual probabilities.
 The probability of several random choices together is often called the *joint probability* and written as $$P(A,B)$$.
-Since the first and second random choices must each have their specified values in order to get `(#t #f)` in the example, the joint probability is their product: 0.25.
+Since the first and second random choices must each have their specified values in order to get `[true, false]` in the example, the joint probability is their product: 0.25.
 
-We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, compute the probability of `(#t #f)` resulting from this program:
+We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, compute the probability of `[true, false]` resulting from this program:
 
 ~~~~
 var A = flip();
@@ -307,13 +307,13 @@ Now let's consider an example where we can't determine from the overall return v
 ~~~~
 flip() || flip()
 ~~~~
-We can sample from this program and determine that the probability of returning `#t` is about 0.75.
+We can sample from this program and determine that the probability of returning `true` is about 0.75.
 
 We cannot simply use the product rule to determine this probability because we don't know the sequence of random choices that led to this return value.
-However we can notice that the program will return true if the two component choices are `#t,#t`, or `#t,#f`, or `#f,#t`. To combine these possibilities we use another rule for probabilities:
+However we can notice that the program will return true if the two component choices are `[true,true]`, or `[true,false]`, or `[false,true]`. To combine these possibilities we use another rule for probabilities:
 If there are two alternative sequences of choices that lead to the same return value, the probability of this return value is the sum of the probabilities of the sequences.
 We can write this using probability notation as: $$P(A) = \sum_{B} P(A,B)$$, where we view $$A$$ as the final value and $$B$$ as a random choice on the way to that value.
-Using the product rule we can determine that the probability in the example above is 0.25 for each sequence that leads to return value `#t`, then, by the sum rule, the probability of `#t` is 0.25+0.25+0.25=0.75.
+Using the product rule we can determine that the probability in the example above is 0.25 for each sequence that leads to return value `true`, then, by the sum rule, the probability of `true` is 0.25+0.25+0.25=0.75.
 
 Using the sum rule to compute the probability of a final value is called *marginalization*.
 From the point of view of sampling processes marginalization is simply ignoring (or not looking at) intermediate random values that are created on the way to a final return value.
@@ -324,7 +324,7 @@ Putting the product and sum rules together, the marginal probability of return v
 # Stochastic recursion
 
 [Recursive functions](appendix-scheme.html#recursion) are a powerful way to structure computation in deterministic systems.
-In Church it is possible to have a *stochastic* recursion that randomly decides whether to stop.
+In WebPPL it is possible to have a *stochastic* recursion that randomly decides whether to stop.
 For example, the *geometric distribution* is a probability distribution over the non-negative integers.
 We imagine flipping a (weighted) coin, returning $$N-1$$ if the first `true` is on the Nth flip (that is, we return the number of times we get `false` before our first `true`):
 
@@ -346,13 +346,13 @@ Indeed, stochastic recursions must be constructed to halt eventually (with proba
 It is often useful to model a set of objects that each have a randomly chosen property. For instance, describing the eye colors of a set of people:
 
 ~~~~
-var eyeColor = cache(function (person) {
+var eyeColor = function (person) {
     return uniformDraw(['blue', 'green', 'brown']);
-});
+};
 [eyeColor('bob'), eyeColor('alice'), eyeColor('bob')];
 ~~~~
 
-The results of this generative process are clearly wrong: Bob's eye color can change each time we ask about it! What we want is a model in which eye color is random, but *persistent.* We can do this using another Church primitive: `mem`. `mem` is a higher order function that takes a procedure and produces a *memoized* version of the procedure.
+The results of this generative process are clearly wrong: Bob's eye color can change each time we ask about it! What we want is a model in which eye color is random, but *persistent.* We can do this using another WebPPL primitive: `mem`. `mem` is a higher order function that takes a procedure and produces a *memoized* version of the procedure.
 When a stochastic procedure is memoized, it will sample a random value the *first* time it is used for some arguments, but return that same value when called with those arguments thereafter.
 The resulting memoized procedure has a persistent value within each "run" of the generative model (or simulated world). For instance consider the equality of two flips, and the equality of two memoized flips:
 
@@ -377,7 +377,7 @@ var eyeColor = cache(function (person) {
 This type of modeling is called *random world* style [@Mcallester2008].
 Note that we don't have to specify ahead of time the people whose eye color we will ask about: the distribution on eye colors is implicitly defined over the infinite set of possible people, but only constructed "lazily" when needed.
 Memoizing stochastic functions thus provides a powerful toolkit to represent and reason about an unbounded set of properties of an unbounded set of objects.
-For instance, here we define a function `flip-n` that encodes the outcome of the $$n$$th flip of a particular coin:
+For instance, here we define a function `flipN` that encodes the outcome of the $$n$$th flip of a particular coin:
 
 ~~~~
 var flipN = cache(function (n) {
@@ -393,7 +393,7 @@ There are a countably infinite number of such flips, each independent
 of all the others. The outcome of each, once determined, will always have the same value.
 
 In computer science memoization is an important technique for optimizing programs by avoiding repeated work.
-In the probabilistic setting, such as in Church, memoization actually affects the meaning of the memoized function.
+In the probabilistic setting, such as in WebPPL, memoization actually affects the meaning of the memoized function.
 
 # Example: Bayesian Tug of War
 
@@ -401,7 +401,7 @@ Imagine a game of tug of war, where each person may be strong or weak, and may b
 If a person is lazy they only pull with half their strength.
 The team that pulls hardest will win.
 We assume that strength is a continuous property of an individual, and that on any match, each person has a 25% chance of being lazy.
-This Church program runs a tournament between several teams, mixing up players across teams.
+This WebPPL program runs a tournament between several teams, mixing up players across teams.
 Can you guess who is strong or weak, looking at the tournament results?
 
 ~~~~
