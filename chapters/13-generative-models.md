@@ -1,8 +1,7 @@
 ---
 layout: chapter
-title: 'Psych 201s: Generative models and functional programming in WebPPL'
-author: "mht"
-description: Alternative 'generative models' chapter from BDA course
+title: Psych 201s - Generative models and functional programming in WebPPL
+description: Alternative generative models chapter from BDA course
 ---
 
 We will switch to using WebPPL, which is what's called a *probabilistic programming language* (PPL). PPLs are languages for doing Bayesian inference (updating beliefs with data). 
