@@ -2,18 +2,13 @@
 layout: chapter
 title: Models for sequences of observations
 description: Handling ordered data sets
-custom_js:
-- assets/js/box2d.js
-- assets/js/phys.js
 ---
 
-% Models for sequences of observations
-% Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
+### Authors: Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
 
 <!-- Josh's HMM switching HW problem for this section? -->
 
-
-In the last chapter we learned about common [patterns of inference](patterns-of-inference.html) that can result from a few observations, given the right model structure. 
+In the last chapter we learned about common [patterns of inference](04-patterns-of-inference.html) that can result from a few observations, given the right model structure. 
 There are also many common patterns of *data* that arise from certain model structures. 
 It is common, for instance, to have a sequence of observations that we believe was each generated from the same causal process: a sequence of coin flips, a series of temperature readings from a weather station, the words in a sentence. 
 In this chapter we explore models for sequences of observations, moving from simple models to those with increasingly complex statistical dependence between the observations.
@@ -24,109 +19,106 @@ In this chapter we explore models for sequences of observations, moving from sim
 If the observations have *nothing* to do with each other, except that they have the same distribution, they are called *identically, independently distributed* (usually abbreviated to i.i.d.). For instance the values that come from calling `flip` are i.i.d. To verify this, let's first check whether the distribution of two flips in the sequence look the same (are "identical"):
 
 ~~~~
-(define (sequence) (repeat 10 flip))
+var genSequence = function() {return repeat(10, flip)};
 
-(define sequences (repeat 1000 sequence))
+var sequences = repeat(1000, genSequence)
 
-(hist (map first sequences) "first flip")
-(hist (map second sequences) "second flip")
+viz.auto(map(function(s) {return s[0]}, sequences), "first flip")
+viz.auto(map(function(s) {return s[1]}, sequences), "second flip")
 ~~~~
 
 Now let's check that the first and second flips are independent, by conditioning on the first and seeing that the distribution of the second is (approximately) unchanged:
 
 ~~~~
-(define (sequences first-val)
-  (mh-query
-   1000 10
-   (define s (repeat 10 flip))
-   (second s)
-   (equal? (first s) first-val)))
+var sequences = function(firstVal) {
+  return Infer({method: "enumerate"},
+    function() {
+      var s = repeat(10, flip);
+      condition(first(s) == firstVal);
+      return second(s);
+  })
+};
 
-(hist (sequences true)  "second if first is true")
-(hist (sequences false) "second if first is false")
+viz.auto(sequences(true),  "second if first is true")
+viz.auto(sequences(false), "second if first is false")
 ~~~~
 
-It is easy to build other i.i.d. sequences in Church, we simply construct a stochastic thunk (which, recall, represents a distribution) and evaluate it several times. For instance, here is an extremely simple model for the words in a sentence:
+It is easy to build other i.i.d. sequences in WebPPL; we simply construct a stochastic thunk (which, recall, represents a distribution) and evaluate it several times. For instance, here is an extremely simple model for the words in a sentence:
 
 ~~~~
-(define (thunk) (multinomial '(chef omelet soup eat work bake stop)
-                             '(0.0032 0.4863 0.0789 0.0675 0.1974 0.1387 0.0277)))
+var words = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop'] 
+var probs = [0.0032, 0.4863, 0.0789, 0.0675, 0.1974, 0.1387, 0.0277]
+var thunk = function() {return categorical({ps: probs, vs: words})};
 
-(repeat 10 thunk)
+repeat(10, thunk)
 ~~~~
 
 In this example the different words are indeed independent: you can show as above (by conditioning) that the first word tells you nothing about the second word.
 However, constructing sequences in this way it is easy to accidentally create a sequence that is not entirely independent. For instance:
 
 ~~~~
-(define word-probs (if (flip)
-'(0.0032 0.4863 0.0789 0.0675 0.1974 0.1387 0.0277)
-'(0.0699 0.1296 0.0278 0.4131 0.1239 0.2159 0.0194)))
+var words = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop'] 
+var probs = (flip() ?
+             [0.0032, 0.4863, 0.0789, 0.0675, 0.1974, 0.1387, 0.0277] :
+             [0.0699, 0.1296, 0.0278, 0.4131, 0.1239, 0.2159, 0.0194])
+var thunk = function() {return categorical({ps: probs, vs: words})};
 
-(define (thunk) (multinomial '(chef omelet soup eat work bake stop)
-                             word-probs))
-
-(repeat 10 thunk)
+repeat(10, thunk)
 ~~~~
 
-While the sequence looks very similar, the words are not independent: learning about the first word tells us something about the `word-probs`, which in turn tells us about the second word. Let's show this in a slightly simpler example:
+While the sequence looks very similar, the words are not independent: learning about the first word tells us something about the `probs`, which in turn tells us about the second word. Let's show this in a slightly simpler example:
 
 ~~~~
-(define (sequences first-val)
-  (mh-query
-   1000 10
-   (define prob (if (flip) 0.2 0.7))
-   (define (myflip) (flip prob))
-   (define s (repeat 10 myflip))
-   (second s)
-   (equal? (first s) first-val)))
+var sequences = function(firstVal) {
+  return Infer({method: "enumerate"}, 
+    function() {
+      var prob = flip() ? 0.2 : 0.7;
+      var s = repeat(10, function() {return flip(prob)});
+      condition(first(s) == firstVal);
+      return second(s);
+  });
+};
  
-(hist (sequences true)  "second if first is true")
-(hist (sequences false) "second if first is false")
+viz.auto(sequences(true),  "second if first is true")
+viz.auto(sequences(false), "second if first is false")
 ~~~~
 
-Conditioning on the first value tells us something about the second. This model is thus not i.i.d., but it does have a slightly weaker property: it is [exchangeable](http://en.wikipedia.org/wiki/Exchangeable_random_variables), meaning that the probability of a sequence is the same in any order.
+Conditioning on the first value tells us something about the second. This model is thus not i.i.d., but it does have a slightly weaker property: it is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), meaning that the probability of a sequence is the same in any order.
 
 It turns out that exchangeable sequences can always be modeled in the form used for the last example: 
-[de Finetti's theorem](http://en.wikipedia.org/wiki/De_Finetti\'s_theorem) says that, under certain technical conditions, any exchangeable sequence can be represented as follows, for some `latent-prior` and `observe` functions:
+[de Finetti's theorem](https://en.wikipedia.org/wiki/De_Finetti%27s_theorem) says that, under certain technical conditions, any exchangeable sequence can be represented as follows, for some `latentPrior` distribution and `observe` function:
 
-~~~~ {.norun}
-(define latent (latent-prior))
+~~~~ norun
+var latent = sample(latentPrior);
+var thunk = function() {return observe(latent)};
 
-(define (thunk) (observe latent))
-
-(repeat 10 thunk)
+repeat(10, thunk)
 ~~~~
 
-For example, consider the classic Polya urn model. Here, an urn contains some number of white and black balls. We draw $n$ samples as follows: we take a random ball from the urn and keep it, but add an additional $n_\text{replace}$ balls of the same color back into the urn. Here is this model in Church:
+For example, consider the classic Polya urn model. Here, an urn contains some number of white and black balls. We draw $n$ samples as follows: we take a random ball from the urn and keep it, but add an additional $n_\text{replace}$ balls of the same color back into the urn. Here is this model in WebPPL:
+
+**TODO: there seems to be a systematic difference between these (same was true in Church)**
+
+**-- de Finetti places more probability on "pure" sequences**
 
 ~~~~
-(define (urn white black replace samples)
-  (if (= samples 0)
-      '()
+var urn = function(white, black, replace, samples) {
+  if(samples == 0) {
+    return []
+  } else {
+    var ball = categorical({ps: [white, black], vs: ['w', 'b']});
+    var newWhite = ball == 'w' ? white + replace - 1 : white;
+    var newBlack = ball == 'b' ? black + replace - 1 : black;
+    return [ball].concat(urn(newWhite, newBlack, replace, samples - 1));
+  }
+};
 
-      (let*
-        ([ball (multinomial '(w b) (list white black))]
-         [add-white (if (equal? ball 'w) (- replace 1) 0)]
-         [add-black (if (equal? ball 'b) (- replace 1) 0)])
+var urnDist = Infer({method: 'enumerate'}, function() {
+  var seq = urn(1,2,4,3);
+  return seq.join('');
+})
 
-        (pair ball
-              (urn (+ white add-white)
-                    (+ black add-black)
-                    replace
-                    (- samples 1))))))
-
-(define _dist-urn
-  (enumeration-query
-   (define balls (urn 1 2 4 3))
-   (apply string-append balls)
-   true))
-
-;; reverse order of distribution entries to facilitate comparison with the next model
-(define dist-urn (list (reverse (first _dist-urn))
-(reverse (second _dist-urn))))
-
-(barplot dist-urn "Poly urn model")
+viz.auto(urnDist);
 ~~~~
 
 Observe that this model is exchangeable---permutations of a sequence all have the same probability (e.g., `bbw`, `bwb`, `wbb` have the same probability; `bww`, `wbw`, `wwb` do too).
@@ -134,23 +126,20 @@ Observe that this model is exchangeable---permutations of a sequence all have th
 Next, consider the de Finetti representation of this model:
 
 ~~~~
-(define (urn-deFinetti white black replace samples)
-  (define a (/ black replace))
-  (define b (/ white replace))
-  (define latent-prior (beta a b))
-  (define (thunk) (if (flip latent-prior) 'b 'w))
-  (repeat samples thunk))
+var urn_deFinetti = function(white, black, replace, samples) {
+  var latentPrior = beta({a: black / replace, b: white / replace});
+  return repeat(samples, function() {
+    return flip(latentPrior) ? 'b' : 'w';
+  })
+};
 
-(define samps-deFinetti
-  (mh-query
-   30000 2
-   ;; urn starts with 1 white and 2 black.
-   ;; we will draw 3 samples, adding an additional 4 balls after each.
-   (define balls (urn-deFinetti 1 2 4 3))
-   (apply string-append balls)
-   true))
+var urnDist = Infer({method: 'MCMC', kernel: 'MH', samples: 100000, burn: 5000}, 
+                    function() {
+  var seq = urn_deFinetti(1,2,4,3);
+  return seq.join('');
+})
 
-(hist samps-deFinetti "de Finetti Polya urn model")
+viz.auto(urnDist);
 ~~~~
 
 Here, we sample a shared latent parameter -- in this case, a sample from a beta distribution -- and, using this parameter, generate $n$ samples independently.
