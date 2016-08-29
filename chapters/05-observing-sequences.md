@@ -1,3 +1,12 @@
+---
+layout: chapter
+title: Models for sequences of observations
+description: Handling ordered data sets
+custom_js:
+- assets/js/box2d.js
+- assets/js/phys.js
+---
+
 % Models for sequences of observations
 % Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
 

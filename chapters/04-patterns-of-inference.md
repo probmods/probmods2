@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Patterns of inference
-description: TODO
+description: Setting up types of conditional dependence
 ---
 
 # Causal Dependence

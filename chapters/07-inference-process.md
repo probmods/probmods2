@@ -1,4 +1,11 @@
-% Algorithms for inference
+---
+layout: chapter
+title: Algorithms for inference
+description: Exploring different methods of conditioning
+custom_js:
+- assets/js/box2d.js
+- assets/js/phys.js
+---
 
 
 # The performance characteristics of different algorithms

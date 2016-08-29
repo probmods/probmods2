@@ -1,4 +1,8 @@
-% Learning as conditional inference
+---
+layout: chapter
+title: Learning as conditional inference
+description: Induction and prediction
+---
 
 <!--
 -revise learning as induction section:

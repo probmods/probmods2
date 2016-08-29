@@ -1,4 +1,11 @@
-% Inference about inference
+---
+layout: chapter
+title: Inference about inference
+description: Models on models on models
+custom_js:
+- assets/js/box2d.js
+- assets/js/phys.js
+---
 
 The `query` operator is an ordinary Church function, in the sense that it can occur anywhere that any other function can occur. In particular, we can construct a query with another query inside of it: this represents hypothetical inference *about* a hypothetical inference. Nested queries are particularly useful in modeling social cognition: reasoning about another agent, who is herself reasoning.
 
