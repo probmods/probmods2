@@ -19,11 +19,12 @@ Let's examine this notion of "causal dependence" a little more carefully.
 We say that expression A causally depends on expression B if it is necessary to evaluate B in order to evaluate A.
 (More precisely, expression A depends on expression B if it is ever necessary to evaluate B in order to evaluate A.) For instance, in this program `A` depends on `B` but not on `C` (the final expression depends on both `A` and `C`):
 
+
 ~~~~
-(define C (flip))
-(define B (flip))
-(define A (if B (flip 0.1) (flip 0.4)))
-(or A C)
+var C = flip()
+var B = flip()
+var A = B ? flip(0.1) : flip(0.4)
+or(A, C)
 ~~~~
 
 Note that causal dependence order is weaker than a notion of ordering in time---one expression might happen to be evaluated before another in time (for instance `C` before `A`), but without the second expression requiring the first.
@@ -32,27 +33,23 @@ Note that causal dependence order is weaker than a notion of ordering in time---
 For example, consider a simpler variant of our medical diagnosis scenario:
 
 ~~~~
-(define samples
-  (mh-query
-   200 100
+var marg = Infer(
+  {method: 'MCMC', samples: 200, lag: 100},
+  function() {
+    var smokes = flip(0.2);
+    var lungDisease = (smokes && flip(0.1)) || flip(0.001);
+    var cold = flip(0.02);
+    var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.01);
+    var fever = (cold && flip(0.3)) || flip(0.01);
+    var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+    var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+    
+    condition(cough)
+    return {cold: cold, lungDisease: lungDisease}
+  })
 
-   (define smokes (flip 0.2))
-
-   (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-   (define cold (flip 0.02))
-
-   (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.01)))
-   (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-   (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-   (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-   (list cold lung-disease)
-
-   cough))
-
-(hist (map first samples) "cold")
-(hist (map second samples) "lung-disease")
-(hist samples "cold, lung-disease")
+viz.marginals(marg)
+viz.auto(marg)
 ~~~~
 
 Here, `cough` depends causally on both `lung-disease` and `cold`, while `fever` depends causally on `cold` but not `lung-disease`.
