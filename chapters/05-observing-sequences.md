@@ -97,10 +97,6 @@ repeat(10, thunk)
 
 For example, consider the classic Polya urn model. Here, an urn contains some number of white and black balls. We draw $n$ samples as follows: we take a random ball from the urn and keep it, but add an additional $n_\text{replace}$ balls of the same color back into the urn. Here is this model in WebPPL:
 
-**TODO: there seems to be a systematic difference between these (same was true in Church)**
-
-**-- de Finetti places more probability on "pure" sequences**
-
 ~~~~
 var urn = function(white, black, replace, samples) {
   if(samples == 0) {
@@ -134,9 +130,9 @@ var urn_deFinetti = function(white, black, replace, samples) {
 };
 
 var urnDist = Infer({method: 'MCMC', kernel: 'MH', samples: 100000, burn: 5000}, 
-                    function() {
-  var seq = urn_deFinetti(1,2,4,3);
-  return seq.join('');
+  function() {
+    var seq = urn_deFinetti(1,2,4,3);
+    return seq.join('');
 })
 
 viz.auto(urnDist);
@@ -145,67 +141,89 @@ viz.auto(urnDist);
 Here, we sample a shared latent parameter -- in this case, a sample from a beta distribution -- and, using this parameter, generate $n$ samples independently.
 Up to sampling error, we obtain the same distribution on sequences of draws.
 
+
+**TODO: not sure if this is true: there seems to be a systematic difference between these (same was true in Church)**
+
+**-- de Finetti places more probability on "pure" sequences**
+
+
 # Markov Models
 
 Exchangeable sequences don't depend on the order of the observations, but often the order *is* important. For instance, the temperature today is highly correlated with the temperature yesterday---if we were building a model of temperature readings we would want to take this into account. 
 The simplest assumption we can make to include the order of the observations is that each observation depends on the previous observation, but not (directly) on the ones before that. This is called a *Markov model* (or, in linguistics and biology, a *bi-gram model*). Here is a simple Markov model for Boolean values:
 
 ~~~~
-(define (markov prev-obs n)
-  (if (= n 0)
-      '()
-      (let ((next-obs (if prev-obs (flip 0.9) (flip 0.1))))
-        (pair next-obs (markov next-obs (- n 1))))))
+var markov = function(prevObs, n) {
+  if(n == 0) {
+    return [];
+  } else {
+    var nextObs = prevObs ? flip(0.9) : flip(0.1);
+    return [nextObs].concat(markov(nextObs, n - 1));
+  }
+};
 
-(markov true 10)
+markov(true, 10)
 ~~~~
 
-Notice that the sequences sampled from this model have "runs" of true or false more than in the i.i.d. or exchangeable models above. This is because the `next-obs` will tend to be similar to the `prev-obs`. How would you adjust this model to make it tend to switch on each observation, rather than tending to stay the same?
+Notice that the sequences sampled from this model have "runs" of true or false more than in the i.i.d. or exchangeable models above. This is because the `nextObs` will tend to be similar to the `prevObs`. How would you adjust this model to make it tend to switch on each observation, rather than tending to stay the same?
 
 We can use a Markov model as a better (but still drastically simplified) model for sequences of words in language.
 
 ~~~~ 
-(define vocabulary '(chef omelet soup eat work bake stop))
+var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop'];
+var transition = function(word) {
+  var ps = (word == 'start' ? [0.0032, 0.4863, 0.0789, 0.0675, 0.1974, 0.1387, 0.0277] :
+            word == 'chef' ? [0.0699, 0.1296, 0.0278, 0.4131, 0.1239, 0.2159, 0.0194] :
+            word == 'omelet' ? [0.2301, 0.0571, 0.1884, 0.1393, 0.0977, 0.1040, 0.1831] :
+            word == 'soup' ?  [0.1539, 0.0653, 0.0410, 0.1622, 0.2166, 0.2664, 0.0941] :
+            word == 'eat' ? [0.0343, 0.0258, 0.6170, 0.0610, 0.0203, 0.2401, 0.0011] :
+            word == 'work' ? [0.0602, 0.2479, 0.0034, 0.0095, 0.6363, 0.02908, 0.0133] :
+            word == 'bake' ? [0.0602, 0.2479, 0.0034, 0.0095, 0.6363, 0.02908, 0.0133] :
+            console.error("word (" + word + ") not recognized"))
+  return categorical({vs: vocab, ps: ps});
+}
 
-(define (sample-words last-word)
-  (if (equal? last-word 'stop)
-      '()
-      (pair last-word
-            (let ((next-word 
-                   (case last-word
-                         (('start) (multinomial vocabulary '(0.0032 0.4863 0.0789 0.0675 0.1974 0.1387 0.0277)))
-                         (('chef)  (multinomial vocabulary '(0.0699 0.1296 0.0278 0.4131 0.1239 0.2159 0.0194)))
-                         (('omelet)(multinomial vocabulary '(0.2301 0.0571 0.1884 0.1393 0.0977 0.1040 0.1831)))  
-                         (('soup)  (multinomial vocabulary '(0.1539 0.0653 0.0410 0.1622 0.2166 0.2664 0.0941)))
-                         (('eat)   (multinomial vocabulary '(0.0343 0.0258 0.6170 0.0610 0.0203 0.2401 0.0011)))
-                         (('work)  (multinomial vocabulary '(0.0602 0.2479 0.0034 0.0095 0.6363 0.02908 0.0133)))
-                         (('bake)  (multinomial vocabulary '(0.0602 0.2479 0.0034 0.0095 0.6363 0.02908 0.0133)))
-                         (else 'error))))
-              (sample-words next-word)))))
+var sampleWords = function(lastWord) {
+  if(lastWord == 'stop') {
+    return [];
+  } else {
+    var nextWord = transition(lastWord);
+    return [lastWord].concat(sampleWords(nextWord));
+  }
+}
 
-
-(sample-words 'start) 
+sampleWords('start')
 ~~~~
 
-Each word is sampled from a multinomial distribution whose parameters are fixed, depending on the previous word (using a [case statement](appendix-scheme.html#useful-syntax)). Notice that we control the length of the generated list here not with a fixed parameter, but by using the model itself: We start the recursion by sampling given the special symbol `start`.  When we sample the symbol `stop` we end the recursion. Like the geometric distribution, this [stochastic recursion](generative-models.html#stochastic-recursion) can produce unbounded structures---in this case lists of words of arbitrary length.
+Each word is sampled from a categorical distribution whose parameters are fixed, depending on the previous word, with this dependence specified in the `transition` function. 
+Notice that we control the length of the generated list here not with a fixed parameter, but by using the model itself: We start the recursion by sampling given the special symbol `start`.  
+When we sample the symbol `stop` we end the recursion. 
+Like the geometric distribution, this [stochastic recursion](02-generative-models.html#stochastic-recursion) can produce unbounded structures---in this case lists of words of arbitrary length.
 
 The above code may seem unnecessarily complex because it explicitly lists every transition probability. Suppose that we put a prior distribution on the multinomial transitions instead. Using `mem` this is very straightforward:
 
 ~~~~
-(define vocabulary '(chef omelet soup eat work bake stop))
-  
-(define word->distribution
-  (mem (lambda (word) (dirichlet (make-list (length vocabulary) 1)))))
-  
-(define (transition word)
-  (multinomial vocabulary (word->distribution word)))
-  
-(define (sample-words last-word)
-  (if (equal? last-word 'stop)
-      '()
-      (pair last-word (sample-words (transition last-word)))))
+var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop'];
+var ones = function(n) {return Vector(repeat(n, function() {return 1}))};
 
-(sample-words 'start)
+var wordToDistribution = mem(function(word) {
+  return dirichlet(ones(vocab.length))
+});
+
+var transition = function(word) {
+  return categorical({ps: wordToDistribution(word), vs: vocab});
+}
+
+var sampleWords = function(lastWord) {
+  if(lastWord == 'stop') {
+    return [];
+  } else {
+    var nextWord = transition(lastWord);
+    return [lastWord].concat(sampleWords(nextWord));
+  }
+}
+
+sampleWords('start')
 ~~~~
 
 This is very much like the way we created an exchangeable model above, except instead of one unknown probability list, we have one for each previous word. Models like this are often called ''hierarchical'' n-gram models. We consider [hierarchical models](hierarchical-models.html) in more detail in a later chapter.
