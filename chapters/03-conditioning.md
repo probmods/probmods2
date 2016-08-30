@@ -230,7 +230,7 @@ Writing models in WebPPL allows the flexibility to build complex random expressi
 Returning to the earlier example of a series of tug-of-war matches, we can use query to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
 ~~~~
-var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 100}, 
+var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 25000}, 
   function () {
     var strength = mem(function (person) { gaussian(0, 1)})
     var lazy = function (person) { flip(1/3) }
@@ -249,7 +249,7 @@ var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 100},
     return strength('bob')
 })
 print('Expected strength: ' + expectation(dist))
-viz.table(dist)
+viz.auto(dist)
 ~~~~
 
 Try varying the number of different teams and teammates that Bob plays with. How does this change the estimate of Bob's strength?
@@ -260,7 +260,7 @@ A model very similar to this was used in @Gerstenberg2012 to predict human judge
 We can form many complex queries from this simple model. We could ask how likely a team of Bob and Mary is to win over a team of Jim and Sue, given that Mary is at least as strong as sue, and Bob was on a team that won against Jim previously:
 
 ~~~~
-var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 100}, 
+var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 10000}, 
   function () {
     var strength = mem(function (person) { gaussian(0, 1)})
     var lazy = function (person) { flip(1/3) }
@@ -273,13 +273,13 @@ var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 100},
       totalPulling(team1) > totalPulling(team2) ? 'team1' : 'team2'
     }
 
-    condition(strength(['mary']) >= strength('sue') &&
+    condition(strength('mary') >= strength('sue') &&
               winner(['bob','francis'], ['tom','jim']) == 'team1')
 
     return winner(['bob','mary'], ['jim','sue']) == 'team1'
 })
 print('Expected strength: ' + expectation(dist))
-viz.table(dist)
+viz.auto(dist)
 ~~~~
 
 # Example: Inverse intuitive physics
