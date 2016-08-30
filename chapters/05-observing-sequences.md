@@ -231,59 +231,57 @@ This is very much like the way we created an exchangeable model above, except in
 
 # Example: Subjective Randomness
 
-<!-- put in zenith radio / representativeness as an example -->
 What does a random sequence look like? Is 00101 more random than 00000? Is the former a better example of a sequence coming from a fair coin than the latter? Most people say so, but notice that if you flip a fair coin, these two sequences are equally probable. Yet these intuitions about randomness are pervasive and often misunderstood: In 1936 the Zenith corporation attempted to test the hypothesis the people are sensitive to psychic transmissions. During a radio program, a group of psychics would attempt to transmit a randomly drawn sequence of ones and zeros to the listeners. Listeners were asked to write down and then mail in the sequence they perceived. The data thus generative showed no systematic effect of the transmitted sequence---but it did show a strong preference for certain sequences [@Goodfellow1938]. 
 The preferred sequences included 00101, 00110, 01100, and 01101.
 
 @Griffiths2001 suggested that we can explain this bias if people are considering not the probability of the sequence under a fair-coin process, but the probability that the sequence would have come from a fair process as opposed to a non-uniform (trick) process:
 
 ~~~~
-(define (samples sequence)
-  (mh-query
-   100 10
-   
-   (define isfair (flip))
-   
-   (define (coin) (flip (if isfair 0.5 0.2)))
-   
-   
-   isfair
-   
-   (condition (equal? sequence (repeat 5 coin)))))
+var samples = function(sequence) {
+  return Infer({method: 'enumerate'}, 
+    function () {
+      var isFair = flip()
+      var realWeight = isFair ? .5 : .2;
+      var coin = function() {return flip(realWeight)};
+      condition(_.isEqual(sequence, repeat(5, coin)))
+      return isFair
+  })
+}
 
-
-(hist (samples (list false false true false true)) "00101 is fair?")
-(hist (samples (list false false false false false)) "00000 is fair?")
+print("00101 is fair?")
+viz.hist(samples([false, false, true, false, true]))
+print("00000 is fair?")
+viz.hist(samples([false, false, false, false, false]))
 ~~~~
 
 This model posits that when considering randomness, as well as when imagining random sequences, people are more concerned with distinguishing a "truly random" generative process from a trick process. This version of the model doesn't think 01010 looks any less random than 01100 (try it), because even its "trick process" is i.i.d. and hence does not distinguish order.
 We could extend the model to consider a Markov model as the alternative (trick) generative process:
 
 ~~~~
-(define (samples sequence)
-  (mh-query
-   100 10
-   
-   (define isfair (flip))
-   
-   (define (transition prev) (flip (if isfair 
-                                       0.5 
-                                       (if prev 0.1 0.9))))
-   
-   (define (markov prev n)
-     (if (= 0 n)
-         '()
-         (let ((next (transition prev)))
-           (pair next (markov next (- n 1))))))
-   
-   
-   isfair
-   
-   (condition (equal? sequence (markov (flip) 5)))))
+var markov = function(isFair, prev, n) {
+  if(n == 0) {
+    return [];
+  } else {
+    var next = flip(isFair ? .5 :
+                    prev ? 0.1 : 0.9);
+    return [next].concat(markov(isFair, next, n - 1));
+  }
+}
 
+var samples = function(sequence) {
+  return Infer({method: 'enumerate'}, 
+    function () {
+      var isFair = flip()
+      var init = flip()
+      condition(_.isEqual(sequence, markov(isFair, init, sequence.length)));
+      return isFair
+  })
+}
 
-(hist (samples (list false true false true false)) "01010 is fair?")
-(hist (samples (list true false false true false)) "01100 is fair?")
+print("10101 is fair?")
+viz.hist(samples([true, false, true, false, true]))
+print("01101 is fair?")
+viz.hist(samples([false, true, true, false, true]))
 ~~~~
 
 This version thinks that alternating sequences are non-random, but there are other non-uniform generative processes (such as all-true) that it doesn't detect. How could we extend this model to detect more non-random sequences?
@@ -294,30 +292,33 @@ This version thinks that alternating sequences are non-random, but there are oth
 Another popular model in computational linguistics is the hidden Markov model (HMM). The HMM extends the Markov model by assuming that the "actual" states aren't observable. Instead there is an "observation model" that generates an observation from each "hidden state". We use the same construction as above to generate an unknown observation model.
 
 ~~~~
-(define states '(s1 s2 s3 s4 s5 s6 s7 s8 stop))
+var ones = function(n) {return Vector(repeat(n, function() {return 1}))};
+var states = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 'stop'];
+var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake']
 
-(define vocabulary '(chef omelet soup eat work bake))
+var stateToObsModel = mem(function(state) {
+  return dirichlet(ones(vocab.length));
+})
 
+var observation = function(state) {
+  return categorical({ps: stateToObsModel(state), vs: vocab})
+}
 
-(define state->observation-model
-  (mem (lambda (state) (dirichlet (make-list (length vocabulary) 1)))))
+var stateToTransitionModel = mem(function(state) {
+  return dirichlet(ones(states.length));
+})
 
-(define (observation state)
-  (multinomial vocabulary (state->observation-model state)))
+var transition = function(state) {
+  return categorical({ps: stateToTransitionModel(state), vs: states});
+}
 
-(define state->transition-model
-  (mem (lambda (state) (dirichlet (make-list (length states) 1)))))
+var sampleWords = function(lastState) {
+  return (lastState == 'stop' ? 
+          [] : 
+          [observation(lastState)].concat(sampleWords(transition(lastState))));
+}
 
-(define (transition state)
-  (multinomial states (state->transition-model state)))
-
-
-(define (sample-words last-state)
-  (if (equal? last-state 'stop)
-      '()
-      (pair (observation last-state) (sample-words (transition last-state)))))
-
-(sample-words 'start)
+sampleWords('start')
 ~~~~
 
 
@@ -325,78 +326,46 @@ Another popular model in computational linguistics is the hidden Markov model (H
 
 The models above generate sequences of words, but lack constituent structure (or "hierarchical structure" in the linguistic sense). 
 
-Probabilistic context-free grammars (PCFGs) are a straightforward (and canonical) way to generate sequences of words with constituent structure. There are many ways to write a PCFG in Church. One especially direct way (inspired by Prolog programming) is to let each non-terminal be represented by a Church procedure; here constituency is embodied by one procedure calling another---that is by causal dependence.
+Probabilistic context-free grammars (PCFGs) are a straightforward (and canonical) way to generate sequences of words with constituent structure. There are many ways to write a PCFG in WebPPL. One especially direct way (inspired by Prolog programming) is to let each non-terminal be represented by a WebPPL function; here constituency is embodied by one procedure calling another---that is by causal dependence.
 
 ~~~~
-(define (sample distribution) (distribution))
+var uniformDraw = function (xs) {return xs[randomInteger(xs.length)]};
 
-(define (terminal t) (lambda () t))
+var D  = function() {return uniformDraw(['the', 'a'])};
 
-(define D (lambda ()
-            (map sample
-                 (multinomial
-                  (list (list (terminal 'the) ) 
-                        (list (terminal 'a)))
-                  (list (/ 1 2) (/ 1 2))))))
-(define N (lambda ()
-            (map sample 
-                 (multinomial
-                  (list (list (terminal 'chef)) 
-                        (list (terminal 'soup)) 
-                        (list (terminal 'omelet)))
-                  (list (/ 1 3) (/ 1 3) (/ 1 3))))))
-(define V (lambda ()
-            (map sample
-                 (multinomial
-                  (list (list (terminal 'cooks)) 
-                        (list (terminal 'works)))
-                  (list (/ 1 2) (/ 1 2))))))                
-(define A (lambda ()
-            (map sample
-                 (multinomial
-                  (list (list (terminal 'diligently)))
-                  (list (/ 1 1))))))
-(define AP (lambda ()
-             (map sample
-                  (multinomial
-                   (list (list A))
-                   (list (/ 1 1))))))
-(define NP (lambda ()
-             (map sample
-                  (multinomial
-                   (list (list D N))
-                   (list (/ 1 1))))))
-(define VP (lambda ()
-             (map sample
-                  (multinomial
-                   (list (list V AP) 
-                         (list V NP))
-                   (list (/ 1 2) (/ 1 2))))))
-(define S (lambda ()
-            (map sample 
-                 (multinomial
-                  (list (list NP VP))
-                  (list (/ 1 1))))))
-(S)
+var N  = function() {return uniformDraw(['chef', 'soup', 'omelet'])};
+
+var V  = function() {return uniformDraw(['cooks', 'works'])}
+
+var A  = function() {return uniformDraw(['diligently'])}
+
+var AP = function() {return uniformDraw([A()])}
+
+var NP = function() {return [D(), N()]}
+
+var VP = function() {return uniformDraw([[V(), AP()], 
+                                         [V(), NP()]])}
+
+var S  = function() {return [NP(), VP()]}
+
+S()
 ~~~~
-
-We have definied a utility procedure `sample`, which applies a thunk (to no arguments), resulting in a sample.
 
 Now, let's look at one of the procedures defining our PCFG in detail.
 
-	(define VP (lambda ()
-	             (map sample
-	                  (multinomial
-	                   (list (list V AP) 
-	                         (list V NP))
-	                   (list (/ 1 2) (/ 1 2))))))
+~~~~norun
+var VP = function() {return uniformDraw([[V(), AP()], 
+                                         [V(), NP()]])}
+~~~~
 
-When `VP` is called it `map`s `sample` across a list which is sampled from a multinomial distribution: in this case either `(V AP)` or `(V NP)`. These two lists correspond to the "right-hand sides" (RHSs) of the rules $VP \longrightarrow V\ AP$ and $VP \longrightarrow V\ NP$ in the standard representation of PCFGs. These are lists that consist of symbols which are actually the names of other procedures. Therefore when `sample` is applied to them, they themselves recursively sample their RHSs until no more recursion can take place.  Note that we have wrapped our terminal symbols up as thunks so that when they are sampled they deterministically return the terminal symbol.
+When `VP` is called, it samples one of two possible expansions, in this case either `[V AP]` or `[V NP]`. These two lists correspond to the "right-hand sides" (RHSs) of the rules $VP \longrightarrow V\ AP$ and $VP \longrightarrow V\ NP$ in the standard representation of PCFGs. These are lists that consist of symbols which are actually the names of other procedures. Therefore when we sample from them, they themselves recursively sample their RHSs until no more recursion can take place.  Note that our terminal symbols deterministically return the terminal symbol.
 
 While it is most common to use PCFGs as models of strings (for linguistic applications), they can be useful as components of any probabilistic model where constituent structure is required. For instance, in a later chapter we will see how PCFGs can be used to construct the hypothesis space for models of concept learning.
 
 
 # Unfold
+
+**TODO: Do we want to keep this section? Not sure how important it is**
 
 You may notice that the basic structure of computation was repeated in each non-terminal procedure for the PCFG above. Similarly, each `case` in the Markov model did the same thing.
  We can abstract out these computation pattern as a higher-order procedure. For the Markov model, where we build a list, this is called `unfold`---it describes the pattern of recursively building lists. (There is a related higher-order procedure called `fold` that can be used to process lists, rather than build them.)
