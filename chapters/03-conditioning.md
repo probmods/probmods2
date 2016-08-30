@@ -244,7 +244,7 @@ var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 100},
     }
 
     condition(winner(['bob', 'mary'], ['tom', 'sue']) == 'team1' &&
-              winner(['bob', 'sue'], ['tom', 'jim']) == 'team2')
+              winner(['bob', 'sue'], ['tom', 'jim']) == 'team1')
 
     return strength('bob')
 })
