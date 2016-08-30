@@ -28,3 +28,11 @@ note that this immediately follows from baz quux
 ```
 
 - as shown above, use `\mid` for the vertical pipe (`|` screws up the tex rendering engine)
+
+**pushing to production**
+
+```sh
+make deploy
+```
+
+(requires ssh access to probmods.org; send long your pubkey to enable this)
