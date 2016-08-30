@@ -361,14 +361,14 @@ flip() == flip()
 ~~~~
 
 ~~~~
-var cacheFlip = cache(flip);
-cacheFlip() == cacheFlip()
+var memFlip = mem(flip);
+memFlip() == memFlip()
 ~~~~
 
 Now returning to the eye color example, we can represent the notion that eye color is random, but each person has a fixed eye color.
 
 ~~~~
-var eyeColor = cache(function (person) {
+var eyeColor = mem(function (person) {
     return uniformDraw(['blue', 'green', 'brown']);
 });
 [eyeColor('bob'), eyeColor('alice'), eyeColor('bob')];
@@ -380,7 +380,7 @@ Memoizing stochastic functions thus provides a powerful toolkit to represent and
 For instance, here we define a function `flipN` that encodes the outcome of the $$n$$th flip of a particular coin:
 
 ~~~~
-var flipN = cache(function (n) {
+var flipN = mem(function (n) {
     return flip()
 });
 [
@@ -405,7 +405,7 @@ This WebPPL program runs a tournament between several teams, mixing up players a
 Can you guess who is strong or weak, looking at the tournament results?
 
 ~~~~
-var strength = cache(function (person) { gaussian(0, 1) });
+var strength = mem(function (person) { gaussian(0, 1) });
 var lazy = function (person) { flip(0.25) }
 var pulling = function (person) { lazy(person) ? strength(person)/2 : strength(person);}
 var totalPulling = function (team) { sum(map(pulling, team)) }
