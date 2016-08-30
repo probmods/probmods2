@@ -230,10 +230,9 @@ Writing models in WebPPL allows the flexibility to build complex random expressi
 Returning to the earlier example of a series of tug-of-war matches, we can use query to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
 ~~~~
-// TODO: cache isn't mem
 var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 100}, 
   function () {
-    var strength = cache(function (person) { gaussian(0, 1)})
+    var strength = mem(function (person) { gaussian(0, 1)})
     var lazy = function (person) { flip(1/3) }
     var totalPulling = function (team) {
       sum(map(function (person) {
@@ -263,7 +262,7 @@ We can form many complex queries from this simple model. We could ask how likely
 ~~~~
 var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 100}, 
   function () {
-    var strength = cache(function (person) { gaussian(0, 1)})
+    var strength = mem(function (person) { gaussian(0, 1)})
     var lazy = function (person) { flip(1/3) }
     var totalPulling = function (team) {
       sum(map(function (person) {
