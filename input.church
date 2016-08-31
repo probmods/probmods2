@@ -1,0 +1,34 @@
+;; (define shortness-of-breath -3.14)
+
+;; (define foo (+ 5 (* 3 9)))
+
+
+
+;;(define foo (+ 1 3))
+
+;;(define foo (+ 1 3))
+
+
+
+(define (bar x)
+  (+ x 3)
+  )
+
+
+(define (sample)
+  (define smokes (flip 0.2))
+
+  (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
+  (define cold true) ;we intervene to make cold true.
+
+  (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.01)))
+  (define fever (or (and cold (flip 0.3)) (flip 0.01)))
+  (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
+  (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
+
+  (list cough cold))
+
+;; (define samples (repeat 200 sample))
+
+;; (hist (map first samples) "cough")
+;; (hist (map second samples) "cold")
