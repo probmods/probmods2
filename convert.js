@@ -81,27 +81,60 @@ var code = fs.readFileSync(argv[0], 'utf8');
 
 var tokens = tokenize(code);
 
+// var desugarSingleQuotes = function(_tokens) {
+//   var tokens = _.clone(_tokens)
+//   var hits = _.where(tokens, '\'');
+//   var n = tokens.length;
+
+//   _.each(hits,
+//          function(i) {
+//            if (i == n - 1) {
+//              throw new Error('dsgr single quote: single quote at end of file')
+//            }
+//            // '(a b c d) => (quote a b c)
+//            if (_.isArray(tokens[i + 1])) {
+//              tokens.splice(i, 2,
+
+//                           )
+//            }
+//          })
+// }
+
+// TODO: explain why this works
 var sexpify = function(tokens) {
   var stack = [];
   var result = [];
+  var quoting = false,
+      quoteParenCount = 0;
 
+  // just handle single quotes (i.e., symbols and short hand lists) in-line here
+  // because we don't actually use quasiquote, unquote, or unquote-splicing in
+  // the textbook
   var currentList;
   _.each(tokens,
-         function(token) {
+         function(token, i) {
            currentList = _.last(stack) || [];
 
            if (token == '(') {
              // make a new array
              var newList = [];
+             if (quoting) {
+               newList.push('quote');
+               quoting = false;
+             }
              stack.push(newList);
              //currentList.push(newList);
            } else if (token == ')') {
              var toPush = stack.pop();
              (_.last(stack) || result).push( toPush )
+           } else if (token == '\'') {
+             quoting = true;
            } else {
-             currentList.push(token)
+             currentList.push(quoting ? '"' + token + '"' : token);
+             quoting = false;
            }
 
+           // debugging:
            // console.log(token)
            // console.log(stack)
            // console.log(result)
@@ -114,5 +147,68 @@ var sexpify = function(tokens) {
 }
 
 var sexps = sexpify(tokens);
+//console.log(JSON.stringify(sexps,null,1));
+//console.log(sexps);
+//process.exit()
 
-console.log(JSON.stringify(sexps,null,1));
+
+var rules = [];
+var addRule = function(name, trigger, replacer) {
+  rules.push({name: name, trigger: trigger, replacer: replacer})
+}
+
+addRule('int',
+        function(s) { return _.isString(s) && !_.isNaN(parseInt(s)) },
+        function(s) { return parseInt(s) })
+
+addRule('symbol',
+        function(s) { return _.isString(s) && s[0] == '"' && s[s.length - 1] == '"' },
+        function(s) { return s })
+
+addRule('string',
+        function(s) { return _.isString(s) && s[0] == '"' && s[s.length - 1] == '"' },
+        function(s) { return s })
+
+addRule('list-shorthand',
+        function(s) { return _.isArray(s) && s[0] == 'quote' },
+        function(s) { return '[' + s.slice(1).map(compile).join(', ') + ']'})
+
+
+// (define a b) --> var a = b;
+addRule('var',
+        function(s) { return s.length == 3 && s[0] == 'define' && !_.isArray(s[1]) },
+        function(s) { return 'var ' + s[1] + ' = ' + compile(s[2]) + ';'; })
+
+// (if a else b)
+// addRule('if',
+//         function(s) { return s.length == 3 && s[0] == 'define' && !_.isArray(s[1]) },
+//         function(s) { return 'var ' + s[1] + ' = ' + compile(s[2]) + ';'; })
+
+// mh-query
+
+// rejection-query
+
+// enumeration-query
+
+
+//console.log(rules)
+
+var compile = function(s) {
+  // top level program: map over sexps and compile each
+
+
+  for(var i = 0, ii = rules.length; i < ii; i++) {
+    var rule = rules[i];
+    var name = rule.name,
+        trigger = rule.trigger,
+        replacer = rule.replacer;
+    if (trigger(s)) {
+      return replacer(s)
+    }
+  }
+
+  throw new Error('unmatched sexp ' + JSON.stringify(s, null, 1))
+}
+
+console.log(compile(['define','a','"foo"']))
+console.log(compile([ 'define', 'foo', [ 'quote', '1', '2', '3' ] ]))
