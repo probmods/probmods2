@@ -7,72 +7,53 @@ custom_js:
 - assets/js/phys.js
 ---
 
-The `query` operator is an ordinary Church function, in the sense that it can occur anywhere that any other function can occur. In particular, we can construct a query with another query inside of it: this represents hypothetical inference *about* a hypothetical inference. Nested queries are particularly useful in modeling social cognition: reasoning about another agent, who is herself reasoning.
-
-(There are some implementation-specific restrictions on nesting queries: the `rejection-query` operator can always be nested, while nesting `mh-query` requires special syntax.)
+The `Infer` operator is an ordinary WebPPL function, in the sense that it can occur anywhere that any other function can occur. In particular, we can construct an inference containing another inference inside of it: this represents hypothetical inference *about* a hypothetical inference. Nested queries are particularly useful in modeling social cognition: reasoning about another agent, who is herself reasoning.
 
 # Prelude: Thinking About Assembly Lines
 
 Imagine a factory where the widget-maker makes a stream of widgets, and the widget-tester removes the faulty ones. You don't know what tolerance the widget tester is set to, and wish to infer it. We can represent this as:
 
 ~~~~
-(define (sample)
- (rejection-query
-  
-  ;;this machine makes a widget -- which we'll just represent with a real number:
-  (define (widget-maker)  (multinomial '(.2 .3 .4 .5 .6 .7 .8) '(.05 .1 .2 .3 .2 .1 .05)))
-  
-  ;;this machine tests widgets as they come out of the widget-maker, letting
-  ;; through only those that pass threshold:
-  (define (next-good-widget)
-    (define widget (widget-maker))
-    (if (> widget threshold)
-        widget
-        (next-good-widget)))
-  
-  ;;but we don't know what threshold the widget tester is set to:
-  
-  (define threshold  (multinomial '(.3 .4 .5 .6 .7) '(.1 .2 .4 .2 .1)))
-  
-  ;;what is the threshold?
-  threshold
-  
-  ;;if we see this sequence of good widgets:
-  (equal? (repeat 3 next-good-widget)
-          '(0.6 0.7 0.8))))
+// this machine makes a widget -- which we'll just represent with a real number:
+var widgetMaker = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
+                               ps: [.05, .1, .2, .3, .2, .1, .05]})
 
-(hist (repeat 20 sample))
+var widgets = Infer({method: 'MCMC', samples: 20000}, function() {
+    var threshold = categorical({vs: [.3, .4, .5, .6, .7],
+                                 ps: [.1, .2, .4, .2, .1]})
+    var nextGoodWidget = function() {
+      var widget = sample(widgetMaker);
+      return widget > threshold ? widget : nextGoodWidget();
+    }
+    var widgetSeq = repeat(3, nextGoodWidget);
+    condition(_.isEqual([.6, .7, .8], widgetSeq))
+    return [threshold].join("");
+})
+
+viz.auto(widgets)
 ~~~~
 
 But notice that the definition of next-good-widget is exactly like the definition of rejection sampling! We can re-write this as a nested-query model:
 
 ~~~~
-(define (sample)
- (rejection-query
-  
-  ;;this machine makes a widget -- which we'll just represent with a real number:
-  (define (widget-maker)  (multinomial '(.2 .3 .4 .5 .6 .7 .8) '(.05 .1 .2 .3 .2 .1 .05)))
-  
-  ;;this machine tests widgets as they come out of the widget-maker, letting
-  ;; through only those that pass threshold:
-  (define (next-good-widget)
-    (rejection-query
-     (define widget (widget-maker))
-     widget
-     (> widget threshold)))
-  
-  ;;but we don't know what threshold the widget tester is set to:
-  
-  (define threshold  (multinomial '(.3 .4 .5 .6 .7) '(.1 .2 .4 .2 .1)))
-  
-  ;;what is the threshold?
-  threshold
-  
-  ;;if we see this sequence of good widgets:
-  (equal? (repeat 3 next-good-widget)
-          '(0.6 0.7 0.8))))
-  
-(hist (repeat 20 sample))
+// this machine makes a widget -- which we'll just represent with a real number:
+var widgetMaker = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
+                               ps: [.05, .1, .2, .3, .2, .1, .05]})
+
+var widgets = Infer({method: 'enumerate'}, function() {
+  var threshold = categorical({vs: [.3, .4, .5, .6, .7],
+                               ps: [.1, .2, .4, .2, .1]})
+  var nextGoodWidget = Infer({method: 'enumerate'}, function() {
+    var widget = sample(widgetMaker);
+    condition(widget > threshold);
+    return widget;
+  });
+  var widgetSeq = repeat(3, function() {sample(nextGoodWidget)});
+  condition(_.isEqual([.6, .7, .8], widgetSeq))
+  return [threshold].join("");
+})
+
+viz.auto(widgets)
 ~~~~
 
 Rather than thinking about the details inside the widget tester, we are now abstracting to represent that the machine correctly chooses a good widget (by some means).
@@ -82,67 +63,64 @@ Rather than thinking about the details inside the widget tester, we are now abst
 How can we capture our intuitive theory of other people? Central to our
 understanding is the principle of rationality: an agent tends to choose actions that
 she expects to lead to outcomes that satisfy her goals. (This is a slight
-restatement of the principle as discussed in @Baker:2009ti, building on earlier work by @Dennett:1989wh, among others.) We can represent this in Church by a query---an agent infers an action which will lead to their goal being satisfied:
+restatement of the principle as discussed in @Baker:2009ti, building on earlier work by @Dennett:1989wh, among others.) We can represent this in WebPPL as an inference over actions---an agent reasons about actions that lead to their goal being satisfied:
 
-~~~~
-(define (choose-action goal? transition state)
-  (query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
+~~~~norun
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer(..., function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
 ~~~~
 
-The function `transition` describes the outcome of taking a particular action in a particular state, the predicate `goal?` determines whether or not a state accomplishes the goal, the input `state` represents the current state of the world. The function `action-prior` used within `choose-action` represents an a-priori tendency towards certain actions.
+The function `transition` describes the outcome of taking a particular action in a particular state, the predicate `goalSatisfied` determines whether or not a state accomplishes the goal, the input `state` represents the current state of the world. The distribution `actionPrior` used within `chooseAction` represents an a-priori tendency towards certain actions.
 
 For instance, imagine that Sally walks up to a vending machine wishing to have a cookie. Imagine also that we know the mapping between buttons (potential actions) and foods (outcomes). We can then predict Sally's action:
 
 ~~~~
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
+var haveCookie = function(obj) {return obj == 'cookie'};
+var vendingMachine = function(state, action) {
+  return (action == 'a' ? 'bagel' :
+          action == 'b' ? 'cookie' :
+          'nothing');
+}
 
-(define (action-prior) (uniform-draw '(a b)))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
 
-(define (vending-machine state action)
-  (case action
-    (('a) 'bagel)
-    (('b) 'cookie)
-    (else 'nothing)))
-
-(define (have-cookie? object) (equal? object 'cookie))
-
-(define (sample)
- (choose-action have-cookie? vending-machine 'state))
-
-(hist (repeat 100 sample))
+viz.auto(chooseAction(haveCookie, vendingMachine, 'state'));
 ~~~~
 
-We see, unsurprisingly, that if Sally wants a cookie, she will always press button b. (In defining the vending machine we have used a [case statement](appendix-scheme.html#useful-syntax) instead of a long set of `if`s.) In a world that is not quite so deterministic Sally's actions will be more stochastic:
+We see, unsurprisingly, that if Sally wants a cookie, she will always press button b. In a world that is not quite so deterministic Sally's actions will be more stochastic:
 
 ~~~~
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (uniform-draw '(a b)))
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
+var haveCookie = function(obj) {return obj == 'cookie'};
+///
+var vendingMachine = function(state, action) {
+  return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
+          action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
+          'nothing');
+}
 
-(define (vending-machine state action)
-  (case action
-    (('a) (multinomial '(bagel cookie) '(0.9 0.1)))
-    (('b) (multinomial '(bagel cookie) '(0.1 0.9)))
-    (else 'nothing)))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
 
-(define (have-cookie? object) (equal? object 'cookie))
-
-(define (sample)
- (choose-action have-cookie? vending-machine 'state))
-
-(hist (repeat 100 sample))
+viz.auto(chooseAction(haveCookie, vendingMachine, 'state'));
 ~~~~
 
 Technically, this method of making a choices is not optimal, but rather it is *soft-max* optimal (also known as following the "Boltzmann policy").
@@ -167,106 +145,110 @@ This is equivalent to choosing an action proportionally to it's utility: $P(a|s)
 
 ## Goal Inference
 
-Now imagine that we don't know Sally's goal (which food she wants), but we observe her pressing button b. We can use a query to infer her goal (this is sometimes called "inverse planning", since the outer query "inverts" the query inside `choose-action`).
+Now imagine that we don't know Sally's goal (which food she wants), but we observe her pressing button b. We can use a query to infer her goal (this is sometimes called "inverse planning", since the outer query "inverts" the query inside `chooseAction`).
 
 ~~~~
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (uniform-draw '(a b)))
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
+var haveCookie = function(obj) {return obj == 'cookie'};
+var vendingMachine = function(state, action) {
+  return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
+          action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
+          'nothing');
+}
+///
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
 
-(define (vending-machine state action)
-  (case action
-        (('a) (multinomial '(bagel cookie) '(0.9 0.1)))
-        (('b) (multinomial '(bagel cookie) '(0.1 0.9)))
-        (else 'nothing)))
-(define (sample)
- (rejection-query
-  (define goal-food (uniform-draw '(bagel cookie)))
-  (define goal? (lambda (outcome) (equal? outcome goal-food)))
-  
-  goal-food
-  
-  (equal? (choose-action goal? vending-machine 'state) 'b)))
+var goalPosterior = Infer({method: 'enumerate'}, function() {
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
+  var goalSatisfied = function(outcome) {return outcome == goal};
+  var possibleAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
+  condition(possibleAction == 'b');
+  return goal;
+})
 
-(hist (repeat 100 sample))
+viz.auto(goalPosterior);
 ~~~~
 
 Now let's imagine a more ambiguous case: button b is "broken" and will (uniformly) randomly result in a food from the machine. If we see Sally press button b, what goal is she most likely to have?
 
 ~~~~ 
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (uniform-draw '(a b)))
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
+var haveCookie = function(obj) {return obj == 'cookie'};
 
-(define (vending-machine state action)
-  (case action
-        (('a) (multinomial '(bagel cookie) '(0.9 0.1)))
-        (('b) (multinomial '(bagel cookie) '(0.5 0.5)))
-        (else 'nothing)))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
+///
+var vendingMachine = function(state, action) {
+  return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
+          action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]}) :
+          'nothing');
+}
 
-(define (sample)
-  (rejection-query
-   (define goal-food (uniform-draw '(bagel cookie)))
-   (define goal? (lambda (outcome) (equal? outcome goal-food)))
-   
-   goal-food
-   
-   (equal? (choose-action goal? vending-machine 'state) 'b)))
+var goalPosterior = Infer({method: 'enumerate'}, function() {
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
+  var goalSatisfied = function(outcome) {return outcome == goal};
+  var possibleAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
+  condition(possibleAction == 'b');
+  return goal;
+})
 
-(hist (repeat 100 sample)) 
+viz.auto(goalPosterior);
 ~~~~
 
-Despite the fact that button b is equally likely to result in either bagel or cookie, we have inferred that sally probably wants a cookie. This is a result of the inference implicitly taking into account the counterfactual alternatives: if Sally had wanted a bagel, she would have likely pressed button a. The inner query takes these alternatives into account, adjusting the probability of the observed action based on alternative goals.
+Despite the fact that button b is equally likely to result in either bagel or cookie, we have inferred that Sally probably wants a cookie. This is a result of the inference implicitly taking into account the counterfactual alternatives: if Sally had wanted a bagel, she would have likely pressed button a. The inner query takes these alternatives into account, adjusting the probability of the observed action based on alternative goals.
 
 
 ## Preferences
 
 If we have some prior knowledge about Sally's preferences (which goals she is likely to have) we can incorporate this immediately into the prior over goals (which above was uniform).
 
-A more interesting situation is when we believe that Sally has *some*
-preferences, but we don't know what they are. We capture this by adding a higher
-level prior (a uniform) over preferences. Using this we can learn about Sally's preferences from her actions: after seeing Sally press button b several times, what will we expect her to want the next time?
+A more interesting situation is when we believe that Sally has *some* preferences, but we don't know what they are. 
+We capture this by adding a higher level prior (a uniform) over preferences. 
+Using this we can learn about Sally's preferences from her actions: after seeing Sally press button b several times, what will we expect her to want the next time?
 
 ~~~~ 
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (uniform-draw '(a b)))
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
+var haveCookie = function(obj) {return obj == 'cookie'};
 
-(define (vending-machine state action)
-  (case action
-        (('a) (multinomial '(bagel cookie) '(0.9 0.1)))
-        (('b) (multinomial '(bagel cookie) '(0.1 0.9)))
-        (else 'nothing)))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
+///
+var vendingMachine = function(state, action) {
+  return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
+          action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
+          'nothing');
+}
 
-(define (sample)
-  (rejection-query
-   (define food-preferences (uniform 0 1))
-   (define (goal-food-prior) (if (flip food-preferences) 'bagel 'cookie))
-   (define (make-goal food)
-     (lambda (outcome) (equal? outcome food)))
-   
-   (goal-food-prior)
-   
-   (and (equal? (choose-action (make-goal (goal-food-prior)) vending-machine 'state) 'b)
-        (equal? (choose-action (make-goal (goal-food-prior)) vending-machine 'state) 'b)
-        (equal? (choose-action (make-goal (goal-food-prior)) vending-machine 'state) 'b))))
+var goalPosterior = Infer({method: 'MCMC', samples: 20000}, function() {
+  var preference = uniform(0, 1);
+  var goalPrior = function() {return flip(preference) ? 'bagel' : 'cookie'};
+  var makeGoal = function(food) {return function(outcome) {return outcome == food}};
+  condition((sample(chooseAction(makeGoal(goalPrior()), vendingMachine, 'state')) == 'b') &&
+            (sample(chooseAction(makeGoal(goalPrior()), vendingMachine, 'state')) == 'b') &&
+            (sample(chooseAction(makeGoal(goalPrior()), vendingMachine, 'state')) == 'b'));
+  return goalPrior();
+})
 
-(hist (repeat 100 sample)) 
+viz.auto(goalPosterior);
 ~~~~
 
 Try varying the amount and kind of evidence. For instance, if Sally one time says "I want a cookie" (so you have directly observed her goal that time) how much evidence does that give you about her preferences, relative to observing her actions?
@@ -276,35 +258,34 @@ have* taken a different action if she had a different preference (i.e. she could
 have pressed button *a* if she preferred to have a bagel). In the program below we have set up a situation in which both actions lead to cookie most of the time:
 
 ~~~~ 
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (uniform-draw '(a b)))
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
 
-(define (vending-machine state action)
-  (case action
-        (('a) (multinomial '(bagel cookie) '(0.1 0.9)))
-        (('b) (multinomial '(bagel cookie) '(0.1 0.9)))
-        (else 'nothing)))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
+///
+var vendingMachine = function(state, action) {
+  return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
+          action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
+          'nothing');
+}
 
-(define (sample)
-  (rejection-query
-   (define food-preferences (uniform 0 1))
-   (define (goal-food-prior) (if (flip food-preferences) 'bagel 'cookie))
-   (define (make-goal food)
-     (lambda (outcome) (equal? outcome food)))
-   
-   (goal-food-prior)
-   
-   (and (equal? (choose-action (make-goal (goal-food-prior)) vending-machine 'state) 'b)
-        (equal? (choose-action (make-goal (goal-food-prior)) vending-machine 'state) 'b)
-        (equal? (choose-action (make-goal (goal-food-prior)) vending-machine 'state) 'b))))
+var goalPosterior = Infer({method: 'MCMC', samples: 50000}, function() {
+  var preference = uniform(0, 1);
+  var goalPrior = function() {return flip(preference) ? 'bagel' : 'cookie'};
+  var makeGoal = function(food) {return function(outcome) {return outcome == food}};
+  condition((sample(chooseAction(makeGoal(goalPrior()), vendingMachine, 'state')) == 'b') &&
+            (sample(chooseAction(makeGoal(goalPrior()), vendingMachine, 'state')) == 'b') &&
+            (sample(chooseAction(makeGoal(goalPrior()), vendingMachine, 'state')) == 'b'));
+  return goalPrior();
+})
 
-(hist (repeat 100 sample)) 
+viz.auto(goalPosterior);
 ~~~~
 
 Now we can draw no conclusion about Sally's preferences. Try varying the machine probabilities, how does the preference inference change? This effect, that the strength of a preference inference depends on the context of alternative actions, has been demonstrated in young infants by @Kushnir:2010wx.
@@ -314,76 +295,83 @@ Now we can draw no conclusion about Sally's preferences. Try varying the machine
 In the above models of goal and preference inference, we have assumed that the structure of the world (both the operation of the vending machine and the, irrelevant, initial state) were common knowledge---they were non-random constructs used by both the agent (Sally) selecting actions and the observer interpreting these actions. What if we (the observer) don't know how exactly the vending machine works, but think that however it works Sally knows? We can capture this by placing uncertainty on the vending machine, inside the overall query but "outside" of Sally's inference:
 
 ~~~~
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (uniform-draw '(a b)))
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
 
-(define (make-vending-machine a-effects b-effects)
-  (lambda (state action)
-    (case action
-          (('a) (multinomial '(bagel cookie) a-effects))
-          (('b) (multinomial '(bagel cookie) b-effects))
-          (else 'nothing))))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
+///
+var makeVendingMachine = function(aEffects, bEffects) {
+  return function(state, action) {
+    return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: aEffects}) :
+            action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: bEffects}) :
+            'nothing');
+  }
+};
 
-(define (sample)
-  (rejection-query
-   
-   (define a-effects (dirichlet '(1 1)))
-   (define b-effects (dirichlet '(1 1)))
-   (define vending-machine (make-vending-machine a-effects b-effects))
-   
-   (define goal-food (uniform-draw '(bagel cookie)))
-   (define goal? (lambda (outcome) (equal? outcome goal-food)))
-   
-   (second b-effects)
-   
-   (and (equal? goal-food 'cookie)
-        (equal? (choose-action goal? vending-machine 'state) 'b) )))
+var goalPosterior = Infer({method: 'MCMC', samples: 50000}, function() {
+  var aEffects = dirichlet(Vector([1,1]))
+  var bEffects = dirichlet(Vector([1,1]));
 
-(define samples (repeat 500 sample))
-(display (list "mean:" (mean samples)))
-(hist samples "Probability that b gives cookie")
+  var vendingMachine = makeVendingMachine(aEffects, bEffects);
+  
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
+  var goalSatisfied = function(outcome) {return outcome == goal};
+  
+  condition(goal == 'cookie' &&
+            sample(chooseAction(goalSatisfied, vendingMachine, 'state')) == 'b');
+  return T.get(bEffects, 1);
+})
+
+print("probability of action 'b' giving cookie")
+viz.auto(goalPosterior);
 ~~~~
 
-Here we have conditioned on Sally wanting the cookie and Sally choosing to press button b. Thus, we have no *direct* evidence of the effects of pressing the buttons on the machine. What happens if you condition instead on the action and outcome, but not the intentional choice of this outcome (that is, change the condition to `(equal? (vending-machine 'state 'b) 'cookie)`)?
+Here we have conditioned on Sally wanting the cookie and Sally choosing to press button b. Thus, we have no *direct* evidence of the effects of pressing the buttons on the machine. What happens if you condition instead on the action and outcome, but not the intentional choice of this outcome (that is, change the condition to `(vendingMachine('state', 'b') == 'cookie')`)?
 
 Now imagine a vending machine that has only one button, but it can be pressed many times. We don't know what the machine will do in response to a given button sequence. We do know that pressing more buttons is less a priori likely.
 
+**TODO: this model isn't working...**
+
 ~~~~
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (if (flip 0.7) '(a) (pair 'a (action-prior))))
+var actionPrior = function() {
+  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+}
 
-(define (sample)
-  (rejection-query
-   
-   (define buttons->outcome-probs (mem (lambda (buttons) (dirichlet '(1 1)))))
-   (define (vending-machine state action)
-     (multinomial '(bagel cookie) (buttons->outcome-probs action)))
-   
-   (define goal-food (uniform-draw '(bagel cookie)))
-   (define goal? (lambda (outcome) (equal? outcome goal-food)))
-   
-   (list (second (buttons->outcome-probs '(a a)))
-         (second (buttons->outcome-probs '(a))))
-   
-   (and (equal? goal-food 'cookie)
-        (equal? (choose-action goal? vending-machine 'state) '(a a)) )
-   ))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'rejection', samples: 100}, function() {
+    var action = actionPrior()
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
 
-(define samples (repeat 500 sample))
-(hist (map first samples) "Probability that (a a) gives cookie")
-(hist (map second samples) "Probability that (a) gives cookie")
+var goalPosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var buttonsToOutcomeProbs = mem(function(buttons) {
+    return dirichlet(ones([2,1]));
+  })
+  
+  var vendingMachine = function(state, action) {
+    return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
+  }
+  
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
+  var goalSatisfied = function(outcome) {return outcome == goal};
+  var actionDist = chooseAction(goalSatisfied, vendingMachine, 'state');
+
+  factor(goal == 'cookie' ? actionDist.score(['a', 'a']) : -Infinity);
+
+  return {once: T.get(buttonsToOutcomeProbs(['a']), 1),
+          twice: T.get(buttonsToOutcomeProbs(['a', 'a']), 1)}
+})
+
+print("probability of actions giving a cookie")
+viz.marginals(goalPosterior);
 ~~~~
 
 Compare the inferences that result if Sally presses the button twice to those if she only presses the button once. Why can we draw much stronger inferences about the machine when Sally chooses to press the button twice? When Sally does press the button twice, she could have done the "easier" (or rather, a priori more likely) action of pressing the button just once. Since she doesn't, a single press must have been unlikely to result in a cookie. This is an example of the *principle of efficiency*---all other things being equal, an agent will take the actions that require least effort (and hence, when an agent expends more effort all other things must not be equal). 
