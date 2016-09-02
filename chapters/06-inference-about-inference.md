@@ -532,36 +532,42 @@ We assume for simplicity that the meaning of sentences are truth-functional: tha
 As above, the speaker chooses what to say in order to lead the listener to infer the correct state:
 
 ~~~~
-(define (speaker state)
-  (query
-   (define words (sentence-prior))
-   words
-   (equal? state (listener words))))
+var speaker = function(state) {
+  return Infer(..., function() {
+    var words = sample(sentencePrior);
+    condition(state == listener(words));
+    return words;
+  });
+};
 ~~~~
 
 The listener does an inference of the state of the world given that the speaker chose to say what they did:
 
-~~~~
-(define (listener words)
-  (query
-     (define state (state-prior))
-     state
-     (equal? words (speaker state))))
+~~~~ norun
+var listener = function(words) {
+  return Infer(..., function() {
+    var state = sample(statePrior);
+    condition(words == speaker(state));
+    return state;
+  });
+};
 ~~~~
 
 However this suffers from two flaws: the recursion never halts, and the literal meaning has not been used. We slightly modify the listener function such that the listener either assumes that the literal meaning of the sentence is true, or figures out what the speaker must have meant given that they chose to say what they said:
 
-~~~~
-(define (listener words)
-  (query
-     (define state (state-prior))
-     state
-     (if (flip literal-prob)
-         (words state)
-         (equal? words (speaker state)))))
+~~~~ norun
+var listener = function(words) {
+  return Infer(..., function() {
+    var state = sample(statePrior);
+    condition(flip(literalProb) ? 
+              words(state) : 
+              words == speaker(state))
+    return state;
+  });
+};
 ~~~~
 
-Here the probability `literal-prob` controls the expected depth of recursion. Another ways to bound the depth of recursion is with an explicit depth argument (which is decremented on each recursion).
+Here the probability `literalProb` controls the expected depth of recursion. Another ways to bound the depth of recursion is with an explicit depth argument (which is decremented on each recursion).
 
 We have used a standard, truth-functional, formulation for the meaning of a sentence: each sentence specifies a (deterministic) predicate on world states. Thus the literal meaning of a sentence specifies the worlds in which the sentence is satisfied. That is the literal meaning of a sentence is the sort of thing one can condition on, transforming a prior over worlds into a posterior. Here's another way of motivating this view: meanings are belief update operations, and since the right way to update beliefs coded as distributions is conditioning, meanings are conditioning statements. Of course, the deterministic predicates can be immediately (without changing any other code) relaxed to probabilistic truth functions, that assign a probability to each world. This might be useful if we want to allow exceptions.
 
@@ -575,31 +581,40 @@ the number of sprouted plants (0, 1, 2, or 3) and take a uniform prior over worl
 Using the above representation for communicating with words (with an explicit depth argument):
 
 ~~~~ 
-(define (state-prior) (uniform-draw '(0 1 2 3)))
+var allSprouted = function(state) {return state == 3}
+var someSprouted = function(state) {return state > 0}
+var noneSprouted = function(state) {return state == 0}
+var meaning = function(words) {
+  return (words == 'all' ? allSprouted :
+          words == 'some' ? someSprouted :
+          words == 'none' ? noneSprouted : 
+          console.error("unknown words"))
+}
 
-(define (sentence-prior) (uniform-draw (list all-sprouted some-sprouted none-sprouted)))
+var statePrior = Categorical({vs: [0,1,2,3], 
+                              ps: [1/4, 1/4, 1/4, 1/4]})
+var sentencePrior = Categorical({vs: ["all", "some", "none"], 
+                                 ps: [1/3, 1/3, 1/3]})
 
-(define (all-sprouted state) (= 3 state))
-(define (some-sprouted state) (< 0 state))
-(define (none-sprouted state) (= 0 state))
+var speaker = function(state, depth) {
+  return Infer({method: 'enumerate'}, function() {
+    var words = sample(sentencePrior)
+    condition(state == sample(listener(words, depth)))
+    return words
+  })
+};
 
-(define (speaker state depth)
-  (rejection-query
-   (define words (sentence-prior))
-   words
-   (equal? state (listener words depth))))
+var listener = function(words, depth) {
+  return Infer({method: 'enumerate'}, function() {
+    var state = sample(statePrior);
+    var wordsMeaning = meaning(words)
+    condition(depth == 0 ? wordsMeaning(state) : 
+              _.isEqual(words, sample(speaker(state, depth - 1))))
+    return state;
+  })
+};
 
-(define (listener words depth)
-  (rejection-query
-   (define state (state-prior))
-   state
-   (if (= depth 0)
-       (words state)
-       (equal? words (speaker state (- depth 1))))))
-
-(define depth 1)
-
-(hist (repeat 300 (lambda () (listener some-sprouted depth))))
+viz.auto(listener("some", 1))
 ~~~~
 
 We see that if the listener hears "some" the probability of three out of three is low, even though the basic meaning of "some" is equally consistent with 3/3, 1/3, and 2/3. This is called the "some but not all" implicature.
@@ -612,26 +627,30 @@ We see that if the listener hears "some" the probability of three out of three i
 
 # Planning
 
+**TODO: Decide what to do with this section. I started to convert it, but wasn't sure if it was going to be kept**
+
 Single step, goal-based decision problem.
 
 ~~~~
-(define (choose-action goal? transition state)
-  (rejection-query
-    (define action (action-prior))
-    action
-    (goal? (transition state action))))
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [1/2, 1/2]})
 
-(define (action-prior) (uniform-draw '(a b)))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior)
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
 
-(define (vending-machine state action)
-  (case action
-    (('a) 'bagel)
-    (('b) 'cookie)
-    (else 'nothing)))
+var vendingMachine = function(state, action) {
+  return (action == 'a' ? 'bagel' :
+          action == 'b' ? 'cookie' :
+          'nothing')
+}
 
-(define (have-cookie? object) (equal? object 'cookie))
+var cookieGoal = function(object) {return object == 'cookie'}
 
-(choose-action have-cookie? vending-machine 'state)
+viz.auto(chooseAction(cookieGoal, vendingMachine, 'state'))
 ~~~~
 
 Single step, utility-based decision problem.
