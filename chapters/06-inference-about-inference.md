@@ -384,38 +384,44 @@ In these examples we have seen two important assumptions combining to allow us t
 
 In social cognition, we often make joint inferences about two kinds of mental states: agents' beliefs about the world and their desires, goals or preferences.  We can see an example of such a joint inference in the vending machine scenario.  Suppose we condition on two observations: that Sally presses the button twice, and that this results in a cookie. Then, assuming that she knows how the machine works, we jointly infer that she wanted a cookie, that pressing the button twice is likely to give a cookie, and that pressing the button once is unlikely to give a cookie.
 
+**TODO: this model isn't working (for the same reason as above -- can't enumerate inside chooseAction because of the dirichlet and MCMC doesn't converge in a reasonable amount of time)...**
+
 ~~~~
-;;;fold: choose-action
-(define (choose-action goal? transition state)
-  (rejection-query
-   (define action (action-prior))
-   action
-   (goal? (transition state action))))
-;;;
-(define (action-prior) (if (flip 0.7) '(a) (pair 'a (action-prior))))
+var actionPrior = function() {
+  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+}
 
-(define (sample)
-  (rejection-query
-   
-   (define buttons->outcome-probs (mem (lambda (buttons) (dirichlet '(1 1)))))
-   (define (vending-machine state action)
-     (multinomial '(bagel cookie) (buttons->outcome-probs action)))
-   
-   (define goal-food (uniform-draw '(bagel cookie)))
-   (define goal? (lambda (outcome) (equal? outcome goal-food)))
-   
-   (list (second (buttons->outcome-probs '(a a)))
-         (second (buttons->outcome-probs '(a)))
-         goal-food)
-   
-   (and (equal? (vending-machine 'state '(a a)) 'cookie)
-        (equal? (choose-action goal? vending-machine 'state) '(a a)) )
-   ))
+var chooseAction = function(goalSatisfied, transition, state) {
+  return Infer({method: 'MCMC', samples: 100}, function() {
+    var action = actionPrior()
+    condition(goalSatisfied(transition(state, action)))
+    return action;
+  })
+}
 
-(define samples (repeat 500 sample))
-(hist (map first samples) "Probability that (a a) gives cookie")
-(hist (map second samples) "Probability that (a) gives cookie")
-(hist (map third samples) "Goal probabilities")
+var goalPosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var buttonsToOutcomeProbs = mem(function(buttons) {
+    return dirichlet(ones([2,1]));
+  })
+  
+  var vendingMachine = function(state, action) {
+    return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
+  }
+  
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
+  var goalSatisfied = function(outcome) {return outcome == goal};
+  var actionDist = chooseAction(goalSatisfied, vendingMachine, 'state');
+
+  condition(vendingMachine('state', ['a', 'a']) == 'cookie' &&
+            chooseAction(goalSatisfied, vendingMachine, 'state', ['a', 'a']))
+  
+  return {goal: goal, 
+          once: T.get(buttonsToOutcomeProbs(['a']), 1),
+          twice: T.get(buttonsToOutcomeProbs(['a', 'a']), 1)}
+})
+
+print("probability of actions giving a cookie")
+viz.marginals(goalPosterior);
 ~~~~
 
 Notice the U-shaped distribution for the effect of pressing the button just once. Without any direct evidence about what happens when the button is pressed just once, we can infer that it probably won't give a cookie---because her goal is likely to have been a cookie but she didn't press the button just once---but there is a small chance that her goal was actually not to get a cookie, in which case pressing the button once could result in a cookie. This very complex (and hard to describe!) inference comes naturally from joint inference of goals and knowledge.
@@ -430,77 +436,88 @@ Notice the U-shaped distribution for the effect of pressing the button just once
 
 Imagine playing the following two-player game. On each round the "teacher" pulls a die from a bag of weighted dice, and has to communicate to the "learner" which die it is (both players are familiar with the dice and their weights). However, the teacher may only communicate by giving the learner examples: showing them faces of the die.
 
-We can formalize the inference of the teacher in choosing the examples to give by assuming that the goal of the teacher is to successfully teach the hypothesis -- that is, to choose examples such that the learner will infer the intended hypothesis (throughout this section we simplify the code by specializing to the situation at hand, rather than using the more general `choose-action` function introduced above):
+We can formalize the inference of the teacher in choosing the examples to give by assuming that the goal of the teacher is to successfully teach the hypothesis -- that is, to choose examples such that the learner will infer the intended hypothesis (throughout this section we simplify the code by specializing to the situation at hand, rather than using the more general `chooseAction` function introduced above):
 
-~~~~
-(define (teacher die)
-  (query
-   (define side (side-prior))
-   side
-   (equal? die (learner side))))
+~~~~ norun
+var teacher = function(die) {
+  return Infer(..., function() {
+    var side = sample(sidePrior);
+    condition(learner(side) == die)
+    return side;
+  })
+}
 ~~~~
 
 The goal of the learner is to infer the correct hypothesis, given that the teacher chose to give these examples:
 
-~~~~
-(define (learner side)
-  (query
-   (define die (die-prior))
-   die
-   (equal? side (teacher die))))
+~~~~ norun
+var learner = function(side) {
+  return Infer(..., function() {
+    var die = sample(diePrior);
+    condition(teacher(die) == side)
+    return die;
+  })
+}
 ~~~~
 
 This pair of mutually recursive functions represents a teacher choosing examples or a learner inferring a hypothesis, each thinking about the other. However, notice that this recursion will never halt---it will be an unending chain of "I think that you think that I think that...". To avoid this infinite recursion say that eventually the learner will just assume that the teacher rolled the die and showed the side that came up (rather than reasoning about the teacher choosing a side):
 
-~~~~
-(define (teacher die depth)
-  (query
-   (define side (side-prior))
-   side
-   (equal? die (learner side depth))))
+~~~~ norun
+var teacher = function(die, depth) {
+  return Infer(..., function() {
+    var side = sample(sidePrior);
+    condition(learner(side, depth) == die)
+    return side
+  })
+}
 
-(define (learner side depth)
-  (query
-   (define die (die-prior))
-   die
-   (if (= depth 0)
-       (equal? side (roll die))
-       (equal? side (teacher die (- depth 1))))))
+var learner = function(side, depth) {
+  return Infer(..., function() {
+    var die = sample(diePrior);
+    condition(depth == 0 ? 
+              side == roll(die) :
+              side == teacher(die, depth - 1))
+    return die
+  })
+}
 ~~~~
 
 To make this concrete, assume that there are two dice, A and B, which each have three sides (red, green, blue) that have weights like so:
 
-<img src='images/pedagogy-pic.png ' width='300' />
+<img src='../assets/img/pedagogy-pic.png ' width='300' />
 
 Which hypothesis will the learner infer if the teacher shows the green side?
 
 ~~~~ 
-(define (teacher die depth)
-  (rejection-query
-   (define side (side-prior))
-   side
-   (equal? die (learner side depth))))
+var dieToProbs = function(die) {
+  return (die == 'A' ? [0, .2, .8] :
+          die == 'B' ? [.1, .3, .6] :
+          'uhoh')
+}
 
-(define (learner side depth)
-  (rejection-query
-   (define die (die-prior))
-   die
-   (if (= depth 0)
-       (equal? side (roll die))
-       (equal? side (teacher die (- depth 1))))))
+var sidePrior = Categorical({vs: ['red', 'green', 'blue'], ps: [1/3, 1/3, 1/3]})
+var diePrior = Categorical({vs: ['A', 'B'], ps: [1/2, 1/2]})
+var roll = function(die) {return categorical({vs: ['red', 'green', 'blue'], ps: dieToProbs(die)})}
 
-(define (die->probs die)
-  (case die
-    (('A) '(0.0 0.2 0.8))
-    (('B) '(0.1 0.3 0.6))
-    (else 'uhoh)))
+var teacher = function(die, depth) {
+  return Infer({method: 'enumerate'}, function() {
+    var side = sample(sidePrior);
+    condition(sample(learner(side, depth)) == die)
+    return side
+  })
+}
 
-(define (side-prior) (uniform-draw '(red green blue)))
-(define (die-prior) (if (flip) 'A 'B))
-(define (roll die) (multinomial '(red green blue) (die->probs die)))
+var learner = function(side, depth) {
+  return Infer({method: 'enumerate'}, function() {
+    var die = sample(diePrior);
+    condition(depth == 0 ? 
+              side == roll(die) :
+              side == sample(teacher(die, depth - 1)))
+    return die
+  })
+}
 
-(define depth 0)
-(learner 'green depth)
+viz.auto(learner('green', 3))
 ~~~~
 
 If we run this with recursion depth 0---that is a learner that does probabilistic inference without thinking about the teacher thinking---we find the learner infers hypothesis B most of the time (about 60% of the time). This is the same as using the "strong sampling" assumption: the learner infers B because B is more likely to have landed on side 2. However, if we increase the recursion depth we find this reverses: the learner infers B only about 40% of the time. Now die A becomes the better inference, because "if the teacher had meant to communicate B, they would have shown the red side because that can never come from A."
