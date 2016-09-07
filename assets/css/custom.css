@@ -156,3 +156,31 @@ blockquote {
 blockquote em {
     font-style: normal
 }
+
+/* Code boxes */
+
+pre.highlight {
+    border: 1px solid #bbb;
+    border-radius: 2px;
+}
+
+code, .CodeMirror pre {
+    font-family: Inconsolata, monospace !important;
+    font-size: 14px !important;
+}
+
+.wpedit .CodeMirror {
+    border-color: #bbb !important;
+}
+
+.wpedit button {
+    font-family: Inconsolata !important;
+    margin: 0 0 0.5em 0 !important;
+    padding: 0.3em !important;
+    border: none !important;
+    background-color: #e8e8e8 !important;
+}
+
+.wpedit .drawerButton {
+    background-color: transparent !important
+}
