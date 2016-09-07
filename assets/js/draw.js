@@ -35,6 +35,15 @@ DrawObject.prototype.circle = function(x, y, radius, stroke, fill){
   this.redraw();
 };
 
+DrawObject.prototype.rectangle = function(x1, y1, x2, y2, stroke, fill, opacity){
+  var rect = new this.paper.Path.Rectangle(this.newPoint(x1,y1), this.newPoint(x2, y2));
+  rect.fillColor = (fill == 'none' ? new paper.Color(1,1,1,0) : (fill || 'white'));
+  rect.strokeColor = stroke || 'black';
+  rect.opacity = opacity || 1;
+  this.redraw();
+};
+
+
 DrawObject.prototype.polygon = function(x, y, n, radius, stroke, fill){
   var point = this.newPoint(x, y);
   var polygon = new this.paper.Path.RegularPolygon(point, n, radius || 20);

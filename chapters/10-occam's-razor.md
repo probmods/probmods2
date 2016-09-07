@@ -114,83 +114,49 @@ The size principle is related to an influential proposal in linguistics known as
 
 ## Example: The Rectangle Game
 
-> **Note: This example is still being ported from the old tutorial; it does not currently run**
 
 To illustrate the power of the size principle in inferring the most parsimonious explanation of data, consider learning a rectangle "concept" <ref>Tenenbaum, 2000</ref>. The data are a set of point in the plane, that we assume to be randomly sampled from within some unknown rectangle.  Given the examples, what is the rectangle they came from?  We can model this learning as conditional of the rectangle given the points. We plot the sampled rectangles as well as the posterior mean:
 
 ~~~~
-;;observed points:
-(define obs-data '((0.4 0.7) (0.5 0.4) (0.46 0.63) (0.43 0.51)))
+var observedData = [[0.4, 0.7], [0.5, 0.4], [0.46, 0.63], [0.43, 0.51]];
+var noise = 0.001;
+var numExamples = observedData.length;
 
-;;parameters and helper functions:
-(define noise 0.001)
-(define num-examples (length obs-data))
+var samples = Infer(
+  {
+    method: 'MCMC',
+    samples: 150,
+    lag: 100,
+    burn: 100
+  },
+  function () {
+    var x1 = uniform(0, 1);
+    var x2 = uniform(0, 1);
+    var y1 = uniform(0, 1);
+    var y2 = uniform(0, 1);
+    var concept = function () { return [uniform(x1, x2), uniform(y1, y2)];
+                              };
 
-;;infer the rectangle given the observed points:
-;;observed points:
-(define obs-data '((0.4 0.7) (0.5 0.4) (0.46 0.63) (0.43 0.51)))
+    map(function(example) {
+      observe(Uniform({a: x1, b: x2}), example[0]);
+      observe(Uniform({a: y1, b: y2}), example[1]);
+    }, observedData);
 
-;;parameters and helper functions:
-(define noise 0.001)
-(define num-examples (length obs-data))
+    return [x1, x2, y1, y2];
+  }
+)
 
-;;infer the rectangle given the observed points:
-(define samples
-  (drop
-   (mh-query
-    300 100
+var img = Draw(500, 500, true);
 
-    ;;sample the rectangle
-    (define x1 (uniform 0 1))
-    (define x2 (uniform 0 1))
-    (define y1 (uniform 0 1))
-    (define y2 (uniform 0 1))
+map(function(hyp) {
+  img.rectangle(hyp[0] * 500,hyp[2] * 500,hyp[1] * 500, hyp[3] * 500, 'gray', 'gray', 0.005)
+}, samples.support())
 
-    ;;the concept is uniform over this rectangle
-    (define concept
-      (lambda () (list (uniform x1 x2) ;;x-val uniform in rect
-                       (uniform y1 y2) ;;y-val uniform in rect
-                       )))
+map(function(obs) {
+  img.circle(obs[0] * 500, obs[1] * 500, 5, '#99ccff', '#99ccff')
+}, observedData);
 
-    (list x1 x2 y1 y2)
-
-    (map (lambda (example) (condition (equal? (uniform x1 x2) (first example)))) obs-data)
-    (map (lambda (example) (condition (equal? (uniform y1 y2) (second example)))) obs-data))
-
-  100))
-
-;;set up fancy graphing:
-(define (adjust points)
-  (map (lambda (p) (+ (* p 350) 25))
-       points))
-(define paper (make-raphael "my-paper" 400 400))
-(define (draw-rect rect color alpha linewidth)
-  (let* ((rect (adjust rect))
-         (x-lower (min (first rect) (second rect)))
-         (y-lower (min (third rect) (fourth rect)))
-         (width (abs (- (second rect) (first rect))))
-         (height (abs (- (fourth rect) (third rect)))))
-    (raphael-js paper
-      "rect = r.rect(" x-lower ", " y-lower ", " width ", " height
-      "); rect.attr('stroke', " color
-      "); rect.attr('stroke-width', " linewidth
-      "); rect.attr('stroke-opacity', " alpha ")")))
-
-;;graph the observed points:
-(raphael-points paper
-                (adjust (map first obs-data))
-                (adjust (map second obs-data)))
-
-;;graph the sampled rectangles:
-(map (lambda (rect) (draw-rect rect "'aaa'" 0.1 0.5)) samples)
-
-;;graph the mean rectangle:
-(define mean-bounds (map mean (list (map first samples) (map second samples) (map third samples) (map fourth samples))))
-(draw-rect mean-bounds "'#1f3'" 1 3)
-
-(draw-rect (list 0 1 0 1) "'#000'" 1 2)
-
-'done
+""
 ~~~~
 
 Explore how the concept learned varies as a function of the number and distribution of example points. Try varying the observed data and seeing how the inferred rectangle changes:
