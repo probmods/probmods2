@@ -291,22 +291,22 @@ Imagine that we drop a block from a random position at the top of a world with t
 **TODO: fix "unknown shape undefined" error**
 
 ~~~~
-var bins = function (xmin, xmax, width) { // makes a floor with evenly spaced buckets
-  return (
-    (xmax < xmin + width)
-    // floor
-    ? [[['rect', true, [400, 10]], [175, 500]]]
-    // bins
-    : [[['rect', true, [1, 10]], [xmin, 490]]].concat(bins(xmin + width, xmax, width))
-  )
+// makes a floor with evenly spaced buckets
+var bins = function (xmin, xmax, width) {
+  return ((xmax < xmin + width)
+          // floor
+          ? {shape: 'rect', static: true, dims: [400, 10], x: 175, y: 500}
+          // bins
+          : [{shape: 'rect', static: true, dims: [1, 10], x: xmin, y: 490}].concat(bins(xmin + width, xmax, width))
+         )
 }
 
 // add two fixed circles
-var world = [[['circle', true, [60]], [60, 200]],
-             [['circle', true, [30]], [300, 300]]].concat(bins(-1000, 1000, 25))
+var world = [{shape: 'circle', static: true, dims: [60], x: 60, y: 200},
+             {shape: 'circle', static: true, dims: [30], x: 300, y: 300}].concat(bins(-1000, 1000, 25))
 
 var randomBlock = function () {
-  return [['circle', false, [10]], [uniform(0, worldWidth), 0]]
+  return {shape: 'circle', static: false, dims: [10], x: uniform(0, worldWidth), y: 0}
 }
 
 physics.animate(1000, [randomBlock()].concat(world))
@@ -315,47 +315,45 @@ physics.animate(1000, [randomBlock()].concat(world))
 Assuming that the block comes to rest in the middle of the floor, where did it come from?
 
 ~~~~
-var bins = function (xmin, xmax, width) { // makes a floor with evenly spaced buckets
-  return (
-    (xmax < xmin + width)
-    // floor
-    ? [[['rect', true, [400, 10]], [175, 500]]]
-    // bins
-    : [[['rect', true, [1, 10]], [xmin, 490]]].concat(bins(xmin + width, xmax, width))
-  )
+// makes a floor with evenly spaced buckets
+var bins = function (xmin, xmax, width) {
+  return ((xmax < xmin + width)
+          // floor
+          ? {shape: 'rect', static: true, dims: [400, 10], x: 175, y: 500}
+          // bins
+          : [{shape: 'rect', static: true, dims: [1, 10], x: xmin, y: 490}].concat(bins(xmin + width, xmax, width))
+         )
 }
 
 // add two fixed circles
-var world = [[['circle', true, [60]], [60, 200]],
-             [['circle', true, [30]], [300, 300]]].concat(bins(-1000, 1000, 25))
+var world = [{shape: 'circle', static: true, dims: [60], x: 60, y: 200},
+             {shape: 'circle', static: true, dims: [30], x: 300, y: 300}].concat(bins(-1000, 1000, 25))
 
 var randomBlock = function () {
-  return [['circle', false, [10]], [uniform(0, worldWidth), 0]]
+  return {shape: 'circle', static: false, dims: [10], x: uniform(0, worldWidth), y: 0}
 }
 
 var getBallX = function(world) {
-  var ball = filter(function(obj) {
-    // find the non-static object (the ball)
-    // TODO: last element of finalWorld is null (remove)
-    // TODO: change object representation from arrays to to property lists
-    return obj ? obj[0][1] === false: false
-  },world)[0];
-  return ball[1][0];
+  var ball = filter(function(obj) { return !obj.static }, world)[0];
+  return ball.x;
 }
 
 var observedX = 160;
 
-var initialXs = MCMC(function() {
-  var initState = [randomBlock()].concat(world);
-  var initX = getBallX(initState);
-  var finalState = physics.run(1000, initState);
-  var finalX = getBallX(finalState);
-  factor(Gaussian({mu: finalX, sigma: 10}).score(observedX))
-  return {initX: initX}
-}, {samples: 100,
-    lag: 10,
-    callbacks: [wpEditor.MCMCProgress()]
-   });
+var initialXs = Infer(
+  {method: 'MCMC',
+   samples: 100,
+   lag: 10,
+   callbacks: [editor.MCMCProgress()]
+  },
+  function() {
+    var initState = [randomBlock()].concat(world);
+    var initX = getBallX(initState);
+    var finalState = physics.run(1000, initState);
+    var finalX = getBallX(finalState);
+    factor(Gaussian({mu: finalX, sigma: 10}).score(observedX))
+    return {initX: initX}
+  });
 
 viz.auto(initialXs)
 ~~~~
