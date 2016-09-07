@@ -2,6 +2,9 @@
 layout: chapter
 title: Generative models
 description: Generative models
+custom_js:
+- assets/js/box2d.js
+- assets/js/phys.js
 ---
 
 ## Exercise 1
@@ -81,26 +84,34 @@ Directly compute the probability of the bent coin in the example. Check your ans
 Here is a modified version of the tug of war game. Instead of drawing strength from the continuous Gaussian distribution, strength is either 5 or 10 with equal probability. Also the probability of laziness is changed from 1/4 to 1/3. Here are four expressions you could evaluate using this modified model:
 
 ~~~~ 
-    (define strength (mem (lambda (person) (if (flip) 5 10))))
+var strength = mem(function(person) {
+  return flip() ? 5 : 10;
+});
 
-    (define lazy (lambda (person) (flip (/ 1 3))))
+var lazy = function(person) {return flip(1/3)}
+var totalPulling = function(team) {
+  return sum(map(function(person) {
+    return lazy(person) ? strength(person) / 2 : strength(person);
+  }, team))
+}
 
-    (define (total-pulling team)
-      (sum
-       (map (lambda (person) (if (lazy person) (/ (strength person) 2) (strength person)))
-            team)))
+var winner = function(team1, team2) {
+  return totalPulling(team1) < totalPulling(team2) : team2 : team1;
+}
 
-    (define (winner team1 team2) (if (< (total-pulling team1) (total-pulling team2)) team2 team1))
+// expression 1
+winner(['alice'], ['bob'])
 
-    (winner '(alice) '(bob))                        ;; expression 1
+// expression 2
+_.isEqual(['alice'], winner(['alice'], ['bob'])) 
 
-    (equal? '(alice) (winner '(alice) '(bob)))      ;; expression 2
+// expression 3
+(_.isEqual(['alice'], winner(['alice'], ['bob'])) &&
+ _.isEqual(['alice'], winner(['alice'], ['fred'])))
 
-    (and (equal? '(alice) (winner '(alice) '(bob))) ;; expression 3
-         (equal? '(alice) (winner '(alice) '(fred))))
-
-    (and (equal? '(alice) (winner '(alice) '(bob))) ;; expression 4
-         (equal? '(jane) (winner '(jane) '(fred))))
+// expression 4
+(_.isEqual(['alice'], winner(['alice'], ['bob'])) &&
+ _.isEqual(['jane'], winner(['jane'], ['fred'])))
 ~~~~
 
 a) Write down the sequence of expression evaluations and random choices that will be made in evaluating each expression.
@@ -114,10 +125,9 @@ c) Why are the probabilities different for the last two? Explain both in terms o
 Use the rules of probability, described above, to compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5.
 
 ~~~~ 
-    (define (geometric p)
-      (if (flip p)
-          0
-          (+ 1 (geometric p))))
+var geometric = function(p) {
+  return flip(p) ? 0 : 1 + geometric(p);
+};
 ~~~~
 
 ## Exercise 7
@@ -150,12 +160,12 @@ Convert the following probability table to a compact Church program:
   </tr>
 </table>
 -->										
-Hint: fix the probability of A and then define the probability of B to *depend* on whether A is true or not. Run your Church program and build a histogram to check that you get the correct distribution
+Hint: fix the probability of A and then define the probability of B to *depend* on whether A is true or not. Run your WebPPL program and build a histogram to check that you get the correct distribution
 
 ~~~~ 
-    (define a ...)
-    (define b ...)
-    (list a b)
+var a = ...;
+var b = ...;
+display([a, b])
 ~~~~
 
 ## Exercise 8
@@ -164,75 +174,69 @@ In [Example: Intuitive physics] above we modeled stability of a tower as the pro
 
 a) Below, modify the stability model by writing a continuous measure, `towerFallDegree`. Make sure that your continuous measure is in some way numerically comparable to the discrete measure, `doesTowerFall` (defined here as either 0 or 1). Mathematically, what is your continuous measure?
 
-~~~~ 
-    (define (getWidth worldObj) (first (third (first worldObj))))
-    (define (getHeight worldObj) (second (third (first worldObj))))
-    (define (getX worldObj) (first (second worldObj)))
-    (define (getY worldObj) (second (second worldObj)))
-    (define (getIsStatic worldObj) (second (first worldObj)))
+~~~~
+///fold:
+var listMin = function(xs) {
+  if (xs.length == 1) {
+    return xs[0]
+  } else {
+    return Math.min(xs[0], listMin(rest(xs)))
+  }
+}
 
-    (define ground
-      (list (list "rect" #t (list worldWidth 10)) (list (/ worldWidth 2) (+ worldHeight 6))))
+var highestY = function (w) { listMin(map(function(obj) { return obj.y }, w)) }
+var ground = {shape: 'rect', static: true, dims: [worldWidth, 10],
+              x: worldWidth/2, y: worldHeight+6};
+	      
+var almostUnstableWorld = [
+  ground,
+  {shape: 'rect', static: false, dims: [24, 22], x: 175, y: 473},
+  {shape: 'rect', static: false, dims: [15, 38], x: 159.97995044874122, y: 413},
+  {shape: 'rect', static: false, dims: [11, 35], x: 166.91912737427202, y: 340},
+  {shape: 'rect', static: false, dims: [11, 29], x: 177.26195677111082, y: 276},
+  {shape: 'rect', static: false, dims: [11, 17], x: 168.51354470809122, y: 230}
+]
 
-    (define almostUnstableWorld
-      (list ground (list (list 'rect #f (list 24 22)) (list 175 473))
-            (list (list 'rect #f (list 15 38)) (list 159.97995044874122 413))
-            (list (list 'rect #f (list 11 35)) (list 166.91912737427202 340))
-            (list (list 'rect #f (list 11 29)) (list 177.26195677111082 276))
-            (list (list 'rect #f (list 11 17)) (list 168.51354470809122 230))))
+var noisify = function (world) {
+  var perturbX = function (obj) {
+    var noiseWidth = 10
+    return obj.static ? obj : _.extend({}, obj, {x: uniform(obj.x - noiseWidth, obj.x + noiseWidth) })
+  }
+  map(perturbX, world)
+}
 
-    (define (noisify world)
-      (define (xNoise worldObj)
-        (define noiseWidth 10) ;how many pixels away from the original xpos can we go?
-        (define (newX x) (uniform (- x noiseWidth) (+ x noiseWidth)))
-        (if (getIsStatic worldObj)
-            worldObj
-            (list (first worldObj)
-                  (list (newX (getX worldObj)) (getY worldObj)))))
-      (map xNoise world))
+///
 
-    (define (boolean->number x) (if x 1 0))
+// Returns height of tower
+var getTowerHeight = function(world) {
+  return worldHeight - highestY(world);
+}; 
 
-    ;; round a number, x, to n decimal places
-    (define (decimals x n)
-      (define a (expt 10 n))
-      (/ (round (* x a)) a))
+var doesTowerFall = function (initialW, finalW) {
+  var approxEqual = function (a, b) { Math.abs(a - b) < 1.0 }
+  return !approxEqual(highestY(initialW), highestY(finalW))
+}
 
-    (define (highestY world) (apply min (map getY world))) ;; y = 0 is at the TOP of the screen
+var towerFallDegree = function(initialW, finalW) {
+  // FILL THIS PART IN
+  return -999;
+};
 
-    ;; get the height of the tower in a world
-    (define (getTowerHeight world) (- worldHeight (highestY world)))
+var visualizeStabilityMeasure = function(measureFunction) {
+  var initialWorld = noisify(almostUnstableWorld)
+  var finalWorld = physics.run(1000, initialWorld)
+  var measureValue = measureFunction(initialWorld, finalWorld);
+  display("Stability measure: " + measureValue + "//" +
+          "Initial height: " + getTowerHeight(initialWorld) + "//" +
+	  "Final height: " + getTowerHeight(finalWorld));
+  physics.animate(1000, initialWorld)
+};
 
-    ;; 0 if tower falls, 1 if it stands
-    (define (doesTowerFall initialW finalW)
-      (define eps 1) ;things might move around a little, but within 1 pixel is close
-      (define (approxEqual a b) (< (abs (- a b)) eps))
-      (boolean->number (approxEqual (highestY initialW) (highestY finalW))))
+// Test binary doesTowerFall measure
+// visualizeStabilityMeasure(doesTowerFall);
 
-
-    (define (towerFallDegree initialW finalW)
-      ;; FILL THIS PART IN
-      -999)
-
-    ;; visualize stability measure value and animation
-    (define (visualizeStabilityMeasure measureFunction)
-      (define initialWorld (noisify almostUnstableWorld))
-      (define finalWorld (runPhysics 1000 initialWorld))
-      (define measureValue (measureFunction initialWorld finalWorld))
-
-      (display (list "Stability measure: "
-                                    (decimals measureValue 2) "//"
-                                    "Initial height: "
-                                    (decimals (getTowerHeight initialWorld) 2) "//"
-                                    "Final height: "
-                                    (decimals (getTowerHeight finalWorld) 2)))
-      (animatePhysics 1000 initialWorld))
-
-    ;; visualize doesTowerFall measure
-    ;;(visualizeStabilityMeasure doesTowerFall)
-
-    ;; visualize towerFallDegree measure
-    (visualizeStabilityMeasure towerFallDegree)
+// Test custom towerFallDegree measure
+visualizeStabilityMeasure(towerFallDegree);
 ~~~~
 
 b) Are there worlds where your new model makes very different predictions about stability from the original model? Which best captures the meaning of "stable"? (it might be useful to actually code up your worlds and test them).
