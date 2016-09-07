@@ -1,10 +1,19 @@
 /* Global layout adjustments */
 
+html {
+    background: url(../../assets/img/grey_wash_wall.png);
+    background-attachment: fixed;
+}
+
+
 body {
-   background-color: #eee
+    background-color: transparent;
+    font-family: Georgia;
+    font-size: 15px;
 }
 
 body div.container {
+    margin-top: 3em;
    max-width: 950px;
    background-color: #fefefe;
    box-shadow: 0 0 15px rgba(0, 0, 0, .3);
@@ -13,8 +22,17 @@ body div.container {
    padding-bottom: 2em;
 }
 
+/* Page header */
+
+.page-header {
+    border-bottom: 1px solid #ccc;
+}
 
 /* Navbar */
+
+.navbar {
+    display: none;
+}
 
 .navbar {
    margin-bottom: 0;
@@ -62,18 +80,25 @@ body .navbar-default .navbar-nav li a:hover {
 
 /* Headings */
 
+/* bold the title */
+.page-header h1 {
+    font-weight: bold;
+    margin-top: 2.5em;
+    font-size: 2em;
+}
+
 h1 {
    margin-top: 1em;
-   font-size: 2.4em;
+   font-size: 1.8em;
 }
 
 h2 {
    margin-top: 1em;
-   font-size: 2em;
+   font-size: 1.5em;
 }
 
 h3 {
-   font-size: 1.5em;
+   font-size: 1.2em;
 }
 
 div.main {
@@ -85,6 +110,10 @@ div.main {
 div.main h1 {
    margin-bottom: .5em;
    line-height: 1.4em;
+}
+
+p {
+    text-align: justify
 }
 
 div.main span.authors {
@@ -106,6 +135,10 @@ div.container ul {
    margin-bottom: 1em;
 }
 
+/* Latex */
+
+/* make math font more similar in size to surrounding text */
+.katex { font-size: 17px !important; }
 
 /* Bibtex */
 

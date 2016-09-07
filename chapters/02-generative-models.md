@@ -55,7 +55,7 @@ This addition results in a powerful language for describing generative models.
 
 In Church, in addition to deterministic functions, we have a set of random functions implementing *random choices.*  These random primitive functions are called *Exchangeable Random Primitives* (XRPs).
 Application of an XRP results in a *sample* from the probability distribution defined by that XRP.
-For example, the simplest XRP is `Bernoulli`, which results in either true or false. 
+For example, the simplest XRP is `Bernoulli`, which results in either true or false.
 Because it simulates a (possibly biased) coin toss, we provide a convenient function called `flip` that draws a Bernoulli sample:
 
 ~~~~
@@ -233,7 +233,7 @@ Now there are four possible diseases and four symptoms.
 Each disease causes a different pattern of symptoms.
 The causal relations are now probabilistic: Only some patients with a cold have a cough (50%), or a fever (30%).
 There is also a catch-all disease category "other", which has a low probability of causing any symptom.
-*Noisy logical* functions, or functions built from **and** (`&&`), **or** (`||`), and `flip`, provide a simple but expressive way to describe probabilistic causal dependencies between Boolean (true-false valued) variables.
+*Noisy logical* functions---functions built from **and** (`&&`), **or** (`||`), and `flip`---provide a simple but expressive way to describe probabilistic causal dependencies between Boolean (true-false valued) variables.
 
 When you run the above code, the program generates a list of symptoms for a hypothetical patient.
 Most likely all the symptoms will be false, as (thankfully) each of these diseases is rare.
@@ -263,7 +263,7 @@ viz.hist(repeat(1000, randomPair), 'return values');
 ~~~~
 
 We see by examining this histogram that `[true, false]` comes out about 25% of the time.
-We may define the **probability** of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `[true, false]` from the above program is 0.25.
+We may define the probability of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `[true, false]` from the above program is 0.25.
 
 Even for very complicated programs we can predict the probability of different outcomes by simulating (sampling from) the program.
 It is also often useful to compute these probabilities directly by reasoning about the sampling process.
