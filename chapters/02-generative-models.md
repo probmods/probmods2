@@ -334,7 +334,7 @@ var geometric = function (p) {
 };
 viz.hist(repeat(1000, function () {
     return geometric(0.6);
-}));
+}), {numBins: 7});
 ~~~~
 
 There is no upper bound on how long the computation can go on, although the probability of reaching some number declines quickly as we go.
