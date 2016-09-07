@@ -52,7 +52,7 @@ D
 This process samples three digits `0`/`1` and adds the result. The value of the final expression here is either 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following Church query (which uses a particular implementation, rejection sampling, to be described shortly):
 
 ~~~~
-var dist = Infer({method: "rejection", samples: 1000}, 
+var dist = Infer({method: "rejection", samples: 1000},
   function () {
     var A = flip() ? 1 : 0
     var B = flip() ? 1 : 0
@@ -69,7 +69,7 @@ The output of `Infer` is a "guess" about the likely value of `A`, conditioned on
 Now suppose that we condition on `D` being greater than or equal to 2.  Then `A` need not be 1, but it is more likely than not to be. (Why?) The corresponding histogram shows the appropriate distribution of "guesses" for `A` conditioned on this new fact:
 
 ~~~~
-var dist = Infer({method: "rejection", samples: 1000}, 
+var dist = Infer({method: "rejection", samples: 1000},
   function () {
     var A = flip() ? 1 : 0
     var B = flip() ? 1 : 0
@@ -97,7 +97,7 @@ var takeSample = function () {
     var D = A + B + C
     return D >= 2 ? A : takeSample()
 }
-viz.auto(repeat(100, takeSample)) 
+viz.auto(repeat(100, takeSample))
 ~~~~
 
 Notice that we have used a stochastic recursion to sample the definitions repeatedly until `D >= 2` is `true`, and we then return `A`: we generate and test until the condition is satisfied.
@@ -175,11 +175,11 @@ Bayes rule simply says that, in special situations where the model decomposes ni
 
 **TODO: link to inference documentation, decide which methods to introduce here (e.g. enumerate, HMC, variational?)**
 
-Much of the difficulty of implementing the WebPPL language (or probabilistic models in general) is in finding useful ways to do conditional inference---to implement `Infer`. 
+Much of the difficulty of implementing the WebPPL language (or probabilistic models in general) is in finding useful ways to do conditional inference---to implement `Infer`.
 The WebPPL implementation that we will use in this tutorial has several different methods available for `Infer`, each of which has its own limitations.
 We will explore the different algorithms used in these implementations in the section on [Algorithms for inference](inference-process.html), for now we just need to note a few differences in usage.
 
-As we have seen already, the method of rejection sampling is implemented using the `rejection` method. 
+As we have seen already, the method of rejection sampling is implemented using the `rejection` method.
 This is a very useful starting point, but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very long time to find evaluations that do so.
 The AI literature is replete with other algorithms and techniques for dealing with conditional probabilistic inference.
 Several of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
@@ -230,7 +230,7 @@ Writing models in WebPPL allows the flexibility to build complex random expressi
 Returning to the earlier example of a series of tug-of-war matches, we can use query to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
 ~~~~
-var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 25000}, 
+var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 25000},
   function () {
     var strength = mem(function (person) { gaussian(0, 1)})
     var lazy = function (person) { flip(1/3) }
@@ -260,7 +260,7 @@ A model very similar to this was used in @Gerstenberg2012 to predict human judge
 We can form many complex queries from this simple model. We could ask how likely a team of Bob and Mary is to win over a team of Jim and Sue, given that Mary is at least as strong as sue, and Bob was on a team that won against Jim previously:
 
 ~~~~
-var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 10000}, 
+var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 10000},
   function () {
     var strength = mem(function (person) { gaussian(0, 1)})
     var lazy = function (person) { flip(1/3) }
@@ -466,7 +466,7 @@ A WebPPL program thus effectively encodes the answers to a very large number of 
 Expressing our knowledge as a probabilistic program of this form also makes it easy to add in new relevant knowledge we may acquire, without altering or interfering with what we already know.  For instance, suppose we decide to consider behavioral and demographic factors that might contribute causally to whether a patient has a given disease:
 
 ~~~~
-var dist = Infer({method: 'enumerate'}, 
+var dist = Infer({method: 'enumerate'},
   function () {
     var worksInHospital = flip(0.01)
     var smokes = flip(0.2)
