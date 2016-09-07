@@ -147,9 +147,6 @@ var sexpify = function(tokens) {
 }
 
 var sexps = sexpify(tokens);
-//console.log(JSON.stringify(sexps,null,1));
-//console.log(sexps);
-//process.exit()
 
 
 var rules = [];
@@ -157,27 +154,58 @@ var addRule = function(name, trigger, replacer) {
   rules.push({name: name, trigger: trigger, replacer: replacer})
 }
 
+
+addRule('bool',
+        function(s) { return s === '#t' || s === '#f' },
+        function(s) { return s === '#t' })
+
 addRule('int',
         function(s) { return _.isString(s) && !_.isNaN(parseInt(s)) },
         function(s) { return parseInt(s) })
 
-addRule('symbol',
-        function(s) { return _.isString(s) && s[0] == '"' && s[s.length - 1] == '"' },
+addRule('float',
+        function(s) { return _.isString(s) && !_.isNaN(parseFloat(s)) },
+        function(s) { return parseFloat(s) })
+
+addRule('identifier',
+        function(s) { return _.isString(s) },
         function(s) { return s })
 
+
+// handles symbols too because we desugar them first to strings
 addRule('string',
         function(s) { return _.isString(s) && s[0] == '"' && s[s.length - 1] == '"' },
         function(s) { return s })
 
+var quote = function(s) {
+  if (_.isString(s)) {
+    if (!_.isNaN(parseInt(s))) {
+      return parseInt(s)
+    } else if (!_.isNaN(parseFloat(s))) {
+      return parseFloat(s)
+    } else {
+      return "'" + s + "'"
+    }
+  }
+  if (_.isArray(s)) {
+    return '[' + s.map(quote).join(', ') + ']';
+  }
+  throw new Error('quote called on non-string ' + s);
+}
+
 addRule('list-shorthand',
         function(s) { return _.isArray(s) && s[0] == 'quote' },
-        function(s) { return '[' + s.slice(1).map(compile).join(', ') + ']'})
-
+        function(s) {
+          return '[' + s.slice(1).map(quote).join(', ') + ']';
+        }
+       )
 
 // (define a b) --> var a = b;
 addRule('var',
-        function(s) { return s.length == 3 && s[0] == 'define' && !_.isArray(s[1]) },
-        function(s) { return 'var ' + s[1] + ' = ' + compile(s[2]) + ';'; })
+        function(s) { return _.isArray(s) && s.length == 3 && s[0] == 'define' && !_.isArray(s[1]) },
+        function(s) {
+          return 'var ' + s[1] + ' = ' + compile(s[2]) + ';';
+        })
 
 // (if a else b)
 // addRule('if',
@@ -195,7 +223,7 @@ addRule('var',
 
 var compile = function(s) {
   // top level program: map over sexps and compile each
-
+  //console.log('* compiling ' + JSON.stringify(s,null,0).replace(/\n/g,""));
 
   for(var i = 0, ii = rules.length; i < ii; i++) {
     var rule = rules[i];
@@ -203,6 +231,7 @@ var compile = function(s) {
         trigger = rule.trigger,
         replacer = rule.replacer;
     if (trigger(s)) {
+      //console.log('matched rule ' + name)
       return replacer(s)
     }
   }
@@ -210,5 +239,17 @@ var compile = function(s) {
   throw new Error('unmatched sexp ' + JSON.stringify(s, null, 1))
 }
 
-console.log(compile(['define','a','"foo"']))
-console.log(compile([ 'define', 'foo', [ 'quote', '1', '2', '3' ] ]))
+var compileProgram = function(ss) {
+  return ss.map(compile).join('\n')
+}
+
+var translate = function(str) {
+  return compileProgram(sexpify(tokenize(str)));
+}
+
+// console.log(compile(['define','a','"foo"']))
+// console.log(compile([ 'define', 'foo', [ 'quote', '1', '2', '3' ] ]))
+
+console.log(translate("(define a '(b c d (e) ))"))
+
+console.log(translate("(define a '(1 2 3 (4)))"))
