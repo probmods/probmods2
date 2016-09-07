@@ -24,44 +24,45 @@ Parallel problems of conditional inference arise in visual perception, social co
 
 When interacting with other people, we observe their actions, which result from a planning process, and often want to guess their desires, beliefs, or future actions. Planning can be modeled as a program that takes as input an agent's mental states (beliefs and desires) and produces action sequences---for a rational agent, these will be actions that are likely to produce the agent's desired states as reliably or efficiently as possible, given the agent's beliefs.  A rational agent can *plan* their actions by conditional inference to infer what steps would be most likely to achieve their desired state.  *Action understanding*, or interpreting an agent's observed behavior, can be expressed as conditioning a planning program (a "theory of mind") on observed actions to infer the mental states that most likely gave rise to those actions, and to predict how the agent is likely to act in the future.
 
-**TODO: Remove language about `query`**
-
-# Hypothetical Reasoning with `query`
+# Hypothetical Reasoning with `Infer`
 
 
-Suppose that we know some fixed fact, and we wish to consider hypotheses about how a generative model could have given rise to that fact.  In Church we can use a special function called  `query` with the following syntax:
+Suppose that we know some fixed fact, and we wish to consider hypotheses about how a generative model could have given rise to that fact.  In WebPPL we can use a special function called  `Infer` with the following syntax:
 
 ~~~~ norun
-query(generative-model,
-      whatWeWantToKnow,
-      whatWeAlreadyKnow)
+Infer(options,
+      model);
 ~~~~
 
-`query` takes three arguments. The first is some generative model expressed as a series of `define` statements. The second is an expression, called the *query expression*, which represents the aspects of the computation that we are interested in. The last argument is the condition that must be met; this may encode observations, data, or more general assumptions.  It is called the *conditioner.*
+`Infer` takes two arguments. The first is a JavaScript object specifying some details about *how* we want to consider the hypotheses. The second is a model (represented as a *thunk*) that samples some hypotheses, conditions on some requirements that must be true (which may include observations, data, or more assumptions), and returns the aspect of the computation that we are interested in.
 
-Consider the following simple generative process:
-
-~~~~
-var A = flip() ? 1 : 0
-var B = flip() ? 1 : 0
-var C = flip() ? 1 : 0
-var D = A + B + C
-D
-~~~~
-
-This process samples three digits `0`/`1` and adds the result. The value of the final expression here is either 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following Church query (which uses a particular implementation, rejection sampling, to be described shortly):
+Consider the following simple generative model:
 
 ~~~~
-var dist = Infer({method: "rejection", samples: 1000},
-  function () {
-    var A = flip() ? 1 : 0
-    var B = flip() ? 1 : 0
-    var C = flip() ? 1 : 0
-    var D = A + B + C
-    condition(D == 3)
-    return A
-})
-viz.auto(dist, 'Value of A, given that D is 3')
+var model = function() {
+  var A = flip() ? 1 : 0
+  var B = flip() ? 1 : 0
+  var C = flip() ? 1 : 0
+  var D = A + B + C
+  return D
+}
+model()
+~~~~
+
+This process samples three digits `0`/`1` and adds the result. The value of the final expression here is either 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following WebPPL inference (which uses a particular method, enumeration, to be described shortly):
+
+~~~~
+var options = {method: 'enumerate'};
+var model = function () {
+  var A = flip() ? 1 : 0
+  var B = flip() ? 1 : 0
+  var C = flip() ? 1 : 0
+  var D = A + B + C
+  condition(D == 3)
+  return A
+};
+var dist = Infer(options, model)
+viz.auto(dist)
 ~~~~
 
 The output of `Infer` is a "guess" about the likely value of `A`, conditioned on `D` being equal to 3. Because `A` must necessarily equal `1`, the histogram shows 100% of the sampled values are `1`.
@@ -69,25 +70,26 @@ The output of `Infer` is a "guess" about the likely value of `A`, conditioned on
 Now suppose that we condition on `D` being greater than or equal to 2.  Then `A` need not be 1, but it is more likely than not to be. (Why?) The corresponding histogram shows the appropriate distribution of "guesses" for `A` conditioned on this new fact:
 
 ~~~~
-var dist = Infer({method: "rejection", samples: 1000},
-  function () {
-    var A = flip() ? 1 : 0
-    var B = flip() ? 1 : 0
-    var C = flip() ? 1 : 0
-    var D = A + B + C
-    condition(D >= 2)
-    return A
-})
-viz.auto(dist, 'Value of A, given that D >= 2')
+var options = {method: 'enumerate'};
+var model = function () {
+  var A = flip() ? 1 : 0
+  var B = flip() ? 1 : 0
+  var C = flip() ? 1 : 0
+  var D = A + B + C
+  condition(D >= 2)
+  return A
+};
+var dist = Infer(options, model)
+viz.auto(dist)
 ~~~~
 
-Predicting the outcome of a generative process is simply a special case of querying, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`.
+Predicting the outcome of a generative process is simply a special case of inference, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`.
 
 Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical operation of *conditioning* a distribution.
 
 ## Rejection Sampling
 
-How can we imagine answering a hypothetical such as those above? We have already seen how to get a sample from a generative model, without constraint, by simply running the evaluation process "forward"  (i.e. simulating the process). We can get conditional samples by forward sampling the entire query, including both the query expression and conditioner, but only keeping the sample if the value returned by the conditioner expression is *true*. For instance, to sample from the above model "A given that D is greater than 2" we could:
+How can we imagine answering a hypothetical such as those above? We have already seen how to get a sample from a generative model, without constraint, by simply running the evaluation process "forward"  (i.e. simulating the process). We can get conditional samples by forward sampling the entire model, but only keeping the sample if the value returned by the conditioner expression is *true*. For instance, to sample from the above model "A given that D is greater than 2" we could:
 
 ~~~~
 var takeSample = function () {
@@ -114,9 +116,8 @@ This process is known as *rejection sampling*; we can use this technique to make
            query-value
            (rejection-query defines query-expression conditioner)))
 ~~~~
-(This is only schematic because we must avoid evaluating the query-expression and conditioner until *inside* the rejection-query function. The Church implementation does this by *de-sugaring*: transforming the code before evaluation.)
 
-While many implementations of `Infer` are possible, and others are discussed later, we can take the `rejection` process to *define* the distribution of values returned by a query expression.
+While many implementations of `Infer` are possible, and others are discussed later, we can take the `rejection` process to *define* the distribution of values returned by a `Infer` expression.
 
 ## Conditional Distributions
 
@@ -124,7 +125,7 @@ The formal definition of *conditional probability* in probability theory is
 
 $$ P(A=a \mid B=b)=\frac{ P(A=a,B=b)}{P(B=b)} $$
 
-Here $$P(A=a \mid B=b)$$ is the probability that "event" $$A$$ has value $$a$$ given that $$B$$ has value $$b$$. (The meaning of events $$A$$ and $$B$$ must be given elsewhere in this notation, unlike a WebPPL program, which contains the full model specification within the query.)
+Here $$P(A=a \mid B=b)$$ is the probability that "event" $$A$$ has value $$a$$ given that $$B$$ has value $$b$$. (The meaning of events $$A$$ and $$B$$ must be given elsewhere in this notation, unlike a WebPPL program, which contains the full model specification within the `Infer` call.)
 The *joint probability*, $$P(A=a,B=b)$$,  is the probability that $$A$$ has value $$a$$ and $$B$$ has value $$b$$.
 So the conditional probability is simply the ratio of the joint probability to the probability of the condition.
 In the case of a WebPPL `Infer` statement, $$A=a$$ will be the "event" returned with value $$a$$, while $$B=b$$ will be the condition statement returning true (so $$b$$ will be *True*).
@@ -133,7 +134,7 @@ The above definition of conditional distribution in terms of rejection sampling 
 Indeed, we can use the process of rejection sampling to understand this alternative definition of the conditional probability $$P(A=a \mid B=b)$$. We imagine sampling many times, but only keeping those samples in which the condition is true. The frequency of the query expression returning a particular value $$a$$ (i.e. $$A=a$$) *given* that the condition is true, will be the number of times that $$A=a$$ **and** $$B=True$$ divided by the number of times that $$B=True$$. Since the frequency of the conditioner returning true will be $$P(B=True)$$ in the long run, and the frequency that the condition returns true *and* the query expression returns a given value $$a$$ will be $$P(A=a, B=True)$$, we get the above formula for the conditional probability.
 <!-- FIXME: clarify this last argument? -->
 
-Try using the above formula for conditional probability to compute the probability of the different return values in the above query examples. Check that you get the same probability that you observe when using rejection sampling.
+Try using the above formula for conditional probability to compute the probability of the different return values in the above examples. Check that you get the same probability that you observe when using rejection sampling.
 
 
 ## Bayes Rule
@@ -168,10 +169,10 @@ We have generated a value, the *hypothesis*, from some distribution called the *
 If we replace the conditioner with `true`in the code above, that is equivalent to observing no data.  Then query draws samples from the prior distribution, rather than the posterior.
 -->
 
-Bayes rule simply says that, in special situations where the model decomposes nicely into a part "before" the query-expression and a part "after" the query expression, then the conditional probability can be expressed in terms of these components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in terms of sampling.
+Bayes rule simply says that, in special situations where the model decomposes nicely into a part "before" the `condition` statement and a part "after" the `condition` statement, then the conditional probability can be expressed in terms of these components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in terms of sampling.
 
 
-## Implementations of `query`
+## Implementations of `Infer`
 
 **TODO: link to inference documentation, decide which methods to introduce here (e.g. enumerate, HMC, variational?)**
 
@@ -221,13 +222,13 @@ var dist = Infer({method: "MCMC", kernel: "MH", samples: 50000},
 viz.auto(dist)
 ~~~~
 
-This query has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above query in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
+This inference has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above inference in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
 
 Writing models in WebPPL allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `Infer` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
 
 ## Example: Reasoning about the Tug of War
 
-Returning to the earlier example of a series of tug-of-war matches, we can use query to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
+Returning to the earlier example of a series of tug-of-war matches, we can use `Infer` to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
 ~~~~
 var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 25000},
@@ -407,7 +408,7 @@ Indeed, @Krynski2007 have argued that human statistical judgment is fundamentall
 
 > 1% of women at age 40 who participate in a routine screening will have breast cancer.  Of those with breast cancer, 80% will receive a positive mammogram.  20% of women at age 40 who participate in a routine screening will have a benign cyst.  Of those with a benign cyst, 50% will receive a positive mammogram due to unusually dense tissue of the cyst.  All others will receive a negative mammogram.  Suppose that a woman in this age group has a positive mammography in a routine screening. What is the probability that she actually has breast cancer?
 
-This question is easy for people to answer---empirically, just as easy as the frequency-based formulation given above.  We may conjecture this is because the relevant frequencies can be computed from a simple query on the following more intuitive causal model:
+This question is easy for people to answer---empirically, just as easy as the frequency-based formulation given above.  We may conjecture this is because the relevant frequencies can be computed from a simple inference on the following more intuitive causal model:
 
 ~~~~
 var samples = Infer({method: 'enumerate'},
@@ -459,7 +460,7 @@ var dist = Infer({method: 'enumerate'},
 viz.auto(dist, 'Joint inferences for lung cancer and TB')
 ~~~~
 
-You can use this model to infer conditional probabilities for any subset of diseases conditioned on any pattern of symptoms.  Try varying the symptoms in the conditioning set or the diseases in the query, and see how the model's inferences compare with your intuitions.  For example, what happens to inferences about lung cancer and TB in the above model if you remove chest pain and shortness of breath as symptoms?  (Why?  Consider the alternative explanations.)  More generally, we can condition on any set of events -- any combination of symptoms and diseases -- and query any others.  We can also condition on the negation of an event $X$ using `!X`: e.g., how does the probability of lung cancer (versus TB) change if we observe that the patient does *not* have a fever, does *not* have a cough, or does not have either symptom?
+You can use this model to infer conditional probabilities for any subset of diseases conditioned on any pattern of symptoms.  Try varying the symptoms in the conditioning set or the diseases in the inference, and see how the model's inferences compare with your intuitions.  For example, what happens to inferences about lung cancer and TB in the above model if you remove chest pain and shortness of breath as symptoms?  (Why?  Consider the alternative explanations.)  More generally, we can condition on any set of events -- any combination of symptoms and diseases -- and query any others.  We can also condition on the negation of an event $X$ using `!X`: e.g., how does the probability of lung cancer (versus TB) change if we observe that the patient does *not* have a fever, does *not* have a cough, or does not have either symptom?
 
 A WebPPL program thus effectively encodes the answers to a very large number of possible questions in a very compact form, where each question has the form, "Suppose we observe X, what can we infer about Y?".  In the program above, there are $3^9=19683$ possible simple conditioners (possible X's) corresponding to conjunctions of events or their negations (because the program has 9 stochastic Boolean-valued functions, each of which can be observed true, observed false, or not observed). Then for each of those X's there are a roughly comparable number of Y's, corresponding to all the possible conjunctions of variables that can be in the query set Y, making the total number of simple questions encoded on the order of 100 million. In fact, as we will see below when we describe complex queries, the true number of possible questions encoded in just a short WebPPL program like this one is very much larger than that; usually the set is infinite. With `Infer` we can in principle compute the answer to every one of these questions.  We are beginning to see the sense in which probabilistic programming provides the foundations for constructing a *language of thought*, as described in the Introduction: a finite system of knowledge that compactly and efficiently supports an infinite number of inference and decision tasks.
 
@@ -504,4 +505,4 @@ Under this model, a patient with coughing, chest pain and shortness of breath is
 
 Test your knowledge: [Exercises](03-conditioning-exercises.html)
 
-<!-- Next chapter: [Patterns of inference](03-patterns-of-inference.html) -->
+Next chapter: [Patterns of inference](04-patterns-of-inference.html) 
