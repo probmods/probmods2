@@ -119,23 +119,15 @@ To illustrate the power of the size principle in inferring the most parsimonious
 
 ~~~~
 var observedData = [[0.4, 0.7], [0.5, 0.4], [0.46, 0.63], [0.43, 0.51]];
-var noise = 0.001;
 var numExamples = observedData.length;
 
 var samples = Infer(
-  {
-    method: 'MCMC',
-    samples: 150,
-    lag: 100,
-    burn: 100
-  },
+  {method: 'MCMC', samples: 150, lag: 100, burn: 100},
   function () {
     var x1 = uniform(0, 1);
     var x2 = uniform(0, 1);
     var y1 = uniform(0, 1);
     var y2 = uniform(0, 1);
-    var concept = function () { return [uniform(x1, x2), uniform(y1, y2)];
-                              };
 
     map(function(example) {
       observe(Uniform({a: x1, b: x2}), example[0]);
@@ -148,8 +140,8 @@ var samples = Infer(
 
 var img = Draw(500, 500, true);
 
-map(function(hyp) {
-  img.rectangle(hyp[0] * 500,hyp[2] * 500,hyp[1] * 500, hyp[3] * 500, 'gray', 'gray', 0.005)
+map(function(r) {
+  img.rectangle(r[0] * 500, r[2] * 500, r[1] * 500, r[3] * 500, 'gray', 'gray', 0.005)
 }, samples.support())
 
 map(function(obs) {
