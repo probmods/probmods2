@@ -175,7 +175,7 @@ code, .CodeMirror pre {
 
 .wpedit button {
     font-family: Inconsolata !important;
-    margin: 0 0 0.5em 0 !important;
+    margin: 0 0.2em 0.5em 0 !important;
     padding: 0.3em !important;
     border: none !important;
     background-color: #e8e8e8 !important;
