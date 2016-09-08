@@ -15,7 +15,7 @@ description: Induction and prediction
 
 The line between "reasoning" and "learning" is unclear in cognition.
 Just as reasoning can be seen as a form of conditional inference, so can learning: discovering persistent facts about the world (for example, causal processes or causal properties of objects).
-By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time. 
+By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time.
 Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations](observing-sequences.html)---those that fit the pattern of [Bayes rule](conditioning.html#bayes-rule):
 
 ~~~~ {.idealized}
@@ -83,7 +83,7 @@ Learning is always about the shift from one state of knowledge to another.  The 
 
 The previous example represents perhaps the simplest imaginable case of learning.  Typical learning problems in human cognition or AI are more complex in many ways.  For one, learners are almost always confronted with more than two hypotheses about the causal structure that might underlie their observations.  Indeed, hypothesis spaces for learning are often infinite.  Countably infinite hypothesis spaces are encountered in models of learning for domains traditionally considered to depend on "discrete" or "symbolic" knowledge; hypothesis spaces of grammars in language acquisition are a canonical example.  Hypothesis spaces for learning in domains traditionally considered more "continuous", such as perception or motor control, are typically uncountable and parametrized by one or more continuous dimensions.  In causal learning, both discrete and continuous hypothesis spaces typically arise.  In statistics and machine learning, making conditional inferences over continuous hypothesis spaces given data is usually called *parameter estimation*.
 
-We can explore a basic case of learning with continuous hypothesis spaces by slightly enriching our coin flipping example.  Suppose that our hypothesis generator `make-coin`, instead of simply flipping a coin to determine which of two coin weights to use, can choose *any* coin weight between 0 and 1.  
+We can explore a basic case of learning with continuous hypothesis spaces by slightly enriching our coin flipping example.  Suppose that our hypothesis generator `make-coin`, instead of simply flipping a coin to determine which of two coin weights to use, can choose *any* coin weight between 0 and 1.
 <!--
 For this we need to introduce a new kind of XRP that outputs a real number in the interval $[0,1]$, corresponding to the coin weight, in addition to `flip` which outputs a Boolean truth value.  The simplest such XRP in Church is called `uniform`, which outputs a random real number chosen uniformly between a given upper and lower bound.  
 -->
@@ -209,15 +209,15 @@ A common problem for cognition is *causal learning*: from observed evidence abou
   (mh-query 10000 1
             (define cp (uniform 0 1)) ;;causal power of C to cause E.
             (define b (uniform 0 1))  ;;background probability of E.
-            
+
             ;;the noisy causal relation to get E given C:
-            (define (E-if-C C) 
+            (define (E-if-C C)
               (or (and C (flip cp))
                   (flip b)))
-            
+
             ;;infer the causal power:
             cp
-            
+
             ;;condition on some contingency evidence:
             (and (E-if-C true)
                  (E-if-C true)
@@ -250,12 +250,12 @@ Consider the following Church program, which induces an arithmetic function from
 
 (define (sample)
 (rejection-query
- 
+
  (define my-expr (random-arithmetic-expression))
  (define my-proc (procedure-from-expression my-expr))
- 
+
  my-expr
- 
+
  (= (my-proc 1) 3)))
 
 (apply display (repeat 20 sample))
@@ -335,7 +335,7 @@ This model learns from an infinite hypothesis space---all expressions made from 
 
 How can we account for the productivity of human concepts (the fact that every child learns a remarkable number of different, complex concepts)? The "classical" theory of concepts formation accounted for this productivity by hypothesizing that concepts are represented compositionally, by logical combination of the features of objects (see for example Bruner, Goodnow, and Austin, 1951). That is, concepts could be thought of as rules for classifying objects (in or out of the concept) and concept learning was a process of deducing the correct rule.
 
-While this theory was appealing for many reasons, it failed to account for a variety of categorization experiments. Here are the training examples, and one transfer example, from the classic experiment of Medin and Schaffer (1978). The bar graph above the stimuli shows the portion of human participants who said that bug was a "fep" in the test phase (the data comes from a replication by Nosofsky, Gluck, Palmeri, McKinley (1994); the bug stimuli are courtesy of Pat Shafto):  
+While this theory was appealing for many reasons, it failed to account for a variety of categorization experiments. Here are the training examples, and one transfer example, from the classic experiment of Medin and Schaffer (1978). The bar graph above the stimuli shows the portion of human participants who said that bug was a "fep" in the test phase (the data comes from a replication by Nosofsky, Gluck, Palmeri, McKinley (1994); the bug stimuli are courtesy of Pat Shafto):
 
 <img src='images/Medin54-bugs.png' width='500' />
 
@@ -360,8 +360,8 @@ Is it possible to get graded effects from rule-based concepts? Perhaps these eff
 (define human-T '(0.56 0.41 0.82 0.40 0.32 0.53 0.20))
 
 ;;two parameters: stopping probability of the grammar, and noise probability:
-(define tau 0.3)         
-(define noise-param (exp -1.5)) 
+(define tau 0.3)
+(define noise-param (exp -1.5))
 
 ;;a generative process for disjunctive normal form propositional equations:
 (define (get-formula)
@@ -387,22 +387,22 @@ Is it possible to get graded effects from rule-based concepts? Perhaps these eff
 (define (noisy-equal? a b) (flip (if (equal? a b) 0.999999999 noise-param)))
 
 (define samples
-  (mh-query 
+  (mh-query
    1000 10
-   
+
    ;;infer a classification formula
    (define my-formula (get-formula))
-   
+
    ;;look at posterior predictive classification
    (map my-formula (append T-objects A-objects B-objects))
-   
+
    ;;conditioning (noisily) on all the training eamples:
    (and (all (map (lambda (x) (noisy-equal? true (my-formula x))) A-objects))
         (all (map (lambda (x) (noisy-equal? false (my-formula x))) B-objects)))))
 
 
 ;;now plot the predictions vs human data:
-(define (means samples) 
+(define (means samples)
   (if (null? (first samples))
       '()
       (pair (mean (map (lambda (x) (if x 1.0 0.0)) (map first samples)))
@@ -413,9 +413,9 @@ Is it possible to get graded effects from rule-based concepts? Perhaps these eff
 
 Goodman, et al, have used to this model to capture a variety of classic categorization effects [@Goodman:2008p865]. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
 
-This style of compositional concept induction model, can be naturally extended to more complex hypothesis spaces. For examples, see: 
+This style of compositional concept induction model, can be naturally extended to more complex hypothesis spaces. For examples, see:
 
-* Compositionality in rational analysis: Grammar-based induction for concept learning. N. D. Goodman, J. B. Tenenbaum, T. L. Griffiths, and J. Feldman (2008). In M. Oaksford and N. Chater (Eds.). The probabilistic mind: Prospects for Bayesian cognitive science. 
+* Compositionality in rational analysis: Grammar-based induction for concept learning. N. D. Goodman, J. B. Tenenbaum, T. L. Griffiths, and J. Feldman (2008). In M. Oaksford and N. Chater (Eds.). The probabilistic mind: Prospects for Bayesian cognitive science.
 
 * A Bayesian Model of the Acquisition of Compositional Semantics. S. T. Piantadosi, N. D. Goodman, B. A. Ellis, and J. B. Tenenbaum (2008). Proceedings of the Thirtieth Annual Conference of the Cognitive Science Society.
 
@@ -424,5 +424,3 @@ It has been used to model theory acquisition, learning natural numbers concepts,
 * Learning Structured Generative Concepts. A. Stuhlmueller, J. B. Tenenbaum, and N. D. Goodman (2010). Proceedings of the Thirty-Second Annual Conference of the Cognitive Science Society.
 
 # References
-
-
