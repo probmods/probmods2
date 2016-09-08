@@ -184,3 +184,19 @@ code, .CodeMirror pre {
 .wpedit .drawerButton {
     background-color: transparent !important
 }
+
+
+/* Tables */
+
+table {
+    border: 1px solid gray;
+    margin: 0.5em 0;
+}
+
+tr, td, th {
+    border: 1px solid gray;
+}
+
+td, th {
+    padding: 0.2em 0.4em
+}
