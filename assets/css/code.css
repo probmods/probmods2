@@ -28,12 +28,10 @@ pre {
 }
 
 .drawCanvas {
-   border: 1px solid #ccc;
+   border: 3px double #ccc;
    border-radius: 4px;
    padding: .5em;
-   margin-bottom: .5em;
-   margin-right: .5em;
-   margin-top: .5em;
+   margin: 1em 1em 0 1em;
 }
 
 p code, li code {
