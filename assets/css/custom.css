@@ -104,12 +104,19 @@ h3 {
 div.main {
    text-align: center;
    margin-top: 4em;
-   margin-bottom: 3.5em;
+   margin-bottom: 1em;
 }
 
 div.main h1 {
-   margin-bottom: .5em;
-   line-height: 1.4em;
+    font-family: 'IM Fell French Canon';
+    font-style: italic;
+    font-size: 50px;
+    background-color: bisque;
+    border: 1px solid bisque;
+    line-height: 1.4em;
+    padding: 0.45em 0 0.35em 0;
+    margin-bottom: 0.5em;
+
 }
 
 p {
