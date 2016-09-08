@@ -1,6 +1,6 @@
 ---
-layout: chapter
-title: Generative models
+layout: exercise
+title: Generative models - exercises
 description: Generative models
 custom_js:
 - assets/js/box2d.js
@@ -83,7 +83,7 @@ Directly compute the probability of the bent coin in the example. Check your ans
 
 Here is a modified version of the tug of war game. Instead of drawing strength from the continuous Gaussian distribution, strength is either 5 or 10 with equal probability. Also the probability of laziness is changed from 1/4 to 1/3. Here are four expressions you could evaluate using this modified model:
 
-~~~~ 
+~~~~
 var strength = mem(function(person) {
   return flip() ? 5 : 10;
 });
@@ -103,7 +103,7 @@ var winner = function(team1, team2) {
 winner(['alice'], ['bob'])
 
 // expression 2
-_.isEqual(['alice'], winner(['alice'], ['bob'])) 
+_.isEqual(['alice'], winner(['alice'], ['bob']))
 
 // expression 3
 (_.isEqual(['alice'], winner(['alice'], ['bob'])) &&
@@ -124,7 +124,7 @@ c) Why are the probabilities different for the last two? Explain both in terms o
 
 Use the rules of probability, described above, to compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5.
 
-~~~~ 
+~~~~
 var geometric = function(p) {
   return flip(p) ? 0 : 1 + geometric(p);
 };
@@ -159,10 +159,10 @@ Convert the following probability table to a compact Church program:
     <td>T</td> <td>T</td> <td>0.4</td>
   </tr>
 </table>
--->										
+-->
 Hint: fix the probability of A and then define the probability of B to *depend* on whether A is true or not. Run your WebPPL program and build a histogram to check that you get the correct distribution
 
-~~~~ 
+~~~~
 var a = ...;
 var b = ...;
 display([a, b])
@@ -187,7 +187,7 @@ var listMin = function(xs) {
 var highestY = function (w) { listMin(map(function(obj) { return obj.y }, w)) }
 var ground = {shape: 'rect', static: true, dims: [worldWidth, 10],
               x: worldWidth/2, y: worldHeight+6};
-	      
+
 var almostUnstableWorld = [
   ground,
   {shape: 'rect', static: false, dims: [24, 22], x: 175, y: 473},
@@ -210,7 +210,7 @@ var noisify = function (world) {
 // Returns height of tower
 var getTowerHeight = function(world) {
   return worldHeight - highestY(world);
-}; 
+};
 
 var doesTowerFall = function (initialW, finalW) {
   var approxEqual = function (a, b) { Math.abs(a - b) < 1.0 }
@@ -240,5 +240,3 @@ visualizeStabilityMeasure(towerFallDegree);
 ~~~~
 
 b) Are there worlds where your new model makes very different predictions about stability from the original model? Which best captures the meaning of "stable"? (it might be useful to actually code up your worlds and test them).
-
-
