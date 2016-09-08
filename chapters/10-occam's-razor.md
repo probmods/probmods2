@@ -118,34 +118,31 @@ The size principle is related to an influential proposal in linguistics known as
 To illustrate the power of the size principle in inferring the most parsimonious explanation of data, consider learning a rectangle "concept" <ref>Tenenbaum, 2000</ref>. The data are a set of point in the plane, that we assume to be randomly sampled from within some unknown rectangle.  Given the examples, what is the rectangle they came from?  We can model this learning as conditional of the rectangle given the points. We plot the sampled rectangles as well as the posterior mean:
 
 ~~~~
-var observedData = [[0.4, 0.7], [0.5, 0.4], [0.46, 0.63], [0.43, 0.51]];
-var numExamples = observedData.length;
+var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}, {x: 0.46, y: 0.63}, {x: 0.43, y: 0.51}]
 
 var samples = Infer(
   {method: 'MCMC', samples: 150, lag: 100, burn: 100},
   function () {
-    var x1 = uniform(0, 1);
-    var x2 = uniform(0, 1);
-    var y1 = uniform(0, 1);
-    var y2 = uniform(0, 1);
-
+    var x1 = uniform(0, 1), x2 = uniform(0, 1);
+    var y1 = uniform(0, 1), y2 = uniform(0, 1);
     map(function(example) {
-      observe(Uniform({a: x1, b: x2}), example[0]);
-      observe(Uniform({a: y1, b: y2}), example[1]);
+      observe(Uniform({a: x1, b: x2}), example.x)
+      observe(Uniform({a: y1, b: y2}), example.y)
     }, observedData);
-
-    return [x1, x2, y1, y2];
+    return {x1: x1, x2: x2, y1: y1, y2: y2};
   }
 )
 
 var img = Draw(500, 500, true);
 
+// draw rectangles
 map(function(r) {
-  img.rectangle(r[0] * 500, r[2] * 500, r[1] * 500, r[3] * 500, 'gray', 'gray', 0.005)
+  img.rectangle(r.x1 * 500, r.y1 * 500, r.x2 * 500, r.y2 * 500, '#99ccff', '#99ccff', 0.01)
 }, samples.support())
 
+// draw data points
 map(function(obs) {
-  img.circle(obs[0] * 500, obs[1] * 500, 5, '#99ccff', '#99ccff')
+  img.circle(obs.x * 500, obs.y * 500, 5, 'black', 'black')
 }, observedData);
 
 ""
@@ -163,75 +160,41 @@ Explore how the concept learned varies as a function of the number and distribut
 Compare this to the results of a slightly different causal process for the same observations, known as *weak sampling*:
 
 ~~~~
-;;observed points (now points and in/out labels):
-(define obs-data '((0.4 0.7 #t) (0.5 0.4 #t) (0.46 0.63 #t) (0.43 0.51 #t)))
+var observedData = [{x: 0.40, y: 0.70, polarity: '+'},{x: 0.50, y: 0.40, polarity: '+'},
+                    {x: 0.46, y: 0.63, polarity: '+'},{x: 0.43, y: 0.51, polarity: '+'}]
 
-;;parameters and helper functions:
-(define num-examples (length obs-data))
+var samples = Infer(
+  {method: 'MCMC', samples: 150, lag: 100, burn: 100},
+  function () {
+    var x1 = uniform(0, 1), x2 = uniform(0, 1);
+    var y1 = uniform(0, 1), y2 = uniform(0, 1);
 
-;;infer the rectangle given the observed points:
-(define samples
-  (drop
-   (mh-query
-    300 100
+    // the concept is now a rule for classifying points as in or out of this rectangle
+    var classifier = function(x,y) {
+     return (x > x1 && x < x2 && y > y1 && y < y2) ? '+' : '-';
+    }
 
-    ;;sample the rectangle
-    (define x1 (uniform 0 1))
-    (define x2 (uniform 0 1))
-    (define y1 (uniform 0 1))
-    (define y2 (uniform 0 1))
+    map(function(example) {
+      condition(classifier(example.x, example.y) == example.polarity)
+    }, observedData);
 
-    ;;the concept is now a rule for classifying points as in or out of this rectangle
-    ;;we return both the point and the label
-    (define (concept p)
-      (list (first p)
-            (second p)
-            (and (< (first p) x2)
-                 (> (first p) x1)
-                 (< (second p) y2)
-                 (> (second p) y1))))
+    return {x1: x1, x2: x2, y1: y1, y2: y2};
+  }
+)
 
-    (list x1 x2 y1 y2)
+var img = Draw(500, 500, true);
 
-    ;;condition on all the observed points being in the rectangle
-    (all
-      (map (lambda (datum) (equal? (third (concept (list (first datum) (second datum)))) (third datum)))
-        obs-data)))
+// draw rectangles
+map(function(r) {
+  img.rectangle(r.x1 * 500, r.y1 * 500, r.x2 * 500, r.y2 * 500, '#99ccff', '#99ccff', 0.01)
+}, samples.support())
 
-  100))
+// draw data points
+map(function(obs) {
+  img.circle(obs.x * 500, obs.y * 500, 5, 'black', 'black')
+}, observedData);
 
-;;set up fancy graphing:
-(define (adjust points)
-  (map (lambda (p) (+ (* p 350) 25))
-       points))
-(define paper (make-raphael "my-paper" 400 400))
-(define (draw-rect rect color alpha linewidth)
-  (let* ((rect (adjust rect))
-         (x-lower (min (first rect) (second rect)))
-         (y-lower (min (third rect) (fourth rect)))
-         (width (abs (- (second rect) (first rect))))
-         (height (abs (- (fourth rect) (third rect)))))
-    (raphael-js paper
-      "rect = r.rect(" x-lower ", " y-lower ", " width ", " height
-      "); rect.attr('stroke', " color
-      "); rect.attr('stroke-width', " linewidth
-      "); rect.attr('stroke-opacity', " alpha ")")))
-
-;;graph the observed points:
-(raphael-points paper
-                (adjust (map first obs-data))
-                (adjust (map second obs-data)))
-
-;;graph the sampled rectangles:
-(map (lambda (rect) (draw-rect rect "'aaa'" 0.1 0.5)) samples)
-
-;;graph the mean rectangle:
-(define mean-bounds (map mean (list (map first samples) (map second samples) (map third samples) (map fourth samples))))
-(draw-rect mean-bounds "'#1f3'" 1 3)
-
-(draw-rect (list 0 1 0 1) "'#000'" 1 2)
-
-'done
+""
 ~~~~
 
 ## The Size Principle and Implicit Negative Evidence
