@@ -26,7 +26,7 @@ Thus, we will formulate learning as inference in a model that (1) has a fixed la
 ~~~~
 
 The `prior` samples a hypothesis from the *hypothesis space*.
-This function expresses our prior knowledge about how the process we observe is likely to work, before we have observed any data. 
+This function expresses our prior knowledge about how the process we observe is likely to work, before we have observed any data.
 The `observe` function describes how a data point is generated given the hypothesis.
 What can be inferred about the hypothesis given a certain subset of the observed data? How much more can we learn as the size of the observed data set increases---what is the *learning curve*?
 
@@ -85,7 +85,7 @@ The previous example represents perhaps the simplest imaginable case of learning
 
 We can explore a basic case of learning with continuous hypothesis spaces by slightly enriching our coin flipping example.  Suppose that our hypothesis generator `make-coin`, instead of simply flipping a coin to determine which of two coin weights to use, can choose *any* coin weight between 0 and 1.
 <!--
-For this we need to introduce a new kind of XRP that outputs a real number in the interval $[0,1]$, corresponding to the coin weight, in addition to `flip` which outputs a Boolean truth value.  The simplest such XRP in Church is called `uniform`, which outputs a random real number chosen uniformly between a given upper and lower bound.  
+For this we need to introduce a new kind of XRP that outputs a real number in the interval $[0,1]$, corresponding to the coin weight, in addition to `flip` which outputs a Boolean truth value.  The simplest such XRP in Church is called `uniform`, which outputs a random real number chosen uniformly between a given upper and lower bound.
 -->
 The following program computes conditional inferences about the weight of a coin drawn from a *prior distribution* described by the `uniform` function, conditioned on a set of observed flips.
 
