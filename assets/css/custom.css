@@ -207,3 +207,12 @@ tr, td, th {
 td, th {
     padding: 0.2em 0.4em
 }
+
+/* footnotes */
+
+.container .bigfoot-footnote__button {
+    border: 1px solid gray;
+    margin-bottom: 0.4em;
+    margin-left: 0.5em;
+    background-color: #da7ea6
+}

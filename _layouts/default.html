@@ -41,7 +41,6 @@
     {% endif %}
 
 
-    <script src="{{ site.baseurl }}/assets/js/custom.js"></script>
     {% if layout.custom_js %}
       {% for js_file in layout.custom_js %}
       <script src='{{ site.baseurl }}/{{ js_file }}' type="text/javascript"></script>
@@ -64,6 +63,7 @@
       {% endfor %}
     {% endif %}
 
+    <script src="{{ site.baseurl }}/assets/js/custom.js"></script>
 
   </head>
   <body>

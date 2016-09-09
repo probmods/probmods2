@@ -82,3 +82,11 @@ $(setBibtex)
 if (typeof ERP !== 'undefined') {
   ERP.prototype.__print__ = viz.print;
 }
+
+// handle footnotes
+
+$("a.footnote").map(function(i,x) {
+  $(x).attr('rel', 'footnote')
+})
+
+$.bigfoot();

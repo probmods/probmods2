@@ -17,6 +17,7 @@
     "underscore": "~1.8.3",
     "jquery": "~2.2.3",
     "bootstrap": "~3.3.6",
-    "KaTeX": "katex#^0.6.0"
+    "KaTeX": "katex#^0.6.0",
+    "bigfoot": "^2.1.4"
   }
 }

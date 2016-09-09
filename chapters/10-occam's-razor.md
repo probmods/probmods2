@@ -110,7 +110,9 @@ $$P(\text{hypothesis} \mid \text{observations}) \propto P(\text{observations} \m
 
 So we see that the the posterior distribution over hypotheses in this case is just the normalized likelihood $$P(\text{observations} \mid \text{hypothesis})$$.  The likelihood ratio $$P(\text{observations} \mid \text{Big})/P(\text{observations} \mid \text{Small}) = (\frac{1}{2})^N$$ determines how quickly the simpler hypothesis `Small` comes to dominate the posterior.
 
-The size principle is related to an influential proposal in linguistics known as the *subset principle*. Intuitively, the subset principle suggests that when two grammars both account for the same data, the grammar that generates a smaller language should be preferred.^[The term *subset principle* is usually used in linguistics to refer to the notion that a grammar that generates a smaller language should be preferred to one that generates a larger language. However, the name originally was introduced by Bob Berwick to refer to a result due to Dana Angluin giving necessary and sufficient conditions for Gold-style learnability of a class of languages. Essentially it states that a class of languages is learnable in the limit using this principle if every language in the class has a *characteristic subset*.]
+The size principle is related to an influential proposal in linguistics known as the *subset principle*. Intuitively, the subset principle suggests that when two grammars both account for the same data, the grammar that generates a smaller language should be preferred.[^fn-subset-principle]
+
+[^fn-subset-principle]: The term *subset principle* is usually used in linguistics to refer to the notion that a grammar that generates a smaller language should be preferred to one that generates a larger language. However, the name originally was introduced by Bob Berwick to refer to a result due to Dana Angluin giving necessary and sufficient conditions for Gold-style learnability of a class of languages. Essentially it states that a class of languages is learnable in the limit using this principle if every language in the class has a *characteristic subset*.
 
 ## Example: The Rectangle Game
 
@@ -705,5 +707,3 @@ Hint: to draw from a set of integers, you may want to use this `noisy-draw` func
 ;;for example:
 (noisy-draw '(1 3 5))
 ~~~~
-
-# References
