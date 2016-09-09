@@ -18,7 +18,7 @@ Just as reasoning can be seen as a form of conditional inference, so can learnin
 By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time.
 Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations](observing-sequences.html)---those that fit the pattern of [Bayes rule](conditioning.html#bayes-rule):
 
-~~~~ {.idealized}
+~~~~ norun
 (query
  (define hypothesis (prior))
  hypothesis
@@ -98,14 +98,14 @@ The following program computes conditional inferences about the weight of a coin
 (define samples
   (mh-query
    num-samples 10
-   
+
    (define coin-weight (uniform 0 1))
-   
+
    (define make-coin (lambda (weight) (lambda () (if (flip weight) 'h 't))))
    (define coin (make-coin coin-weight))
-   
+
    coin-weight
-   
+
    (equal? observed-data (repeat num-flips coin))))
 
 (density prior-samples "Coin weight, prior to observing data")
