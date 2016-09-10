@@ -15,45 +15,56 @@ Imagine a factory where the widget-maker makes a stream of widgets, and the widg
 
 ~~~~
 // this machine makes a widget -- which we'll just represent with a real number:
-var widgetMaker = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
-                               ps: [.05, .1, .2, .3, .2, .1, .05]})
+var widgetMachine = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
+                                 ps: [.05, .1, .2, .3, .2, .1, .05]})
+var thresholdPrior = Categorical({vs: [.3, .4, .5, .6, .7],
+                                  ps: [.1, .2, .4, .2, .1]})
+var makeWidgetSeq = function(numWidgets, threshold) {
+  if(numWidgets == 0) {
+    return [];
+  } else {
+    var widget = sample(widgetMachine);
+    return (widget > threshold ? 
+            [widget].concat(makeWidgetSeq(numWidgets - 1, threshold)) : 
+            makeWidgetSeq(numWidgets, threshold));
+  }
+}
 
-var widgets = Infer({method: 'MCMC', samples: 20000}, function() {
-    var threshold = categorical({vs: [.3, .4, .5, .6, .7],
-                                 ps: [.1, .2, .4, .2, .1]})
-    var nextGoodWidget = function() {
-      var widget = sample(widgetMaker);
-      return widget > threshold ? widget : nextGoodWidget();
-    }
-    var widgetSeq = repeat(3, nextGoodWidget);
-    condition(_.isEqual([.6, .7, .8], widgetSeq))
-    return [threshold].join("");
+var widgetDist = Infer({method: 'rejection', samples: 300}, function() {
+  var threshold = sample(thresholdPrior);
+  var goodWidgetSeq = makeWidgetSeq(3, threshold);
+  condition(_.isEqual([.6, .7, .8], goodWidgetSeq))
+  return [threshold].join("");
 })
 
-viz.auto(widgets)
+viz.auto(widgetDist)
 ~~~~
 
 But notice that the definition of next-good-widget is exactly like the definition of rejection sampling! We can re-write this as a nested-query model:
 
 ~~~~
 // this machine makes a widget -- which we'll just represent with a real number:
-var widgetMaker = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
-                               ps: [.05, .1, .2, .3, .2, .1, .05]})
+var widgetMachine = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
+                                 ps: [.05, .1, .2, .3, .2, .1, .05]})
+var thresholdPrior = Categorical({vs: [.3, .4, .5, .6, .7],
+                                  ps: [.1, .2, .4, .2, .1]})
+var makeGoodWidgetSeq = function(numWidgets, threshold) {
+  return Infer({method: 'enumerate'}, function() {
+    var widgets = repeat(numWidgets, function() {return sample(widgetMachine)});
+    condition(all(function(widget) {return widget > threshold}, widgets));
+    return widgets;
+  })
+}
 
-var widgets = Infer({method: 'enumerate'}, function() {
-  var threshold = categorical({vs: [.3, .4, .5, .6, .7],
-                               ps: [.1, .2, .4, .2, .1]})
-  var nextGoodWidget = Infer({method: 'enumerate'}, function() {
-    var widget = sample(widgetMaker);
-    condition(widget > threshold);
-    return widget;
-  });
-  var widgetSeq = repeat(3, function() {sample(nextGoodWidget)});
-  condition(_.isEqual([.6, .7, .8], widgetSeq))
+var widgetDist = Infer({method: 'enumerate'}, function() {
+  var threshold = sample(thresholdPrior);
+  var goodWidgetSeq = makeGoodWidgetSeq(3, threshold);
+  // Now that this is a *distribution*, we can just look up the likelihood
+  factor(goodWidgetSeq.score([.6, .7, .8]))
   return [threshold].join("");
 })
 
-viz.auto(widgets)
+viz.auto(widgetDist)
 ~~~~
 
 Rather than thinking about the details inside the widget tester, we are now abstracting to represent that the machine correctly chooses a good widget (by some means).
@@ -168,8 +179,8 @@ var chooseAction = function(goalSatisfied, transition, state) {
 var goalPosterior = Infer({method: 'enumerate'}, function() {
   var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
   var goalSatisfied = function(outcome) {return outcome == goal};
-  var possibleAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
-  condition(possibleAction == 'b');
+  var actionDist = chooseAction(goalSatisfied, vendingMachine, 'state')
+  factor(actionDist.score('b'));
   return goal;
 })
 
@@ -200,8 +211,8 @@ var vendingMachine = function(state, action) {
 var goalPosterior = Infer({method: 'enumerate'}, function() {
   var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
   var goalSatisfied = function(outcome) {return outcome == goal};
-  var possibleAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
-  condition(possibleAction == 'b');
+  var actionDist = chooseAction(goalSatisfied, vendingMachine, 'state')
+  factor(actionDist.score('b'));
   return goal;
 })
 
@@ -627,7 +638,7 @@ We see that if the listener hears "some" the probability of three out of three i
 
 # Planning
 
-**TODO: Decide what to do with this section. I started to convert it, but wasn't sure if it was going to be kept**
+**TODO: Decide what to do with this section. I started to convert it, but wasn't sure if it was going to be kept because it already seems like a sketch**
 
 Single step, goal-based decision problem.
 
@@ -743,143 +754,6 @@ Multi-step, suboptimal planning as inference
 Gergely and Csibra principle of efficiency and equifinality come from Bayes Occam.
 -->
 
-# Exercises
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/06-inference-about-inference.html) 
 
-1) **Tricky Agents**. What would happen if Sally knew you were watching her and wanted
-to deceive you? 
-
-	A) Complete the code below so that choose-action chooses a misdirection if Sally is deceptive. Then describe and show what happens if you knew Sally was deceptive and chose action "b".
-
-	~~~~ {data-exercise="ex1a"}
-	(define (choose-action goal? transition state deceive)
-	  (rejection-query
-	   (define action (action-prior))
-	
-	    action
-	
-	;;; add condition statement here
-	...
-	))
-	
-	
-	(define (action-prior) (uniform-draw '(a b c)))
-	
-	(define (vending-machine state action)
-	  (case action
-	    (('a) (multinomial '(bagel cookie doughnut) '(0.8 0.1 0.1)))
-	    (('b) (multinomial '(bagel cookie doughnut) '(0.1 0.8 0.1)))
-	    (('c) (multinomial '(bagel cookie doughnut) '(0.1 0.1 0.8)))
-	    (else 'nothing)))
-	
-	 (define (sample)
-	   (rejection-query
-	   (define deceive (flip .5))
-	   (define goal-food (uniform-draw '(bagel cookie doughnut)))
-	   (define goal? (lambda (outcome) (equal? outcome goal-food)))
-	   (define (sally-choice) (choose-action goal? vending-machine 'state deceive))
-	
-	   goal-food
-	
-	    ;;; add condition statement here
-	    ...
-	))
-	
-	 (hist (repeat 100 sample) "Sally's goal")
-	~~~~
-
-	B) What happens if you don't know Sally is deceptive and she chooses "b" and then "b". What if she chooses "a" and then "b." Show the models and describe the difference in behavior. Is she deceptive in each case?
-
-2) **Monty Hall**. Here, we will use the tools of Bayesian inference to explore a classic statistical puzzle -- the Monty Hall problem. Here is one statement of the problem:
-
-    > Alice is on a game show and she's given the choice of three doors. Behind one door is a car; behind the others, goats. She picks door 1. The host, Monty, knows what's behind the doors and opens another door, say No. 3, revealing a goat. He then asks Alice if she wants to switch doors. Should she switch?
-
-    Intuitively, it may seem like switching doesn't matter. However, the canonical solution is that you *should* switch doors. We'll explore (a) the intuition that switching doesn't matter, (b) the canonical solution, and more. This is the starter code you'll be working with:
-
-    ~~~~ {data-exercise="exmonty"}
-    (define (remove lst bad-items)
-      ;; remove bad items from a list
-      (if (null? lst)
-          lst
-          (let ((kar (first lst)))
-            (if (member kar bad-items)
-                (remove (rest lst) bad-items)
-                (pair kar (remove (rest lst) bad-items))
-                ))))
-    
-    (define doors (list 1 2 3))
-    
-    ;;;; monty-random
-    ; (define (monty-random alice-door prize-door)
-    ;   (enumeration-query
-    ;    ..defines..
-    ;    ..query..
-    ;    ..condition..
-    ;   ))
-    
-    ;;;; monty-avoid-both
-    ; (define (monty-avoid-both alice-door prize-door)
-    ;   (enumeration-query
-    ;    ..defines..
-    ;    ..query..
-    ;    ..condition..
-    ;    ))
-    
-    ;;;; monty-avoid-alice
-    ; (define (monty-avoid-alice alice-door prize-door)
-    ;   (enumeration-query
-    ;    ..defines..
-    ;    ..query..
-    ;    ..condition..
-    ;    ))
-    
-    ;;;; monty-avoid-prize
-    ; (define (monty-avoid-prize alice-door prize-door)
-    ;   (enumeration-query
-    ;    ..defines..
-    ;    ..query..
-    ;    ..condition..
-    ;    ))
-    
-    (enumeration-query
-     (define alice-door ...)
-     (define prize-door ...)
-    
-     ;; we'll be testing multiple possible montys
-     ;; let's use "monty-function" as an alias for whichever one we're testing
-     (define monty-function monty-random)
-     
-     (define monty-door
-       ;; get the result of whichever enumeration-query we're asking about
-       ;; this will be a list of the form ((x1 x2 ... xn) (p1 p2 ... pn))
-       ;; we then (apply multinomial ) on this list to sample from that distribution
-       (apply multinomial (monty-function alice-door prize-door)))
-    
-     ;; query
-     ;; what information could tell us whether we should switch?
-     ...
-    
-     ;; condition
-     ;; look at the problem description - what evidence do we have?
-     ...
-    )
-    ~~~~
-
-    A) Whether you should switch depends crucially on how you believe Monty chooses doors to pick. First, write the model such that the host *randomly* picks doors (for this, fill in `monty-random`). In this setting, should Alice switch? Or does it not matter? Hint: it is useful to condition on the exact doors that we discussed in the problem description.
-
-    B) Now, fill in `monty-avoid-both` (make sure you switch your `(define monty-function ...)` alias to use `monty-avoid-both`). Here, Monty randomly picks a door that is *neither* the prize door *nor* Alice's door. For both-avoiding Monty, you'll find that Alice *should* switch. This is unintuitive  -- we know that Monty picked door 3, so why should the process he used to arrive at this choice matter? By hand, compute the probability table for $$P(\text{Prize } \mid \text{Alice picks door 1}, \text{Monty picks door 3}, \text{Door 3 is not the prize})$$ under both `monty-random` and `monty-avoid-both`. Your tables should look like:
-
-        Alice's door   Prize door     Monty's Door   P(Alice, Prize, Monty)
-        -------------  -----------    -------------  -----------------------
-        1              1              1              ...
-        1              1              2              ...
-        ...            ...            ...            ...
-
-        Using these tables, explain why Alice should switch for both-avoiding Monty but why switching doesn't matter for random Monty. Hint: you will want to compare particular *rows* of these tables.
-    
-    C) Fill in `monty-avoid-alice`. Here, Monty randomly picks a door that is simply not Alice's door. Should Alice switch here?
-    
-    D) Fill in `monty-avoid-prize`. Here, Monty randomly picks a door that is simply not the prize door. Should Alice switch here?
-
-    E) An interesting cognitive question is: why do we have the initial intuition that switching shouldn't matter? Given your explorations, propose an answer.
-
-# References
+Next chapter: [Algorithms for inference]({{site.baseurl}}/chapters/07-inference-process.html)
