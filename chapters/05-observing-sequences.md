@@ -449,9 +449,6 @@ The PCFG can't be written with `unfold` because it builds a tree (nested list) r
 
 Note that this samples a hierarchical (or "parenthesized") sequence of terminals. How would you "flatten" this to return a sequence without parentheses?
 
+<!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/05-observing-sequences.html) -->
 
-# Exercises
-
-<!-- Write a version of the preceding PCFG that draws the RHS distributions from a Dirichlet distribution (as in the hierarchical n-gram model).-->
-
-# References
+Next chapter: [Inference about inference]({{site.baseurl}}/chapters/06-inference-about-inference.html)
