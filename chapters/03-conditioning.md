@@ -10,7 +10,7 @@ custom_js:
 # Cognition and conditioning
 
 We have built up a tool set for constructing probabilistic generative models. These can represent knowledge about causal processes in the world: running one of these programs generates a particular outcome by sampling a "history" for that outcome. However, the power of a causal model lies in the flexible ways it can be used to reason about the world. In the
-[last chapter](01-generative-models.html) we ran generative models *forward* to reason about outcomes from initial conditions. Generative models also enable reasoning in other directions.
+[last chapter](02-generative-models.html) we ran generative models *forward* to reason about outcomes from initial conditions. Generative models also enable reasoning in other directions.
 For instance, if we have a generative model in which X is the output of a process that depends on Y (say `var X = function(Y){...}`) we may ask: "assuming I have observed X, how must Y have been?" That is we can reason *backward* from outcomes to initial conditions.
 More generally, we can make hypothetical assumptions and reason about the generative history: "assuming *something*, how must
 the generative model have run?"
@@ -503,6 +503,6 @@ viz.auto(dist)
 
 Under this model, a patient with coughing, chest pain and shortness of breath is likely to have either lung cancer or TB.  Modify the above code to see how these conditional inferences shift if you also know that the patient smokes or works in a hospital (where they could be exposed to various infections, including many worse infections than the typical person encounters).  More generally, the causal structure of knowledge representation in a probabilistic program allows us to model intuitive theories that can grow in complexity continually over a lifetime, adding new knowledge without bound.
 
-Test your knowledge: [Exercises](03-conditioning-exercises.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/03-conditioning.html)
 
-Next chapter: [Patterns of inference](04-patterns-of-inference.html) 
+Next chapter: [Patterns of inference]({{site.baseurl}}/chapters/04-patterns-of-inference.html) 
