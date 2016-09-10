@@ -70,23 +70,23 @@ var montyRandom = function(aliceDoor, prizeDoor) {
   };
 };
 
-var montyAvoidBoth = function(aliceDoor, prizeDoor) {
-  return Infer({method: 'enumerate'}, function() {
-    ... 
-  };
-};
+// var montyAvoidBoth = function(aliceDoor, prizeDoor) {
+//   return Infer({method: 'enumerate'}, function() {
+//     ... 
+//   };
+// };
 
-var montyAvoidAlice = function(aliceDoor, prizeDoor) {
-  return Infer({method: 'enumerate'}, function() {
-    ... 
-  };
-};
+// var montyAvoidAlice = function(aliceDoor, prizeDoor) {
+//   return Infer({method: 'enumerate'}, function() {
+//     ... 
+//   };
+// };
 
-var montyAvoidPrize = function(aliceDoor, prizeDoor) {
-  return Infer({method: 'enumerate'}, function() {
-    ... 
-  };
-};
+// var montyAvoidPrize = function(aliceDoor, prizeDoor) {
+//   return Infer({method: 'enumerate'}, function() {
+//     ... 
+//   };
+// };
 
 Infer({method: 'enumerate'}, function() {
   var aliceDoor = ...
