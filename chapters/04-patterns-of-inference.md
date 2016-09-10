@@ -24,7 +24,7 @@ We say that expression A causally depends on expression B if it is necessary to 
 var C = flip()
 var B = flip()
 var A = B ? flip(0.1) : flip(0.4)
-or(A, C)
+A || C
 ~~~~
 
 Note that causal dependence order is weaker than a notion of ordering in time---one expression might happen to be evaluated before another in time (for instance `C` before `A`), but without the second expression requiring the first.
@@ -33,27 +33,25 @@ Note that causal dependence order is weaker than a notion of ordering in time---
 For example, consider a simpler variant of our medical diagnosis scenario:
 
 ~~~~
-var marg = Infer(
-  {method: 'MCMC', samples: 200, lag: 100},
-  function() {
-    var smokes = flip(0.2);
-    var lungDisease = (smokes && flip(0.1)) || flip(0.001);
-    var cold = flip(0.02);
-    var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.01);
-    var fever = (cold && flip(0.3)) || flip(0.01);
-    var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
-    var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-    
-    condition(cough)
-    return {cold: cold, lungDisease: lungDisease}
-  })
+var marg = Infer({method: 'enumerate'}, function() {
+  var smokes = flip(0.2);
+  var lungDisease = (smokes && flip(0.1)) || flip(0.001);
+  var cold = flip(0.02);
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.01);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  condition(cough)
+  return {cold: cold, lungDisease: lungDisease}
+})
 
 viz.marginals(marg)
 viz.auto(marg)
 ~~~~
 
-Here, `cough` depends causally on both `lung-disease` and `cold`, while `fever` depends causally on `cold` but not `lung-disease`.
- We can see that `cough` depends causally on `smokes` but only indirectly: although `cough` does not call `smokes` directly, in order to evaluate whether a patient coughs, we first have to evaluate the expression `lung-disease` that must itself evaluate `smokes`.
+Here, `cough` depends causally on both `lungDisease` and `cold`, while `fever` depends causally on `cold` but not `lungDisease`.
+ We can see that `cough` depends causally on `smokes` but only indirectly: although `cough` does not call `smokes` directly, in order to evaluate whether a patient coughs, we first have to evaluate the expression `lungDisease` that must itself evaluate `smokes`.
 
 
 We haven't made the notion of "direct" causal dependence precise: do we want to say that `cough` depends directly on `cold`, or only directly on the expression `(or (and cold (flip 0.5)) ...`? This can be resolved in several ways that all result in similar intuitions.
@@ -219,17 +217,17 @@ Each node has a *conditional probability table* (CPT), which represents the cond
 The joint probability distribution over random variables is given by the product of the conditional distributions for each variable in the graph.
 
 The figure below defines a Bayesian network for the medical diagnosis example.
-The graph contains a node for each `define` statement in our church program, with links to that node from each variable that appears in the assignment expression.
+The graph contains a node for each `define` statement in our WebPPL program, with links to that node from each variable that appears in the assignment expression.
 There is a probability table ("CPT") for each node, with a column for each value of the variable, and a row for each combination of values for its parents in the graph.
 
 ![A Bayes net for the medical diagnosis example.](images/Med-diag-bnet1.jpg)
 
 Simple generative models will have a corresponding graphical model that captures all of the dependencies (and *in*dependencies) of the model, without capturing the precise *form* of these functions.
-For example, while the graphical model shown above faithfully represents the probability distribution encoded by the church program, it captures the *noisy-OR* form of the causal dependencies only implicitly.
-As a result, the CPTs provide a less compact representation of the conditional probabilities than the church model.
+For example, while the graphical model shown above faithfully represents the probability distribution encoded by the WebPPL program, it captures the *noisy-OR* form of the causal dependencies only implicitly.
+As a result, the CPTs provide a less compact representation of the conditional probabilities than the WebPPL model.
 For instance, the CPT for `cough` specifies 4 parameters -- one for each pair of values of `lung-disease` and `cold` (the second entry in each row is determined by the constraint that the conditional distribution of `cough` must sum to 1).
-In contrast, the `define` statement for `cough` in church specifies only 3 parameters: the base rate of `cough`, and the strength with which `lung-disease` and `cold` cause `cough`.
-This difference becomes more pronounced for noisy-OR relations with many causes -- the size of the CPT for a node will be exponential in the number of parents, while the number of terms in the noisy-OR expression in church for that node will be linear in the number of causal dependencies (why?).
+In contrast, the `define` statement for `cough` in WebPPL specifies only 3 parameters: the base rate of `cough`, and the strength with which `lung-disease` and `cold` cause `cough`.
+This difference becomes more pronounced for noisy-OR relations with many causes -- the size of the CPT for a node will be exponential in the number of parents, while the number of terms in the noisy-OR expression in WebPPL for that node will be linear in the number of causal dependencies (why?).
 As we will see, this has important implications for the ability to learn the values of the parameters from data.
 
 More complicated generative models, which can be expressed as probabilistic programs, often don't have such a graphical model (or rather they have many approximations, none of which captures all independencies).
@@ -555,7 +553,7 @@ Notice how far up or down knowledge about whether the patient has a cold can pus
 
 Explaining away effects can be more indirect.
 Instead of observing the truth value of `cold`, a direct alternative cause of `cough`, we might simply observe another symptom that provides evidence for `cold`, such as `fever`.
-Compare these conditioners with the above church program to see an "explaining away" conditional dependence in belief between `fever` and `lung-disease`.
+Compare these conditioners with the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lung-disease`.
 
 Replace `(and smokes chest-pain cough)`  with `(and smokes chest-pain cough fever)` or `(and smokes chest-pain cough (not fever))`.
 In this case, finding out that the patient either does or does not have a fever makes a crucial difference in whether we think that the patient has lung disease...
@@ -819,83 +817,6 @@ condition on effect of observing contour
 
 -->
 
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/04-patterns-of-inference.html)
 
-
-# Exercises
-
-## 1. Causal and statistical dependency.
-
-For each of the following programs:
-
-* Draw the dependency diagram (Bayes net). If you don't have software on your computer for doing this, Google Docs has a decent interface for creating drawings.
-* Use informal evaluation order reasoning and the intervention method to determine causal dependency between A and B.
-* Use conditioning to determine whether A and B are statistically dependent.
-
-A.
-
-~~~~
-(define a (flip))
-(define b (flip))
-(define c (flip (if (and a b) 0.8 0.5)))
-~~~~
-
-B.
-
-~~~~
-(define a (flip))
-(define b (flip (if a 0.9 0.2)))
-(define c (flip (if b 0.7 0.1)))
-~~~~
-
-C.
-
-~~~~
-(define a (flip))
-(define b (flip (if a 0.9 0.2)))
-(define c (flip (if a 0.7 0.1)))
-~~~~
-
-D.
-
-~~~~
-(define a (flip 0.6))
-(define c (flip 0.1))
-(define z (uniform-draw (list a c)))
-(define b (if z 'foo 'bar))
-~~~~
-
-E.
-
-~~~~
-(define exam-fair-prior .8)
-(define does-homework-prior .8)
-(define exam-fair? (mem (lambda (exam) (flip exam-fair-prior))))
-(define does-homework? (mem (lambda (student) (flip does-homework-prior))))
-
-(define (pass? student exam) (flip (if (exam-fair? exam)
-                                       (if (does-homework? student) 0.9 0.5)
-                                       (if (does-homework? student) 0.2 0.1))))
-
-(define a (pass? 'alice 'history-exam))
-(define b (pass? 'bob 'history-exam))
-~~~~
-
-
-## 2. Epidemiology
-
-Imagine that you are an epidemiologist and you are determining people's cause of death.
-In this simplified world, there are two main diseases, cancer and the common cold.
-People rarely have cancer, $$p( \text{cancer}) = 0.00001$$, but when they do have cancer, it is often fatal, $$p( \text{death} \mid \text{cancer} ) = 0.9$$.
-People are much more likely to have a common cold, $$p( \text{cold} ) = 0.2$$, but it is rarely fatal, $$p( \text{death} \mid \text{cold} ) = 0.00006$$.
-Veryrarely, people also die of other causes $$p(\text{death} \mid \text{other}) = 0.000000001$$.
-
-Write this model in webppl and use `enumeration-query`to answer these questions (Be sure to include your code in your answer):
-
-~~~~
-(enumeration-query
-...)
-~~~~
-
-A. Compute $$p( \text{cancer} \mid \text{death} , \text{cold} )$$ and $$p( \text{cancer} \mid \text{death} , \text{no cold} )$$. How do these probabilities compare to $$p( \text{cancer} \mid \text{death} )$$ and $$p( \text{cancer} )$$? Using these probabilities, give an example of explaining away.
-
-B. Compute $$p( \text{cold} \mid \text{death} , \text{cancer} )$$ and $$p( \text{cold} \mid \text{death} , \text{no cancer} )$$. How do these probabilities compare to $$p( \text{cold} \mid \text{death} )$$ and $$p( \text{cold} )$$? Using these probabilities, give an example of explaining away.
+Next chapter: [Models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html) 
