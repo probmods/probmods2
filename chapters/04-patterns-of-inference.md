@@ -37,7 +37,7 @@ var marg = Infer({method: 'enumerate'}, function() {
   var smokes = flip(0.2);
   var lungDisease = (smokes && flip(0.1)) || flip(0.001);
   var cold = flip(0.02);
-  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.01);
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
   var fever = (cold && flip(0.3)) || flip(0.01);
   var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
   var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
@@ -54,7 +54,7 @@ Here, `cough` depends causally on both `lungDisease` and `cold`, while `fever` d
  We can see that `cough` depends causally on `smokes` but only indirectly: although `cough` does not call `smokes` directly, in order to evaluate whether a patient coughs, we first have to evaluate the expression `lungDisease` that must itself evaluate `smokes`.
 
 
-We haven't made the notion of "direct" causal dependence precise: do we want to say that `cough` depends directly on `cold`, or only directly on the expression `(or (and cold (flip 0.5)) ...`? This can be resolved in several ways that all result in similar intuitions.
+We haven't made the notion of "direct" causal dependence precise: do we want to say that `cough` depends directly on `cold`, or only directly on the expression `(cold && flip(0.5)) || ...`? This can be resolved in several ways that all result in similar intuitions.
 For instance, we could first re-write the program into a form where each intermediate expression is named (called A-normal form) and then say direct dependence is when one expression immediately includes the name of another.
 
 
@@ -63,14 +63,16 @@ In some cases, whether expression A requires expression B will depend on the val
  For example, here is a particular way of writing a noisy-AND relationship:
 
 ~~~~
-(define C (flip))
-(define B (flip))
-(define A (if C (if B (flip 0.85) false) false))
+var C = flip()
+var B = flip() 
+var A = (C ? 
+         (B ? flip(.85) : false) : 
+         false)
 A
 ~~~~
 
 A always requires C, but only evaluates B if C returns true.
- Under the above definition of causal dependence A depends on B (as well as C).
+Under the above definition of causal dependence A depends on B (as well as C).
 However, one could imagine a more fine-grained notion of causal dependence that would be useful here: we could say that A depends causally on B only in certain *contexts* (just those where C happens to return true and thus A calls B).
 
 Another nuance is that an expression that occurs inside a function body may get evaluated several times in a program execution.
@@ -81,61 +83,53 @@ Why?)
 ## Detecting Dependence Through Intervention
 
 The causal dependence structure is not always immediately clear from examining a program, particularly where there are complex functions calls.
-Another way to detect (or according to some philosophers, such as Jim Woodward, to *define*) causal dependence is more operational, in terms of "difference making": If we manipulate A, does B tend to change? By *manipulate* here we don't mean an assumption in the sense of `query`.
+Another way to detect (or according to some philosophers, such as Jim Woodward, to *define*) causal dependence is more operational, in terms of "difference making": If we manipulate A, does B tend to change? By *manipulate* here we don't mean an assumption in the sense of `Infer`.
 Instead we mean actually edit, or *intervene on*, the program in order to make an expression have a particular value independent of its (former) causes.
 If setting A to different values in this way changes the distribution of values of B, then B causally depends on A.
 This method is known in the causal Bayesian network literature as the "do operator" or graph surgery (Pearl, 1988).
 It is also the basis for interesting theories of counterfactual reasoning by Pearl and colleagues (Halpern, Hitchcock and others).
 
-For example, this code represents whether a patient is likely to have a cold or a cough *a priori*, conditioned on no observations:
+For example, this code represents whether a patient is likely to have a cold or a cough *a priori*, conditioned on no observations (we use `method: 'forward'` to build a distribution of "forward samples" run through the model:
 
 ~~~~
-(define (sample)
-  (define smokes (flip 0.2))
-
-  (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-  (define cold (flip 0.02))
-
-  (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.01)))
-  (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-  (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-  (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-  (list cough cold))
-
-(define samples (repeat 200 sample))
-
-(hist (map first samples) "cough")
-(hist (map second samples) "cold")
+var medicalDist = Infer({method: 'forward', samples: 10000}, function() {
+  var smokes = flip(.2)
+  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var cold = flip(0.02);
+  
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  return {cough: cough, cold: cold};
+})
+viz.marginals(medicalDist)
 ~~~~
 
 Imagine we now *give* our hypothetical patient a  cold---for example, by exposing him to a strong cocktail of cold viruses.
 We should not model this as an observation (conditioning on having a cold using query), because we have taken direct action to change the normal causal structure.
-Instead we implement intervention by directly editing the program: first do `(define cold true)`, then do `(define cold false)`:
+Instead we implement intervention by directly editing the program: first do `var cold = true`, then do `var cold = false`:
 
 ~~~~
-(define (sample)
-  (define smokes (flip 0.2))
-
-  (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-  (define cold true) ;we intervene to make cold true.
-
-  (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.01)))
-  (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-  (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-  (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-  (list cough cold))
-
-(define samples (repeat 200 sample))
-
-(hist (map first samples) "cough")
-(hist (map second samples) "cold")
+var medicalDist = Infer({method: 'forward', samples: 10000}, function() {
+  var smokes = flip(.2)
+  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var cold = true // we intervene to make cold true
+  
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  return {cough: cough, cold: cold};
+})
+viz.marginals(medicalDist)
 ~~~~
 
 You should see that the distribution on `cough` changes: coughing becomes more likely if we know that a patient has been given a cold by external intervention.
 But the reverse is not true.
-Try forcing the patient to have a  cough (e.g., with some unusual drug or by exposure to some cough-inducing dust) by writing `(define cough true)`: the distribution on `cold` is unaffected.
+Try forcing the patient to have a  cough (e.g., with some unusual drug or by exposure to some cough-inducing dust) by writing `var cough = true`: the distribution on `cold` is unaffected.
 We have captured a familiar fact: treating the symptoms of a disease directly doesn't cure the disease (taking cough medicine doesn't make your cold go away), but treating the disease *does* relieve the symptoms.
 
 Verify in the program above that the method of manipulation works also to identify causal relations that are only indirect: for example, force a patient to smoke and show that it increases their probability of coughing, but not vice versa.
@@ -148,9 +142,9 @@ As long as we can modify (or imagine modifying) the definitions in the program a
 One often hears the warning, "correlation does not imply causation".
 By "correlation" we mean a different kind of dependence between events or functions---*statistical dependence*.
 We say that A and B are statistically dependent, if learning information about A tells us something about B, and vice versa.
-In the language of webppl: using `query` to make an assumption about A changes the value expected for B.
+In the language of webppl: using `Infer` to make an assumption about A changes the value expected for B.
 Statistical dependence is a *symmetric* relation between events referring to how information flows between them when we observe or reason about them.
-(If using `query` to condition on A changes B, then conditioning on B also changes A.
+(If using `Infer` to condition on A changes B, then conditioning on B also changes A.
 Why?)
 The fact that we need to be warned against confusing statistical and causal dependence suggests they are related, and indeed, they are.
 In general, if A causes B, then A and B will be statistically dependent.
@@ -160,17 +154,18 @@ Diagnosing statistical dependence using query is similar to diagnosing causal de
 We query on the target variable, here `A`, conditioning on various values of the possible statistical dependent, here `B`:
 
 ~~~~
-(define (samples B-val)
-  (mh-query
-   100 10
-   (define C (flip))
-   (define B (flip))
-   (define A (if B (flip 0.1) (flip 0.4)))
-   A
-   (eq? B B-val)))
+var Aposterior = function(Bval) {
+  return Infer({method: 'enumerate'}, function() {
+    var C = flip();
+    var B = flip();
+    var A = B ? flip(.1) : flip(.4);
+    condition(B == Bval);
+    return A;
+  })
+}
 
-(hist (samples true) "A if B is true.")
-(hist (samples false) "A if B is false.")
+viz.auto(Aposterior(true))
+viz.auto(Aposterior(false))
 ~~~~
 
 Because the two distributions on `A` (when we have different information about `B`) are different, we can conclude that `A` statistically depends on `B`.
@@ -185,22 +180,23 @@ That is, two expressions in a webppl program can be statistically dependent if o
 Here is an example of statistical dependence generated by a common cause:
 
 ~~~~
-(define (samples B-val)
-  (mh-query
-   100 10
-   (define C (flip))
-   (define B (if C (flip 0.5) (flip 0.9)))
-   (define A (if C (flip 0.1) (flip 0.4)))
-   A
-   (eq? B B-val)))
+var Aposterior = function(Bval) {
+  return Infer({method: 'enumerate'}, function() {
+    var C = flip();
+    var B = C ? flip(.5) : flip(.9);
+    var A = C ? flip(.1) : flip(.4);
+    condition(B == Bval);
+    return A;
+  })
+}
 
-(hist (samples true) "A if B is true.")
-(hist (samples false) "A if B is false.")
+viz.auto(Aposterior(true))
+viz.auto(Aposterior(false))
 ~~~~
 
 Situations like this are extremely common.
-In the medical example above, `cough` and `fever` are not causally dependent but they are statistically dependent, because they both depend on `cold`; likewise for `chest-pain` and `shortness-of-breath` which both depend on `lung-disease`.
-Here we can read off these facts from the program definitions, but more generally all of these relations can be diagnosed by reasoning using `query`.
+In the medical example above, `cough` and `fever` are not causally dependent but they are statistically dependent, because they both depend on `cold`; likewise for `chestPain` and `shortnessOfBreath` which both depend on `lungDisease`.
+Here we can read off these facts from the program definitions, but more generally all of these relations can be diagnosed by reasoning using `Infer`.
 
 Successful learning and reasoning with causal models typically depends on exploiting the close coupling between causation and correlation.
 Causal relations are typically unobservable, while correlations are observable from data.
@@ -217,16 +213,16 @@ Each node has a *conditional probability table* (CPT), which represents the cond
 The joint probability distribution over random variables is given by the product of the conditional distributions for each variable in the graph.
 
 The figure below defines a Bayesian network for the medical diagnosis example.
-The graph contains a node for each `define` statement in our WebPPL program, with links to that node from each variable that appears in the assignment expression.
+The graph contains a node for each `var` statement in our WebPPL program, with links to that node from each variable that appears in the assignment expression.
 There is a probability table ("CPT") for each node, with a column for each value of the variable, and a row for each combination of values for its parents in the graph.
 
-![A Bayes net for the medical diagnosis example.](images/Med-diag-bnet1.jpg)
+![A Bayes net for the medical diagnosis example.]({{site.baseURL}}/assets/img/Med-diag-bnet1.jpg)
 
 Simple generative models will have a corresponding graphical model that captures all of the dependencies (and *in*dependencies) of the model, without capturing the precise *form* of these functions.
 For example, while the graphical model shown above faithfully represents the probability distribution encoded by the WebPPL program, it captures the *noisy-OR* form of the causal dependencies only implicitly.
 As a result, the CPTs provide a less compact representation of the conditional probabilities than the WebPPL model.
-For instance, the CPT for `cough` specifies 4 parameters -- one for each pair of values of `lung-disease` and `cold` (the second entry in each row is determined by the constraint that the conditional distribution of `cough` must sum to 1).
-In contrast, the `define` statement for `cough` in WebPPL specifies only 3 parameters: the base rate of `cough`, and the strength with which `lung-disease` and `cold` cause `cough`.
+For instance, the CPT for `cough` specifies 4 parameters -- one for each pair of values of `lungDisease` and `cold` (the second entry in each row is determined by the constraint that the conditional distribution of `cough` must sum to 1).
+In contrast, the `var` statement for `cough` in WebPPL specifies only 3 parameters: the base rate of `cough`, and the strength with which `lungDisease` and `cold` cause `cough`.
 This difference becomes more pronounced for noisy-OR relations with many causes -- the size of the CPT for a node will be exponential in the number of parents, while the number of terms in the noisy-OR expression in WebPPL for that node will be linear in the number of causal dependencies (why?).
 As we will see, this has important implications for the ability to learn the values of the parameters from data.
 
@@ -250,21 +246,22 @@ This can occur if A and B are connected by one or more causal chains, and all su
 For instance, let's look again at our common cause example, this time assuming that we *already* know the value of `C`:
 
 ~~~~
-(define (samples B-val)
-  (mh-query
-   100 10
-   (define C (flip))
-   (define B (if C (flip 0.5) (flip 0.9)))
-   (define A (if C (flip 0.1) (flip 0.4)))
-   A
-   (and C (eq? B B-val))))
+var Aposterior = function(Bval) {
+  return Infer({method: 'enumerate'}, function() {
+    var C = flip();
+    var B = C ? flip(.5) : flip(.9);
+    var A = C ? flip(.1) : flip(.4);
+    condition(C && B == Bval);
+    return A;
+  })
+}
 
-(hist (samples true) "A if B is true.")
-(hist (samples false) "A if B is false.")
+viz.auto(Aposterior(true))
+viz.auto(Aposterior(false))
 ~~~~
 
 We see that `A` an `B` are statistically *independent* given knowledge of `C`.
-(Note: it can be tricky to diagnose statistical *in*dependence from samples, such as returned by `mh-query`, since natural variation due to random sampling can look like differences between conditions.)
+(Note: it can be tricky to diagnose statistical *in*dependence from samples, such as returned by methods like `MCMC` or `forward`, since natural variation due to random sampling can look like differences between conditions.)
 
 Screening off is a purely statistical phenomenon.
 For example, consider the the causal chain model, where A directly causes C, which in turn directly causes B.
@@ -279,17 +276,18 @@ If two events A and B are statistically (and hence causally) independent, but th
 Here is an example where `A` and `B` have a common *effect*:
 
 ~~~~
-(define (samples B-val)
-  (mh-query
-   100 10
-   (define A (flip))
-   (define B (flip))
-   (define C (if (or A B) (flip 0.9) (flip 0.2)))
-    A
-   (and C (eq? B B-val))))
+var Aposterior = function(Bval) {
+  return Infer({method: 'enumerate'}, function() {
+    var A = flip();
+    var B = flip();
+    var C = (A || B) ? flip(.9) : flip(.2);
+    condition(C && B == Bval);
+    return A;
+  })
+}
 
-(hist (samples true) "A if B is true.")
-(hist (samples false) "A if B is false.")
+viz.auto(Aposterior(true))
+viz.auto(Aposterior(false))
 ~~~~
 
 As with screening off, we only induce statistical dependence from learning about `C`, not causal dependence: when we observe `C`, `A` and `B` remain causally independent in our model of the world; it is our beliefs about A and B that become correlated.
@@ -301,18 +299,16 @@ In models in cognitive science in general and linguistics in particular this kin
 
 -->
 
-We can express the general phenomenon of explaining away with the following schematic webppl query:
+We can express the general phenomenon of explaining away with the following schematic WebPPL query:
 
 ~~~~norun
-(query
-  (define a ...)
-  (define b ...)
-  ...
-  (define data (... a... b...))
-
-  b
-
-  (and (equal? data some-value) (equal? a some-other-value)))
+Infer({...}, function() {
+  var a = ...
+  var b = ... 
+  var data = f(a, b)
+  condition(data == someVal && a == someOtherVal)
+  return b;
+});
 ~~~~
 
 We have defined two independent variables `a` and `b` both of which are used to define the value of our data.
@@ -325,49 +321,41 @@ The following simple mathematical examples show this and other patterns.
 
 Suppose we condition on observing the sum of two integers drawn uniformly from 0 to 9:
 
+**TODO: figure out how to do scatter plot...**
+
 ~~~~
-(define (take-sample)
-  (rejection-query
-    (define A (random-integer 10))
-    (define B (random-integer 10))
+var sumPosterior = Infer({method: 'enumerate'}, function() {
+  var A = sample(RandomInteger({n: 10}));
+  var B = sample(RandomInteger({n: 10}));
+  condition(A + B == 9);
+  return [A, B]
+})
 
-    (pair A B)
-
-    (equal? (+ A B) 9)))
-
-(define samples (repeat 500 take-sample))
-
-(scatter samples "A and B, conditioned on A + B = 9")
-(hist samples "A, B")
+viz.auto(sumPosterior)
 ~~~~
 
 This gives perfect anti-correlation in conditional inferences for `A` and `B`. But suppose we instead condition on observing that `A` and `B` are equal:
 
 ~~~~
-(define (take-sample)
-  (rejection-query
-    (define A (random-integer 10))
-    (define B (random-integer 10))
+var sumPosterior = Infer({method: 'enumerate'}, function() {
+  var A = sample(RandomInteger({n: 10}));
+  var B = sample(RandomInteger({n: 10}));
+  condition(A == B);
+  return [A, B]
+})
 
-    (pair A B)
-
-    (equal? A B)))
-
-(define samples (repeat 500 take-sample))
-
-(scatter samples "A and B, conditioned on A = B")
-(hist samples "A, B")
+viz.auto(sumPosterior)
 ~~~~
 
 Now, of course, A and B go from being independent a priori to being perfectly correlated in the conditional distribution.
 Try out these other conditioners to see other possible patterns of conditional dependence for a priori independent functions:
 
-* `(< (abs (- A B)) 2)`
-* `(and (>= (+ A B) 9) (<= (+ A B) 11))`
-* `(equal? 3 (abs (- A B)))`
-* `(equal? 3 (mod (- A B) 10))`
-* `(equal? (mod A 2) (mod B 2))`
-* `(equal? (mod A 5) (mod B 5))`
+* `Math.abs(A - B) < 2`
+* `(A + B >= 9) && (A + B <= 11)`
+* `Math.abs(A - B) == 3`
+* `(A - B) % 10 == 3` (Note: `%` means "remainder when divided by...")
+* `A % 2 == B % 2`
+* `A % 5 == B % 5`
 
 
 ## Non-monotonic Reasoning
@@ -394,58 +382,51 @@ Even fairly simple probabilistic models can induce complex explaining-away dynam
 ## Example: Medical Diagnosis
 
 The medical scenario is a great model to explore screening off and explaining away.
-In this model `smokes` is statistically dependent on several symptoms---`cough`, `chest-pain`, and `shortness-of-breath`---due to a causal chain between them mediated by `lung-disease`.
+In this model `smokes` is statistically dependent on several symptoms---`cough`, `chestPain`, and `shortnessOfBreath`---due to a causal chain between them mediated by `lungDisease`.
 We can see this easily by conditioning on these symptoms and querying `smokes`:
 
 ~~~~
-(define samples
-  (mh-query 200 100
-    (define smokes (flip 0.2))
-
-    (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-    (define cold (flip 0.02))
-
-    (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.001)))
-    (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-    (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-    (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-     smokes
-
-     (and cough chest-pain shortness-of-breath)
-  )
-)
-(hist samples "smokes")
+var medicalDist = Infer({method: 'enumerate'}, function() {
+  var smokes = flip(.2);
+  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var cold = flip(0.02);
+  
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  condition(cough && chestPain && shortnessOfBreath);
+  
+  return smokes
+})
+viz.auto(medicalDist)
 ~~~~
 
 The conditional probability of `smokes` is much higher than the base rate, 0.2, because observing all these symptoms gives strong evidence for smoking.
 See how much evidence the different symptoms contribute by dropping them out of the conditioning set.
-For instance, condition the above query on `(and cough chest-pain)`, or just `cough`; you should observe the probability of `smokes` decrease as fewer symptoms are observed.
+For instance, try conditioning on `cough && chestPain`, or just `cough`; you should observe the probability of `smokes` decrease as fewer symptoms are observed.
 
-Now, suppose we condition also on knowledge about the function that mediates these causal links: `lung-disease`.
-Is there still an informational dependence between these various symptoms and `smokes`?  In the query below, try adding and removing various symptoms (`cough`, `chest-pain`, `shortness-of-breath`) but maintaining the observation `lung-disease`:
+Now, suppose we condition also on knowledge about the function that mediates these causal links: `lungDisease`.
+Is there still an informational dependence between these various symptoms and `smokes`?  In the Inference below, try adding and removing various symptoms (`cough`, `chestPain`, `shortnessOfBreath`) but maintaining the observation `lungDisease`:
 
 ~~~~
-(define samples
-  (mh-query 500 100
-    (define smokes (flip 0.2))
+var medicalDist = Infer({method: 'enumerate'}, function() {
+  var smokes = flip(.2);
+  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var cold = flip(0.02);
+  
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  condition(lungDisease && (cough && chestPain && shortnessOfBreath));
+  
+  return smokes
+})
 
-    (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-    (define cold (flip 0.02))
-
-    (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.001)))
-    (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-    (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-    (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-     smokes
-
-     (and lung-disease
-          (and cough chest-pain shortness-of-breath)
-      )
-  )
-)
-(hist samples "smokes")
+viz.auto(medicalDist)
 ~~~~
 
 You should see an effect of whether the patient has lung disease on conditional inferences about smoking---a person is judged to be substantially more likely to be a smoker if they have lung disease than otherwise---but there is no separate effects of chest pain, shortness of breath or cough, over and above the evidence provided by knowing whether the patient has lung-disease.
@@ -453,83 +434,74 @@ We say that the intermediate variable lung disease *screens off* the root cause 
 
 Here is a concrete example of explaining away in our medical scenario.
 Having a cold and having lung disease are *a priori* independent both causally and statistically.
-But because they are both causes of coughing if we observe `cough` then `cold` and `lung-disease` become statistically dependent.
-That is, learning something about whether a patient has `cold` or `lung-disease` will, in the presence of their common effect `cough`, convey information about the other condition.
-We say that `cold` and `lung-cancer` are marginally (or *a priori*) independent, but *conditionally dependent* given `cough`.
+But because they are both causes of coughing if we observe `cough` then `cold` and `lungDisease` become statistically dependent.
+That is, learning something about whether a patient has `cold` or `lungDisease` will, in the presence of their common effect `cough`, convey information about the other condition.
+We say that `cold` and `lungCancer` are marginally (or *a priori*) independent, but *conditionally dependent* given `cough`.
 
-To illustrate, observe how the probabilities of `cold` and `lung-disease` change when we observe `cough` is true:
+To illustrate, observe how the probabilities of `cold` and `lungDisease` change when we observe `cough` is true:
 
 ~~~~
-(define samples
-  (mh-query 500 100
-    (define smokes (flip 0.2))
+var medicalDist = Infer({method: 'enumerate'}, function() {
+  var smokes = flip(.2);
+  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var cold = flip(0.02);
+  
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  condition(cough);
+  
+  return {cold: cold, lungDisease: lungDisease}
+})
 
-    (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-    (define cold (flip 0.02))
-
-    (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.001)))
-    (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-    (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-    (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-   (list cold lung-disease)
-
-   cough))
-
-(hist (map first samples) "cold")
-(hist (map second samples) "lung-disease")
-(hist samples "cold, lung-disease")
+viz.marginals(medicalDist)
 ~~~~
 
 Both cold and lung disease are now far more likely that their baseline probability: the probability of having a cold increases from 2% to around 50%; the probability of having lung disease also increases from 1 in a 1000 to around 50%.
 
-Now suppose we learn that the patient does *not* have a cold.
+Now suppose we *also* learn that the patient does *not* have a cold.
 
 ~~~~
-(define samples
-  (mh-query 500 100
-    (define smokes (flip 0.2))
+var medicalDist = Infer({method: 'enumerate'}, function() {
+  var smokes = flip(.2);
+  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var cold = flip(0.02);
+  
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  condition(cough && !cold);
+  
+  return {cold: cold, lungDisease: lungDisease}
+})
 
-    (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-    (define cold (flip 0.02))
-
-    (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.001)))
-    (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-    (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-    (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-   (list cold lung-disease)
-
-   (and cough (not cold))))
-
-(hist (map first samples) "cold")
-(hist (map second samples) "lung-disease")
-(hist samples "cold, lung-disease")
+viz.marginals(medicalDist)
 ~~~~
 
 The probability of having lung disease increases dramatically.
 If instead we had observed that the patient does have a cold, the probability of lung cancer returns to its very low base rate of 1 in a 1000.
 
 ~~~~
-(define samples
-  (mh-query 500 100
-    (define smokes (flip 0.2))
+var medicalDist = Infer({method: 'enumerate'}, function() {
+  var smokes = flip(.2);
+  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var cold = flip(0.02);
+  
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
+  var fever = (cold && flip(0.3)) || flip(0.01);
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
+  
+  condition(cough && cold);
+  
+  return {cold: cold, lungDisease: lungDisease}
+})
 
-    (define lung-disease (or (flip 0.001) (and smokes (flip 0.1))))
-    (define cold (flip 0.02))
-
-    (define cough (or (and cold (flip 0.5)) (and lung-disease (flip 0.5)) (flip 0.001)))
-    (define fever (or (and cold (flip 0.3)) (flip 0.01)))
-    (define chest-pain (or (and lung-disease (flip 0.2)) (flip 0.01)))
-    (define shortness-of-breath (or (and lung-disease (flip 0.2)) (flip 0.01)))
-
-   (list cold lung-disease)
-
-   (and cough cold)))
-
-(hist (map first samples) "cold")
-(hist (map second samples) "lung-disease")
-(hist samples "cold, lung-disease")
+viz.marginals(medicalDist)
 ~~~~
 
 This is the conditional statistical dependence between lung disease and cold, given cough: Learning that the patient does in fact have a cold "explains away" the observed cough, so the alternative of lung disease decreases to a much lower value --- roughly back to its 1 in a 1000 rate in the general population.
@@ -553,9 +525,11 @@ Notice how far up or down knowledge about whether the patient has a cold can pus
 
 Explaining away effects can be more indirect.
 Instead of observing the truth value of `cold`, a direct alternative cause of `cough`, we might simply observe another symptom that provides evidence for `cold`, such as `fever`.
-Compare these conditioners with the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lung-disease`.
+Compare these conditioners with the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lungDisease`.
 
-Replace `(and smokes chest-pain cough)`  with `(and smokes chest-pain cough fever)` or `(and smokes chest-pain cough (not fever))`.
+**TODO: smokes && chestPain && cough doesn't occur anywhere above; seems like this only makes sense if we uncomment out the above?**
+
+Replace `(and smokes chestPain cough)`  with `(and smokes chest-pain cough fever)` or `(and smokes chest-pain cough (not fever))`.
 In this case, finding out that the patient either does or does not have a fever makes a crucial difference in whether we think that the patient has lung disease...
 even though fever itself is not at all diagnostic of lung disease, and there is no causal connection between them.
 
@@ -724,12 +698,12 @@ Thus luminance is inherently ambiguous.
 The visual system has to determine what proportion of the luminance is due to reflectance and what proportion is due to the illumination of the scene.
 This has led to a famous illusion known as the *checker shadow illusion* discovered by Ted Adelson.
 
-![Are the two squares the same shade of grey?](images/Checkershadow_illusion_small.png)
+![Are the two squares the same shade of grey?]({{site.baseURL}}/assets/img/Checkershadow_illusion_small.png)
 
 Despite appearances, in the image above both the square labeled A and the square labeled B are actually the same shade of gray.
 This can be seen in the figure below where they are connected by solid gray bars on either side.
 
-![](images/Checkershadow_proof_small.png)
+![]({{site.baseURL}}/assets/img/Checkershadow_proof_small.png)
 
 The presence of the cylinder is providing evidence that the illumination of square B is actually less than that of square A (because it is expected to cast a shadow).
 Thus we perceive square B as having higher reflectance since its luminance is identical to square A and we believe there is less light hitting it.
