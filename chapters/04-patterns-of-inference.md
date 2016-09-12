@@ -527,7 +527,7 @@ Explaining away effects can be more indirect.
 Instead of observing the truth value of `cold`, a direct alternative cause of `cough`, we might simply observe another symptom that provides evidence for `cold`, such as `fever`.
 Compare these conditioners with the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lungDisease`.
 
-**TODO: smokes && chestPain && cough doesn't occur anywhere above; seems like this only makes sense if we uncomment out the above?**
+**TODO: smokes && chestPain && cough doesn't occur anywhere above; seems like this only makes sense with the little commented-out?**
 
 Replace `(and smokes chestPain cough)`  with `(and smokes chest-pain cough fever)` or `(and smokes chest-pain cough (not fever))`.
 In this case, finding out that the patient either does or does not have a fever makes a crucial difference in whether we think that the patient has lung disease...
@@ -545,53 +545,49 @@ Imagine yourself in the position of an interested outside observer---a parent, a
 If a student doesn't pass an exam, what can you say about why he failed?  Maybe he doesn't do his homework, maybe the exam was unfair, or maybe he was just unlucky?
 
 ~~~~
-(define samples
-  (mh-query 1000 10
+var examPosterior = Infer({method: 'enumerate'}, function() {
+  var examFair = flip(.8);
+  var doesHomework = flip(.8);
+  var pass = flip(examFair ? 
+                  (doesHomework ? 0.9 : 0.4) :
+                  (doesHomework ? 0.6 : 0.2))
+  condition(!pass)
+  return {doesHomework: doesHomework, examFair: examFair}
+})
 
-   (define exam-fair (flip .8))
-   (define does-homework (flip .8))
-
-   (define pass? (flip (if exam-fair
-                           (if does-homework 0.9 0.4)
-                           (if does-homework 0.6 0.2))))
-
-   (list does-homework exam-fair)
-
-   (not pass?)))
-
-(hist samples "Joint: Student Does Homework?, Exam Fair?")
-(hist (map first samples) "Student Does Homework")
-(hist (map second samples) "Exam Fair")
+viz.marginals(examPosterior)
+viz.auto(examPosterior)
 ~~~~
 
 Now what if you have evidence from several students and several exams? We first re-write the above model to allow many students and exams:
 
 ~~~~
-(define samples
-  (mh-query 1000 10
+var examFairPrior = Bernoulli({p: .8});
+var doesHomeworkPrior = Bernoulli({p: .8});
 
-   (define exam-fair-prior .8)
-   (define does-homework-prior .8)
-   (define exam-fair? (mem (lambda (exam) (flip exam-fair-prior))))
-   (define does-homework? (mem (lambda (student) (flip does-homework-prior))))
+var examPosterior = Infer({method: 'enumerate'}, function() {
+  var examFair = mem(function(exam){return sample(examFairPrior)})
+  var doesHomework = mem(function(student){return sample(doesHomeworkPrior)})
 
-   (define (pass? student exam) (flip (if (exam-fair? exam)
-                                          (if (does-homework? student) 0.9 0.4)
-                                          (if (does-homework? student) 0.6 0.2))))
+  var pass = function(student, exam) {
+    return flip(examFair(exam) ? 
+                (doesHomework(student) ? 0.9 : 0.4) :
+                (doesHomework(student) ? 0.6 : 0.2))
+  };
+  
+  condition(!pass('bill', 'exam1'))
+  
+  return {doesHomework: doesHomework('bill'), examFair: examFair('exam1')}
+})
 
-   (list (does-homework? 'bill) (exam-fair? 'exam1))
-
-   (not (pass? 'bill 'exam1))))
-
-(hist samples "Joint: Student Does Homework?, Exam Fair?")
-(hist (map first samples) "Student Does Homework")
-(hist (map second samples) "Exam Fair")
+viz.marginals(examPosterior)
+viz.auto(examPosterior)
 ~~~~
 
 Initially we observe that Bill failed exam 1.
 A priori, we assume that most students do their homework and most exams are fair, but given this one observation it becomes somewhat likely that either the student didn't study or the exam was unfair.
 
-Notice that we have set the probabilities in the `pass?` function to be asymmetric: whether a student does homework has a greater influence on passing the test than whether the exam is fair.
+Notice that we have set the probabilities in the `pass` function to be asymmetric: whether a student does homework has a greater influence on passing the test than whether the exam is fair.
 This in turns means that when inferring the *cause* of a failed exam, the model tends to attribute it to the person property (not doing homework) over the situation property (exam being unfair).
 This asymmetry is an example of the *fundamental attribution bias* [@Ross1977]: we tend to attribute outcomes to personal traits rather than situations.
 However there are many interacting tendencies (for instance the direction of this bias switches for members of some east-asian cultures).
@@ -603,35 +599,34 @@ Try to explain the different inferences that result at each stage.
 What does each new piece of the larger data set contribute to your intuition about Bill  and exam 1?
 
 ~~~~norun
-(and (not (pass? 'bill 'exam1)) (not (pass? 'bill 'exam2)))
+!pass('bill', 'exam1') && !pass('bill', 'exam2')
 
-(and (not (pass? 'bill 'exam1))
-     	  (not (pass? 'mary 'exam1))
-       	  (not (pass? 'tim 'exam1)))
+!pass('bill', 'exam1') && !pass('mary', 'exam1') && !pass('tim', 'exam1')
 
- (and (not (pass? 'bill 'exam1)) (not (pass? 'bill 'exam2))
-       (not (pass? 'mary 'exam1))
-       (not (pass? 'tim 'exam1)))
+!pass('bill', 'exam1') && !pass('bill', 'exam2') && 
+  !pass('mary', 'exam1') && 
+  !pass('tim', 'exam1')
 
-  (and (not (pass? 'bill 'exam1))
-       (not (pass? 'mary 'exam1)) (pass? 'mary 'exam2) (pass? 'mary 'exam3) (pass? 'mary 'exam4) (pass? 'mary 'exam5)
-       (not (pass? 'tim 'exam1)) (pass? 'tim 'exam2) (pass? 'tim 'exam3) (pass? 'tim 'exam4) (pass? 'tim 'exam5))
+!pass('bill', 'exam1') && 
+  !pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+  !pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
 
-  (and (not (pass? 'bill 'exam1))
-       (pass? 'mary 'exam1)
-       (pass? 'tim 'exam1))
+!pass('bill', 'exam1') && 
+  pass('mary', 'exam1') && 
+  pass('tim', 'exam1')
 
-  (and (not (pass? 'bill 'exam1))
-       (pass? 'mary 'exam1) (pass? 'mary 'exam2) (pass? 'mary 'exam3) (pass? 'mary 'exam4) (pass? 'mary 'exam5)
-       (pass? 'tim 'exam1) (pass? 'tim 'exam2) (pass? 'tim 'exam3) (pass? 'tim 'exam4) (pass? 'tim 'exam5))
+!pass('bill', 'exam1') && 
+  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
 
-  (and (not (pass? 'bill 'exam1)) (not (pass? 'bill 'exam2))
-       (pass? 'mary 'exam1) (pass? 'mary 'exam2) (pass? 'mary 'exam3) (pass? 'mary 'exam4) (pass? 'mary 'exam5)
-       (pass? 'tim 'exam1) (pass? 'tim 'exam2) (pass? 'tim 'exam3) (pass? 'tim 'exam4) (pass? 'tim 'exam5))
+!pass('bill', 'exam1') && !pass('bill', 'exam2') &&
+  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
 
-  (and (not (pass? 'bill 'exam1)) (not (pass? 'bill 'exam2)) (pass? 'bill 'exam3) (pass? 'bill 'exam4) (pass? 'bill 'exam5)
-       (not (pass? 'mary 'exam1)) (not (pass? 'mary 'exam2)) (not (pass? 'mary 'exam3)) (not (pass? 'mary 'exam4)) (not (pass? 'mary 'exam5))
-       (not (pass? 'tim 'exam1)) (not (pass? 'tim 'exam2)) (not (pass? 'tim 'exam3)) (not (pass? 'tim 'exam4)) (not (pass? 'tim 'exam5)))
+!pass('bill', 'exam1') && !pass('bill', 'exam2') && pass('bill', 'exam3') && pass('bill', 'exam4') && pass('bill', 'exam5') &&
+  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
+
 ~~~~
 
 This example is inspired by the work of Harold Kelley (and many others) on causal attribution in social settings [@Kelley1973].
@@ -657,23 +652,21 @@ We can capture this set up with a model in which each block has a persistent "bl
 Finally, the machine goes off if any of the blocks on it is a blicket (but noisily).
 
 ~~~~
-(define samples
-  (mh-query 100 100
+var blicketPosterior = Infer({method: 'enumerate'}, function() {
+  var blicket = mem(function(block) {return flip(.2)})
+  var power = function(block) {return blicket(block) ? .9 : .05};
+  var machine = function(blocks) {
+    return (blocks.length == 0 ?
+            flip(.05) :
+            flip(power(_.first(blocks))) || machine(_.rest(blocks)));
+  }
+  
+  condition(machine(['A', 'B']));
+  
+  return blicket('A');
+});
 
-    (define blicket (mem (lambda (block) (flip 0.2))))
-    (define (power block) (if (blicket block) 0.9 0.05))
-
-    (define (machine blocks)
-      (if (null? blocks)
-          (flip 0.05)
-          (or (flip (power (first blocks)))
-              (machine (rest blocks)))))
-
-    (blicket 'A)
-
-    (machine (list 'A 'B))))
-
-(hist samples "Is A a blicket?")
+viz.auto(blicketPosterior)
 ~~~~
 
 Try the backward blocking scenario described above.
@@ -710,44 +703,36 @@ Thus we perceive square B as having higher reflectance since its luminance is id
 The following program implements a simple version of this scenario "before" we see the shadow cast by the cylinder.
 
 ~~~~
-(define observed-luminance 3.0)
+var observedLuminance = 3;
 
-(define samples
-   (mh-query
-    1000 10
+var reflectancePosterior = Infer({method: 'MCMC', samples: 100000}, function() {
+  var reflectance = sample(Gaussian({mu: 1, sigma: 1}));
+  var illumination = sample(Gaussian({mu: 3, sigma: 0.5}));
+  var luminance = reflectance * illumination;
+  factor(Gaussian({mu: observedLuminance, sigma: 0.1}).score(luminance));
+  return reflectance;
+});
 
-    (define reflectance (gaussian 1 1))
-    (define illumination (gaussian 3 0.5))
-    (define luminance (* reflectance illumination))
-
-    reflectance
-
-    (= luminance (gaussian observed-luminance 0.1))))
-
-(display (list "Mean reflectance:" (mean samples)))
-(hist samples "Reflectance")
+print(expectation(reflectancePosterior));
+viz.auto(reflectancePosterior);
 ~~~~
 
 Now let's condition on the presence of the cylinder, by conditioning on the presence of it's "shadow" (i.e. lower illumination than expected *a priori*):
 
 ~~~~
-(define observed-luminance 3.0)
+var observedLuminance = 3;
 
-(define samples
-   (mh-query
-    1000 10
+var reflectancePosterior = Infer({method: 'MCMC', samples: 100000}, function() {
+  var reflectance = sample(Gaussian({mu: 1, sigma: 1}));
+  var illumination = sample(Gaussian({mu: 3, sigma: 0.5}));
+  var luminance = reflectance * illumination;
+  factor(Gaussian({mu: observedLuminance, sigma: 0.1}).score(luminance)
+         + Gaussian({mu: .5, sigma: .1}).score(illumination));
+  return reflectance;
+});
 
-    (define reflectance (gaussian 1 1))
-    (define illumination (gaussian 3 0.5))
-    (define luminance (* reflectance illumination))
-
-    reflectance
-
-    (condition (= luminance (gaussian observed-luminance 0.1)))
-    (condition (= illumination (gaussian 0.5  0.1)))))
-
-(display (list "Mean reflectance:" (mean samples)))
-(hist samples "Reflectance")
+print(expectation(reflectancePosterior));
+viz.auto(reflectancePosterior);
 ~~~~
 
 The variables `reflectance` and `illumination` are conditionally independent in the generative model, but after we condition on `luminance` they become dependent: changing one of them affects the probability of the other.
