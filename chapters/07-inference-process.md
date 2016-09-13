@@ -10,6 +10,8 @@ custom_js:
 
 # The performance characteristics of different algorithms
 
+**Note: Waiting to decide which algorithms to discuss?**
+
 When we introduced [conditioning](conditioning.html#hypothetical-reasoning-with-query) we pointed out that the rejection sampling and mathematical definitions are equivalent---we could take either one as the definition of `query`, showing that the other specifies the same distribution. There are many different ways to compute the same distribution, it is thus useful to separately think about the distributions we are building (including conditional distributions) and how we will compute them. Indeed, in the last few chapters we have explored the dynamics of inference without worrying about the details of inference algorithms. The efficiency characteristics of different implementations of `query` can be very different, however, and this is important both practically and for motivating cognitive hypotheses at the level of algorithms (or psychological processes).
 
 The "guess and check" method of rejection sampling, implemented in `rejection-query`, is conceptually useful but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very large number of samples to find computations that do so. To see this, try making the `baserate` probability of `A`, `B`, and `C` lower in this example:
@@ -428,57 +430,6 @@ Here we are caching a set of samples from each query, and drawing one at random 
 
 We can also mix these methods---using enumeration for levels of query with few states, rejection for queries with likely conditions, and MCMC for queries where these methods take too long.
 
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/07-inference-process.html) 
 
-
-
-# Exercises
-
-1) Why does the Church MH algorithm return less stable estimates when you lower the baserate for the following program?
-
-~~~~ {data-exercise="ex1"}
-(define baserate 0.1)
-
-(define samples
-  (mh-query 100 100
-
-   (define A (if (flip baserate) 1 0))
-   (define B (if (flip baserate) 1 0))
-   (define C (if (flip baserate) 1 0))
-   (define D (+ A B C))
-
-   A
-
-   (>= D 2)))
-   
-(hist samples "Value of A, given that D is greater than or equal to 2")
-~~~~
-
-<!--
-
-# Importance sampling 
-
-Imagine we want to compute the expected value (ie. long-run average) of the composition of a thunk `p` with a rela-valued function `f`. This is:
-~~~~
-(define (p) ...)
-(define (f x) ...)
-(mean (repeat 1000 (lambda () (f (p)))))
-~~~~
-Mathematically this is:
-:$E_p(f) = \sum_x f(x) p(x) \simeq \frac{1}{N}\sum_{x_i}f(x)$
-where $x_i$ are N samples drawn from the distribution `p`.
-
-What if `p` is hard to sample from? E.g. what if it is a conditional:
-~~~~
-(define (p) (query ...))
-(define (f x) ...)
-(mean (repeat 1000 (lambda () (f (p)))))
-~~~~
-One thing we could do is to sample from the conditional (via rejection or MCMC), but this can be difficult or expensive. We can also sample from a different distribution `q` and then correct for the difference:
-:$E_p(f) = \sum_x f(x) \frac{p(x)}{q(x)}q(x) \simeq \frac{1}{N} \sum_{x_i}f(x)\frac{p(x)}{q(x)} $
-where $x_i$ are N samples drawn from the distribution `q`. This is called '''importance sampling'''. The factor $\frac{p(x)}{q(x)}$ is called the ''importance weight''.
-
-If we want samples from distribution `p`, rather than an expectation, we can take N importance samples then ''resample'' N times from the discrete distribution on these samples with probabilities proportional to the importance weights. In the limit of many samples this resampling gives samples from the desired distribution. (Why?)
-
-## Sequential Importance Resampling
-
--->
+Next chapter: [Learning as conditional inference]({{site.baseurl}}/chapters/08-learning-as-conditional-inference.html)
