@@ -289,8 +289,6 @@ We previously saw how a generative model of physics---a noisy, intuitive version
 
 Imagine that we drop a block from a random position at the top of a world with two fixed obstacles:
 
-**TODO: fix "unknown shape undefined" error**
-
 ~~~~
 // makes a floor with evenly spaced buckets
 var bins = function (xmin, xmax, width) {
@@ -360,6 +358,8 @@ viz.auto(initialXs)
 ~~~~
 
 What if the ball comes to rest at the left side, under the large circle (x about 60)? The right side?
+
+**TODO: This plot is a bit confusing, since it's not clear how to map the x axis onto the picture above -- can we explicitly force x lims to be 0-???**
 
 **TODO: the model here is too certain about the physics: it knows just how the ball will bounce off the pegs... should add collision noise? anyhow discuss this?**
 

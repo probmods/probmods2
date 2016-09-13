@@ -35,6 +35,8 @@ How can we, clearly and precisely, describe the simulation we want a computer to
 
 # Building Generative Models
 
+**TODO: reframe for webppl -- integrate with the [generative models exercises](13-generative-models.html) MH and I used in BDA class?**
+
 We wish to describe in formal terms how to generate states of the world.
 That is, we wish to describe the causal process, or steps that unfold, leading to some potentially observable states.
 The key idea of this section is that these generative processes can be described as *computations*---computations that involve random choices to capture uncertainty about the process.

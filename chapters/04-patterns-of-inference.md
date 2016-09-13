@@ -598,6 +598,8 @@ Try using each of the below expressions as the condition for the above inference
 Try to explain the different inferences that result at each stage.
 What does each new piece of the larger data set contribute to your intuition about Bill  and exam 1?
 
+**TODO: Rewrite some of these more efficiently? Like with map or repeat?**
+
 ~~~~norun
 !pass('bill', 'exam1') && !pass('bill', 'exam2')
 
