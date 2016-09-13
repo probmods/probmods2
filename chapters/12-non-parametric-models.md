@@ -1,3 +1,9 @@
+---
+layout: chapter
+title: Non-parametric models
+description: Something else clever
+---
+
 % Non-parametric models
 % Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
 
@@ -175,7 +181,7 @@ The DP is said to *concentrate* the base measure.  Draws from a normal distribut
 
 The way that the DP concentrates the underlying base measure is illustrated in the following figure.
 
-<img src='images/Concentration.png' width='300' />
+<img src='{{site.base}}/assets/img/Concentration.png' width='300' />
 
 In the stick-breaking construction stick heights become shorter on average as we walk further down the number line. This means that earlier draws from the DP are more likely to be redrawn than later draws.
 When we use the DP to construct `DPmem` the memoized function will therefore tend to favor *reuse* of earlier computed values. Intuitively, we will use `DPmem` when we need to model reuse of samples in a scenario where we do not know in advance how many samples we need.
@@ -701,6 +707,6 @@ In particular, Griffiths et al. (2007) examine the data from Smith and Minda (19
 
 The results are shown below.
 
-<center><img src='images/unifying-table.png' width='500' /></center>
+<center><img src='{{site.base}}/assets/img/unifying-table.png' width='500' /></center>
 
-<center><img src='images/unifying.png' width='600' /></center>
+<center><img src='{{site.base}}/assets/img/unifying.png' width='600' /></center>
