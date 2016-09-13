@@ -4,7 +4,7 @@ title: Conditioning
 description: Using generative models to ask questions
 custom_js:
 - assets/js/box2d.js
-- assets/js/phys.js
+- assets/js/physics.js
 ---
 
 # Cognition and conditioning
@@ -505,4 +505,4 @@ Under this model, a patient with coughing, chest pain and shortness of breath is
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/03-conditioning.html)
 
-Next chapter: [Patterns of inference]({{site.baseurl}}/chapters/04-patterns-of-inference.html) 
+Next chapter: [Patterns of inference]({{site.baseurl}}/chapters/04-patterns-of-inference.html)
