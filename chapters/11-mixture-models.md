@@ -12,7 +12,7 @@ In the chapter on [Hierarchical Models]({{base.url}}/chapters/09-hierarchical-mo
 Imagine a child who enters the world and begins to see objects. She can't begin by learning the typical features of cats or mice, because she doesn't yet know that there are such kinds of objects as cats and mice. Yet she may quickly notice that some of the objects all tend to purr and have claws, while other objects are small and run fast---she can
  *cluster* the objects together on the basis of common features and thus form categories (such as cats and mice), whose typical features she can then learn.
 
-To formalize this learning problem, we begin by adapting the bags-of-marbles examples from the [Hierarchical Models](hierarchical-models.html) chapter. However, we now assume that the bag that each marble is drawn from is *unobserved* and must be inferred.
+To formalize this learning problem, we begin by adapting the bags-of-marbles examples from the [Hierarchical Models]({{site.base}}/chapters/09-hierarchical-models.html) chapter. However, we now assume that the bag that each marble is drawn from is *unobserved* and must be inferred.
 
 ~~~~
 (define colors '(blue green red))
@@ -380,7 +380,7 @@ Human perception is often skewed by our expectations. A common example of this i
 
 Notice that the perceived distances between input sounds are skewed relative to the actual acoustic distances – that is they are attracted towards the category centers.
 
-<img src='images/Pme.png' />
+<img src='{{site.base}}/assets/img/Pme.png' />
 
 # Unknown Numbers of Categories
 
@@ -466,3 +466,7 @@ For clarity, you can use the `make-gensym` to create a `gensym` function with a 
 ~~~~
 
 Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. In the next section we describe another method for allowing an unknown number of things: In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an 'infinite model' we construct distributions assuming a truly infinite numbers of objects.
+
+<!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/11-mixture-models.html)  -->
+
+Next chapter: [Non-parametric models]({{site.baseurl}}/chapters/12-non-parametric-models.html)
