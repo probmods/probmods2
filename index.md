@@ -1,11 +1,13 @@
 ---
 layout: default
 title: Probabilistic Models of Cognition
+custom_css:
+- assets/css/home.css
 ---
 
-<div class="main">
-  <h1>Probabilistic Models of Cognition</h1>
-  <span class="authors">Noah D. Goodman <span style='color: #ccc'>&amp;</span> Joshua B. Tenenbaum</span>
+<div id="header">
+  <h1 id='title'>Probabilistic Models of Cognition</h1>
+  <span class="authors">Noah D. Goodman <span class='ampersand'>&amp;</span> Joshua B. Tenenbaum</span>
 </div>
 
 In this book, we explore the probabilistic approach to cognitive science, which models learning and reasoning as inference in complex probabilistic models.
@@ -19,7 +21,7 @@ N. D. Goodman and J. B. Tenenbaum (electronic). Probabilistic Models of Cognitio
   title = {% raw %}{{Probalistic Models of Cognition}}{% endraw %},
   author = {Goodman, Noah D and Joshua B. Tenenbaum},
   year = {2016},
-  howpublished = {\url{http://probmods.org}},
+  howpublished = {\url{http://probmods.org/v2}},
   note = {Accessed: <span class="date"></span>}
 }
 </pre>

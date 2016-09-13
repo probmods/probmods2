@@ -1,0 +1,24 @@
+#header {
+    padding: 2.5em 0em 1.5em 0em;
+    text-align: center;
+    margin: 0em -5em 1em -5em;
+    color: white;
+    background-color: #b54c4c;
+    border-bottom: 1px solid #666;
+}
+
+#title {
+    font-family: 'Crimson Text', Crimson, Times, serif;
+    font-size: 50px;
+    text-shadow: 1px 1px 2px #222;
+    margin: 0;
+}
+
+.authors {
+    font-family: 'Crimson Text', Crimson, Times, serif;
+    font-size: 20px;
+}
+
+.ampersand {
+    opacity: 0.4
+}

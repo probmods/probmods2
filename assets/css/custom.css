@@ -101,30 +101,8 @@ h3 {
    font-size: 1.2em;
 }
 
-div.main {
-   text-align: center;
-   margin-top: 4em;
-   margin-bottom: 1em;
-}
-
-div.main h1 {
-    font-family: 'IM Fell French Canon';
-    font-style: italic;
-    font-size: 50px;
-    background-color: bisque;
-    border: 1px solid bisque;
-    line-height: 1.4em;
-    padding: 0.45em 0 0.35em 0;
-    margin-bottom: 0.5em;
-
-}
-
 p {
     text-align: justify
-}
-
-div.main span.authors {
-   font-size: 1.35em;
 }
 
 a.navbar-brand {
