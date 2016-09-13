@@ -4,7 +4,7 @@ title: Generative models
 description: Generative models
 custom_js:
 - assets/js/box2d.js
-- assets/js/phys.js
+- assets/js/physics.js
 - assets/js/plinko.js
 ---
 
