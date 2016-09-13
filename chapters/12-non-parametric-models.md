@@ -1,3 +1,9 @@
+---
+layout: chapter
+title: Non-parametric models
+description: Something else clever
+---
+
 % Non-parametric models
 % Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
 

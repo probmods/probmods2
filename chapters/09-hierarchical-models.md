@@ -1,3 +1,9 @@
+---
+layout: chapter
+title: Hierarchical models
+description: The power of abstraction
+---
+
 % Hierarchical models
 
 <!-- NEED TO BREAK THIS DOWN INTO TWO KINDS OF POINTS:
