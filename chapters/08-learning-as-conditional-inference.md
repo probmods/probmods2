@@ -20,7 +20,7 @@ description: Induction and prediction
 The line between "reasoning" and "learning" is unclear in cognition.
 Just as reasoning can be seen as a form of conditional inference, so can learning: discovering persistent facts about the world (for example, causal processes or causal properties of objects).
 By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time.
-Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations](observing-sequences.html)---those that fit the pattern of [Bayes rule](conditioning.html#bayes-rule):
+Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations]({{site.base}}/chapters/05-observing-sequences.html)---those that fit the pattern of [Bayes rule](03-conditioning.html#bayes-rule):
 
 ~~~~ norun
 Infer({...}, function() {
@@ -256,6 +256,7 @@ An important worry about Bayesian models of learning is that the Hypothesis spac
 Consider the following WebPPL program, which induces an arithmetic function from examples. We generate an expression as a list, and then turn it into a value (in this case a procedure) by using `apply`---a function that invokes evaluation.
 
 **TODO: Issues with webpplEval. Might want to cut example, since there's an eval-less version below that does the same thing?**
+
 ~~~~
 var randomArithmeticExpression = function() {
   return (flip(.7) ?
@@ -266,7 +267,7 @@ var randomArithmeticExpression = function() {
 };
 
 var funcFromExpression = function(expression) {
-  return webpplEval('(function(x) { ' + expression + '})');
+  return _top.eval('(function(x) { ' + expression + '})');
 };
 
 var expressionPosterior = Infer({method: 'enumerate', maxExecutions: 100}, function() {
@@ -365,78 +366,81 @@ How can we account for the productivity of human concepts (the fact that every c
 
 While this theory was appealing for many reasons, it failed to account for a variety of categorization experiments. Here are the training examples, and one transfer example, from the classic experiment of Medin and Schaffer (1978). The bar graph above the stimuli shows the portion of human participants who said that bug was a "fep" in the test phase (the data comes from a replication by Nosofsky, Gluck, Palmeri, McKinley (1994); the bug stimuli are courtesy of Pat Shafto):
 
-<img src='images/Medin54-bugs.png' width='500' />
+<img src='{{site.base}}/assets/img/Medin54-bugs.png' width='500' />
 
 Notice three effects: there is a gradient of generalization (rather than all-or-nothing classification), some of the Feps are better (or more typical) than others (this is called "typicality"), and the transfer item is a ''better'' Fep than any of the Fep exemplars (this is called "prototype enhancement"). Effects like these were difficult to capture with classical rule-based models of category learning, which led to deterministic behavior. As a result of such difficulties, psychological models of category learning turned to more uncertain, prototype and exemplar based theories of concept representation. These models were able to predict behavioral data very well, but lacked  compositional conceptual structure.
 
 Is it possible to get graded effects from rule-based concepts? Perhaps these effects are driven by uncertainty in *learning* rather than uncertainty in the representations themselves? To explore these questions Goodman, Tenenbaum, Feldman, and Griffiths (2008) introduced the Rational Rules model, which learns deterministic rules by probabilistic inference. This model has an infinite hypothesis space of rules (represented in propositional logic), which are generated compositionally. Here is a slightly simplified version of the model, applied to the above experiment:
 
 ~~~~
-;;first set up the training (cat A/B) and test objects:
-(define num-features 4)
+// first set up the training (cat A/B) and test objects:
+var numFeatures = 4;
 
-(define A-objects (list '(0 0 0 1) '(0 1 0 1) '(0 1 0 0) '(0 0 1 0) '(1 0 0 0)))
+var makeObj = function(l) {return _.object(['trait1', 'trait2', 'trait3', 'trait4'], l)};
+var AObjects = map(makeObj, [[0,0,0,1], [0,1,0,1], [0,1,0,0], [0,0,1,0], [1,0,0,0]]);
+var BObjects = map(makeObj, [[0,0,1,1], [1,0,0,1], [1,1,1,0], [1,1,1,1]]);
+var TObjects = map(makeObj, [[0,1,1,0], [0,1,1,1], [0,0,0,0], [1,1,0,1], [1,0,1,0], [1,1,0,0], [1,0,1,1]])
 
-(define B-objects (list '(0 0 1 1) '(1 0 0 1) '(1 1 1 0) '(1 1 1 1)))
+//here are the human results from Nosofsky et al, for comparison:
+var humanA = [.77, .78, .83, .64, .61];
+var humanB = [.39, .41, .21, .15];
+var humanT = [.56, .41, .82, .40, .32, .53, .20]
 
-(define T-objects (list '(0 1 1 0) '(0 1 1 1) '(0 0 0 0) '(1 1 0 1)
-                        '(1 0 1 0) '(1 1 0 0) '(1 0 1 1)))
+// two parameters: stopping probability of the grammar, and noise probability:
+var tau = 0.3;
+var noiseParam = Math.exp(-1.5)
 
-;;here are the human results from Nosofsky et al, for comparison:
-(define human-A '(0.77 0.78 0.83 0.64 0.61))
-(define human-B '(0.39 0.41 0.21 0.15))
-(define human-T '(0.56 0.41 0.82 0.40 0.32 0.53 0.20))
+// a generative process for disjunctive normal form propositional equations:
+var traitPrior = Categorical({vs: ['trait1', 'trait2', 'trait3', 'trait4'], 
+                              ps: [.25, .25, .25, .25]});
+var samplePred = function() {
+  var trait = sample(traitPrior);
+  var value = flip()
+  return function(x) {return x[trait] == value};
+}
 
-;;two parameters: stopping probability of the grammar, and noise probability:
-(define tau 0.3)
-(define noise-param (exp -1.5))
+var sampleConj = function() {
+  if(flip(tau)) {
+    var c = sampleConj();
+    var p = samplePred();
+    return function(x) {return c(x) && p(x)};
+  } else {
+    return samplePred();
+  }
+}
 
-;;a generative process for disjunctive normal form propositional equations:
-(define (get-formula)
-  (if (flip tau)
-      (let ((c (Conj))
-            (f (get-formula)))
-        (lambda (x) (or (c x) (f x))))
-      (Conj)))
+var getFormula = function() {
+  if(flip(tau)) {
+    var c = sampleConj();
+    var f = getFormula();
+    return function(x) {return c(x) || f(x)};
+  } else {
+    return sampleConj();
+  }
+}
 
-(define (Conj)
-  (if (flip tau)
-      (let ((c (Conj))
-            (p (Pred)))
-        (lambda (x) (and (c x) (p x))))
-      (Pred)))
+var noisyEqual = function(a, b) { 
+  return flip(a == b ?  0.999999999 : noiseParam)
+}
 
-(define (Pred)
-  (let ((index (sample-integer num-features))
-        (value (sample-integer 2)))
-    (lambda (x) (= (list-ref x index) value))))
+var rulePosterior = Infer({method: 'MCMC', samples: 20000, justSample: true}, function() {
+  // sample a classification formula
+  var rule = getFormula();
+  // condition on correctly (up to noise) accounting for A & B categories
+  condition(all(function(x) { return x;}, map(function(obj){return noisyEqual(true, rule(obj))}, AObjects)) &&
+            all(function(x) { return x;}, map(function(obj){return noisyEqual(false, rule(obj))}, BObjects)));
+  // return posterior predictive
+  var allObjs = TObjects.concat(AObjects).concat(BObjects);
+  return _.object(_.range(allObjs.length), map(rule, TObjects.concat(AObjects).concat(BObjects)));
+})
 
-
-(define (noisy-equal? a b) (flip (if (equal? a b) 0.999999999 noise-param)))
-
-(define samples
-  (mh-query
-   1000 10
-
-   ;;infer a classification formula
-   (define my-formula (get-formula))
-
-   ;;look at posterior predictive classification
-   (map my-formula (append T-objects A-objects B-objects))
-
-   ;;conditioning (noisily) on all the training eamples:
-   (and (all (map (lambda (x) (noisy-equal? true (my-formula x))) A-objects))
-        (all (map (lambda (x) (noisy-equal? false (my-formula x))) B-objects)))))
-
-
-;;now plot the predictions vs human data:
-(define (means samples)
-  (if (null? (first samples))
-      '()
-      (pair (mean (map (lambda (x) (if x 1.0 0.0)) (map first samples)))
-            (means (map rest samples)))))
-
-(scatter (map pair (means samples) (append human-T human-A human-B)) "model vs human")
+// Do some data munging to pull out avg predictions for each item
+var samples = _.pluck(rulePosterior.samples, "value");
+var predictives = map(function(item) {
+  return listMean(_.pluck(samples, item));
+}, _.range(15))
+var humanData = humanT.concat(humanA).concat(humanB)
+viz.scatter(predictives, humanData)
 ~~~~
 
 Goodman, et al, have used to this model to capture a variety of classic categorization effects [@Goodman:2008p865]. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
