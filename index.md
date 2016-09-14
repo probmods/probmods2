@@ -4,7 +4,7 @@ title: Probabilistic Models of Cognition
 custom_js:
 - assets/js/index.js
 custom_css:
-- assets/css/index.cssb
+- assets/css/index.css
 ---
 
 <div id="header">
