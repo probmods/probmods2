@@ -125,12 +125,6 @@ div.container ul {
 /* make math font more similar in size to surrounding text */
 .katex { font-size: 17px !important; }
 
-/* Bibtex */
-
-pre#bibtex {
-   display: none;
-}
-
 /* Quotes */
 blockquote {
     font-family: Georgia;
@@ -144,31 +138,37 @@ blockquote em {
 
 /* Code boxes */
 
-pre.highlight {
+.container code, .container pre.highlight, .container .wpedit .CodeMirror {
+    font-family: Inconsolata, monospace;
+}
+
+pre.highlight, .container .wpedit .CodeMirror {
     border: 1px solid #bbb;
-    border-radius: 2px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    background: none;
+    font-size: 14px;
+    line-height: 20px;
+    margin-bottom: 0.5em;
 }
 
-code, .CodeMirror pre {
-    font-family: Inconsolata, monospace !important;
-    font-size: 14px !important;
+.container .wpedit .CodeMirror {
+    padding: 0.5em
 }
 
-.wpedit .CodeMirror {
-    border-color: #bbb !important;
+.container .wpedit button {
+    font-family: Inconsolata;
+    margin: 0 0.2em 0.5em 0;
+    padding: 0.3em;
+    border: none;
+    background-color: #e8e8e8;
 }
 
-.wpedit button {
-    font-family: Inconsolata !important;
-    margin: 0 0.2em 0.5em 0 !important;
-    padding: 0.3em !important;
-    border: none !important;
-    background-color: #e8e8e8 !important;
+.container .wpedit .drawerButton {
+    background-color: transparent;
+    font-size: 10px;
 }
 
-.wpedit .drawerButton {
-    background-color: transparent !important
-}
 
 
 /* Tables */

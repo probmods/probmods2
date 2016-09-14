@@ -22,3 +22,7 @@
 .ampersand {
     opacity: 0.4
 }
+
+pre#bibtex {
+   display: none;
+}
