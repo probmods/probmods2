@@ -8,7 +8,6 @@
 
     <title>{{ page.title }}</title>
 
-
     <link rel="stylesheet" href="{{ site.baseurl }}/bower_components/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ site.baseurl }}/bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/custom.css">
@@ -16,7 +15,6 @@
     <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Inconsolata" rel="stylesheet">
     <script src="{{ site.baseurl }}/bower_components/jquery/dist/jquery.min.js"></script>
     <script src="{{ site.baseurl }}/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="{{ site.baseurl }}/bower_components/paper/dist/paper-full.js"></script>
     <script src="{{ site.baseurl }}/bower_components/underscore/underscore.js"></script>
 
     <!--[if lt IE 9]>
@@ -39,8 +37,6 @@
       <link rel="stylesheet" href="{{ site.baseurl }}/{{ stylesheet }}" media="screen" type="text/css">
       {% endfor %}
     {% endif %}
-
-
     {% if layout.custom_js %}
       {% for js_file in layout.custom_js %}
       <script src='{{ site.baseurl }}/{{ js_file }}' type="text/javascript"></script>
@@ -56,16 +52,11 @@
       <script src='{{ site.baseurl }}/{{ jsx_file }}' type="text/jsx"></script>
       {% endfor %}
     {% endif %}
-
     {% if page.custom_js %}
       {% for js_file in page.custom_js %}
       <script src='{{ site.baseurl }}/{{ js_file }}' type="text/javascript"></script>
       {% endfor %}
     {% endif %}
-
-      <script src="{{ site.baseurl }}/assets/js/parse-bibtex.js"></script>
-    <script src="{{ site.baseurl }}/assets/js/main.js"></script>
-
   </head>
   <body>
 

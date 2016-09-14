@@ -1,8 +1,10 @@
 ---
 layout: default
 title: Probabilistic Models of Cognition
+custom_js:
+- assets/js/index.js
 custom_css:
-- assets/css/home.css
+- assets/css/index.css
 ---
 
 <div id="header">
