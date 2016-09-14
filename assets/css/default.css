@@ -142,6 +142,11 @@ blockquote em {
     font-family: Inconsolata, monospace;
 }
 
+.container code {
+    color: black;
+    border: 1px solid #ddd;
+}
+
 pre.highlight, .container .wpedit .CodeMirror {
     border: 1px solid #bbb;
     border-radius: 4px;
@@ -168,7 +173,6 @@ pre.highlight, .container .wpedit .CodeMirror {
     background-color: transparent;
     font-size: 10px;
 }
-
 
 
 /* Tables */
