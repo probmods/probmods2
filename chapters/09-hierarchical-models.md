@@ -4,8 +4,6 @@ title: Hierarchical models
 description: The power of abstraction
 ---
 
-% Hierarchical models
-
 <!-- NEED TO BREAK THIS DOWN INTO TWO KINDS OF POINTS:
 
 Learn about basic level from subordinates.  Extract the common prototype.  This isn't transfer learning.
@@ -23,66 +21,60 @@ The task is challenging because real-world categories are not homogeneous.  A ba
 *car* actually spans many different subtypes: e.g., *poodle*, *Dalmatian*, *Labrador*, and such, or
 *sedan*, *coupe*, *convertible*, *wagon*, and so on.  The child observes examples of these sub-kinds or *subordinate*-level categories: a few poodles, one Dalmatian, three Labradors, etc. From this data she must infer what it means to be a dog in general, in addition to what each of these different kinds of dog is like.  Knowledge about the prototype level includes understanding what it means to be a prototypical dog and what it means to be non-prototypical, but still a dog. This will involve understanding that dogs come in different breeds which share features between them, but also differ systematically as well.
 
-As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following Church example using the Dirichlet distribution (the Dirichlet is the higher-dimensional analogue of the Beta distribution).
+As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following WebPPL example using the Dirichlet distribution (the Dirichlet is the higher-dimensional analogue of the Beta distribution).
 
 ~~~~
-(define colors '(black blue green orange red))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
+///
+var colors = ['black', 'blue', 'green', 'orange', 'red'];
+var bagToPrototype = mem(function(bag){return getProbs(dirichlet(ones([colors.length, 1])))})
+var drawMarbles = function(bag, numDraws){
+  var probs = bagToPrototype(bag);
+  return repeat(numDraws, function(){return categorical({vs: colors, ps: probs})});
+}
 
-(define bag->prototype
-  (mem (lambda (bag) (dirichlet '(1 1 1 1 1)))))
-
-(define (draw-marbles bag num-draws)
-  (repeat num-draws
-          (lambda () (multinomial colors (bag->prototype bag)))))
-
-(hist (draw-marbles 'bag 50) "first sample")
-(hist (draw-marbles 'bag 50) "second sample")
-(hist (draw-marbles 'bag 50) "third sample")
-(hist (draw-marbles 'bag 50) "fourth sample")
-'done
+viz.auto(drawMarbles('bag', 100))
+viz.auto(drawMarbles('bag', 100))
+viz.auto(drawMarbles('bag', 100))
+viz.auto(drawMarbles('bag', 100))
 ~~~~
 
 Note that we are using the operator `mem` that we introduced in the first part of the tutorial. `mem` is particularly useful when writing hierarchical models because it allows us to associate arbitrary random draws with categories across entire runs of the program. In this case it allows us to associate a particular mixture of marble colors with each bag. The mixture is drawn once, and then remains the same thereafter for that bag.
 
 Run the code above multiple times.  Each run creates a single bag of marbles with its characteristic distribution of marble colors, and then draws four samples of 50 marbles each.  Intuitively, you can see how each sample is sufficient to learn a lot about what that bag is like; there is typically a fair amount of similarity between the empirical color distributions in each of the four samples from a given bag.  In contrast, you should see a lot more variation across different runs of the code -- samples from different bags.
 
-Now let's add a few twists: we will generate three different bags, and try to learn about their respective color prototypes by conditioning on observations. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag, using the expression `(draw-marble 'bag)`.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
+Now let's add a few twists: we will generate three different bags, and try to learn about their respective color prototypes by conditioning on observations. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag, using the expression `drawMarble('bag')`.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
 
 ~~~~
-(define colors '(black blue green orange red))
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
+var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
-(define samples
- (mh-query
-  200 100
+var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
+  var makeBag = mem(function(bag){
+    var colorProbs = getProbs(dirichlet(ones([colors.length, 1])));
+    return Categorical({vs: colors, ps: colorProbs});
+  })
 
-  (define bag->prototype
-    (mem (lambda (bag) (dirichlet '(1 1 1 1 1)))))
+  var bagScore = function(bag, values) {
+    return sum(map(function(v) {return bag.score(v)}, values));
+  }
 
-  (define (draw-marble bag) (multinomial colors (bag->prototype bag)))
+  factor(bagScore(makeBag('bag1'), ['blue', 'blue', 'black', 'blue', 'blue', 'blue']) +
+         bagScore(makeBag('bag2'), ['blue', 'green', 'blue', 'blue', 'blue', 'red']) +
+         bagScore(makeBag('bag3'), ['blue', 'blue', 'blue', 'blue', 'blue', 'orange']))
 
-  (define (observe-bag bag values)
-    (map (lambda (v)
-        (condition (equal? (multinomial colors (bag->prototype bag)) v)))
-      values))
+  return {bag1: sample(makeBag('bag1')),
+          bag2: sample(makeBag('bag2')),
+          bag3: sample(makeBag('bag3')),
+          bagN: sample(makeBag('bagN'))}
+});
 
-  ;;predict the next sample from each observed bag, and a new one:
-  (list (draw-marble 'bag-1)
-        (draw-marble 'bag-2)
-        (draw-marble 'bag-3)
-        (draw-marble 'bag-n))
-
-  ;;condition on observations from three bags:
-  (observe-bag 'bag-1 '(blue blue black blue blue blue))
-  (observe-bag 'bag-2 '(blue green blue blue blue red))
-  (observe-bag 'bag-3 '(blue blue blue blue blue orange))))
-
-samples
-
-(hist (map first samples) "bag one posterior predictive")
-(hist (map second samples) "bag two posterior predictive")
-(hist (map third samples) "bag three posterior predictive")
-(hist (map fourth samples) "bag n posterior predictive")
-'done
+viz.marginals(predictives)
 ~~~~
 
 This generative model describes the prototype mixtures in each bag, but it does not attempt learn a common higher-order prototype. It is like learning separate prototypes for subordinate classes *poodle*, *Dalmatian*, and *Labrador*, without learning a prototype for the higher-level kind *dog*&mdash;or learning about any functions that are shared across the different lower-level classes or bags.  Specifically, inference suggests that each bag is predominantly blue, but with a fair amount of residual uncertainty about what other colors might be seen. There is no information shared across bags, and nothing significant is learned about `bag-n` as it has no observations and no structure shared with the bags that have been observed.
@@ -434,7 +426,7 @@ Intuitively, the observations for bags one, two and three should now suggest a v
 
 One well studied overhypothesis in cognitive development is the 'shape bias': the inductive bias which develops by 24 months and which is the preference to generalize a novel label for some object to other objects of the same shape, rather than say the same color or texture. Studies by Smith and colleagues [-@Smith2002] have shown that this bias can be learned with very little data. They trained 17 month old children, over eight weeks, on four pairs of novel objects where the objects in each pair had the same shape but differed in color and texture and were consistently given the same novel name. First order generalization was tested by showing children an object from one of the four trained categories and asking them to choose another such object from three choice objects that matched the shown object in exactly one feature. Children preferred the shape match. Second order generalization was also tested by showing children an object from a novel category and again children preferred the choice object which matched in shape. Smith and colleagues further found an increase in real-world vocabulary as a result of this training such that children who had been trained began to use more object names. Children had thus presumably learned something like 'shape is homogeneous within object categories' and were able to apply this inductive bias to word learning outside the lab.
 
-We now consider a model of learning the shape bias which uses the compound Dirichlet-multinomial model that we have been discussing in the context of bags of marbles. This model for the shape bias is from [@Kemp2007]. Rather than bags of marbles we now have object categories and rather than observing marbles we now observe the features of an object (e.g. its shape, color, and texture) drawn from one of the object categories. Suppose that a feature from each dimension of an object is generated independently of the other dimensions and there are separate values of alpha and phi for each dimension. Importantly, one needs to allow for more values along each dimension than appear in the training data so as to be able to generalize to novel shapes, colors, etc. To test the model we can feed it training data to allow it to learn the values for the alphas and phis corresponding to each dimension. We can then give it a single instance of some new category and then ask what the probability is that the various choice objects also come from the same new category. The church code below shows a model for the shape bias, conditioned on the same training data used in the Smith et al experiment. We can then ask both for draws from some category which we've seen before, and from some new category which we've seen a single instance of. One small difference from the previous models we've seen for the example case is that the alpha hyperparameter is now drawn from an exponential distribution with inverse mean 1, rather than a Gamma distribution. This is simply for consistency with the model given in the Kemp et al (2007) paper.
+We now consider a model of learning the shape bias which uses the compound Dirichlet-multinomial model that we have been discussing in the context of bags of marbles. This model for the shape bias is from [@Kemp2007]. Rather than bags of marbles we now have object categories and rather than observing marbles we now observe the features of an object (e.g. its shape, color, and texture) drawn from one of the object categories. Suppose that a feature from each dimension of an object is generated independently of the other dimensions and there are separate values of alpha and phi for each dimension. Importantly, one needs to allow for more values along each dimension than appear in the training data so as to be able to generalize to novel shapes, colors, etc. To test the model we can feed it training data to allow it to learn the values for the alphas and phis corresponding to each dimension. We can then give it a single instance of some new category and then ask what the probability is that the various choice objects also come from the same new category. The WebPPL code below shows a model for the shape bias, conditioned on the same training data used in the Smith et al experiment. We can then ask both for draws from some category which we've seen before, and from some new category which we've seen a single instance of. One small difference from the previous models we've seen for the example case is that the alpha hyperparameter is now drawn from an exponential distribution with inverse mean 1, rather than a Gamma distribution. This is simply for consistency with the model given in the Kemp et al (2007) paper.
 
 ~~~~
 (define shapes (iota 11))
