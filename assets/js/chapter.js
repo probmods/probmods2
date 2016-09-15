@@ -105,11 +105,17 @@ function textohtml(tex) {
     return tex;
 }
 
-function replace_html(source, target) {
-    $('p, li').each(function () {
-        var html = $(this).html();
-        $(this).html(html.replace(new RegExp(source, "ig"), target));
-    });
+function replace_html(rx, target) {
+  var matches = $('p').filter(function() {
+    return rx.test($(this).text())
+  })
+
+  $.each(matches,
+         function() {
+           var html = $(this).html();
+           $(this).html(html.replace(rx, target))
+         });
+
 }
 
 function format_citation(citation) {
@@ -181,6 +187,7 @@ function format_refp(citation) {
 }
 
 
+
 $(function() {
   $.get("../assets/bibliography.bib", function (bibtext) {
     $(function () {
@@ -188,22 +195,13 @@ $(function() {
       _.each(
         bibs,
         function (citation, citation_id) {
-          var rx = new RegExp('\\[.*@' + citation_id + '.*\\]', 'ig');
+          // [@foo2001]
+          replace_html(new RegExp('\\[.*@' + citation_id + '.*\\]', 'ig'),
+                       format_refp(citation))
 
-          var matches = $('p').filter(function() {
-            return rx.test($(this).text())
-          })
+          replace_html(new RegExp('@' + citation_id, 'ig'),
+                       format_reft(citation))
 
-          $.each(matches,
-                 function() {
-                   var html = $(this).html();
-                   $(this).html(html.replace(rx, format_refp(citation)))
-                 });
-
-
-          //replace_html("[@" + citation_id + ']', format_citation(citation));
-          //replace_html("reft:" + citation_id, format_reft(citation));
-          //replace_html("refp:" + citation_id, format_refp(citation));
         }
       );
     });
