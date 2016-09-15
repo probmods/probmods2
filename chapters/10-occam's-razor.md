@@ -419,86 +419,73 @@ The two models now have the same number of free parameters (the unfair coin weig
 
 ## Example: Curve Fitting
 
-> **Note: This example is still being ported from the old tutorial; it does not currently run**
-
 This example shows how the Bayesian Occam's Razor can be used to select the right order of a polynomial fit.
 This Church program samples polynomials up to order 3 that are (noisily) consistent with the observed data, then graphs the mean polynomial of each order.
 
+**TODO: inference is challenging here (want something like reversible-jump). try variational?**
+
 ~~~~
-;;first a helper function that makes a polynomial function, given the coefficients:
-(define (make-poly c)
-  (lambda (x) (apply + (map (lambda (a b) (* a (expt x b))) c (iota (length c))))))
+///fold:
+var mapDist = function(_f, dist) {
+  // if f is a string, act like _.pluck
+  var f = (_.isFunction(_f) ? _f : function(x) { return x[_f] })
 
-;;now set up the observed data:
-(define x-vals (range -5 5))
-(define obs-y-vals '(-0.199 -0.208 -0.673 -0.431 -0.360 -0.478 -0.984 0.516 1.138 2.439 3.501))
+  // a little hacky
+  Enumerate(function() {
+    return f(sample(dist))
+  })
+}
 
-;;y-vals generated from:
-;(define true-y-vals (map (make-poly '(-.5 0.3 .1)) x-vals))
-;(define obs-y-vals (map (lambda (x) (gaussian x 0.4)) true-y-vals))
+var filterDist = function(pred, dist) {
+  Enumerate(function() {
+    var x = sample(dist);
+    condition(pred(x));
+    return x
+  })
+}
+///
 
-(define (noisy-equals? x y)
-  (log-flip (* -1000 (expt (- x y) 2))))
+// a0 + a1*x + a2*x^2 + ...
+var makePoly = function(as) {
+  var f = function(x) {
+    return sum(mapIndexed(function(i,a) { return a * Math.pow(x, i) },
+                          as))
+  };
+  return f;
+}
 
-;;the actual curve inference:
-(define samples
-  (mh-query
-   400 20
+var xVals = [-5,-4,-3,-2,-1,0,1,2,3,4,5];
+var yValsObs = [-0.199, -0.208, -0.673, -0.431, -0.360, -0.478, -0.984, 0.516, 1.138, 2.439, 3.501];
 
-   (define poly-order (sample-integer 4))
-   (define coefficients (repeat (+ poly-order 1) (lambda () (gaussian 0.0 2.0))))
+var post = Infer(
+  {method: 'MCMC',
+   samples: 400,
+   lag: 200},
+  function() {
+    var order = uniformDraw([0,1,2,3]);
+    var coeffs = repeat(order + 1, function() { return gaussian(0,2) })
 
-   (define y-vals (map (make-poly coefficients) x-vals))
+    var f = makePoly(coeffs);
+    var yValsSampled = map(f, xVals);
 
-   (list poly-order coefficients)
+    map2(function(ySamp, yObs) {
+      observe(Gaussian({mu: ySamp, sigma: 0.01}), yObs)
+    }, yValsSampled,
+        yValsObs)
 
-   (all (map noisy-equals? y-vals obs-y-vals))
-   )
-  )
+    return {order: order,
+           coeffs: coeffs}
+  }
+)
 
-;;now let's look at the results:
-(hist (map first samples) "Polynomial degree")
+viz.auto(mapDist('order', post))
 
-;;find the average coefficients for sampled polynomials of each order:
-(define (mean-coeffs order)
-  (let ((coeffs (map second (filter (lambda (s) (= order (first s))) samples))))
-    (if (null? coeffs)
-        '()
-        (map (lambda (c) (mean c)) (apply zip coeffs)))))
-
-
-;;set up graphing:
-(define plot-x-vals (map (lambda (x) (/ x 10)) (range -50 50)))
-(define plot-0-y-vals (map (make-poly (mean-coeffs 0)) plot-x-vals))
-(define plot-1-y-vals (map (make-poly (mean-coeffs 1)) plot-x-vals))
-(define plot-2-y-vals (map (make-poly (mean-coeffs 2)) plot-x-vals))
-(define plot-3-y-vals (map (make-poly (mean-coeffs 3)) plot-x-vals))
-
-(define (adjust points)
-  (map (lambda (p) (+ (* (+ p 5) 25) 25))
-       points))
-
-;; 0th order polynomial
-(define paper-0 (make-raphael "polynomial-0" 250 250))
-(raphael-points paper-0 (adjust x-vals) (adjust obs-y-vals))
-(raphael-lines paper-0 (adjust plot-x-vals) (adjust plot-0-y-vals))
-
-;; 1st order polynomial
-(define paper-1 (make-raphael "polynomial-1" 250 250))
-(raphael-points paper-1 (adjust x-vals) (adjust obs-y-vals))
-(raphael-lines paper-1 (adjust plot-x-vals) (adjust plot-1-y-vals))
-
-;; 2nd order polynomial
-(define paper-2 (make-raphael "polynomial-2" 250 250))
-(raphael-points paper-2 (adjust x-vals) (adjust obs-y-vals))
-(raphael-lines paper-2 (adjust plot-x-vals) (adjust plot-2-y-vals))
-
-;; 3rd order polynomial
-(define paper-3 (make-raphael "polynomial-3" 250 250))
-(raphael-points paper-3 (adjust x-vals) (adjust obs-y-vals))
-(raphael-lines paper-3 (adjust plot-x-vals) (adjust plot-3-y-vals))
-
-'done
+var getMeanPolynomialOfOrder = function(k) {
+  var polys = filterDist(function(x) { return x.order == k}, post)
+  return map(function(i) {
+    return expectation(mapDist(function(x) { return x.coeffs[i] }, polys))
+  }, _.range(k + 1))
+};
 ~~~~
 
 Try the above code using a different data set generated from the same function:
