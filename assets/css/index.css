@@ -26,3 +26,7 @@
 pre#bibtex {
    display: none;
 }
+
+ul.nav {
+    display: none !important
+}

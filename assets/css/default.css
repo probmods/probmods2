@@ -30,53 +30,17 @@ body div.container {
 
 /* Navbar */
 
-.navbar {
-    display: none;
+ul.nav {
+    position: fixed;
+    margin-left: -8.1em;
+    margin-top: 4.5em;
+    background-color: #32682f;
+    z-index: 9999999999;
 }
 
-.navbar {
-   margin-bottom: 0;
+ul.nav a {
+    color: black;
 }
-
-div.navbar {
-   background-image: linear-gradient(to bottom, #B00B30 0%, #8b0d25 100%);
-}
-
-.navbar a.navbar-brand {
-   color: #fff;
-}
-
-.navbar a.navbar-brand:hover {
-   color: #fff;
-}
-
-.navbar p.navbar-text {
-   color: #eee;
-}
-
-.navbar li.dropdown a.dropdown-toggle {
-   color: #fff
-}
-
-.navbar a.navbar-brand .fa {
-   margin-right: .2em
-}
-
-.navbar #cse-text {
-   width: 300px;
-}
-.navbar .tt-hint {
-   width: 300px;
-}
-
-body .navbar-default .navbar-nav li a {
-   color: #eee;
-}
-
-body .navbar-default .navbar-nav li a:hover {
-   color: #fff;
-}
-
 
 /* Headings */
 
