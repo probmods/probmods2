@@ -12,11 +12,13 @@ custom_css:
   <span class="authors">Noah D. Goodman <span class='ampersand'>&amp;</span> Joshua B. Tenenbaum</span>
 </div>
 
-In this book, we explore the probabilistic approach to cognitive science, which models learning and reasoning as inference in complex probabilistic models.
-In particular, we examine how a broad range of empirical phenomena in cognitive science (including intuitive physics, concept learning, causal reasoning, social cognition, and language understanding) can be modeled using a functional probabilistic programming language called WebPPL.
+This book explores the probabilistic approach to cognitive science, which models learning and reasoning as inference in complex probabilistic models.
+We examine how a broad range of empirical phenomena, including intuitive physics, concept learning, causal reasoning, social cognition, and language understanding, can be modeled using a functional probabilistic programming language called WebPPL.
 
-**Citation:**
-N. D. Goodman and J. B. Tenenbaum (electronic). Probabilistic Models of Cognition. Retrieved <Date> from http://probmods.org/v2. <a id="toggle-bibtex" href="#">[bibtex]</a>
+<div id='left'>
+
+<h3>Citation</h3>
+N. D. Goodman and J. B. Tenenbaum (electronic). Probabilistic Models of Cognition. Retrieved <span class="date">YYYY-MM-DD</span> from <code>http://probmods.org/v2</code>. <a id="toggle-bibtex" href="#">[bibtex]</a>
 
 <pre id="bibtex">
 @misc{probmods,
@@ -28,25 +30,37 @@ N. D. Goodman and J. B. Tenenbaum (electronic). Probabilistic Models of Cognitio
 }
 </pre>
 
+<h3>Open source</h3>
+
+<ul>
+<li><a href='https://github.com/probmods/probmods2'>Book content</a><br />
+<em>Markdown code for the book chapters</em></li>
+
+<li><a href='http://webppl.org'>WebPPL</a><br />
+    <em>A probabilistic programming language for the web</em></li>
+</ul>
+
+<h3>Acknowledgments</h3>
+
+<p>We are grateful to the following people, who contributed content or technical expertise: Timothy J. O’Donnell, Andreas Stuhlmuller, Tomer Ullman, John McCoy, Long Ouyang, Julius Cheng.</p>
+
+<p>The construction and ongoing support of this tutorial are made possible by grants from the Office of Naval Research, the James S. McDonnell Foundation, the Stanford VPOL, and the Center for Brains, Minds, and Machines (funded by NSF STC award CCF-1231216).</p>
+</div>
+
 {% assign sorted_pages = site.pages | sort:"name" %}
 
-### Chapters
+<div id="right">
 
+<h3>Chapters</h3>
+
+<ol>
 {% for p in sorted_pages %}
     {% if p.layout == 'chapter' %}
-1. [{{ p.title }}]({{ site.baseurl }}{{ p.url }})<br>
+    <li><a href="{{ site.baseurl }}{{ p.url }}">{{p.title}}</a></li>
     <em>{{ p.description }}</em>
     {% endif %}
 {% endfor %}
+</ol>
 
-### Open source
 
-- [Book content](https://github.com/probmods/probmods)<br>
-  *Markdown code for the book chapters*
-
-- [WebPPL](http://webppl.org)<br>
-  *A probabilistic programming language for the web*
-
-### Acknowledgments
-
-The construction and ongoing support of this tutorial are made possible by grants from the Office of Naval Research, the James S. McDonnell Foundation, the Stanford VPOL, and the Center for Brains, Minds, and Machines (funded by NSF STC award CCF-1231216).
+</div>

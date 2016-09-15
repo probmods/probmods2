@@ -1,5 +1,5 @@
 #header {
-    padding: 2.5em 0em 1.5em 0em;
+    padding: 3.5em 0em 2.5em 0em;
     text-align: center;
     margin: 0em -5em 1em -5em;
     color: white;
@@ -29,4 +29,26 @@ pre#bibtex {
 
 ul.nav {
     display: none !important
+}
+
+#left {
+    width: 48%;
+    float: left;
+}
+
+#right {
+    width: 48%;
+    float: right;
+}
+
+ul, ol {
+    padding-left: 1.5em;
+}
+
+h3 {
+    text-decoration: underline
+}
+
+.container {
+    width: 840px;
 }
