@@ -186,8 +186,6 @@ function format_refp(citation) {
   return textohtml(s);
 }
 
-
-
 $(function() {
   $.get("../assets/bibliography.bib", function (bibtext) {
     $(function () {
@@ -196,10 +194,11 @@ $(function() {
         bibs,
         function (citation, citation_id) {
           // [@foo2001]
-          replace_html(new RegExp('\\[.*@' + citation_id + '.*\\]', 'ig'),
+          replace_html(new RegExp('\\[.*@' + citation_id + '.*\\]', 'i'),
                        format_refp(citation))
 
-          replace_html(new RegExp('@' + citation_id, 'ig'),
+          // @foo2011
+          replace_html(new RegExp('@' + citation_id, 'i'),
                        format_reft(citation))
 
         }
