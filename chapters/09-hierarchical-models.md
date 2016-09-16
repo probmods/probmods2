@@ -49,9 +49,15 @@ Run the code above multiple times.  Each run creates a single bag of marbles wit
 Now let's add a few twists: we will generate three different bags, and try to learn about their respective color prototypes by conditioning on observations. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag, using the expression `drawMarble('bag')`.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
 
 ~~~~
+///fold:
 var getProbs = function(vector) {
   return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
 }
+
+var observeBag = function(bag, values) {
+  return sum(map(function(v) {return bag.score(v)}, values));
+}
+///
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
@@ -60,13 +66,9 @@ var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
     return Categorical({vs: colors, ps: colorProbs});
   })
 
-  var bagScore = function(bag, values) {
-    return sum(map(function(v) {return bag.score(v)}, values));
-  }
-
-  factor(bagScore(makeBag('bag1'), ['blue', 'blue', 'black', 'blue', 'blue', 'blue']) +
-         bagScore(makeBag('bag2'), ['blue', 'green', 'blue', 'blue', 'blue', 'red']) +
-         bagScore(makeBag('bag3'), ['blue', 'blue', 'blue', 'blue', 'blue', 'orange']))
+  factor(observeBag(makeBag('bag1'), ['blue', 'blue', 'black', 'blue', 'blue', 'blue']) +
+         observeBag(makeBag('bag2'), ['blue', 'green', 'blue', 'blue', 'blue', 'red']) +
+         observeBag(makeBag('bag3'), ['blue', 'blue', 'blue', 'blue', 'blue', 'orange']))
 
   return {bag1: sample(makeBag('bag1')),
           bag2: sample(makeBag('bag2')),
@@ -77,53 +79,47 @@ var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
 viz.marginals(predictives)
 ~~~~
 
-This generative model describes the prototype mixtures in each bag, but it does not attempt learn a common higher-order prototype. It is like learning separate prototypes for subordinate classes *poodle*, *Dalmatian*, and *Labrador*, without learning a prototype for the higher-level kind *dog*&mdash;or learning about any functions that are shared across the different lower-level classes or bags.  Specifically, inference suggests that each bag is predominantly blue, but with a fair amount of residual uncertainty about what other colors might be seen. There is no information shared across bags, and nothing significant is learned about `bag-n` as it has no observations and no structure shared with the bags that have been observed.
+This generative model describes the prototype mixtures in each bag, but it does not attempt learn a common higher-order prototype. It is like learning separate prototypes for subordinate classes *poodle*, *Dalmatian*, and *Labrador*, without learning a prototype for the higher-level kind *dog*&mdash;or learning about any functions that are shared across the different lower-level classes or bags.  Specifically, inference suggests that each bag is predominantly blue, but with a fair amount of residual uncertainty about what other colors might be seen. There is no information shared across bags, and nothing significant is learned about `bagN` as it has no observations and no structure shared with the bags that have been observed.
 
 Now let us introduce another level of abstraction: a global prototype that provides a prior on the specific prototype mixtures of each bag.
 
 ~~~~
-(define colors '(black blue green orange red))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define samples
- (mh-query
-  200 100
+var observeBag = function(bag, values) {
+  return sum(map(function(v) {return bag.score(v)}, values));
+}
+///
+var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
-  ;;we make a global prototype which is a dirichlet sample scaled to total 5.
-  (define prototype (map (lambda (x) (* 5 x)) (dirichlet '(1 1 1 1 1))))
+var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
+  // we make a global prototype which is a dirichlet sample scaled to total 5.
+  var prototype = T.mul(dirichlet(ones([5, 1])), 5)
+  
+  var makeBag = mem(function(bag){
+    var colorProbs = getProbs(dirichlet(prototype));
+    return Categorical({vs: colors, ps: colorProbs});
+  })
 
-   ;;the prototype for each bag uses the global prototype as parameters.
-  (define bag->prototype
-    (mem (lambda (bag) (dirichlet prototype))))
+  factor(observeBag(makeBag('bag1'), ['blue', 'blue', 'black', 'blue', 'blue', 'blue']) +
+         observeBag(makeBag('bag2'), ['blue', 'green', 'blue', 'blue', 'blue', 'red']) +
+         observeBag(makeBag('bag3'), ['blue', 'blue', 'blue', 'blue', 'blue', 'orange']))
 
-  (define (draw-marble bag)
-    (multinomial colors (bag->prototype bag)))
+  return {bag1: sample(makeBag('bag1')),
+          bag2: sample(makeBag('bag2')),
+          bag3: sample(makeBag('bag3')),
+          bagN: sample(makeBag('bagN'))}
+});
 
-  (define (observe-bag bag values)
-    (map (lambda (v)
-        (condition (equal? (multinomial colors (bag->prototype bag)) v)))
-      values))
-
-  (list (draw-marble 'bag-1)
-        (draw-marble 'bag-2)
-        (draw-marble 'bag-3)
-        (draw-marble 'bag-n))
-
-  ;;condition on observations from three bags:
-  (observe-bag 'bag-1 '(blue blue black blue blue blue))
-  (observe-bag 'bag-2 '(blue green blue blue blue red))
-  (observe-bag 'bag-3 '(blue blue blue blue blue orange))))
-
-
-(hist (map first samples) "bag one posterior predictive")
-(hist (map second samples) "bag two posterior predictive")
-(hist (map third samples) "bag three posterior predictive")
-(hist (map fourth samples) "bag n posterior predictive")
-'done
+viz.marginals(predictives)
 ~~~~
 
 Compared with inferences in the previous example, this extra level of abstraction enables faster learning: more confidence in what each bag is like based on the same observed sample.  This is because all of the observed samples suggest a common prototype structure, with most of its weight on `blue` and the rest of the weight spread uniformly among the remaining colors.  Statisticians sometimes refer to this phenomenon of inference in hierarchical models as "sharing of statistical strength": it is as if the sample we observe for each bag also provides a weaker indirect sample relevant to the other bags.  In machine learning and cognitive science this phenomenon is often called *learning to learn* or *transfer learning.* Intuitively, knowing something about bags in general allows the learner to transfer knowledge gained from draws from one bag to other bags.  This example is analogous to seeing several examples of different subtypes of dogs and learning what features are in common to the more abstract basic-level dog prototype, independent of the more idiosyncratic features of particular dog subtypes.
 
-A particularly striking example of "sharing statistical strength" or "learning to learn" can be seen if we change the observed sample for bag 3 to have only two examples, one blue and one orange.  Replace the line `(equal? (draw-marbles 'bag-3 6) '(blue blue blue blue blue orange))` with `(equal? (draw-marbles 'bag-3 2) '(blue orange))` in each program above.  In a situation where we have no shared higher-order prototype structure, inference for bag-3 from these observations suggests that `blue` and `orange` are equally likely.  However, when we have inferred a shared higher-order prototype, then the inferences we make for bag 3 look much more like those we made before, with six observations (five blue, one orange), because the learned higher-order prototype tells us that blue is most likely to be highly represented in any bag regardless of which other colors (here, orange) may be seen with lower probability.
+A particularly striking example of "sharing statistical strength" or "learning to learn" can be seen if we change the observed sample for bag 3 to have only two examples, one blue and one orange.  Replace the line `observeBag(makeBag('bag3'), ['blue', 'blue', 'blue', 'blue', 'blue', 'orange'])` with `observeBag(makeBag('bag3'), ['blue', 'orange'])` in each program above.  In a situation where we have no shared higher-order prototype structure, inference for bag3 from these observations suggests that `blue` and `orange` are equally likely.  However, when we have inferred a shared higher-order prototype, then the inferences we make for bag 3 look much more like those we made before, with six observations (five blue, one orange), because the learned higher-order prototype tells us that blue is most likely to be highly represented in any bag regardless of which other colors (here, orange) may be seen with lower probability.
 
 Learning about shared structure at a higher level of abstraction also supports inferences about new bags without observing *any* examples from that bag: a hypothetical new bag could produce any color, but is likely to have more blue marbles than any other color. We can imagine hypothetical, previously unseen, new subtypes of dogs that share the basic features of dogs with more familiar kinds but may differ in some idiosyncratic ways.
 
@@ -133,92 +129,64 @@ Learning about shared structure at a higher level of abstraction also supports i
 Now let's investigate the relative learning speeds at different levels of abstraction.  Suppose that we have a number of bags that all have identical prototypes: they mix red and blue in proportion 2:1.  But the learner doesn't know this.  She observes only one ball from each of N bags.  What can she learn about an individual bag versus the population as a whole as the number of bags changes?
 
 ~~~~
-(define colors '(red blue))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define (sample-bags obs-draws)
- (mh-query
-   300 100
+var observeBag = function(bag, values) {
+  return sum(map(function(v) {return bag.score(v)}, values));
+}
 
-   ;;we make a global prototype which is a dirichlet sample scaled to total 2:
-   (define phi (dirichlet '(1 1)))
-   (define global-prototype (map (lambda (x) (* 2 x)) phi))
+var meanDev = function(dist, param, truth) {
+  return expectation(dist, function(val) {return Math.pow(truth - val[param], 2)});
+};
+///
+var colors = ['red', 'blue'];
+var bagPosterior = function(observedDraws) {
+  return Infer({method: 'MCMC', samples: 5000}, function() {
+    // we make a global prototype which is a dirichlet sample scaled to total 2:
+    var phi = dirichlet(ones([colors.length,1]))
+    var globalPrototype = T.mul(phi, colors.length);
 
-   ;;the prototype for each bag uses the global prototype as parameters.
-   (define bag->prototype
-     (mem (lambda (bag) (dirichlet global-prototype))))
+    // the prototype for each bag uses the global prototype as parameters.
+    var makeBag = mem(function(bag){
+      var colorProbs = getProbs(dirichlet(globalPrototype));
+      return Categorical({vs: colors, ps: colorProbs});
+    })
 
-   (define (draw-marbles bag num-draws)
-     (repeat num-draws
-             (lambda () (multinomial colors (bag->prototype bag)))))
+    var bagScores = map(function(bagName) {
+      return observeBag(makeBag(bagName), observedDraws[bagName])
+    }, _.keys(observedDraws))
 
-   ;;query the inferred bag1 and global prototype:
-   (list (first (bag->prototype (first (first obs-draws))))
-         (first phi))
+    factor(sum(bagScores))
+    
+    return {bag1: Math.exp(makeBag('bag1').score('red')),
+            global: getProbs(phi)[0]}
+  })
+};
 
-   ;;condition on getting the right observations from each bag.
-   ;;obs-draws is a list of lists of draws from each bag (first is bag name).
-   (all (map (lambda (bag) (equal? (rest bag)
-                                   (draw-marbles (first bag) (length (rest bag)))))
-             obs-draws))))
+// now we generate learning curves! we take a single sample from each bag.
+// plot the mean-squared error normalized by the no-observations error.
+var initialPosterior = bagPosterior({'bag1': []})
+var initialSpec = meanDev(initialPosterior, 'bag1', .66);
+var initialGlob = meanDev(initialPosterior, 'global', .66);
 
-;;; visualization code
-;;;fold:
-;;compute the mean squared deviation of samples from truth:
-(define colors '(red blue))
+var obs = {'bag1': ['red'], 'bag2': ['red'], 'bag3': ['blue'], 'bag4': ['red'], 'bag5': ['red'], 
+           'bag6': ['blue'], 'bag7': ['red'], 'bag8': ['red'], 'bag9': ['blue'], 'bag10': ['red'], 
+           'bag11': ['red'], 'bag12': ['blue']};
+var numObs = [1,3,6,9, 12]
 
-(define (sample-bags obs-draws)
- (mh-query
-   300 100
+var allSamples = map(function(maxBagNumber) {
+  var dataSubset = _.pick(obs, map(function(num){return 'bag' + num}, _.range(1,maxBagNumber + 1)))
+  var bagPost = bagPosterior(dataSubset)
+  
+  return {mseSpec: meanDev(bagPost, 'bag1', .66) / initialSpec,
+          mseGlob: meanDev(bagPost, 'global', .66) / initialGlob};
+}, numObs);
 
-   ;;we make a global prototype which is a dirichlet sample scaled to total 2:
-   (define phi (dirichlet '(1 1)))
-   (define global-prototype (map (lambda (x) (* 2 x)) phi))
-
-   ;;the prototype for each bag uses the global prototype as parameters.
-   (define bag->prototype
-     (mem (lambda (bag) (dirichlet global-prototype))))
-
-   (define (draw-marbles bag num-draws)
-     (repeat num-draws
-             (lambda () (multinomial colors (bag->prototype bag)))))
-
-   (define (observe-bag bag values)
-     (map (lambda (v)
-         (condition (equal? (multinomial colors (bag->prototype bag)) v)))
-       values))
-
-   ;;query the inferred bag1 and global prototype:
-   (list (first (bag->prototype (first (first obs-draws))))
-         (first phi))
-
-   ;;condition on getting the right observations from each bag.
-   ;;obs-draws is a list of lists of draws from each bag (first is bag name).
-   (map (lambda (bag-and-values) (observe-bag (first bag-and-values) (rest bag-and-values))) obs-draws)))
-
-;;; visualization code
-;;;fold:
-;;compute the mean squared deviation of samples from truth:
-(define (mean-dev truth samples)
-  (mean (map (lambda (s) (expt (- truth s) 2)) samples)))
-
-;;now we generate learning curves! we take a single sample from each bag.
-;;plot the mean-squared error normalized by the no-observations error.
-
-(define samples (sample-bags '((bag1))))
-(define initial-specific (mean-dev 0.66 (map first samples)))
-(define initial-global (mean-dev 0.66 (map second samples)))
-
-(define observations '((bag1 red) (bag2 red) (bag3 blue) (bag4 red) (bag5 red) (bag6 blue) (bag7 red) (bag8 red) (bag9 blue) (bag10 red) (bag11 red) (bag12 blue)))
-(define num-obs '(1 3 6 9 12))
-
-(define all-samples (map (lambda (num) (sample-bags (take observations num))) num-obs))
-(define mse-specific (map (lambda (samples) (/ (mean-dev 0.66 (map first samples)) initial-specific)) all-samples))
-(define mse-general (map (lambda (samples) (/ (mean-dev 0.66 (map second samples)) initial-specific)) all-samples))
-
-(lineplot (pair '(0 1) (zip num-obs mse-specific)) "specific learning")
-(lineplot (pair '(0 1) (zip num-obs mse-general)) "general learning")
-
-'done
+viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseSpec')))
+viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseGlob')))
 ~~~~
 
 We are plotting learning curves: the mean squared error of the prototype from the true prototype for the specific level (the first bag) and the general (global prototype) level as a function of the number of observed data points. Note that these quantities are directly comparable because they are each samples from a Dirichlet distribution of the same size (this is often not the case in hierarchical models). What we see is that learning is faster at the general level than the specific level&mdash;that is that the error in the estimated prototype drops faster in the general than the specific plots. We also see that there is continued learning at the specific level, even though we see no additional samples from the first bag after the first; this is because the evolving knowledge at the general level further constrains the inferences at the specific level. Going back to our familiar categorization example, this suggests that a child could be quite confident in the prototype of "dog" while having little idea of the prototype for any specific kind of dog&mdash;learning more quickly at the abstract level than the specific level, but then using this abstract knowledge to constrain expectations about the specific level.  This dynamic depends crucially on the fact that we get very diverse evidence: try changing the above example to observe the same N examples, but coming from a single bag (instead of N bags). You should now see that learning for this bag is quick, while global learning (and transfer) is slow.
@@ -238,6 +206,7 @@ In machine learning one often talks of the *curse of dimensionality*. The curse 
 In contrast, we have seen that adding additional levels of abstraction (and hence additional parameters) in a probabilistic model can sometimes make it possible to learn *more*  with *fewer* observations. This happens because learning at the abstract level can be quicker than learning at the specific level. Because this ameliorates the curse of dimensionality, we refer to these effects as the **blessing of abstraction**.
 
 In general, the blessing of abstraction can be surprising because our intuitions often suggest that adding more hierarchical levels to a model increases the model's complexity. More complex models should make learning harder, rather than easier. On the other hand, it has long been understood in cognitive science that learning is made easier by the addition of *constraints* on possible hypothesis. For instance, proponents of universal grammar have long argued for a highly constrained linguistic system on the basis of learnability. Their theories often have an explicitly hierarchical flavor. Hierarchical Bayesian models can be seen as a way of introducing soft, probabilistic constraints on hypotheses that allow for the transfer of knowledge between different kinds of observations.
+
 <!--
 
 old blessing of abstraction stuff
