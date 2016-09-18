@@ -49,55 +49,48 @@ A simple case of Bayes Occam's razor comes from the *size principle* [@Tenenbaum
 The following Church program demonstrates the size principle with a very simple model. Here we have two hypothesized sets: `Big` has 6 elements and `Small` has 3 elements. The generative model chooses one of the hypotheses at random and samples some number of symbols from it uniformly. We then wish to infer the hypothesis given observed elements.
 
 ~~~~
-(define samples
-   (mh-query
-    100 100
+var hypothesisToDist = function(hyp) {
+  return (hyp == 'Big' ? 
+          Categorical({vs: ['a', 'b', 'c', 'd', 'e', 'f'], ps: [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]}) :
+          Categorical({vs: ['a', 'b', 'c'], ps: [1/3, 1/3, 1/3]}));
+}
 
-    (define (hypothesis->set  hyp)
-      (if (equal? hyp  'Big) '(a b c d e f) '(a b c)))
+var data = ['a']
 
-    (define hypothesis (if (flip) 'Big 'Small))
-    (define (observe N)
-      (repeat N (lambda () (uniform-draw (hypothesis->set hypothesis)))))
-
-    hypothesis
-
-    (equal? (observe 1) '(a))
-    )
-   )
- (hist samples "Size Principle")
+var results = Infer({method: 'enumerate'}, function(){
+  var hypothesis = flip() ? 'Big' : 'Small';
+  var dist = hypothesisToDist(hypothesis);
+  factor(sum(map(function(v){ return dist.score(v);}, data)));
+  return hypothesis;
+})
+viz.auto(results);
 ~~~~
 
 With a single observed `a`, we already favor hypothesis `Small`. What happens when we increase the amount of observed data? Consider the learning trajectory:
 
 ~~~~
-(define (samples data)
-   (mh-query
-    100 10
+///fold:
+var hypothesisToDist = function(hyp) {
+  return (hyp == 'Big' ? 
+          Categorical({vs: ['a', 'b', 'c', 'd', 'e', 'f'], ps: [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]}) :
+          Categorical({vs: ['a', 'b', 'c'], ps: [1/3, 1/3, 1/3]}));
+}
+///
+var hypothesisPosterior = function(data) {
+  return Infer({method: 'enumerate'}, function(){
+    var hypothesis = flip() ? 'Big' : 'Small';
+    var dist = hypothesisToDist(hypothesis);
+    factor(sum(map(function(v){ return dist.score(v);}, data)));
+    return hypothesis;
+  })
+};
 
-    (define (hypothesis->set  hyp)
-      (if (equal? hyp  'Big) '(a b c d e f) '(a b c)))
-
-    (define hypothesis (if (flip) 'Big 'Small))
-    (define (observe N)
-      (repeat N (lambda () (uniform-draw (hypothesis->set hypothesis)))))
-
-    hypothesis
-
-    (equal? (observe (length data)) data)
-    )
-   )
-
-(define (big-freq data) (mean (map (lambda (hyp) (if (equal? hyp 'Big) 1.0 0.0)) (samples data))))
-
-(lineplot
- (list
-  (pair 1 (big-freq '(a)))
-  (pair 3 (big-freq '(a b a)))
-  (pair 5 (big-freq '(a b a b b)))
-  (pair 7 (big-freq '(a b a b b a b))))
- "P(Big | observations)"
- )
+var fullData = ['a', 'b', 'a', 'b', 'b', 'a', 'b'];
+var dataSizes = [1,3,5,7];
+var probBig = map(function(size) {
+  return hypothesisPosterior(fullData.slice(0,size)).score('Big');
+}, dataSizes);
+viz.line(dataSizes, probBig, {xLabel: 'numDataPoints', yLabel: 'P(Big|data)'})
 ~~~~
 
 As the number of data points increases, the hypothesis `Small` rapidly comes to dominate the posterior distribution.  Why is this happening? We sample observations uniformly from hypotheses, the law of conservation of belief and the symmetry between observations imply that the probability of a draw from `Big` is $$\frac{1}{6}$$, while the probability of a draw from `Small` is $$\frac{1}{3}$$. Thus, by the product rule of probabilities, the probability of drawing a set of N observations from `Big` is $$(\frac{1}{6})^N$$, while the probability of drawing a set of observations from `Small` is $$(\frac{1}{3})^N$$. The later probability decreases much more slowly than the former as the number of observations increases. Using Bayes' rule, the posterior distribution over hypotheses is given by:
@@ -153,10 +146,11 @@ map(function(obs) {
 Explore how the concept learned varies as a function of the number and distribution of example points. Try varying the observed data and seeing how the inferred rectangle changes:
 
 ~~~~ norun
-(define obs-data '((0.2 0.6) (0.2 0.8) (0.4 0.8) (0.4 0.6) (0.3 0.7)))
-(define obs-data '((0.4 0.7) (0.5 0.4) (0.45 0.5) (0.43 0.7) (0.47 0.6)))
-(define obs-data '((0.4 0.7) (0.5 0.4)))
-(define obs-data '((0.4 0.7) (0.5 0.4) (0.46 0.63) (0.43 0.51) (0.42 0.45) (0.48 0.66)))
+var observedData = [{x: 0.20, y: 0.60}, {x: 0.20, y: 0.80}, {x: 0.40, y: 0.80}, {x: 0.40, y: 0.60}, {x: 0.30, y: 0.70}]
+var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}, {x: 0.45, y: 0.50}, {x: 0.43, y: 0.70}, {x: 0.47, y: 0.60}]
+var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}]
+var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}, {x: 0.46, y: 0.63}, 
+                    {x: 0.43, y: 0.51}, {x: 0.42, y: 0.45}, {x: 0.48, y: 0.66}]
 ~~~~
 
 Compare this to the results of a slightly different causal process for the same observations, known as *weak sampling*:
@@ -209,72 +203,51 @@ Importantly, the Size Principle tells us that the prior distribution on hypothes
 In our example above we have illustrated Bayes Occam's razor with examples based strictly on the "size" of the hypotheses involved, however, the principle is more general. Bayes'  Occam razor says that all else being equal the hypothesis that assigns the highest likelihood to the data will dominate the posterior. Because of the law of conservation of belief, assigning higher likelihood to the observed data requires assigning lower likelihood to other possible data. Consider the following example
 
 ~~~~
-(define observed-letters '(a b a b c d b b))
+var hypothesisToDist = function(hypothesis) {
+  return (hypothesis == 'A' ? 
+          Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.375, 0.375, 0.125, 0.125]}) :
+          Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.25, 0.25, 0.25, 0.25]}))
+}
 
-(define samples
-   (mh-query
-    100 100
+var observedLetters = ['a', 'b', 'a', 'b', 'c', 'd', 'b', 'b'];
 
-    (define (hypothesis->parameters hyp)
-      (if (equal? hyp 'A)
-          (list '(a b c d) '(0.375 0.375 0.125 0.125))
-          (list '(a b c d) '(0.25 0.25 0.25 0.25))))
+var posterior = Infer({method: 'enumerate'}, function(){
+  var hypothesis = flip() ? 'A' : 'B';
+  var dist = hypothesisToDist(hypothesis);
+  factor(sum(map(function(letter){return dist.score(letter)}, observedLetters)));
+  return hypothesis;
+})
 
-    (define hypothesis (if (flip) 'A 'B))
+viz.auto(posterior);
 
-    (define (observe observed-letters)
-      (map (lambda (letter) (condition (equal? (multinomial
-              (first (hypothesis->parameters hypothesis))
-              (second (hypothesis->parameters hypothesis)))
-            letter)))
-        observed-letters))
-
-    hypothesis
-
-    (observe observed-letters)
-
-    )
-   )
-
-(hist samples "Bayes-Occam-Razor")
 ~~~~
 
 In this example, unlike the size principle cases above, both hypotheses lead to the same possible observed values. However, hypothesis A is skewed toward examples a and b&mdash;while it can produce c or d, it is less likely to do so. In this sense hypothesis A is less flexible than hypothesis B. The data set we conditioned on also has exemplars of all the elements in the support of the two hypotheses. However, because there are more exemplars of elements favored by hypothesis `A`, this hypothesis is favored in the posterior. The Bayesian Occam's razor emerges naturally here, and is often described as favoring the less flexible hypothesis.
 
 Similar effects emerge if hypothesis B is not uniform, but favors different examples that hypothesis A:
 
+**TODO: this is confusing: B is still uniform in this example; the only difference is the data. Guessing there's some typo in the original probmods?**
+
 ~~~~
-(define observed-letters '(a b a c d))
+var hypothesisToDist = function(hypothesis) {
+  return (hypothesis == 'A' ? 
+          Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.375, 0.375, 0.125, 0.125]}) :
+          Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.25, 0.25, 0.25, 0.25]}))
+}
 
-(define samples
-   (mh-query
-    100 100
+var observedLetters = ['a', 'b', 'a', 'c', 'd'];
 
-    (define (hypothesis->parameters hyp)
-      (if (equal? hyp 'A)
-          (list '(a b c d) '(0.375 0.375 0.125 0.125))
-          (list '(a b c d) '(0.25 0.25 0.25 0.25))))
+var posterior = Infer({method: 'enumerate'}, function(){
+  var hypothesis = flip() ? 'A' : 'B';
+  var dist = hypothesisToDist(hypothesis);
+  factor(sum(map(function(letter){return dist.score(letter)}, observedLetters)));
+  return hypothesis;
+})
 
-    (define hypothesis (if (flip) 'A 'B))
-
-    (define (observe observed-letters)
-      (map (lambda (letter) (condition (equal? (multinomial
-              (first (hypothesis->parameters hypothesis))
-              (second (hypothesis->parameters hypothesis)))
-            letter)))
-        observed-letters))
-
-    hypothesis
-
-    (observe observed-letters)
-
-    )
-   )
-
-(hist samples "Bayes-Occam-Razor")
+viz.auto(posterior);
 ~~~~
 
-Try changing the observed letters to `d c d a b`. How does the inference change? Note that it takes less evidence here to favor hypothesis A that when B is uniform, but still more that in a size principle case (where A wouldn't be able to generate c or d at all)&mdash;but the size principle case would be unable to handle the "exceptional" observations of c and d.
+Try changing the observed letters to `['d', 'c', 'd', 'a', 'b']`. How does the inference change? Note that it takes less evidence here to favor hypothesis A than when B is uniform, but still more than in a size principle case (where A wouldn't be able to generate c or d at all)&mdash;but the size principle case would be unable to handle the "exceptional" observations of c and d.
 This examples suggest another way to understand Bayes Occam's razor: the posterior distribution will favor hypotheses for which the data set is simpler in the sense that it is more "easily generated."  Here more "easily" generated, means generated with higher probability. We will see a more striking example of this for compositional models at the end of this section of the tutorial.
 
 <!--
