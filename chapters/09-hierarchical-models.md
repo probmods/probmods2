@@ -185,7 +185,9 @@ var allSamples = map(function(maxBagNumber) {
           mseGlob: meanDev(bagPost, 'global', .66) / initialGlob};
 }, numObs);
 
+print("bag1 beliefs")
 viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseSpec')))
+print("global beliefs")
 viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseGlob')))
 ~~~~
 
@@ -476,37 +478,34 @@ Again, we can use the compound Dirichlet-multinomial model we have been working 
 So far, we've been using the compound Dirichlet-multinomial to do one shot learning, by learning low values for the alpha hyperparameter. This causes the Dirichlet distribution at the second level to have parameters less than 1, and so to be 'spiky'. While such a Dirichlet distribution can lead to one shot learning, we're not explicitly learning about the variance of
 the categories in the model. We might imagine a similar model in which we handle continuous quantities and directly represent hyperparameters for the mean and variance of various related groups.
 
+**TODO: This model takes too long to converge (but the old probmods was all over the place, too)**
+
 ~~~~
-(define results
-  (mh-query
-   50 1000
+var observeGroup = function(group, values) {
+  return sum(map(function(v) {return group.score(v)}, values));
+}
 
-   (define overall-variance (gamma 1 1))
-   (define overall-shape (gamma 2 2))
-   (define overall-scale (gamma 2 2))
+var results = Infer({method: "MCMC", samples: 100000}, function() {
+  var overallVariance = gamma(1,1);
+  var overallShape = gamma(2,2);
+  var overallScale = gamma(2,2);
+ 
+  var makeGroup = mem(function(groupName) {
+    var groupVariance = gamma(overallShape, overallScale);
+    var groupMean = gaussian(1, overallVariance);
+    return Gaussian({mu: groupMean, sigma: groupVariance});
+  })
+  
+  factor(observeGroup(makeGroup('one'), [1.001, 1.001, 1.001]) +
+        observeGroup(makeGroup('two'), [1.05, 1.05, 1.05]) +
+        observeGroup(makeGroup('three'), [1.1, 1.1, 1.1]) +
+        observeGroup(makeGroup('four'), [1.003]))
+  
+  return makeGroup('new').params.sigma
+});
 
-   (define group->variance
-     (mem (lambda (group) (gamma overall-shape overall-scale))))
-
-   (define group->mean
-     (mem (lambda (group) (gaussian 1 overall-variance))))
-
-   (define (draw-observation group)
-     (lambda () (gaussian (group->mean group) (group->variance group))))
-
-   (define (observe-group group values)
-     (map (lambda (v) (condition (equal? (gaussian (group->mean group) (group->variance group)) v)))
-          values))
-
-   (group->variance 'new)
-
-   (observe-group 'one '(1.001 1.001 1.001))
-   (observe-group 'two '(1.05 1.05 1.05))
-   (observe-group 'three '(1.1 1.1 1.1))
-   (observe-group 'four '(1.003))))
-
-(define new-var (mean results))
-new-var
+print(expectation(results))
+viz.auto(results)
 ~~~~
 
 In the next section, we will discuss a more complicated example of 'learning to learn' which also uses continuous distributions at the lowest level and learns something explicitly about the mean and covariance of both basic and superordinate categories is a model which learns what object features are necessary for retrieval and recognition.
@@ -545,50 +544,54 @@ An important way in which languages vary is the order in which heads appear with
 The fact that languages show consistency in head directionality could be of great advantage to the learner; after encountering a relatively small number of phrase types and instances the learner of a consistent language can learn the dominant head direction in their language, transferring this knowledge to new phrase types. The fact that within many languages there are exceptions suggests that this generalization cannot be deterministic, however, and, furthermore means that a learning approach will have to be robust to  within-language variability. Here is a highly simplified model of X-Bar structure:
 
 ~~~~
-(define data '((D N)))
+///fold:
+var observePhrase = function(dist, values) {
+  return sum(map(function(v) {return dist.score(v)}, values));
+}
+///
+// the "grammar": a set of phrase categories, and an associating of the complement to each head category:
+var categories = ['D', 'N', 'T', 'V', 'A', 'Adv']
 
-;;the "grammar": a set of phrase categories, and an associating of the complement to each head category:
-(define categories '(D N T V A Adv))
+var headToComp = function(head) {
+  return (head == 'D' ? 'N' :
+          head == 'T' ? 'V' :
+          head == 'N' ? 'A' :
+          head == 'V' ? 'Adv' :
+          head == 'A' ? 'none' :
+          head == 'Adv' ?'none' :
+          'error');
+}
 
-(define (head->comp head)
-  (case head
-    (('D) 'N)
-    (('T) 'V)
-    (('N) 'A)
-    (('V) 'Adv)
-    (('A) 'none)
-    (('Adv) 'none)
-    (else 'error)))
+var makePhraseDist = function(headToPhraseDirs) {
+  return Infer({method: 'enumerate'}, function(){
+    var head = uniformDraw(categories);
+    if(headToComp(head) == 'none') {
+      return [head] 
+    } else {
+      // On which side will the head go?
+      return flip(headToPhraseDirs[head]) ? [headToComp(head), head] : [head, headToComp(head)];
+    }
+  })
+}
 
+var data = [['D', 'N']];
 
-(define samples
-   (mh-query
-    100 100
+var results = Infer({method: 'MCMC', samples: 20000}, function() {
+  var languageDir = beta(1,1);
+  var headToPhraseDirs = _.object(categories, map(function() {
+    return T.get(dirichlet(Vector([languageDir, 1 - languageDir])), 1)
+  }, categories))
+  
+  var phraseDist = makePhraseDist(headToPhraseDirs);
+  factor(observePhrase(phraseDist, data))
+  
+  return flip(headToPhraseDirs['N']) ? 'N second' : 'N first';
+})
 
-    (define language-direction (beta 1 1))
-
-    (define head->phrase-direction
-       (mem (lambda (head) (first (dirichlet (list language-direction
-                                                   (- 1 language-direction)))))))
-
-    (define (generate-phrase head)
-      (if (equal? (head->comp head) 'none)
-          (list head)
-          (if (flip (head->phrase-direction head)) ;;on which side will the head go?
-              (list (head->comp head) head)        ;;left, or
-              (list head (head->comp head)))))     ;;right?
-
-    (define (observe-phrase) (generate-phrase (uniform-draw categories)))
-
-    (generate-phrase 'N)
-
-    (equal? data (repeat (length data) observe-phrase))))
-
-(hist samples "N-phrase headedness")
-'done
+viz.auto(results)
 ~~~~
 
-First, try increasing the number of copies of `(D N)` observed. What happens? Now, try changing the data to `'((D N) (T V) (V Adv))`. What happens if you condition on additional instance of `(V Adv)` how about `(Adv V)`?
+First, try increasing the number of copies of `['D', 'N']` observed. What happens? Now, try changing the data to `[['D', 'N'], ['T', 'V'], ['V', 'Adv']]`. What happens if you condition on additional instance of `['V', 'Adv']`? How about `['Adv', 'V']`?
 
 What we see in this example is a simple probabilistic model capturing a version of the "principles and parameters" theory. Because it is probabilistic, systematic inferences will be drawn despite exceptional sentences or even phrase types. More importantly, due to the blessing of abstraction, the overall headedness of the language can be inferred from very little data---before the learner is very confident in the headedness of individual phrase types.
 
@@ -602,11 +605,11 @@ Hierarchical model structures will generally give rise to a number of important 
 
 ## Hierarchical Abstraction versus Lambda Abstraction
 
-We have spoken of the earlier choices in a hierarchical model as being more "abstract." In computer science the `lambda` operator is often called lambda abstraction. Are these two uses of "abstract" related?
+We have spoken of the earlier choices in a hierarchical model as being more "abstract." In computer science the `function` operator is often called lambda abstraction. Are these two uses of "abstract" related?
 
 There is a third notion of abstraction in a generative model which may explain the relation between these two: if we have a designated set of observations (or more generally a function that we think of as generating "perceptual" data) we can say that a random choice is abstract if it is far from the data. More specifically the degree of abstraction of an expression in a probabilistic program is the number of immediate causal dependencies (edges) from the expression to the designated observation expression (note that this is a partial, not strict, ordering on the random choices).
 
-In a hierarchically structured model the deeper random choices are more abstract in this sense of causal distance from the data. More subtly, when a procedure is created with `lambda` the expressions inside this procedure will tend to be more causally distant from the data (since the procedure must be applied before these expressions can be used), and hence greater depth of lambda abstraction will tend to lead to greater abstraction in the causal distance sense.
+In a hierarchically structured model the deeper random choices are more abstract in this sense of causal distance from the data. More subtly, when a procedure is created with `function` the expressions inside this procedure will tend to be more causally distant from the data (since the procedure must be applied before these expressions can be used), and hence greater depth of lambda abstraction will tend to lead to greater abstraction in the causal distance sense.
 
 <!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/09-hierarchical-models.html)  -->
 
