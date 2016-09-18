@@ -350,36 +350,39 @@ Now imagine a vending machine that has only one button, but it can be pressed ma
 **TODO: this model isn't working...**
 
 ~~~~
-var actionPrior = function() {
-  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
 }
 
 var chooseAction = function(goalSatisfied, transition, state) {
-  return Infer({method: 'rejection', samples: 100}, function() {
+  return Infer({method: 'rejection', samples: 1}, function() {
     var action = actionPrior()
     condition(goalSatisfied(transition(state, action)))
     return action;
   })
 }
+///
+var actionPrior = function() {
+  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+}
 
-var goalPosterior = Infer({method: 'MCMC', samples: 10000}, function() {
-  var buttonsToOutcomeProbs = mem(function(buttons) {
-    return dirichlet(ones([2,1]));
-  })
-  
+var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
+  var buttonsToOutcomeProbs = mem(function(buttons) {return getProbs(dirichlet(ones([2,1])))});
+ 
   var vendingMachine = function(state, action) {
     return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
-  }
+  };
   
-  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
-  var goalSatisfied = function(outcome) {return outcome == goal};
-  var actionDist = chooseAction(goalSatisfied, vendingMachine, 'state');
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]});
+  var goalSatisfied = function(outcome) {return outcome == goal;};
+  var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'));
 
-  factor(goal == 'cookie' ? actionDist.score(['a', 'a']) : -Infinity);
+  condition(goal == 'cookie' && _.isEqual(chosenAction, ['a', 'a']));
 
-  return {once: T.get(buttonsToOutcomeProbs(['a']), 1),
-          twice: T.get(buttonsToOutcomeProbs(['a', 'a']), 1)}
-})
+  return {once: buttonsToOutcomeProbs(['a'])[1],
+          twice: buttonsToOutcomeProbs(['a', 'a'])[1]};
+});
 
 print("probability of actions giving a cookie")
 viz.marginals(goalPosterior);
@@ -395,25 +398,28 @@ In these examples we have seen two important assumptions combining to allow us t
 
 In social cognition, we often make joint inferences about two kinds of mental states: agents' beliefs about the world and their desires, goals or preferences.  We can see an example of such a joint inference in the vending machine scenario.  Suppose we condition on two observations: that Sally presses the button twice, and that this results in a cookie. Then, assuming that she knows how the machine works, we jointly infer that she wanted a cookie, that pressing the button twice is likely to give a cookie, and that pressing the button once is unlikely to give a cookie.
 
-**TODO: this model isn't working (for the same reason as above -- can't enumerate inside chooseAction because of the dirichlet and MCMC doesn't converge in a reasonable amount of time)...**
+  **TODO: this model isn't working either (at least gets the 'twice' posterior, but not the others)**
 
 ~~~~
-var actionPrior = function() {
-  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
 }
 
 var chooseAction = function(goalSatisfied, transition, state) {
-  return Infer({method: 'MCMC', samples: 100}, function() {
+  return Infer({method: 'rejection', samples: 1}, function() {
     var action = actionPrior()
     condition(goalSatisfied(transition(state, action)))
     return action;
   })
 }
+///
+var actionPrior = function() {
+  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+}
 
-var goalPosterior = Infer({method: 'MCMC', samples: 10000}, function() {
-  var buttonsToOutcomeProbs = mem(function(buttons) {
-    return dirichlet(ones([2,1]));
-  })
+var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
+  var buttonsToOutcomeProbs = mem(function(buttons) {return getProbs(dirichlet(ones([2,1])))})
   
   var vendingMachine = function(state, action) {
     return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
@@ -427,8 +433,8 @@ var goalPosterior = Infer({method: 'MCMC', samples: 10000}, function() {
             chooseAction(goalSatisfied, vendingMachine, 'state', ['a', 'a']))
   
   return {goal: goal, 
-          once: T.get(buttonsToOutcomeProbs(['a']), 1),
-          twice: T.get(buttonsToOutcomeProbs(['a', 'a']), 1)}
+          once: buttonsToOutcomeProbs(['a'])[1],
+          twice: buttonsToOutcomeProbs(['a', 'a'])[1]}
 })
 
 print("probability of actions giving a cookie")
