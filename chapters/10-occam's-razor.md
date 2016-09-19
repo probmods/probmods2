@@ -268,54 +268,38 @@ In the previous section we considered learning about the weight of a coin, and n
 This example shows how our inferences about coin flipping can be explained in terms of model selection guided by the Bayesian Occam's razor.  Imagine a coin that you take out of a freshly unwrapped roll of quarters straight from the bank.  Almost surely this coin is fair... But how does that sense change when you see more or less anomalous sequences of flips? We can simultaneously ask if the coin is fair, and what is its weight.
 
 ~~~~
-(define observed-data '(h h t h t h h h t h))
+// fair coin, probability of H = 0.5
+var observedData = ['h', 'h', 't', 'h', 't', 'h', 'h', 'h', 't', 'h']
 
-;; fair coin, probability of H = 0.5
-;; (define observed-data (h h t h t h h h t h))
+// ?? suspicious coincidence, probability of H = 0.5 ..?
+// var observedData = repeat(10, function(){return 'h'})
 
-;; ?? suspicious coincidence, probability of H = 0.5 ..?
-;; (define observed-data (h h h h h h h h h h))
+// probably unfair coin, probability of H near 1
+// var observedData = repeat(15, function(){return 'h'})
 
-;; probably unfair coin, probability of H near 1
-;; (define observed-data (h h h h h h h h h h h h h h h))
+// definitely unfair coin, probability of H near 1
+// var observedData = repeat(20, function(){return 'h'})
 
-;; definitely unfair coin, probability of H near 1
-;; (define observed-data (h h h h h h h h h h h h h h h h h h h h))
+// unfair coin, probability of H = 0.85
+// var observedData = repeat(54, function(){return flip(.85) ? 'h' : 't'})
 
-;; unfair coin, probability of H = 0.85
-;; (define observed-data (h h h h h h t h t h h h h h t h h t h h h h h t h t h h h h h t h h h h h h h h h t h h h h t h h h h h h h))
+var numFlips = observedData.length;
+var fairPrior = .999;
+var pseudoCounts = {a: 1, b: 1}
 
-(define num-flips (length observed-data))
-(define num-samples 1000)
-(define fair-prior 0.999)
-(define pseudo-counts '(1 1))
+var results = Infer({method: 'MCMC', samples: 10000}, function(){
+  var fair = flip(fairPrior);
+  var coinWeight = fair ? .5 : beta(pseudoCounts.a, pseudoCounts.b);
+  var makeCoin = function(weight) {return function() {return flip(weight) ? 'h' : 't'}};
+  factor(sum(map(function(datum) {
+    return datum == 'h' ? Bernoulli({p: coinWeight}).score(true) : Bernoulli({p: coinWeight}).score(false);
+  }, observedData)));
+  return {prior: flip(fairPrior) ? .5 : beta(pseudoCounts.a, pseudoCounts.b),
+         fair : fair,
+         weight: coinWeight};
+})
 
-(define prior-samples
-   (repeat num-samples
-     (lambda () (if (flip fair-prior)
-                     0.5
-                    (beta (first pseudo-counts) (second pseudo-counts))))))
-
-(define samples
-   (mh-query
-     num-samples 10
-
-     (define fair-coin? (flip fair-prior))
-     (define coin-weight (if fair-coin?
-                             0.5
-                             (beta (first pseudo-counts) (second pseudo-counts))))
-
-     (define make-coin (lambda (weight) (lambda () (if (flip weight) 'h 't))))
-
-     (list (if fair-coin? 'fair 'unfair) coin-weight)
-
-     (map (lambda (datum) (condition (equal? (flip coin-weight) (equal? datum 'h)))) observed-data)
-   )
-)
-
-(hist (map first samples) "Fair coin?")
-(density (append '(0) '(1) prior-samples) "Coin weight, prior to observing data")
-(density (append '(0) '(1) (map second samples)) "Coin weight, conditioned on observed data")
+viz.marginals(results);
 ~~~~
 
 Try some of the other cases that we've commented out above and see if the inferences accord with your intuitions.
