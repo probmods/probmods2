@@ -283,17 +283,19 @@ var observedData = ['h', 'h', 't', 'h', 't', 'h', 'h', 'h', 't', 'h']
 // unfair coin, probability of H = 0.85
 // var observedData = repeat(54, function(){return flip(.85) ? 'h' : 't'})
 
-var numFlips = observedData.length;
 var fairPrior = .999;
 var pseudoCounts = {a: 1, b: 1}
+
+var makeCoin = function(weight) {return function() {return flip(weight) ? 'h' : 't'}};
 
 var results = Infer({method: 'MCMC', samples: 10000}, function(){
   var fair = flip(fairPrior);
   var coinWeight = fair ? .5 : beta(pseudoCounts.a, pseudoCounts.b);
-  var makeCoin = function(weight) {return function() {return flip(weight) ? 'h' : 't'}};
+
   factor(sum(map(function(datum) {
     return datum == 'h' ? Bernoulli({p: coinWeight}).score(true) : Bernoulli({p: coinWeight}).score(false);
   }, observedData)));
+
   return {prior: flip(fairPrior) ? .5 : beta(pseudoCounts.a, pseudoCounts.b),
          fair : fair,
          weight: coinWeight};
@@ -306,36 +308,35 @@ Try some of the other cases that we've commented out above and see if the infere
 
 Now let's look at the learning trajectories for this model:
 
+**TODO: this probably takes too long; if we lower mcmc samples, the curve looks worse pretty consistently, but it might be worth it***
+
 ~~~~
-(define make-coin (lambda (weight) (lambda () (if (flip weight) 'h 't))))
+var fairPrior = .999;
+var pseudoCounts = {a: 1, b: 1}
 
-(define fair-prior 0.999)
-(define pseudo-counts '(1 1))
+var makeCoin = function(weight) {return function() {return flip(weight) ? 'h' : 't'}};
 
-(define (samples data)
-  (mh-query 400 10
+var results = function(data) {
+  return Infer({method: 'MCMC', samples: 10000, burn: 1000}, function(){
+    var fair = flip(fairPrior);
+    var coinWeight = fair ? .5 : beta(pseudoCounts.a, pseudoCounts.b);
+	
+    factor(sum(map(function(datum) {
+      return datum == 'h' ? Bernoulli({p: coinWeight}).score(true) : Bernoulli({p: coinWeight}).score(false);
+    }, data)));
+	
+    return {fair : fair,
+           weight: coinWeight};
+  });
+}
 
-     (define fair-coin? (flip fair-prior))
-     (define coin-weight (if fair-coin?
-                             0.5
-                            (beta (first pseudo-counts) (second pseudo-counts))))
-
-     (define coin (make-coin coin-weight))
-
-     coin-weight
-
-     (map (lambda (datum) (condition (equal? (flip coin-weight) (equal? datum 'h)))) data)
-   )
-)
-
-(define true-coin (make-coin 0.9))
-(define full-data-set (repeat 100 true-coin))
-(define observed-data-sizes '(1 3 6 10 20 30 50 70 100))
-(define (estimate N) (mean (samples (take full-data-set N))))
-
-(lineplot (map (lambda (N)
-       (list N (estimate N)))
-     observed-data-sizes))
+var trueCoin = makeCoin(.9);
+var fullDataSet = repeat(100, trueCoin);
+var dataSizes = [1,3,6,10,20,30,40,50,60,70,100];
+var predictions = map(function(dataSize) {
+  return expectation(results(fullDataSet.slice(0,dataSize)), function(x){return x.weight});
+}, dataSizes);
+viz.line(dataSizes, predictions);
 ~~~~
 In general (though not on every run) the learning trajectory stays near 0.5 initially&mdash;favoring the simpler hypothesis that the coin is fair&mdash;then switches fairly abruptly to near 0.9&mdash;as it infers that it is an unfair coin and likely has high weight. Here the Bayesian Occam's Razor penalizes the hypothesis with the flexibility to learn any coin weight: we automatically get a notion of comparing the complexity of very differently-structured models.
 
@@ -343,33 +344,26 @@ In general (though not on every run) the learning trajectory stays near 0.5 init
 
 When statisticians suggest methods for model selection, they often include a penalty for the *number* of parameters (e.g., [AIC](http://en.wikipedia.org/wiki/Akaike_information_criterion)). This seems like a worrying policy from the point of view of a probabilistic program: we could always introduce parameters that are not used, and therefore have no effect on the program. For instance we could change the above coin flipping example so that it draws the potential unfair coin weight even in the model which gives a fair coin:
 
+**TODO: explain why we're using a biased beta?**
+
 ~~~~
-(define make-coin (lambda (weight) (lambda () (if (flip weight) 'h 't))))
+var makeCoin = function(weight) {return function() {return flip(weight) ? 'h' : 't'}};
+var observedData = ['h'];
+var fairPrior = 0.5;
 
-(define observed-data '(h))
-(define fair-prior 0.5)
+var results = Infer({method: 'MCMC', samples: 10000}, function() {
+  var unfairCoinWeight = beta(1, 10);
+  var fair = flip(fairPrior);
+  var coinWeight = fair ? .5 : unfairCoinWeight;
+  var coin = makeCoin(coinWeight);
+  factor(sum(map(function(datum) {
+    return datum == 'h' ? Bernoulli({p: coinWeight}).score(true) : Bernoulli({p: coinWeight}).score(false);
+  }, observedData)));
 
-(define samples
-   (mh-query
-     1000 10
-
-     (define unfair-coin-weight (beta 1 10))
-
-     (define fair-coin? (flip fair-prior))
-     (define coin-weight (if fair-coin?
-                             0.5
-                             unfair-coin-weight
-                             ))
-
-     (define coin (make-coin coin-weight))
-
-     (list (if fair-coin? 'fair 'unfair) coin-weight)
-
-     (map (lambda (datum) (condition (equal? (flip coin-weight) (equal? datum 'h)))) observed-data)
-   )
-)
-
-(hist (map first samples) "Fair coin?")
+  return {fair : fair,
+          weight: coinWeight};
+});
+viz.marginals(results);
 ~~~~
 
 The two models now have the same number of free parameters (the unfair coin weight), but we will still favor the simpler hypothesis, as we did above. Why? The Bayesian Occam's razor penalizes models not for having more parameters (or longer code) but for too much flexibility &mdash; being able to fit too many other potential observations. Unused parameters (or parameters with very little effect) don't increase this flexibility, and hence aren't penalized. The Bayesian Occam's razor only penalizes complexity that matters for prediction, and only to the extent that it matters.
@@ -448,21 +442,21 @@ var getMeanPolynomialOfOrder = function(k) {
 Try the above code using a different data set generated from the same function:
 
 ~~~~
-(define obs-y-vals '(0.66 -0.32 -0.41 -0.59 -0.87 -0.75 -0.23 0.47 1.31 1.97 3.25))
+var observedYs = [0.66, -0.32, -0.41, -0.59, -0.87, -0.75, -0.23, 0.47, 1.31, 1.97, 3.25];
 ~~~~
 
 Try a simpler data set that should also suggest a 2nd order polynomial:
 
 ~~~~
-(define x-vals (range -3 3))
-(define obs-y-vals '(2 0.1 -1 -1.5 -0.8 0 1.9))
+var xs = _.range(-3, 3.01);
+var observedYs = [2, 0.1, -1, -1.5, -0.8, 0, 1.9]
 ~~~~
 
 These data should suggest a 1st order polynomial:
 
 ~~~~
-(define x-vals (range -3 3))
-(define obs-y-vals '(2 1.6 0.9 0.3 -0.1 -0.45 -1.2))
+var xVals = _.range(-3, 3.01);
+var observedYs = [2, 1.6, 0.9, 0.3, -0.1, -0.45, -1.2];
 ~~~~
 
 <!--
@@ -482,57 +476,50 @@ And one day you see this 1x2 red patch... is it one 1x2 block or two 1x1 blocks?
 We can model this inference by building a generative model of scenes. To do so we use simple models of geometry and of rendering geometric objects to an image (in this case by layering them):
 
 ~~~~
-;;take an object and "render" it into an image (represented as a list of lists):
-(define (object-appearance object)
-  (map (lambda (pixel-y)
-         (map (lambda (pixel-x) (if (or (< pixel-x (first object))
-                                        (<= (+ (first object) 1) pixel-x)
-                                        (< pixel-y (second object))
-                                        (<= (+ (second object) (third object)) pixel-y))
-                                    0
-                                   (fourth object)))
-              '(0 1 2 3)))
-         '(0 1)))
+// take an object and "render" it into an image (represented as a list of lists):
+var objectAppearance = function(object) {
+  return map(function(yPixel) {
+    return map(function(xPixel) {
+      var isBackgroundPixel = (xPixel < object.xLoc || xPixel >= object.xLoc + object.hSize || 
+                               yPixel < object.yLoc || yPixel >= object.yLoc + object.vSize);
+      return isBackgroundPixel ? 0 : object.color;
+    }, [0,1,2,3])
+  }, [0,1])
+}; 
 
-;;layer the image of an object onto a "background" image. Note that the object occludes the background.
-(define (layer object image) (map (lambda (obj-row im-row)
-                                    (map (lambda (o i) (if (= 0 o) i o))
-                                         obj-row
-                                         im-row))
-                                  object image))
+// layer the image of an object onto a "background" image. Note that the object occludes the background.
+var layer = function(object, image) {
+  return map2(function(objectRow, imageRow) {
+    return map2(function(objectCell, imageCell) {
+      return objectCell == 0 ? imageCell : objectCell;
+    }, objectRow, imageRow)
+  }, object, image)  
+};
 
-;;prior distribution over objects' properties:
-(define (sample-properties)
-  (list (sample-integer 4) ;;x location
-        (sample-integer 2) ;;y location
-        (+ 1 (sample-integer 2)) ;;vertical size
-        (+ 1 (sample-integer 2)))) ;;color
+// prior distribution over objects' properties:
+var sampleProperties = function() {
+  return {xLoc: randomInteger(4), yLoc: randomInteger(2),
+          hSize: 1, vSize: randomInteger(2) + 1, color: randomInteger(2) + 1}
+}
 
-;;Now we infer how many objects there are, given an ambiguous observed image:
-(define observed-image '((0 1 0 0)(0 1 0 0)))
+// Now we infer how many objects there are, given an ambiguous observed image:
+var observedImage = [[0,1,0,0], [0,1,0,0]];
+var results = Infer({method: 'enumerate'}, function() {
+  // sample how many objects
+  var numObjects = flip() ? 1 : 2;
+  
+  // sample the objects
+  var obj1 = objectAppearance(sampleProperties());
+  var obj2 = objectAppearance(sampleProperties());
 
-(define samples
-  (mh-query 500 10
+  // only render the second object if there are two
+  var image1 = numObjects > 1 ? layer(obj1, obj2) : obj1;
+  
+  condition(_.isEqual(image1, observedImage));
+  return numObjects;
+})
 
-            ;;sample how many objects:
-            (define num-objects (if (flip) 1 2))
-
-            ;;sample the objects:
-            (define object1 (sample-properties))
-            (define object2 (sample-properties))
-
-            ;;only render the second object if there are two:
-            (define image1 (if (= num-objects 1)
-                               (object-appearance object1)
-                               (layer (object-appearance object1)
-                                      (object-appearance object2))))
-
-            num-objects
-
-            (equal? image1 observed-image))
-  )
-
-(hist samples "Number of objects")
+viz.auto(results);
 ~~~~
 
 There is a slight preference for one object over two.
@@ -540,74 +527,65 @@ There is a slight preference for one object over two.
 Now let's see what happens if we see the two "halves" moving together. We use a simple random drift model of motion: an object randomly moves right or left or stays in place. Critically, the motion of each object is independent of other objects.
 
 ~~~~
-;;take an object and "render" it into an image (represented as a list of lists):
-(define (object-appearance object)
-  (map (lambda (pixel-y)
-         (map (lambda (pixel-x) (if (or (< pixel-x (first object))
-                                        (<= (+ (first object) 1) pixel-x)
-                                        (< pixel-y (second object))
-                                        (<= (+ (second object) (third object)) pixel-y))
-                                    0
-                                   (fourth object)))
-              '(0 1 2 3)))
-         '(0 1)))
+///fold:
+var objectAppearance = function(object) {
+  return map(function(yPixel) {
+    return map(function(xPixel) {
+      var isBackgroundPixel = (xPixel < object.xLoc || xPixel >= object.xLoc + object.hSize || 
+                               yPixel < object.yLoc || yPixel >= object.yLoc + object.vSize);
+      return isBackgroundPixel ? 0 : object.color;
+    }, [0,1,2,3])
+  }, [0,1])
+}; 
 
-;;layer the image of an object onto a "background" image. Note that the object occludes the background.
-(define (layer object image) (map (lambda (obj-row im-row)
-                                    (map (lambda (o i) (if (= 0 o) i o))
-                                         obj-row
-                                         im-row))
-                                  object image))
+var layer = function(object, image) {
+  return map2(function(objectRow, imageRow) {
+    return map2(function(objectCell, imageCell) {
+      return objectCell == 0 ? imageCell : objectCell;
+    }, objectRow, imageRow)
+  }, object, image)  
+};
 
-;;motion model: the object drifts left or right with some probability.
-(define (move object) (pair (+ (first object) (multinomial '(-1 0 1) '(0.3 0.4 0.3)))
-                            (rest object)))
+var sampleProperties = function() {
+  var props = {xLoc: randomInteger(4), yLoc: randomInteger(2),
+               hSize: 1, vSize: randomInteger(2) + 1, color: randomInteger(2) + 1};
+  return {props: props, 
+          appearance: objectAppearance(props)};
+}
+///
 
-;;prior distribution over objects' properties:
-(define (sample-properties)
-  (list (sample-integer 4) ;;x location
-        (sample-integer 2) ;;y location
-        (+ 1 (sample-integer 2)) ;;vertical size
-        (+ 1 (sample-integer 2)))) ;;color
+// motion model: the object drifts left or right with some probability.
+var move = function(object) {
+  var newProps = _.extend(object.props, {
+    xLoc: object.props.xLoc + categorical({vs: [-1, 0, 1], ps: [0.3, 0.4, 0.3]})
+  })
+  return {props: newProps, appearance: objectAppearance(newProps)}
+};
 
-;;Now we infer how many objects there are, given two "frames" of an ambiguous movie:
-(define observed-image1 '((0 1 0 0)
-                          (0 1 0 0)))
-(define observed-image2 '((0 0 1 0)
-                          (0 0 1 0)))
+// Now we infer how many objects there are, given two "frames" of an ambiguous movie:
+var observedImage1 = [[0,1,0,0],
+                      [0,1,0,0]];
+var observedImage2 = [[0,0,1,0],
+                      [0,0,1,0]];
 
-(define samples
-  (mh-query 1000 10
-
-            ;;sample how many objects:
-            (define num-objects (if (flip) 1 2))
-
-            ;;sample the objects:
-            (define object1 (sample-properties))
-            (define object2 (sample-properties))
-
-            ;;only render the second object if there are two:
-            (define image1 (if (= num-objects 1)
-                               (object-appearance object1)
-                               (layer (object-appearance object1)
-                                      (object-appearance object2))))
-
-            ;;the second image comes from motion on the objects:
-            (define image2 (if (= num-objects 1)
-                               (object-appearance (move object1))
-                               (layer (object-appearance (move object1))
-                                      (object-appearance (move object2)))))
-
-            num-objects
-
-            (and (equal? image1 observed-image1)
-                 (equal? image2 observed-image2)))
-  )
-
-(hist samples "Number of objects, moving image")
+var results = Infer({method: 'enumerate'}, function() {
+  var numObjects = flip() ? 1 : 2;
+  var obj1 = sampleProperties();
+  var obj2 = sampleProperties();
+  var image1 = (numObjects > 1 ? layer(obj1.appearance, obj2.appearance) : 
+                obj1.appearance);
+  var image2 = (numObjects > 1 ? layer(move(obj1).appearance, move(obj2).appearance) : 
+                move(obj1).appearance);
+  condition(_.isEqual(image1, observedImage1) && _.isEqual(image2, observedImage2));
+  return numObjects;
+})
+viz.auto(results);
 ~~~~
 
 We see that there is a much stronger preference for the one object interpretation.
+
+**TODO: "much stronger" seems a bit extreme..." it goes from .68 to .75)**
+
 It is a much bigger coincidence (as measured by Bayes Occam's Razor) for the two halves to move together if they are unconnected, than if they are connected, or if they are merely seen statically next to each other.
 
 We see from these examples that several of the gestalt principles for perceptual grouping emerge from this probabilistic scene inference setup (in this case "good continuation" and "common fate"). However, these are graded inferences, rather than hard rules: in this case we found that the information available in a static image was much weaker that the information in a moving image (and hence good continuation was weaker than common fate). This effect may have important developmental implications: the psychologist Elizabeth Spelke has found that young infants do not group objects by any static features (such as good continuation) but they do group them by common motion (see Spelke, 1990, Cognitive Science).
