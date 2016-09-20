@@ -22,12 +22,11 @@ The plinko machine is a 'working model' for many physical processes in which man
 It is an approximation to these systems because we use a discrete grid (the pegs) and discrete bins.
 Yet it is useful as a model: for instance, we can ask where we expect a marble to end up depending on where we drop it in, by running the machine several times---simulating the outcome.
 
-Simulation is intimately connected to degrees of belief.
-For instance, imagine that someone has dropped a marble into the plinko machine; before looking at the outcome, you can probably report how much you believe that the ball has landed in each possible bin.
+Imagine that someone has dropped a marble into the plinko machine; before looking at the outcome, you can probably report how much you believe that the ball has landed in each possible bin.
 Indeed, if you run the plinko machine many times, you will see a shape emerge in the bins.
 The number of balls in a bin gives you some idea how much you should expect a new marble to end up there.
 This 'shape of expected outcomes' can be formalized as a probability distribution (described below).
-Indeed, there is an intimate connection between simulation and probability, which we explore in the rest of this section.
+Indeed, there is an intimate connection between simulation, expectation or belief, and probability, which we explore in the rest of this section.
 
 There is one more thing to note about our Plinko machine above: we are using a computer program to *simulate* the simulation.
 Computers can be seen as universal simulators.
