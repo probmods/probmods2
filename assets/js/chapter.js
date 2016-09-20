@@ -107,19 +107,19 @@ function replace_html(rx, target) {
 
 }
 
-function format_citation(citation) {
-    var s = "";
-    if (citation["URL"]) {
-        s += "<a href='" + citation["URL"] + "'>" + citation["TITLE"] + "</a>. ";
-    } else {
-        s += citation["TITLE"] + ". ";
-    };
-    s += citation["AUTHOR"] + " (" + citation["YEAR"] + ").";
-    if (citation["JOURNAL"]) {
-        s += " <em>" + citation["JOURNAL"] + "</em>.";
-    }
-    return textohtml(s);
-}
+// function format_citation(citation) {
+//     var s = "";
+//     if (citation["URL"]) {
+//         s += "<a href='" + citation["URL"] + "'>" + citation["TITLE"] + "</a>. ";
+//     } else {
+//         s += citation["TITLE"] + ". ";
+//     };
+//     s += citation["AUTHOR"] + " (" + citation["YEAR"] + ").";
+//     if (citation["JOURNAL"]) {
+//         s += " <em>" + citation["JOURNAL"] + "</em>.";
+//     }
+//     return textohtml(s);
+// }
 
 function author_lastname(authorString) {
   var names = authorString.split(", ");
