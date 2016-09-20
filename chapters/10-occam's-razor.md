@@ -88,7 +88,7 @@ var hypothesisPosterior = function(data) {
 var fullData = ['a', 'b', 'a', 'b', 'b', 'a', 'b'];
 var dataSizes = [1,3,5,7];
 var probBig = map(function(size) {
-  return hypothesisPosterior(fullData.slice(0,size)).score('Big');
+  return Math.exp(hypothesisPosterior(fullData.slice(0,size)).score('Big'));
 }, dataSizes);
 viz.line(dataSizes, probBig, {xLabel: 'numDataPoints', yLabel: 'P(Big|data)'})
 ~~~~
