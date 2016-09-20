@@ -34,18 +34,21 @@ How can we, clearly and precisely, describe the simulation we want a computer to
 
 # Building Generative Models
 
-**TODO: reframe for webppl -- integrate with the [generative models exercises](13-generative-models.html) MH and I used in BDA class?**
-
 We wish to describe in formal terms how to generate states of the world.
 That is, we wish to describe the causal process, or steps that unfold, leading to some potentially observable states.
 The key idea of this section is that these generative processes can be described as *computations*---computations that involve random choices to capture uncertainty about the process.
 
+Programming languages are formal systems for describing what (deterministic) computation a computer should do. Modern programming languages offer a wide variety of different ways to describe computation; each makes some processes simple to describe and others more complex. However, a key tenet of computer science is that all of these languages have the same fundamental power: any computation that can be described with one programming language can described by another. (More technically this Church-Turing thesis posits that many specific computational systems capture the set of all effectively computable procedure. These are called *universal* systems.)
+
+<!--
 As our formal model of computation we start with the $$\lambda$$-calculus, and its embodiment in the LISP family of programming languages.
 The $$\lambda$$-calculus is a formal system which was invented by Alonzo Church in 1936 as a way of formalizing the notion of an effectively computable function [@Church1936].
 The $$\lambda$$-calculus has only two basic operations for computing: creating and applying functions.
 Despite this simplicity, it is a *universal* model of computation---it is (conjectured to be) equivalent to all other notions of classical computation.
 (The $$\lambda$$-calculus was shown to have the same computational power as the Turing machine, and vice versa, by Alan Turing in his famous paper which introduced the Turing machine [@Turing1937]).
+-->
 
+<!--
 In 1958 John McCarthy introduced LISP (**LIS**t **P**rocessing), a programming language based on the $$\lambda$$-calculus.
 Scheme is a variant of LISP developed by Guy L.
 Steele and Gerald Jay Sussman with particularly simple syntax and semantics.
@@ -53,11 +56,16 @@ We will use Scheme-style notation for the $$\lambda$$-calculus in this tutorial.
 For a quick introduction to programming in Scheme see [the appendix on Scheme basics](appendix-scheme.html).
 The Church programming language [@Goodman2008], named in honor of Alonzo Church, is a generalization of Scheme which introduces the notion of probabilistic computation to the language.
 This addition results in a powerful language for describing generative models.
+-->
 
-In Church, in addition to deterministic functions, we have a set of random functions implementing *random choices.*  These random primitive functions are called *Exchangeable Random Primitives* (XRPs).
+In this book we will build on the JavaScript language, which is a portable and flexible modern programming language.
+The [WebPPL language](http://webppl.org) takes a subset of JavaScript and extends it with pieces needed to describe *probabilistic* computation.
+The key idea is that we have primitive operations that describe not only deterministic functions (like `and`) but stochastic operations.
+<!--
+In WebPPL, in addition to deterministic functions, we have a set of random functions implementing *random choices.*  These random primitive functions are called *Exchangeable Random Primitives* (XRPs).
 Application of an XRP results in a *sample* from the probability distribution defined by that XRP.
-For example, the simplest XRP is `Bernoulli`, which results in either true or false.
-Because it simulates a (possibly biased) coin toss, we provide a convenient function called `flip` that draws a Bernoulli sample:
+-->
+For example, the `flip` function can be thought of as simulating a (possibly biased) coin toss (technically `flip` samples from a Bernoulli distribution, which we'l return to shortly):
 
 ~~~~
 flip()
@@ -80,30 +88,22 @@ Here we have used the `repeat` procedure which takes a number of repetitions, $$
 We have used the `viz.hist` function to visualize the results of calling the `flip` function 1000 times.
 As you can see, the result is an approximately uniform distribution over `true` and `false`.
 
-An important idea here is that `flip` can be thought of in two different ways.
-From one perspective, `flip` is a procedure which returns a sample from a fair coin.
-That is, it's a *sampler* or *simulator*.
-From another perspective, `flip` is *itself* a characterization of the distribution over `true` and `false`.
-When we think about probabilistic programs we will often move back and forth between these two views, emphasizing either the sampling perspective or the distributional perspective.
-(With suitable restrictions this duality is complete: any WebPPL program implicitlyWebPPL represents a distribution and any distribution can be represented by a WebPPL program; see e.g., @Ackerman2011 for more details on this duality.)
-We return to this relationship between probability and simulation below.
-
-The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.
-Using these distributions we can construct more complex expressions that describe more complicated sampling processes. For instance here we describe a process that samples a number by multiplying two samples from a gaussian distribution:
+Using `flip` we can construct more complex expressions that describe more complicated sampling processes. For instance here we describe a process that samples a number adding up several flips (note that in JavaScript a boolean will be turned into a number, $$0$$ or $$1$$, by the plus operator `+`):
 
 ~~~~
-gaussian(0,1) * gaussian(0,1)
+flip() + flip() + flip()
 ~~~~
 
-What if we want to invoke this sampling process multiple times? We would like to construct a stochastic function that multiplies two Gaussians each time it is called.
+What if we want to invoke this sampling process multiple times? We would like to construct a stochastic function that adds three random numbers each time it is called.
 We can use `function` to construct such complex stochastic functions from the primitive ones.
 
 ~~~~
-var twoGaussians = function() { return gaussian(0,1) * gaussian(0,1) }
-viz.density(repeat(100, twoGaussians))
+var sumFlips = function() { return flip() + flip() + flip() }
+viz.hist(repeat(100, sumFlips))
 ~~~~
 
-A function expression with an empty argument list, `function () {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`. A thunk is an object that represents a whole *probability distribution*.
+A function expression with an empty argument list, `function () {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`.
+<!--A thunk is an object that represents a whole *probability distribution*.-->
 Complex functions can also have arguments. Here is a stochastic function that will only sometimes double its input:
 
 ~~~~
@@ -111,7 +111,7 @@ var noisyDouble = function(x) { flip() ? x+x : x }
 noisyDouble(3)
 ~~~~
 
-By using higher-order functions we can construct and manipulate probability distributions.
+By using higher-order functions we can construct and manipulate complex sampling processes.
 A good example comes from coin flipping...
 
 ## Example: Flipping Coins
@@ -266,6 +266,19 @@ viz.hist(repeat(1000, randomPair), 'return values');
 We see by examining this histogram that `[true, false]` comes out about 25% of the time.
 We may define the probability of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `[true, false]` from the above program is 0.25.
 
+## Distributions
+
+An important idea here is that `flip` can be thought of in two different ways.
+From one perspective, `flip` is a procedure which returns a sample from a fair coin.
+That is, it's a *sampler* or *simulator*.
+From another perspective, `flip` is *itself* a characterization of the probability distribution over `true` and `false`.
+When we think about probabilistic programs we will often move back and forth between these two views, emphasizing either the sampling perspective or the distributional perspective.
+(With suitable restrictions this duality is complete: any WebPPL program implicitly represents a distribution and any distribution can be represented by a WebPPL program; see e.g., @Ackerman2011 for more details on this duality.)
+
+The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.
+
+<!-- describe Distribution generators, distirbutions, and sample here. -->
+
 Even for very complicated programs we can predict the probability of different outcomes by simulating (sampling from) the program.
 It is also often useful to compute these probabilities directly by reasoning about the sampling process.
 
@@ -320,6 +333,8 @@ Using the sum rule to compute the probability of a final value is called *margin
 From the point of view of sampling processes marginalization is simply ignoring (or not looking at) intermediate random values that are created on the way to a final return value.
 From the point of view of directly computing probabilities, marginalization is summing over all the possible "histories" that could lead to a return value.
 Putting the product and sum rules together, the marginal probability of return values from a program that we have explored above is the sum over sampling histories of the product over choice probabilities---a computation that can quickly grow unmanageable, but can be approximated by sampling.
+
+<!-- intro to Infer goes here -->
 
 
 # Stochastic recursion
