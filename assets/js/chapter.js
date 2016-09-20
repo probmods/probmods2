@@ -155,7 +155,7 @@ function cite_url(citation) {
   if (citation["url"]) {
     return citation["url"];
   }
-  return 'https://scholar.google.com/scholar?q="' + citation["TITLE"] + '"';
+  return 'https://scholar.google.com/scholar?q="' + escape(citation["TITLE"]) + '"';
 }
 
 function format_reft(citation) {
