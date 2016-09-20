@@ -152,8 +152,8 @@ function short_authors(authorsString) {
 }
 
 function cite_url(citation) {
-  if (citation["url"]) {
-    return citation["url"];
+  if (citation["URL"]) {
+    return citation["URL"];
   }
   return 'https://scholar.google.com/scholar?q="' + escape(citation["TITLE"]) + '"';
 }
