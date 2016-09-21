@@ -173,6 +173,156 @@ var data = repeat(1000, function() { sum(map(function (x) { x ? 1 : 0 },
 viz.hist(data, {xLabel: 'foo'}) // TODO: add xLabel option
 ~~~~
 
+
+
+# Prediction, Simulation, and Probabilities
+
+Suppose that we flip two fair coins, and return the list of their values:
+
+~~~~
+[flip(), flip()]
+~~~~
+
+How can we predict the return value of this program?
+For instance, how likely is it that we will see `[true, false]`?
+A **probability** is a number between 0 and 1 that expresses the answer to such a question: it is a degree of belief that we will see a given outcome, such as `[true, false]`.
+The probability of an event $$A$$ (such as the above program returning `[true, false]`) is usually written as: $$P(A)$$.
+
+A **probability distribution** is the probability of each possible outcome of an event. For instance, we can examine the probability distribution on values that can be returned by the above program by sampling many times and examining the histogram of return values:
+
+~~~~
+var randomPair = function () { return [flip(), flip()]; };
+viz.hist(repeat(1000, randomPair), 'return values');
+~~~~
+
+We see by examining this histogram that `[true, false]` comes out about 25% of the time.
+We may define the probability of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `[true, false]` from the above program is 0.25.
+
+## Distributions in WebPPL
+
+An important idea is that `flip` can be thought of in two different ways.
+From one perspective, `flip` is a procedure which returns a sample from a fair coin.
+That is, it's a *sampler* or *simulator*. As we saw above we can build more complex samplers by building more complex functions.
+From another perspective, `flip` is *itself* a characterization of the probability distribution over `true` and `false`.
+In order to make this view explicit, WebPPL has a special type of **distribution** objects. These are objects that can be sampled from using the `sample` operator, and that can explicit return the probability of a return value using the `score` method. Distributions are made by a family of distribution constructors:
+
+~~~
+//make a distribution using the Bernoulli constructor:
+var b = Bernoulli({p: 0.5})
+
+//sample from it with the sample operator:
+print( sample(b) )
+
+//compute the log-probability of sampling true:
+print( b.score(true) )
+
+//visualize the distribution:
+viz.auto(b)
+~~~
+
+In fact `flip(x)` is just a helper function that constructs a Bernoulli distribution and samples from it. The function `bernoulli(x)` is an alias for `flip`.
+There are many other distribution constructors built into WebPPL listed [here](http://docs.webppl.org/en/master/distributions.html) (and each has a sampling helper, named in lower case). For instance the Gaussian (also called Normal) distribution is a very common distribution over real numbers:
+
+~~~
+//create a gaussian distribution:
+var g = Gaussian({mu: 0, sigma: 1})
+
+//sample from it:
+print( sample(g) )
+
+//can also use the sampling helper (note lower-case name):
+print( gaussian(0,1) )
+
+//and build more complex processes!
+var foo = function(){return gaussian(0,1)*gaussian(0,1)}
+foo()
+~~~
+
+<!--
+The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.-->
+
+<!-- describe Distribution generators, distirbutions, and sample here. -->
+
+## Constructing marginal distributions: `Infer`
+
+Above we described how complex sampling processes can be built as complex functions, and how these sampling processes implicitly specify a distribution on return values (which we examined by sampling many times and building a histogram). This distribution on return values is caled the **marginal distribution**, and the WebPPL `Infer` operator gives us a way to make this implicit distribution into an explicit distribution object:
+
+~~~
+//a complex function, that specifies a complex sampling process:
+var foo = function(){gaussian(0,1)*gaussian(0,1)}
+
+//make the marginal distributions on return values explicit:
+var d = Infer({method: 'forward', samples: 1000}, foo)
+
+//now we can use d as we would any other distribution:
+print( sample(d) )
+viz.auto(d)
+~~~
+
+Note that `Infer` took an object describing *how* to construct the marginal distribution (which we will describe more later) and a thunk describing the sampling process, or *model*, of interest. For more details see the [Infer documentation](http://docs.webppl.org/en/master/inference/index.html).
+
+Thus `sample` lets us sample from a distribution, and build complex sampling processes by using sampling in a program; conversely, `Infer` lets us reify the distribution implicitly described by a sampling process.
+When we think about probabilistic programs we will often move back and forth between these two views, emphasizing either the sampling perspective or the distributional perspective.
+With suitable restrictions this duality is complete: any WebPPL program implicitly represents a distribution and any distribution can be represented by a WebPPL program; see e.g., @Ackerman2011 for more details on this duality.
+
+
+# The rules of probability
+
+While `Infer` lets us build the marginal distribution for even very complicated programs, we can also derive these marginal distributions with the "rules of probability". This is intractable for complex processes, but can help us build intuition for how distributions work.
+
+## Product Rule
+
+In the above example we take three steps to compute the output value: we sample from the first `flip()`, then from the second, then we make a list from these values.
+To make this more clear let us re-write the program as:
+
+~~~~
+var A = flip();
+var B = flip();
+var C = [A, B];
+C;
+~~~~
+
+We can directly observe (as we did above) that the probability of `true` for `A` is 0.5, and the probability of `false` from `B` is 0.5. Can we use these two probabilities to arrive at the probability of 0.25 for the overall outcome `C` = `[true, false]`? Yes, using the *product rule* of probabilities:
+The probability of two random choices is the product of their individual probabilities.
+The probability of several random choices together is often called the *joint probability* and written as $$P(A,B)$$.
+Since the first and second random choices must each have their specified values in order to get `[true, false]` in the example, the joint probability is their product: 0.25.
+
+We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, compute the probability of `[true, false]` resulting from this program:
+
+~~~~
+var A = flip();
+var B = flip(A ? 0.3 : 0.7);
+[A, B];
+~~~~
+
+In general, the joint probability of two random choices $$A$$ and $$B$$ made sequentially, in that order, can be written as $$P(A,B) = P(A) P(B \vert A)$$.
+This is read as the product of the probability of $$A$$ and the probability of "$$B$$ given $$A$$", or "$$B$$ conditioned on $$A$$".
+That is, the probability of making choice $$B$$ given that choice $$A$$ has been made in a certain way.
+Only when the second choice does not depend on (or "look at") the first choice does this expression reduce to a simple product of the probabilities of each choice individually: $$P(A,B) = P(A) P(B)$$.
+
+What is the relation between $$P(A,B)$$ and $$P(B,A)$$, the joint probability of the same choices written in the opposite order?  The only logically consistent definitions of probability require that these two probabilities be equal, so $$P(A) P(B \vert A) = P(B) P(A \vert B)$$.  This is the basis of *Bayes' theorem*, which we will encounter later.
+
+## Sum Rule
+
+Now let's consider an example where we can't determine from the overall return value the sequence of random choices that were made:
+
+~~~~
+flip() || flip()
+~~~~
+We can sample from this program and determine that the probability of returning `true` is about 0.75.
+
+We cannot simply use the product rule to determine this probability because we don't know the sequence of random choices that led to this return value.
+However we can notice that the program will return true if the two component choices are `[true,true]`, or `[true,false]`, or `[false,true]`. To combine these possibilities we use another rule for probabilities:
+If there are two alternative sequences of choices that lead to the same return value, the probability of this return value is the sum of the probabilities of the sequences.
+We can write this using probability notation as: $$P(A) = \sum_{B} P(A,B)$$, where we view $$A$$ as the final value and $$B$$ as a random choice on the way to that value.
+Using the product rule we can determine that the probability in the example above is 0.25 for each sequence that leads to return value `true`, then, by the sum rule, the probability of `true` is 0.25+0.25+0.25=0.75.
+
+Using the sum rule to compute the probability of a final value is called is sometimes called *marginalization*, because the final distribution is the marginal distribution on final values.
+From the point of view of sampling processes marginalization is simply ignoring (or not looking at) intermediate random values that are created on the way to a final return value.
+From the point of view of directly computing probabilities, marginalization is summing over all the possible "histories" that could lead to a return value.
+Putting the product and sum rules together, the marginal probability of return values from a program that we have explored above is the sum over sampling histories of the product over choice probabilities---a computation that can quickly grow unmanageable, but can be approximated by `Infer`.
+
+
 # Example: Causal Models in Medical Diagnosis
 
 Generative knowledge is often *causal* knowledge that describes how events or states of the world are related to each other.
@@ -242,114 +392,6 @@ Experiment with running the program multiple times.
 Now try modifying the `var` statement for one of the diseases, setting it to be true, to simulate only patients known to have that disease.
 For example, replace `var lungCancer = flip(0.01)` with `var lungCancer = true`.
 Run the program several times to observe the characteristic patterns of symptoms for that disease.
-
-# Prediction, Simulation, and Probabilities
-
-Suppose that we flip two fair coins, and return the list of their values:
-
-~~~~
-[flip(), flip()]
-~~~~
-
-How can we predict the return value of this program?
-For instance, how likely is it that we will see `[true, false]`?
-A **probability** is a number between 0 and 1 that expresses the answer to such a question: it is a degree of belief that we will see a given outcome, such as `[true, false]`.
-The probability of an event $$A$$ (such as the above program returning `[true, false]`) is usually written as: $$P(A)$$.
-
-As we did above, we can sample many times and examine the histogram of return values:
-
-~~~~
-var randomPair = function () { return [flip(), flip()]; };
-viz.hist(repeat(1000, randomPair), 'return values');
-~~~~
-
-We see by examining this histogram that `[true, false]` comes out about 25% of the time.
-We may define the probability of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `[true, false]` from the above program is 0.25.
-
-## Distributions
-
-A *probability distribution* is the probability of each possible outcome of an event. For instance the probability distribution on values that can be returned by `flip()`.
-
-An important idea is that `flip` can be thought of in two different ways.
-From one perspective, `flip` is a procedure which returns a sample from a fair coin.
-That is, it's a *sampler* or *simulator*.
-From another perspective, `flip` is *itself* a characterization of the probability distribution over `true` and `false`.
-When we think about probabilistic programs we will often move back and forth between these two views, emphasizing either the sampling perspective or the distributional perspective.
-(With suitable restrictions this duality is complete: any WebPPL program implicitly represents a distribution and any distribution can be represented by a WebPPL program; see e.g., @Ackerman2011 for more details on this duality.)
-
-In WebPPL distributions can be explicitly represented
-
-~~~
-var b = Bernoulli({p: 0.5})
-viz.print(b)
-viz.print(sample(b))
-viz.print(b.score(true))
-viz.auto(b)
-~~~
-
-In fact `flip(x)` is just a helper function that constructs a Bernoulli distribution and samples from it. The function `bernoulli(x)` is an alias for `flip`. (There are similar helpers for other distributions, named in lower case.)
-
-<!--
-The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.-->
-
-<!-- describe Distribution generators, distirbutions, and sample here. -->
-
-Even for very complicated programs we can predict the probability of different outcomes by simulating (sampling from) the program.
-It is also often useful to compute these probabilities directly by reasoning about the sampling process.
-
-## Product Rule
-
-In the above example we take three steps to compute the output value: we sample from the first `flip()`, then from the second, then we make a list from these values.
-To make this more clear let us re-write the program as:
-
-~~~~
-var A = flip();
-var B = flip();
-var C = [A, B];
-C;
-~~~~
-
-We can directly observe (as we did above) that the probability of `true` for `A` is 0.5, and the probability of `false` from `B` is 0.5. Can we use these two probabilities to arrive at the probability of 0.25 for the overall outcome `C` = `[true, false]`? Yes, using the *product rule* of probabilities:
-The probability of two random choices is the product of their individual probabilities.
-The probability of several random choices together is often called the *joint probability* and written as $$P(A,B)$$.
-Since the first and second random choices must each have their specified values in order to get `[true, false]` in the example, the joint probability is their product: 0.25.
-
-We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, compute the probability of `[true, false]` resulting from this program:
-
-~~~~
-var A = flip();
-var B = flip(A ? 0.3 : 0.7);
-[A, B];
-~~~~
-
-In general, the joint probability of two random choices $$A$$ and $$B$$ made sequentially, in that order, can be written as $$P(A,B) = P(A) P(B \vert A)$$.
-This is read as the product of the probability of $$A$$ and the probability of "$$B$$ given $$A$$", or "$$B$$ conditioned on $$A$$".
-That is, the probability of making choice $$B$$ given that choice $$A$$ has been made in a certain way.
-Only when the second choice does not depend on (or "look at") the first choice does this expression reduce to a simple product of the probabilities of each choice individually: $$P(A,B) = P(A) P(B)$$.
-
-What is the relation between $$P(A,B)$$ and $$P(B,A)$$, the joint probability of the same choices written in the opposite order?  The only logically consistent definitions of probability require that these two probabilities be equal, so $$P(A) P(B \vert A) = P(B) P(A \vert B)$$.  This is the basis of *Bayes' theorem*, which we will encounter later.
-
-## Sum Rule or Marginalization
-
-Now let's consider an example where we can't determine from the overall return value the sequence of random choices that were made:
-
-~~~~
-flip() || flip()
-~~~~
-We can sample from this program and determine that the probability of returning `true` is about 0.75.
-
-We cannot simply use the product rule to determine this probability because we don't know the sequence of random choices that led to this return value.
-However we can notice that the program will return true if the two component choices are `[true,true]`, or `[true,false]`, or `[false,true]`. To combine these possibilities we use another rule for probabilities:
-If there are two alternative sequences of choices that lead to the same return value, the probability of this return value is the sum of the probabilities of the sequences.
-We can write this using probability notation as: $$P(A) = \sum_{B} P(A,B)$$, where we view $$A$$ as the final value and $$B$$ as a random choice on the way to that value.
-Using the product rule we can determine that the probability in the example above is 0.25 for each sequence that leads to return value `true`, then, by the sum rule, the probability of `true` is 0.25+0.25+0.25=0.75.
-
-Using the sum rule to compute the probability of a final value is called *marginalization*.
-From the point of view of sampling processes marginalization is simply ignoring (or not looking at) intermediate random values that are created on the way to a final return value.
-From the point of view of directly computing probabilities, marginalization is summing over all the possible "histories" that could lead to a return value.
-Putting the product and sum rules together, the marginal probability of return values from a program that we have explored above is the sum over sampling histories of the product over choice probabilities---a computation that can quickly grow unmanageable, but can be approximated by sampling.
-
-<!-- intro to Infer goes here -->
 
 
 # Stochastic recursion
