@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Probabilistic Models of Cognition
+title: Probabilistic Models of Cognition - 2nd Edition
 custom_js:
 - assets/js/index.js
 custom_css:
@@ -9,7 +9,8 @@ custom_css:
 
 <div id="header">
   <h1 id='title'>Probabilistic Models of Cognition</h1>
-  <span class="authors">Noah D. Goodman <span class='ampersand'>&amp;</span> Joshua B. Tenenbaum</span>
+  <hr class='edition' />
+  <span class="authors">by Noah D. Goodman <span class='ampersand'>&amp;</span> Joshua B. Tenenbaum</span>
 </div>
 
 This book explores the probabilistic approach to cognitive science, which models learning and reasoning as inference in complex probabilistic models.
@@ -18,11 +19,12 @@ We examine how a broad range of empirical phenomena, including intuitive physics
 <div id='left'>
 
 <h3>Citation</h3>
-N. D. Goodman and J. B. Tenenbaum (electronic). Probabilistic Models of Cognition. Retrieved <span class="date">YYYY-MM-DD</span> from <code>http://probmods.org/v2</code>. <a id="toggle-bibtex" href="#">[bibtex]</a>
+N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</i> (2nd ed.). Retrieved <span class="date">YYYY-MM-DD</span> from <code>http://probmods.org/v2</code>. <a id="toggle-bibtex" href="#">[bibtex]</a>
 
 <pre id="bibtex">
-@misc{probmods,
-  title = {% raw %}{{Probalistic Models of Cognition}}{% endraw %},
+@misc{probmods2,
+  title = {% raw %}{{Probabilistic Models of Cognition}}{% endraw %},
+  edition = {Second},
   author = {Goodman, Noah D and Joshua B. Tenenbaum},
   year = {2016},
   howpublished = {\url{http://probmods.org/v2}},
