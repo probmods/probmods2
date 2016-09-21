@@ -4,42 +4,50 @@ title: Non-parametric models
 description: Something else clever
 ---
 
-% Non-parametric models
-% Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
+### Authors: Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
 
-In the chapter on [Mixture Models](mixture-models.html) we saw a simple way to construct a model with an unbounded number of categories---simply place uncertainty over the number of categories that are 'actually' in the world. In this section we describe another approach which instead posits an infinite number of (mostly unused) categories actually in the world. The *non-parametric*, or *infinite*, models have a number of useful mathematical properties.
+In the chapter on [Mixture Models](11-mixture-models.html) we saw a simple way to construct a model with an unbounded number of categories---simply place uncertainty over the number of categories that are 'actually' in the world. In this section we describe another approach which instead posits an infinite number of (mostly unused) categories actually in the world. The *non-parametric*, or *infinite*, models have a number of useful mathematical properties.
 
 # Prelude: sampling from a discrete distribution
 
-In Church the discrete distribution is a primitive---you can simply call `(sample-discrete '(0.2 0.3 0.1 0.4))`. If it wasn't built-in and the only random primitive you could use was `flip`, how could you sample from discrete? One solution is to recursively walk down the list of probabilities, deciding whether to stop on each step. For instance, in `(sample-discrete '(0.2 0.3 0.1 0.4))` there is a 0.2 probability of stopping on the first flip, a 0.3/0.8 probability of stopping on the second flip (given that we didn't stop on the first), and so on. We can start by turning the list of probabilities into a list of *residual* probabilities---the probability we will stop on each step, given that we haven't stopped yet:
+In WebPPL the discrete distribution is a primitive, e.g. `Discrete({ps: [0.2, 0.3, 0.1, 0.4]})`. If it wasn't built-in and the only random primitive you could use was `flip`, how could you sample from discrete? One solution is to recursively walk down the list of probabilities, deciding whether to stop on each step. For instance, in `Discrete({ps: [0.2, 0.3, 0.1, 0.4]})` there is a 0.2 probability of stopping on the first flip, a 0.3/0.8 probability of stopping on the second flip (given that we didn't stop on the first), and so on. We can start by turning the list of probabilities into a list of *residual* probabilities---the probability we will stop on each step, given that we haven't stopped yet:
 
 ~~~~
-(define (residuals probs)
-  (if (null? probs)
-      '()
-      (pair (/ (first probs) (sum probs))
-            (residuals (rest probs)))))
+var residuals = function(probs) {
+  if(probs.length == 0) {
+    return [];
+  } else {
+    return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
+  }
+}; 
 
-(residuals '(0.2 0.3 0.1 0.4))
+residuals([0.2, 0.3, 0.1, 0.4])
 ~~~~
 
 Now to sample from the discrete distribution we simply walk down this list, deciding when to stop:
 
 ~~~~
-(define (residuals probs)
-  (if (null? probs)
-      '()
-      (pair (/ (first probs) (sum probs))
-            (residuals (rest probs)))))
+var residuals = function(probs) {
+  if(probs.length == 0) {
+    return [];
+  } else {
+    return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
+  }
+}; 
 
-(define (my-sample-discrete resid)
-  (if (null? resid)
-      '()
-      (if (flip (first resid))
-          1
-          (+ 1 (my-sample-discrete (rest resid))))))
+var mySampleDiscrete = function(resid) {
+  if(resid.length == 0) {
+    return 0;
+  } else if(flip(first(resid))) {
+    return 1;
+  } else {
+    return 1 + mySampleDiscrete(rest(resid));
+  }
+}
 
-(hist (repeat 5000 (lambda () (my-sample-discrete (residuals '(0.2 0.3 0.1 0.4))))) "stop?" )
+viz.auto(repeat(5000, function(){
+  return mySampleDiscrete(residuals([0.2, 0.3, 0.1, 0.4]))
+}))
 ~~~~
 
 # Infinite Discrete Distributions: The Dirichlet Processes
@@ -47,15 +55,15 @@ Now to sample from the discrete distribution we simply walk down this list, deci
 We have seen several examples of mixture models where the mixture components are chosen from a multinomial distribution and the weights of the mixture components are drawn from a Dirichlet prior. Both multinomial and Dirichlet distributions are defined for fixed numbers of categories&mdash;now, imagine generalizing the  combination of Dirichlet and multinomial, to a multinomial over *infinitely* many categories of components.
 This would solve the problem of "running out of categories," because there would always be more categories that hadn't yet been used for any observation.
 
-Just as the Dirchlet distribution defines a prior on parameters for a multinomial with $K$ possible outcomes, the *Dirichlet process* defines a prior on parameters for a multinomial with $K = \infty$&mdash;an infinite number of possible outcomes.
+Just as the Dirchlet distribution defines a prior on parameters for a multinomial with $$K$$ possible outcomes, the *Dirichlet process* defines a prior on parameters for a multinomial with $$K = \infty$$&mdash;an infinite number of possible outcomes.
 
-First, we imagine drawing an infinite sequence of samples from a beta distribution with parameters $1,\ \alpha$ (recall that a beta distribution defines  a distribution on the interval $[0,1]$). We write this infinite set of draws as $\left\{\beta'_k\right\}_{k=1}^{\infty}$.
+First, we imagine drawing an infinite sequence of samples from a beta distribution with parameters $$1,\ \alpha$$ (recall that a beta distribution defines  a distribution on the interval $$[0,1]$$). We write this infinite set of draws as $$\left\{\beta'_k\right\}_{k=1}^{\infty}$$.
 $$\beta'_k \sim \text{Beta}\left(1,\alpha\right)$$
-Ultimately we would like to define a distribution on an infinite set of discrete outcomes that will represent our categories or mixture components, but we start by defining a distribution on the natural numbers. The probability of the natural number $k$ is given by:
+Ultimately we would like to define a distribution on an infinite set of discrete outcomes that will represent our categories or mixture components, but we start by defining a distribution on the natural numbers. The probability of the natural number $$k$$ is given by:
 $$\beta_k = \prod_{i=1}^{k-1}\left(1-\beta'_i\right)\cdot\beta'_k$$
-How can this be interpreted as a generative process? Imagine "walking" down the natural numbers in order, flipping a coin with weight $\beta'_i$  for each one; if the coin comes up `false`, we continue to the next natural number; if the coin comes up `true`,  we stop and return the current natural number. Convince yourself that the probability of getting natural number $k$ is given by $\beta_k$ above.
+How can this be interpreted as a generative process? Imagine "walking" down the natural numbers in order, flipping a coin with weight $$\beta'_i$$  for each one; if the coin comes up `false`, we continue to the next natural number; if the coin comes up `true`,  we stop and return the current natural number. Convince yourself that the probability of getting natural number $$k$$ is given by $$\beta_k$$ above.
 
-To formalize this as a Church program, we define a procedure, `pick-a-stick`, that walks down the list of $\beta'_k$s (called *sticks* in the statistics and machine learning literatures) and flips a coin at each one: if the coin comes up `true`, it returns the index associated with that stick, if the coin comes up `false` the procedure recurses to the next natural number.
+To formalize this as a WebPPL program, we define a procedure, `pick-a-stick`, that walks down the list of $$\beta'_k$$s (called *sticks* in the statistics and machine learning literatures) and flips a coin at each one: if the coin comes up `true`, it returns the index associated with that stick, if the coin comes up `false` the procedure recurses to the next natural number.
 
 ~~~~
 (define (pick-a-stick sticks J)
@@ -69,9 +77,9 @@ To formalize this as a Church program, we define a procedure, `pick-a-stick`, th
 
 `pick-a-stick` is a higher-order procedure that takes another procedure called `sticks`, which returns the stick weight for each stick. `pick-a-stick` is also a *recursive* function---one that calls itself.
 
-Notice that `sticks` uses `mem` to associate a particular draw from `beta` with each natural number. When we call it again with the same index we will get back the same stick weight. This (crucially) means that we construct the $\beta'_k$s only "lazily" when we need them&mdash;even though we started by imagining an infinite set of "sticks" we only ever construct a finite subset of them.
+Notice that `sticks` uses `mem` to associate a particular draw from `beta` with each natural number. When we call it again with the same index we will get back the same stick weight. This (crucially) means that we construct the $$\beta'_k$$s only "lazily" when we need them&mdash;even though we started by imagining an infinite set of "sticks" we only ever construct a finite subset of them.
 
-We can put these ideas together in a procedure called `make-sticks` which takes the $\alpha$ parameter as an input and returns a procedure which samples stick indices.
+We can put these ideas together in a procedure called `make-sticks` which takes the $$\alpha$$ parameter as an input and returns a procedure which samples stick indices.
 
 ~~~~
 (define (pick-a-stick sticks J)
@@ -88,7 +96,7 @@ We can put these ideas together in a procedure called `make-sticks` which takes 
 (hist (repeat 1000 my-sticks) "Dirichlet Process")
 ~~~~
 
-`my-sticks` samples from the natural numbers by walking down the list starting at 1 and flipping a coin weighted by a fixed $\beta'_k$ for each $k$. When the coin comes up `true` it returns $k$ otherwise it keeps going. It does this by drawing the individual $\beta'_k$ *lazily*, only generating new ones when we have walked out further than furthest previous time.<ref>
+`my-sticks` samples from the natural numbers by walking down the list starting at 1 and flipping a coin weighted by a fixed $$\beta'_k$$ for each $$k$$. When the coin comes up `true` it returns $$k$$ otherwise it keeps going. It does this by drawing the individual $$\beta'_k$$ *lazily*, only generating new ones when we have walked out further than furthest previous time.<ref>
 This way of constructing a Dirichlet Process is known as the *stick-breaking* construction and was first defined in:
 <br/>
 Sethuraman, J. (1994). A constructive definition of dirichlet priors. Statistica Sinica, 4(2):639–650.
@@ -121,7 +129,7 @@ The above construction of the Dirichlet process defines a distribution over the 
 (density (repeat 10000 memoized-gaussian) "Dirichlet Process" true)
 ~~~~
 
-We can do a similar transformation to *any* church procedure: we associate to every argument and natural number pair a sample from the procedure, then use the Dirichlet process to define a new procedure with the same signature. In Church this useful higher-order distribution is called `DPmem`:
+We can do a similar transformation to *any* WebPPL procedure: we associate to every argument and natural number pair a sample from the procedure, then use the Dirichlet process to define a new procedure with the same signature. In WebPPL this useful higher-order distribution is called `DPmem`:
 
 ~~~~
 (define (pick-a-stick sticks J)
@@ -156,13 +164,13 @@ In a probabilistic setting a procedure applied to some inputs may evaluate to a 
 A stochastic memoizer wraps a stochastic procedure in another distribution, called the *memoization distribution* which tells us whether to reuse one of the previously computed values or to compute a fresh value from the underlying procedure. To accomplish this we generalize the notion of a memoization such that it we associate a **distribution** with each argument combination that we pass to the procedure.
 Since, in general, a probabilistic procedure may define a distribution over an unbounded number of observations (in general an uncountable number) we need a memoization distribution that is also unbounded. This distribution should also be exchangeable. These factors lead us to define `DPmem` a stochastic generalization of `mem` which uses the Dirichlet process as a memoization distribution.
 We have already shown above how to construct a Dirichlet process. All that is left to do is to associate such a process with each set of argument combinations for an arbitrary function.
-Here we have defined the procedure `DPmem`. `DPmem` takes two arguments, the first is the concentration parameter of the Dirichlet process (usually written as $\alpha$, the second is some arbitrary procedure. `DPmem` first constructs an augmented version of the procedure which is passed to it. This augmented version uses `mem` to associate a particular outcome from the underlying procedure with each combination of arguments and some index called `stick-index`.
+Here we have defined the procedure `DPmem`. `DPmem` takes two arguments, the first is the concentration parameter of the Dirichlet process (usually written as $$\alpha$$, the second is some arbitrary procedure. `DPmem` first constructs an augmented version of the procedure which is passed to it. This augmented version uses `mem` to associate a particular outcome from the underlying procedure with each combination of arguments and some index called `stick-index`.
 `DPmem` then constructs a Dirichlet process and associates it with the combination of arguments. It returns a procedure that when called first samples a stick index from the DP associated with the arguments and then calls the augmented procedure with the arguments and that stick index. `DPmem` can be thought of in the following way. If we had infinite time and resources we could enumerate all possible argument combinations that `proc` accepts and all the natural numbers. For all combinations of arguments plus a natural number we would draw a value from `proc` and permanently associate that value with that combination. In practice, of course, we do this lazily, only associating the new values with new combinations of arguments and stick indices as we need them.  If that combination of arguments and stick has been sampled before the previously computed value will simply be returned. Otherwise, a new value will be sampled from the underlying procedure and associated with the argument-stick combination.
 -->
 
 ## Properties of DP Memoized Procedures
 
-A procedure in Church defines a distribution. When we wrap such a procedure in `DPmem` the resulting procedure defines a new Dirichlet process distribution. The underlying distribution associated with `proc` in the code above is called the *base measure* of the Dirichlet process and is often written $\mu$ or sometimes $G_0$. In the following example we stochastically memoize a normal distribution.
+A procedure in WebPPL defines a distribution. When we wrap such a procedure in `DPmem` the resulting procedure defines a new Dirichlet process distribution. The underlying distribution associated with `proc` in the code above is called the *base measure* of the Dirichlet process and is often written $$\mu$$ or sometimes $$G_0$$. In the following example we stochastically memoize a normal distribution.
 
 ~~~~
 (define memoized-normal (DPmem 1.0 (lambda () (gaussian 0 1.0))))
@@ -237,7 +245,7 @@ A model like this is called an *infinite mixture model*; in this case an infinit
 ~~~~
 
 To generate our observation in this infinite mixture model we first sample a category label from the memoized `gensym`.  Since the Dirichlet process tends to reuse earlier choices (more than later ones), our data will tend to cluster together in earlier components. However, there is no a priori bound on the number of latent classes, rather there is just a bias towards fewer classes.
-The strength of this bias is controlled by the DP concentration parameter $\alpha$. When $\alpha$ is high, we will tolerate a larger number of classes, when it is low we will strongly favor fewer classes. In general, the number of classes grows proportional to $\alpha \log(N)$ where $N$ is the number of observations.
+The strength of this bias is controlled by the DP concentration parameter $$\alpha$$. When $$\alpha$$ is high, we will tolerate a larger number of classes, when it is low we will strongly favor fewer classes. In general, the number of classes grows proportional to $$\alpha \log(N)$$ where $$N$$ is the number of observations.
 
 We can use this basic template to create infinite mixture models with any type of observation distribution. For instance here is an infinite Gaussian mixture model:
 
@@ -262,7 +270,7 @@ There are, of course, many possible observation models that can be used in the i
 
 If you have looked at the literature on Bayesian models of cognition in the last few years, you will have seen many uses of a prior distribution known as the *Chinese Restaurant Process*.  The Chinese Restaurant Process is an alternate, but equivalent, way to construct the Dirichlet process. The CRP is usually described as a sequential sampling scheme using the metaphor of a restaurant.
 
-We imagine a restaurant with an infinite number of tables. The first customer enters the restaurant and sits at the first unoccupied table.  The ($N+1$)th customer enters the restaurant and sits at either an already occupied table or a new, unoccupied table, according to the following distribution.
+We imagine a restaurant with an infinite number of tables. The first customer enters the restaurant and sits at the first unoccupied table.  The ($$N+1$$)th customer enters the restaurant and sits at either an already occupied table or a new, unoccupied table, according to the following distribution.
 $$\tau^{(N+1)} |  \tau^{(1)},..., \tau^{(N)},\alpha \sim \sum_{i=1}^{K}   \frac{
   				y_i
 			}{
@@ -273,11 +281,11 @@ $$\tau^{(N+1)} |  \tau^{(1)},..., \tau^{(N)},\alpha \sim \sum_{i=1}^{K}   \frac{
 			}{
 				N + \alpha
 			} \delta_{\tau_{K+1}}$$
-$N$ is the total number of customers in the restaurant. $K$ is the total number of occupied tables, indexed by $1 \geq i \geq K$. $\tau^{(j)}$ refers to the table chosen by the $j$th customer. $\tau_i$ refers to $i$th occupied table in the restaurant. $y_i$ is the number of customers seated at table $\tau_i$; $\delta_{\tau}$ is the $\delta$-distribution which puts all of its mass on table $\tau$.  $\alpha \geq 0$ is the *concentration parameter* of the model.
+$$N$$ is the total number of customers in the restaurant. $$K$$ is the total number of occupied tables, indexed by $$1 \geq i \geq K$$. $$\tau^{(j)}$$ refers to the table chosen by the $$j$$th customer. $$\tau_i$$ refers to $$i$$th occupied table in the restaurant. $$y_i$$ is the number of customers seated at table $$\tau_i$$; $$\delta_{\tau}$$ is the $$\delta$$-distribution which puts all of its mass on table $$\tau$$.  $$\alpha \geq 0$$ is the *concentration parameter* of the model.
 
-In other words, customers sit at an already-occupied table with probability proportional to the number of individuals at that table, or at a new table with probability controlled by the parameter $\alpha$.
+In other words, customers sit at an already-occupied table with probability proportional to the number of individuals at that table, or at a new table with probability controlled by the parameter $$\alpha$$.
 
-Each table has a *dish* associated with it. Each dish $v$ is a label on the table which is shared by all the customers at that table. When the first customer sits at a new table, $\tau_i$, a dish is sampled from another distribution, $\mu$, and placed on that table. This distribution, $\mu$, is called the *base distribution* of the Chinese restaurant process, and is a parameter of the model.  From then on, all customers who are seated at table $\tau_i$ share this dish, $v_{\tau_i}$.
+Each table has a *dish* associated with it. Each dish $$v$$ is a label on the table which is shared by all the customers at that table. When the first customer sits at a new table, $$\tau_i$$, a dish is sampled from another distribution, $$\mu$$, and placed on that table. This distribution, $$\mu$$, is called the *base distribution* of the Chinese restaurant process, and is a parameter of the model.  From then on, all customers who are seated at table $$\tau_i$$ share this dish, $$v_{\tau_i}$$.
 
 The following animation demonstrates the Chinese restaurant process (click on it).
 
@@ -286,15 +294,15 @@ The following animation demonstrates the Chinese restaurant process (click on it
 The CRP can be used to define a stochastic memoizer just as the Dirichlet process. We let the dish at each table be drawn from the underlying procedure. When we seat a customer we emit the dish labeling the table where the customer sat. To use a CRP as a memoization distribution we associate our underlying procedure with a set of restaurants---one for each combination of a procedure with its arguments. We let customers represent particular instances in which a procedure is evaluated, and we let the dishes labeling each table represent the values that result from those procedure applications. The base distribution which generates dishes corresponds to the underlying procedure which we have memoized.
 
 When we seat a customer at an existing table, it corresponds to retrieving a value from the memory. Every customer seated at an existing table always returns the dish placed at that table when it was created. When we seat a customer at a new table it corresponds to computing a fresh value from our memoized random function and storing it as the dish at the new table.
-Another way of understanding the CRP is to think of it as defining a distribution over ways of partitioning $N$ items (customers) into $K$ partitions (tables), for all possible $N$ and $K$.
+Another way of understanding the CRP is to think of it as defining a distribution over ways of partitioning $$N$$ items (customers) into $$K$$ partitions (tables), for all possible $$N$$ and $$K$$.
 
-The probability of a particular partition of $N$ customers over $K$ tables is the product of the probabilities of the $N$ choices made in seating those customers.  It can easily be confirmed that the order in which elements are added to the partition components does not affect the probability of the final partition (i.e.  the terms of the product can be rearranged in any order). Thus the distribution defined by a CRP is exchangeable.
+The probability of a particular partition of $$N$$ customers over $$K$$ tables is the product of the probabilities of the $$N$$ choices made in seating those customers.  It can easily be confirmed that the order in which elements are added to the partition components does not affect the probability of the final partition (i.e.  the terms of the product can be rearranged in any order). Thus the distribution defined by a CRP is exchangeable.
 
 The probability of a particular CRP partition can also be written down in closed form as follows.
 $$P(\vec{y})=\frac{\alpha^{K}\Gamma[\alpha]\prod_{j=0}^{K}\Gamma[y_{j}]}{\Gamma[\alpha+\sum_{j=0}^{K}y_{j}]}$$
-Where $\vec{y}$ is the vector of counts of customers at each table and $\Gamma(\cdot)$ is the gamma function, a continuous generalization of the factorial function. This shows that for a CRP the vector of counts is sufficient.
+Where $$\vec{y}$$ is the vector of counts of customers at each table and $$\Gamma(\cdot)$$ is the gamma function, a continuous generalization of the factorial function. This shows that for a CRP the vector of counts is sufficient.
 
-As a distribution, the CRP has a number of useful properties. In particular, it implements a simplicity bias. It assigns a higher probability to partitions which (1) have fewer customers, (2) have fewer tables, and (3) for a fixed number of customers $N$, assign them to the smallest number of tables.
+As a distribution, the CRP has a number of useful properties. In particular, it implements a simplicity bias. It assigns a higher probability to partitions which (1) have fewer customers, (2) have fewer tables, and (3) for a fixed number of customers $$N$$, assign them to the smallest number of tables.
 
 Thus the CRP favors simple restaurants and implements a rich-get-richer scheme. Tables with more customers have higher probability of being chosen by later customers. These properties mean that, all else being equal, when we use the CRP as a stochastic memoizer we favor reuse of previously computed values.
 
@@ -318,7 +326,7 @@ The result is the Polya urn scheme in the finite case, and the Chinese restauran
 
 <img src='crp-dp.003.png' width='400' />
 
-Church provides a higher-order procedure which implements CRP based stochastic memoization called `CRPmem`. For the reasons discussed in section [[Functional Purity, Exchangeability, and De Finetti's Theorem#XRPs|XRPs]] using `CRPmem` often leads to much more efficient inference than `DPmem`.
+WebPPL provides a higher-order procedure which implements CRP based stochastic memoization called `CRPmem`. For the reasons discussed in section [[Functional Purity, Exchangeability, and De Finetti's Theorem#XRPs|XRPs]] using `CRPmem` often leads to much more efficient inference than `DPmem`.
 -->
 
 ## Example: Goldwater Model 1
@@ -388,7 +396,7 @@ This model is known as the "infinite hidden Markov model". Notice how the transi
 Much semantic knowledge is inherently *relational*. For example, verb meanings can often be formalized as relations between their arguments. The verb "give" is a three-way relation between a giver, something given, and a receiver. These relations are also inherently *typed*. For example, the giver in the relation above is typically an agent. In a preceding section, we discussed the infinite mixture models, where observations were generated from a potentially unbounded set of latent classes. In this section we introduce an extension of this model to relational data: the infinite relational model (IRM).
 
 <!--
-$
+$$
 \[ \left( \begin{array}{ccccc}
 1 & 0 & 0 & 1 & 0 \\
 1 & 1 & 0 & 1 & 0 \\
@@ -396,7 +404,7 @@ $
 0 & 0 & 1 & 0 & 0 \\
 0 & 0 & 0 & 0 & 1 \\
 \end{array} \right)\]
-$
+$$
 -->
 
 Given some relational data, the IRM learns to cluster objects into classes such that whether or not the relation holds depends on the *pair* of object classes. For instance, we can imagine trying to infer social groups from the relation of who talks to who:
@@ -486,9 +494,9 @@ The Dirichlet Process is the best known example of a *non-parametric distributio
 
 ## Pitman-Yor Distributions
 
-Many models in the literature use a small generalization of the CRP known as the Pitman-Yor process (PYP). The Pitman-Yor process is identical to the CRP except for having an extra parameter, $a$, which introduces a dependency between the probability of sitting at a new table and the number of tables already occupied in the restaurant.
+Many models in the literature use a small generalization of the CRP known as the Pitman-Yor process (PYP). The Pitman-Yor process is identical to the CRP except for having an extra parameter, $$a$$, which introduces a dependency between the probability of sitting at a new table and the number of tables already occupied in the restaurant.
 
-The process is defined as follows. The first customer enters the restaurant and sits at the first table. The ($N+1$)th customer enters the restaurant and sits at either an already occupied table or a new one, according to the following distribution.
+The process is defined as follows. The first customer enters the restaurant and sits at the first table. The ($$N+1$$)th customer enters the restaurant and sits at either an already occupied table or a new one, according to the following distribution.
 $$
   \tau^{(N+1)} |  \tau^{(1)},...,\tau^{(N)}, a, b \sim \sum_{i=1}^{K}  \frac{
   				y_i - a
@@ -501,9 +509,9 @@ $$
 				N + b
 			} \delta_{\tau_{K+1}}
 $$
-Here all variables are the same as in the CRP, except for $a$ and $b$.  $b \geq 0$ corresponds to the CRP $\alpha$ parameter. $0 \leq a \leq 1$ is a new *discount* parameter which moves a fraction of a unit of probability mass from each occupied table to the new table. When it is $1$, every customer will sit at their own table. When it is $0$ the distribution becomes the single-parameter CRP. The $a$ parameter can be thought of as controlling the *productivity* of a restaurant: how much sitting at a new table depends on how many tables already exist. On average, $a$ will be the limiting proportion of tables in the restaurant which have only a single customer. The $b$ parameter controls the rate of growth of new tables in relation to the total number of customers $N$ as before.
+Here all variables are the same as in the CRP, except for $$a$$ and $$b$$.  $$b \geq 0$$ corresponds to the CRP $$\alpha$$ parameter. $$0 \leq a \leq 1$$ is a new *discount* parameter which moves a fraction of a unit of probability mass from each occupied table to the new table. When it is $$1$$, every customer will sit at their own table. When it is $$0$$ the distribution becomes the single-parameter CRP. The $$a$$ parameter can be thought of as controlling the *productivity* of a restaurant: how much sitting at a new table depends on how many tables already exist. On average, $$a$$ will be the limiting proportion of tables in the restaurant which have only a single customer. The $$b$$ parameter controls the rate of growth of new tables in relation to the total number of customers $$N$$ as before.
 
-Like the CRP, the sequential sampling scheme outlined above generates a distribution over partitions for unbounded numbers of objects. Given some vector of table counts $\vec{y}$, A closed-form expression for this probability can be given as follows. First, define the following generalization of the factorial function, which multiples $m$ integers in increments of size $a$ starting at $x$.
+Like the CRP, the sequential sampling scheme outlined above generates a distribution over partitions for unbounded numbers of objects. Given some vector of table counts $$\vec{y}$$, A closed-form expression for this probability can be given as follows. First, define the following generalization of the factorial function, which multiples $$m$$ integers in increments of size $$a$$ starting at $$x$$.
 $$
 	[x]_{m,s} =
 	\begin{cases}
@@ -511,11 +519,11 @@ $$
 		x(x+s)...(x+(m-1)s)& \text{for }  m > 0
 	\end{cases}
 $$
-Note that $[1]_{m,1} = m!$. The probability of the partition given by the count vector, $\vec{y}$, is defined by:
+Note that $$[1]_{m,1} = m!$$. The probability of the partition given by the count vector, $$\vec{y}$$, is defined by:
 $$
 	P( \vec{y} \mid a, b) = \frac{[b+a]_{K-1,a}}{[b+1]_{N-1,1}} \prod_{i=1}^{K}[1-a]_{y_i-1,1}
 $$
-It is easy to confirm that in the special case of $a = 0$ and $b >0$, this reduces to the closed form for CRP by noting that $[1]_{m,1} = m!  = \Gamma[m+1]$. In what follows, we will assume that we have a higher-order function `PYmem` which takes three arguments `a`, `b`, and `proc` and returns the PYP-memoized version of `proc`.
+It is easy to confirm that in the special case of $$a = 0$$ and $$b >0$$, this reduces to the closed form for CRP by noting that $$[1]_{m,1} = m!  = \Gamma[m+1]$$. In what follows, we will assume that we have a higher-order function `PYmem` which takes three arguments `a`, `b`, and `proc` and returns the PYP-memoized version of `proc`.
 
 
 ## The Indian Buffet Process
@@ -689,17 +697,17 @@ For example, the prototype for **dog** might include features such as *furry*, *
 In *exemplar theories*, by contrast, it is assumed that people store all examples of a particular concept, rather than a single summary representation in prototype forms.
 A new object is classified by comparison with all of these forms.
 
-Both prototype and exemplar theories are based on similarity, and the probability that an observation is assigned to category $c_{N}$ can be given by
+Both prototype and exemplar theories are based on similarity, and the probability that an observation is assigned to category $$c_{N}$$ can be given by
 $$p(c_{N} \mid x_N, \vec{x}_{N-1}, \vec{c}_{N-1}) = \frac{\eta_{N,j}\beta_{N,j}}{\sum_{c} \eta_{N,c}\beta_{N,c}}$$
-where $\eta_{N,i}$ is the similarity between observation $N$ and category $i$, and $\beta_{N,i}$ is the response bias for the category (i.e., its prior weight).
+where $$\eta_{N,i}$$ is the similarity between observation $$N$$ and category $$i$$, and $$\beta_{N,i}$$ is the response bias for the category (i.e., its prior weight).
 
-Exemplar models treat the similarity between observation $N$ and a category as a sum over all members of the category:
+Exemplar models treat the similarity between observation $$N$$ and a category as a sum over all members of the category:
 $$\eta_{N,i} = \sum_{i \mid c_{i} = j } \eta_{N,i}$$
 Prototype models treat the similarity as the similarity between
-observation $N$ and the single stored prototype:
+observation $$N$$ and the single stored prototype:
 $$\eta_{N,i} = \eta_{N,p_i}$$
 Notice that these two models can be seen as opposite ends of a spectrum; one estimates the category based on every member, while the other estimates based on a single member.
-There are clearly many intermediate points where each category can be viewed as a mixture over $K$ clusters.
+There are clearly many intermediate points where each category can be viewed as a mixture over $$K$$ clusters.
 
 Griffiths et al. (2007) show how a large number of different models of categorization can be unified by viewing them all as special cases of a HDP which learns how many clusters each category should be represented by. (Griffiths, T. L., Canini, K. R., Sanborn, A. N., and Navarro, D. J. (2007). Unifying rational models of categorization via the hierarchical dirichlet process. In Proceedings of the Twenty-Ninth Annual Conference of the Cognitive Science Society.)
 
