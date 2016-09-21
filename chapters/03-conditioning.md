@@ -26,8 +26,10 @@ When interacting with other people, we observe their actions, which result from 
 
 # Hypothetical Reasoning with `Infer`
 
+Suppose that we know some fixed fact, and we wish to consider hypotheses about how a generative model could have given rise to that fact. In the [last chapter]({{site.baseurl}}/chapters/02-generative-models.html) we met the `Infer` operator for constructing the marginal distribution on return values of a function; with the help of the `condition` operator `Infer` is also able to describe marginal distributions *under some assumption* or condition.
 
-Suppose that we know some fixed fact, and we wish to consider hypotheses about how a generative model could have given rise to that fact.  In WebPPL we can use a special function called  `Infer` with the following syntax:
+<!--
+In WebPPL we can use a special function called  `Infer` with the following syntax:
 
 ~~~~ norun
 Infer(options,
@@ -35,24 +37,25 @@ Infer(options,
 ~~~~
 
 `Infer` takes two arguments. The first is a JavaScript object specifying some details about *how* we want to consider the hypotheses. The second is a model (represented as a *thunk*) that samples some hypotheses, conditions on some requirements that must be true (which may include observations, data, or more assumptions), and returns the aspect of the computation that we are interested in.
+-->
 
 Consider the following simple generative model:
 
 ~~~~
 var model = function() {
-  var A = flip() ? 1 : 0
-  var B = flip() ? 1 : 0
-  var C = flip() ? 1 : 0
+  var A = flip()
+  var B = flip()
+  var C = flip()
   var D = A + B + C
   return D
 }
 model()
 ~~~~
 
-This process samples three digits `0`/`1` and adds the result. The value of the final expression here is either 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following WebPPL inference (which uses a particular method, enumeration, to be described shortly):
+This process samples three numbers and adds the results (recall JavaScript converts booleans to $$0$$ or $$1$$ when they enter arithmetic). The value of the final expression here is 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following WebPPL inference, where we use `condition` to express the desired assumption:
 
 ~~~~
-var options = {method: 'enumerate'};
+var options = {method: 'enumerate'}
 var model = function () {
   var A = flip() ? 1 : 0
   var B = flip() ? 1 : 0
@@ -65,12 +68,12 @@ var dist = Infer(options, model)
 viz.auto(dist)
 ~~~~
 
-The output of `Infer` is a "guess" about the likely value of `A`, conditioned on `D` being equal to 3. Because `A` must necessarily equal `1`, the histogram shows 100% of the sampled values are `1`.
+The output of `Infer` describes appropriate beliefs about the likely value of `A`, conditioned on `D` being equal to 3. Because `A` must necessarily equal `1`, the histogram shows 100% of the sampled values are `1`.
 
-Now suppose that we condition on `D` being greater than or equal to 2.  Then `A` need not be 1, but it is more likely than not to be. (Why?) The corresponding histogram shows the appropriate distribution of "guesses" for `A` conditioned on this new fact:
+Now suppose that we condition on `D` being greater than or equal to 2.  Then `A` need not be 1, but it is more likely than not to be. (Why?) The corresponding plot shows the appropriate distribution of beliefs for `A` conditioned on this new fact:
 
 ~~~~
-var options = {method: 'enumerate'};
+var options = {method: 'enumerate'}
 var model = function () {
   var A = flip() ? 1 : 0
   var B = flip() ? 1 : 0
@@ -83,7 +86,7 @@ var dist = Infer(options, model)
 viz.auto(dist)
 ~~~~
 
-Predicting the outcome of a generative process is simply a special case of inference, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`.
+Predicting the outcome of a generative process is simply a special case of inference, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`; try removing this line altogether.
 
 Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical operation of *conditioning* a distribution.
 
