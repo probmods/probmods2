@@ -143,6 +143,10 @@ pre.highlight, .container .wpedit .CodeMirror {
     font-size: 10px;
 }
 
+.container .wpedit .result pre {
+    background-color: transparent
+}
+
 
 /* Tables */
 
