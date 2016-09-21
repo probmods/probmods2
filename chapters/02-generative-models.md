@@ -81,11 +81,11 @@ In WebPPL, each time you run a program you get a *sample* by simulating the comp
 If you run the program many times, and collect the values in a histogram, you can see what a typical sample looks like:
 
 ~~~~
-viz.hist(repeat(1000,flip))
+viz(repeat(1000,flip))
 ~~~~
 
 Here we have used the `repeat` procedure which takes a number of repetitions, $$K$$, and a function (in this case `flip`) and returns a list of $$K$$ samples from that function.
-We have used the `viz.hist` function to visualize the results of calling the `flip` function 1000 times.
+We have used the `viz` function to visualize the results of calling the `flip` function 1000 times.
 As you can see, the result is an approximately uniform distribution over `true` and `false`.
 
 Using `flip` we can construct more complex expressions that describe more complicated sampling processes. For instance here we describe a process that samples a number adding up several flips (note that in JavaScript a boolean will be turned into a number, $$0$$ or $$1$$, by the plus operator `+`):
@@ -99,7 +99,7 @@ We can use `function` to construct such complex stochastic functions from the pr
 
 ~~~~
 var sumFlips = function() { return flip() + flip() + flip() }
-viz.hist(repeat(100, sumFlips))
+viz(repeat(100, sumFlips))
 ~~~~
 
 A function expression with an empty argument list, `function () {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`.
@@ -120,14 +120,14 @@ The following program defines a fair coin, and flips it 20 times:
 
 ~~~~
 var fairCoin = function() { flip(0.5) ? 'h' : 't' };
-viz.hist(repeat(20, fairCoin))
+viz(repeat(20, fairCoin))
 ~~~~
 
 This program defines a "trick" coin that comes up heads most of the time (95%), and flips it 20 times:
 
 ~~~~
 var trickCoin = function() { flip(0.95) ? 'h' : 't' };
-viz.hist(repeat(20, trickCoin))
+viz(repeat(20, trickCoin))
 ~~~~
 
 The higher-order function `make-coin` takes in a weight and outputs a function (a thunk) describing a coin with that weight.  Then we can use `make-coin` to make the coins above, or others.
@@ -138,9 +138,9 @@ var fairCoin = makeCoin(0.5);
 var trickCoin = makeCoin(0.95);
 var bentCoin = makeCoin(0.25);
 
-viz.hist(repeat(20,fairCoin))
-viz.hist(repeat(20,trickCoin))
-viz.hist(repeat(20,bentCoin))
+viz(repeat(20,fairCoin))
+viz(repeat(20,trickCoin))
+viz(repeat(20,bentCoin))
 ~~~~
 
 We can also define a higher-order function that takes a "coin" and "bends it":
@@ -148,20 +148,20 @@ We can also define a higher-order function that takes a "coin" and "bends it":
 ~~~~
 var makeCoin = function(weight) { return function() { flip(weight) ? 'h' : 't' } };
 var bend = function(coin) {
-    return function() {
-        (coin() == 'h') ? makeCoin(0.7)() : makeCoin(0.1)()
-    }
+  return function() {
+    (coin() == 'h') ? makeCoin(0.7)() : makeCoin(0.1)()
+  }
 }
 var fairCoin = makeCoin(0.5)
 var bentCoin = bend(fairCoin)
-viz.hist(repeat(100,bentCoin))
+viz(repeat(100,bentCoin))
 ~~~~
 
 Make sure you understand how the `bend` function works! Why are there an "extra" pair of parentheses after each `make-coin` statement?
 
 Higher-order functions like `repeat`, `map`, and `apply` can be quite useful.
 Here we use them to visualize the number of heads we expect to see if we flip a weighted coin (weight = 0.8) 10 times.
-We'll repeat this experiment 1000 times and then use `viz.hist` to visualize the results.
+We'll repeat this experiment 1000 times and then use `viz` to visualize the results.
 Try varying the coin weight or the number of repetitions to see how the expected distribution changes.
 
 ~~~~
@@ -170,9 +170,8 @@ var coin = makeCoin(0.8)
 
 var data = repeat(1000, function() { sum(map(function (x) { x ? 1 : 0 },
                                              repeat(10, coin))) })
-viz.hist(data, {xLabel: 'foo'}) // TODO: add xLabel option
+viz(data, {xLabel: '# heads'})
 ~~~~
-
 
 # Example: Causal Models in Medical Diagnosis
 
@@ -244,7 +243,6 @@ Now try modifying the `var` statement for one of the diseases, setting it to be 
 For example, replace `var lungCancer = flip(0.01)` with `var lungCancer = true`.
 Run the program several times to observe the characteristic patterns of symptoms for that disease.
 
-
 # Prediction, Simulation, and Probabilities
 
 Suppose that we flip two fair coins, and return the list of their values:
@@ -287,7 +285,7 @@ print( sample(b) )
 print( b.score(true) )
 
 //visualize the distribution:
-viz.auto(b)
+viz(b)
 ~~~
 
 In fact `flip(x)` is just a helper function that constructs a Bernoulli distribution and samples from it. The function `bernoulli(x)` is an alias for `flip`.
@@ -326,7 +324,7 @@ var d = Infer({method: 'forward', samples: 1000}, foo)
 
 //now we can use d as we would any other distribution:
 print( sample(d) )
-viz.auto(d)
+viz(d)
 ~~~
 
 Note that `Infer` took an object describing *how* to construct the marginal distribution (which we will describe more later) and a thunk describing the sampling process, or *model*, of interest. For more details see the [Infer documentation](http://docs.webppl.org/en/master/inference/index.html).
@@ -395,7 +393,7 @@ Putting the product and sum rules together, the marginal probability of return v
 
 # Stochastic recursion
 
-[Recursive functions](appendix-scheme.html#recursion) are a powerful way to structure computation in deterministic systems.
+[Recursive functions](https://en.wikipedia.org/wiki/Recursion_(computer_science)) are a powerful way to structure computation in deterministic systems.
 In WebPPL it is possible to have a *stochastic* recursion that randomly decides whether to stop.
 For example, the *geometric distribution* is a probability distribution over the non-negative integers.
 We imagine flipping a (weighted) coin, returning $$N-1$$ if the first `true` is on the Nth flip (that is, we return the number of times we get `false` before our first `true`):
@@ -406,7 +404,7 @@ var geometric = function (p) {
 };
 var g = Infer({method: 'forward', samples: 1000},
               function(){return geometric(0.6)})
-viz.auto(g)
+viz(g)
 ~~~~
 
 There is no upper bound on how long the computation can go on, although the probability of reaching some number declines quickly as we go.
@@ -639,13 +637,13 @@ var run = function(world) {
   doesTowerFall(initialWorld, finalWorld)
 }
 
-viz.auto(
+viz(
   Infer({method: 'forward', samples: 100},
         function() { run(stableWorld) }))
-viz.auto(
+viz(
   Infer({method: 'forward', samples: 100},
         function() { run(almostUnstableWorld) }))
-viz.auto(
+viz(
   Infer({method: 'forward', samples: 100},
         function() { run(unstableWorld) }))
 
