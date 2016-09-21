@@ -174,6 +174,76 @@ viz.hist(data, {xLabel: 'foo'}) // TODO: add xLabel option
 ~~~~
 
 
+# Example: Causal Models in Medical Diagnosis
+
+Generative knowledge is often *causal* knowledge that describes how events or states of the world are related to each other.
+As an example of how causal knowledge can be encoded in WebPPL expressions, consider a simplified medical scenario:
+
+~~~~
+var lungCancer = flip(0.01);
+var cold = flip(0.2);
+var cough = cold || lungCancer;
+cough;
+~~~~
+
+This program models the diseases and symptoms of a patient in a doctor's office.
+It first specifies the base rates of two diseases the patient could have: lung cancer is rare while a cold is common, and there is an independent chance of having each disease.
+The program then specifies a process for generating a common symptom of these diseases -- an effect with two possible causes: The patient coughs if they have a cold or lung cancer (or both).
+
+Here is a more complex version of this causal model:
+
+~~~~
+var lungCancer = flip(0.01);
+var TB = flip(0.005);
+var stomachFlu = flip(0.1);
+var cold = flip(0.2);
+var other = flip(0.1);
+
+var cough = (
+    (cold && flip(0.5)) ||
+    (lungCancer && flip(0.3)) ||
+    (TB && flip(0.7)) ||
+    (other && flip(0.01)))
+
+var fever = (
+    (cold && flip(0.3)) ||
+    (stomachFlu && flip(0.5)) ||
+    (TB && flip(0.1)) ||
+    (other && flip(0.01)))
+
+var chestPain = (
+    (lungCancer && flip(0.5)) ||
+    (TB && flip(0.5)) ||
+    (other && flip(0.01)))
+
+var shortnessOfBreath = (
+    (lungCancer && flip(0.5)) ||
+    (TB && flip(0.2)) ||
+    (other && flip(0.01)))
+
+var symptoms = {
+  cough: cough,
+  fever: fever,
+  chestPain: chestPain,
+  shortnessOfBreath: shortnessOfBreath
+};
+
+symptoms
+~~~~
+
+Now there are four possible diseases and four symptoms.
+Each disease causes a different pattern of symptoms.
+The causal relations are now probabilistic: Only some patients with a cold have a cough (50%), or a fever (30%).
+There is also a catch-all disease category "other", which has a low probability of causing any symptom.
+*Noisy logical* functions---functions built from **and** (`&&`), **or** (`||`), and `flip`---provide a simple but expressive way to describe probabilistic causal dependencies between Boolean (true-false valued) variables.
+
+When you run the above code, the program generates a list of symptoms for a hypothetical patient.
+Most likely all the symptoms will be false, as (thankfully) each of these diseases is rare.
+Experiment with running the program multiple times.
+Now try modifying the `var` statement for one of the diseases, setting it to be true, to simulate only patients known to have that disease.
+For example, replace `var lungCancer = flip(0.01)` with `var lungCancer = true`.
+Run the program several times to observe the characteristic patterns of symptoms for that disease.
+
 
 # Prediction, Simulation, and Probabilities
 
@@ -323,77 +393,6 @@ From the point of view of directly computing probabilities, marginalization is s
 Putting the product and sum rules together, the marginal probability of return values from a program that we have explored above is the sum over sampling histories of the product over choice probabilities---a computation that can quickly grow unmanageable, but can be approximated by `Infer`.
 
 
-# Example: Causal Models in Medical Diagnosis
-
-Generative knowledge is often *causal* knowledge that describes how events or states of the world are related to each other.
-As an example of how causal knowledge can be encoded in WebPPL expressions, consider a simplified medical scenario:
-
-~~~~
-var lungCancer = flip(0.01);
-var cold = flip(0.2);
-var cough = cold || lungCancer;
-cough;
-~~~~
-
-This program models the diseases and symptoms of a patient in a doctor's office.
-It first specifies the base rates of two diseases the patient could have: lung cancer is rare while a cold is common, and there is an independent chance of having each disease.
-The program then specifies a process for generating a common symptom of these diseases -- an effect with two possible causes: The patient coughs if they have a cold or lung cancer (or both).
-
-Here is a more complex version of this causal model:
-
-~~~~
-var lungCancer = flip(0.01);
-var TB = flip(0.005);
-var stomachFlu = flip(0.1);
-var cold = flip(0.2);
-var other = flip(0.1);
-
-var cough = (
-    (cold && flip(0.5)) ||
-    (lungCancer && flip(0.3)) ||
-    (TB && flip(0.7)) ||
-    (other && flip(0.01)))
-
-var fever = (
-    (cold && flip(0.3)) ||
-    (stomachFlu && flip(0.5)) ||
-    (TB && flip(0.1)) ||
-    (other && flip(0.01)))
-
-var chestPain = (
-    (lungCancer && flip(0.5)) ||
-    (TB && flip(0.5)) ||
-    (other && flip(0.01)))
-
-var shortnessOfBreath = (
-    (lungCancer && flip(0.5)) ||
-    (TB && flip(0.2)) ||
-    (other && flip(0.01)))
-
-var symptoms = {
-  cough: cough,
-  fever: fever,
-  chestPain: chestPain,
-  shortnessOfBreath: shortnessOfBreath
-};
-
-symptoms
-~~~~
-
-Now there are four possible diseases and four symptoms.
-Each disease causes a different pattern of symptoms.
-The causal relations are now probabilistic: Only some patients with a cold have a cough (50%), or a fever (30%).
-There is also a catch-all disease category "other", which has a low probability of causing any symptom.
-*Noisy logical* functions---functions built from **and** (`&&`), **or** (`||`), and `flip`---provide a simple but expressive way to describe probabilistic causal dependencies between Boolean (true-false valued) variables.
-
-When you run the above code, the program generates a list of symptoms for a hypothetical patient.
-Most likely all the symptoms will be false, as (thankfully) each of these diseases is rare.
-Experiment with running the program multiple times.
-Now try modifying the `var` statement for one of the diseases, setting it to be true, to simulate only patients known to have that disease.
-For example, replace `var lungCancer = flip(0.01)` with `var lungCancer = true`.
-Run the program several times to observe the characteristic patterns of symptoms for that disease.
-
-
 # Stochastic recursion
 
 [Recursive functions](appendix-scheme.html#recursion) are a powerful way to structure computation in deterministic systems.
@@ -405,9 +404,9 @@ We imagine flipping a (weighted) coin, returning $$N-1$$ if the first `true` is 
 var geometric = function (p) {
     flip(p) ? 0 : 1 + geometric(p);
 };
-viz.hist(repeat(1000, function () {
-    return geometric(0.6);
-}), {numBins: 7});
+var g = Infer({method: 'forward', samples: 1000},
+              function(){return geometric(0.6)})
+viz.auto(g)
 ~~~~
 
 There is no upper bound on how long the computation can go on, although the probability of reaching some number declines quickly as we go.
@@ -425,8 +424,8 @@ var eyeColor = function (person) {
 [eyeColor('bob'), eyeColor('alice'), eyeColor('bob')];
 ~~~~
 
-The results of this generative process are clearly wrong: Bob's eye color can change each time we ask about it! What we want is a model in which eye color is random, but *persistent.* We can do this using another WebPPL primitive: `mem`. `mem` is a higher order function that takes a procedure and produces a *memoized* version of the procedure.
-When a stochastic procedure is memoized, it will sample a random value the *first* time it is used for some arguments, but return that same value when called with those arguments thereafter.
+The results of this generative process are clearly wrong: Bob's eye color can change each time we ask about it! What we want is a model in which eye color is random, but *persistent.* We can do this using a WebPPL built-in: `mem`. `mem` is a higher order function that takes a procedure and produces a *memoized* version of the procedure.
+When a stochastic procedure is memoized, it will sample a random value the *first* time it is used with some arguments, but return that same value when called with those arguments thereafter.
 The resulting memoized procedure has a persistent value within each "run" of the generative model (or simulated world). For instance consider the equality of two flips, and the equality of two memoized flips:
 
 ~~~~
@@ -469,6 +468,8 @@ In computer science memoization is an important technique for optimizing program
 In the probabilistic setting, such as in WebPPL, memoization actually affects the meaning of the memoized function.
 
 # Example: Bayesian Tug of War
+
+<!-- possibly save tug of war for next chapter? -->
 
 Imagine a game of tug of war, where each person may be strong or weak, and may be lazy or not on each match.
 If a person is lazy they only pull with half their strength.
@@ -623,6 +624,7 @@ var doesTowerFall = function (initialW, finalW) {
   var approxEqual = function (a, b) { Math.abs(a - b) < 1.0 }
   !approxEqual(highestY(initialW), highestY(finalW))
 }
+
 var noisify = function (world) {
   var perturbX = function (obj) {
     var noiseWidth = 10
@@ -637,9 +639,15 @@ var run = function(world) {
   doesTowerFall(initialWorld, finalWorld)
 }
 
-print(repeat(10, function() { run(stableWorld) }))
-print(repeat(10, function() { run(almostUnstableWorld) }))
-print(repeat(10, function() { run(unstableWorld) }))
+viz.auto(
+  Infer({method: 'forward', samples: 100},
+        function() { run(stableWorld) }))
+viz.auto(
+  Infer({method: 'forward', samples: 100},
+        function() { run(almostUnstableWorld) }))
+viz.auto(
+  Infer({method: 'forward', samples: 100},
+        function() { run(unstableWorld) }))
 
 // uncomment any of these that you'd like to see for yourself
 // physics.animate(1000, stableWorld)
