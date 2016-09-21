@@ -81,11 +81,11 @@ In WebPPL, each time you run a program you get a *sample* by simulating the comp
 If you run the program many times, and collect the values in a histogram, you can see what a typical sample looks like:
 
 ~~~~
-viz.hist(repeat(1000,flip))
+viz(repeat(1000,flip))
 ~~~~
 
 Here we have used the `repeat` procedure which takes a number of repetitions, $$K$$, and a function (in this case `flip`) and returns a list of $$K$$ samples from that function.
-We have used the `viz.hist` function to visualize the results of calling the `flip` function 1000 times.
+We have used the `viz` function to visualize the results of calling the `flip` function 1000 times.
 As you can see, the result is an approximately uniform distribution over `true` and `false`.
 
 Using `flip` we can construct more complex expressions that describe more complicated sampling processes. For instance here we describe a process that samples a number adding up several flips (note that in JavaScript a boolean will be turned into a number, $$0$$ or $$1$$, by the plus operator `+`):
@@ -99,7 +99,7 @@ We can use `function` to construct such complex stochastic functions from the pr
 
 ~~~~
 var sumFlips = function() { return flip() + flip() + flip() }
-viz.hist(repeat(100, sumFlips))
+viz(repeat(100, sumFlips))
 ~~~~
 
 A function expression with an empty argument list, `function () {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`.
@@ -120,14 +120,14 @@ The following program defines a fair coin, and flips it 20 times:
 
 ~~~~
 var fairCoin = function() { flip(0.5) ? 'h' : 't' };
-viz.hist(repeat(20, fairCoin))
+viz(repeat(20, fairCoin))
 ~~~~
 
 This program defines a "trick" coin that comes up heads most of the time (95%), and flips it 20 times:
 
 ~~~~
 var trickCoin = function() { flip(0.95) ? 'h' : 't' };
-viz.hist(repeat(20, trickCoin))
+viz(repeat(20, trickCoin))
 ~~~~
 
 The higher-order function `make-coin` takes in a weight and outputs a function (a thunk) describing a coin with that weight.  Then we can use `make-coin` to make the coins above, or others.
@@ -138,9 +138,9 @@ var fairCoin = makeCoin(0.5);
 var trickCoin = makeCoin(0.95);
 var bentCoin = makeCoin(0.25);
 
-viz.hist(repeat(20,fairCoin))
-viz.hist(repeat(20,trickCoin))
-viz.hist(repeat(20,bentCoin))
+viz(repeat(20,fairCoin))
+viz(repeat(20,trickCoin))
+viz(repeat(20,bentCoin))
 ~~~~
 
 We can also define a higher-order function that takes a "coin" and "bends it":
@@ -154,7 +154,7 @@ var bend = function(coin) {
 }
 var fairCoin = makeCoin(0.5)
 var bentCoin = bend(fairCoin)
-viz.hist(repeat(100,bentCoin))
+viz(repeat(100,bentCoin))
 ~~~~
 
 Make sure you understand how the `bend` function works! Why are there an "extra" pair of parentheses after each `make-coin` statement?
@@ -170,7 +170,7 @@ var coin = makeCoin(0.8)
 
 var data = repeat(1000, function() { sum(map(function (x) { x ? 1 : 0 },
                                              repeat(10, coin))) })
-viz.hist(data, {xLabel: 'foo'}) // TODO: add xLabel option
+viz(data, {xLabel: 'num heads'})
 ~~~~
 
 
@@ -639,13 +639,13 @@ var run = function(world) {
   doesTowerFall(initialWorld, finalWorld)
 }
 
-viz.auto(
+viz(
   Infer({method: 'forward', samples: 100},
         function() { run(stableWorld) }))
-viz.auto(
+viz(
   Infer({method: 'forward', samples: 100},
         function() { run(almostUnstableWorld) }))
-viz.auto(
+viz(
   Infer({method: 'forward', samples: 100},
         function() { run(unstableWorld) }))
 
