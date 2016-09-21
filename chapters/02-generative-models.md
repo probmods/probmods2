@@ -268,14 +268,29 @@ We may define the probability of a return value to be the fraction of times (in 
 
 ## Distributions
 
-An important idea here is that `flip` can be thought of in two different ways.
+A *probability distribution* is the probability of each possible outcome of an event. For instance the probability distribution on values that can be returned by `flip()`.
+
+An important idea is that `flip` can be thought of in two different ways.
 From one perspective, `flip` is a procedure which returns a sample from a fair coin.
 That is, it's a *sampler* or *simulator*.
 From another perspective, `flip` is *itself* a characterization of the probability distribution over `true` and `false`.
 When we think about probabilistic programs we will often move back and forth between these two views, emphasizing either the sampling perspective or the distributional perspective.
 (With suitable restrictions this duality is complete: any WebPPL program implicitly represents a distribution and any distribution can be represented by a WebPPL program; see e.g., @Ackerman2011 for more details on this duality.)
 
-The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.
+In WebPPL distributions can be explicitly represented
+
+~~~
+var b = Bernoulli({p: 0.5})
+viz.print(b)
+viz.print(sample(b))
+viz.print(b.score(true))
+viz.auto(b)
+~~~
+
+In fact `flip(x)` is just a helper function that constructs a Bernoulli distribution and samples from it. The function `bernoulli(x)` is an alias for `flip`. (There are similar helpers for other distributions, named in lower case.)
+
+<!--
+The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.-->
 
 <!-- describe Distribution generators, distirbutions, and sample here. -->
 
