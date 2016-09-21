@@ -58,8 +58,10 @@ N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</
 <ol>
 {% for p in sorted_pages %}
     {% if p.layout == 'chapter' %}
-    <li><a href="{{ site.baseurl }}{{ p.url }}">{{p.title}}</a></li>
+    <li><a href="{{ site.baseurl }}{{ p.url }}">{{p.title}}</a><br />
     <em>{{ p.description }}</em>
+    </li>
+
     {% endif %}
 {% endfor %}
 </ol>

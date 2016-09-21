@@ -1,5 +1,5 @@
 #header {
-    padding: 3.5em 0em 2.5em 0em;
+    padding: 3em 0em 1.5em 0em;
     text-align: center;
     margin: 0em -5em 1em -5em;
     color: white;
@@ -27,6 +27,8 @@ hr.edition {
     color: white;
     text-align: center;
     width: 650px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 hr.edition:after {
     content: "2nd Edition";
@@ -72,4 +74,9 @@ h3 {
 
 .container {
     width: 850px;
+    margin-bottom: 3em;
+}
+
+li {
+    padding-bottom: 7px;
 }
