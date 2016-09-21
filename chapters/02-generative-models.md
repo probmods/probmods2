@@ -65,7 +65,7 @@ The key idea is that we have primitive operations that describe not only determi
 In WebPPL, in addition to deterministic functions, we have a set of random functions implementing *random choices.*  These random primitive functions are called *Exchangeable Random Primitives* (XRPs).
 Application of an XRP results in a *sample* from the probability distribution defined by that XRP.
 -->
-For example, the `flip` function can be thought of as simulating a (possibly biased) coin toss (technically `flip` samples from a Bernoulli distribution, which we'l return to shortly):
+For example, the `flip` function can be thought of as simulating a (possibly biased) coin toss (technically `flip` samples from a Bernoulli distribution, which we'll return to shortly):
 
 ~~~~
 flip()
