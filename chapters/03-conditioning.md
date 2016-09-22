@@ -213,15 +213,16 @@ If we replace the conditioner with `true`in the code above, that is equivalent t
 
 Bayes' rule simply says that, in special situations where the model decomposes nicely into a part "before" the value to be returned (hypothesis) and a part "after" the value to be returned, then the conditional probability can be expressed simply in terms of the prior and likelihood components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in other terms.
 
-## Othe implementations of `Infer`
+## Other implementations of `Infer`
 
 Much of the difficulty of implementing the WebPPL language (or probabilistic models in general) is in finding useful ways to do conditional inference---to implement `Infer`.
 We have already seen rejection sampling and enumeration, but the AI literature is replete with other algorithms and techniques for dealing with conditional probabilistic inference.
 Many of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
 Switching from one method to another is as simple as changing the options passed to `Infer`. We have already seen two methods: `{method: 'enumerate'}` and `{method: 'rejection', samples: X}`; other methods include `'MCMC'`, `'SMC'`, and `'variational'`. The [Infer documentation](http://docs.webppl.org/en/master/inference/index.html) provides many more usage details.
 
-**levels of analysis?**
-We will explore the different algorithms used in these implementations in the section on [Algorithms for inference](inference-process.html).
+There is an interesting parallel between the `Infer` abstraction and the engineering challenge of different inference methods and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
+In parallel, WebPPL allows us to specify generative knowledge and inference questions, largely abstracting away the methods of inference (they show up only in the options argument to `Infer`).
+We will further explore some of the algorithms used in these implementations, and ask whether they may be useful algorithmic levels models for human thinking, in the section on [Algorithms for inference](inference-process.html). For most of this book, however, we work at the cimputational level, abstracting away from algorithmic details.
 
 <!--
 One implementation that we will often use is based on the *Metropolis Hastings* (MH) algorithm, a member of the class of Markov chain Monte Carlo (MCMC) methods:
@@ -455,29 +456,29 @@ var getBallX = function(world) {
 
 var observedX = 160;
 
-var initialXs = Infer(
+var model = function() {
+  var initState = world.concat([randomBlock()])
+  var initX = getBallX(initState);
+  var finalState = physics.run(1000, initState);
+  var finalX = getBallX(finalState);
+  observe(Gaussian({mu: finalX, sigma: 10}), observedX)
+  return {initX: initX}
+}
+
+var initialXDist = Infer(
   {method: 'MCMC',
    samples: 100,
    lag: 10,
    callbacks: [editor.MCMCProgress()]
   },
-  function() {
-    var initState = [randomBlock()].concat(world);
-    var initX = getBallX(initState);
-    var finalState = physics.run(1000, initState);
-    var finalX = getBallX(finalState);
-    factor(Gaussian({mu: finalX, sigma: 10}).score(observedX))
-    return {initX: initX}
-  });
+  model);
 
-viz.auto(initialXs)
+viz.density(initialXDist, {bounds: [0,350]})
 ~~~~
 
 What if the ball comes to rest at the left side, under the large circle (x about 60)? The right side?
 
-**TODO: This plot is a bit confusing, since it's not clear how to map the x axis onto the picture above -- can we explicitly force x lims to be 0-???**
-
-**TODO: the model here is too certain about the physics: it knows just how the ball will bounce off the pegs... should add collision noise? anyhow discuss this?**
+Notice that the model described above has preternatural knowledge of physics. For instance, it knows exactly how the ball will bounce of the pegs, even if there are many bounces. Do you think this is a good model of human intuition? If not, how could you change the model to capture human reasoning better?
 
 
 # Example: Causal Inference in Medical Diagnosis
@@ -489,14 +490,14 @@ This classic Bayesian inference task is a special case of conditioning. Kahneman
 What is your intuition? Many people without training in statistical inference judge the probability to be rather high, typically between 0.7 and 0.9. The correct answer is much lower, less than 0.1, as we can see by running this WebPPL inference:
 
 ~~~~
-var samples = Infer({method: 'enumerate'},
+var cancerDist = Infer({method: 'enumerate'},
   function () {
     var breastCancer = flip(0.01)
     var positiveMammogram = breastCancer ? flip(0.8) : flip(0.096)
     condition(positiveMammogram)
-    return breastCancer
+    return {breastCancer: breastCancer}
 })
-viz.hist(samples, 'breast cancer')
+viz(cancerDist)
 ~~~~
 
 @Tversky1974 named this kind of judgment error *base rate neglect*, because in order to make the correct judgment, one must realize that the key contrast is between the *base rate* of the disease, 0.01 in this case, and the *false alarm rate* or probability of a positive mammogram given no breast cancer, 0.096.  The false alarm rate (or *FAR* for short) seems low compared to the probability of a positive mammogram given breast cancer (the *likelihood*), but what matters is that it is almost ten times higher than the base rate of the disease.  All three of these quantities are needed to compute the probability of having breast cancer given a positive mammogram using Bayes' rule for posterior conditional probability:
@@ -513,13 +514,13 @@ Now one can practically read off the answer from the problem formulation: 8 out 
 
 Gigerenzer (along with Cosmides, Tooby and other colleagues) has argued that this formulation is easier because of evolutionary and computational considerations: human minds have evolved to count and compare natural frequencies of discrete events in the world, not to add, multiply and divide decimal probabilities.  But this argument alone cannot account for the very broad human capacity for causal reasoning.  We routinely make inferences for which we haven't stored up sufficient frequencies of events observed *in the world.* (And often for which no one has told us the relevant frequencies, although perhaps we have been told about degrees of causal strength or base rates in the form of probabilities or other linguistic encoding).
 
-However, the basic idea that the mind is good at manipulating frequencies of situations, but bad at arithmetic on continuous probability values, can be extended to cope with novel situations if the frequencies that are manipulated can be frequencies of *imagined* situations. Recall that Church programs explicitly give instructions for sampling imagined situations, and only implicitly specify probability distributions. If human inference is similar to a WebPPL inference then it would readily create and manipulate imagined situations, and this could explain both why the frequency framing of Bayesian probability judgment is natural to people and how people cope with rarer and more novel situations.  The numbers given in the frequency formulation (or close approximations thereof) can be read off a tree of evaluation histories for 1000 calls of the WebPPL program that specifies the causal model for this problem:
+However, the basic idea that the mind is good at manipulating frequencies of situations, but bad at arithmetic on continuous probability values, can be extended to cope with novel situations if the frequencies that are manipulated can be frequencies of *imagined* situations. Recall that probabilistic programs explicitly give instructions for sampling imagined situations, and only implicitly specify probability distributions. If human inference is similar to a WebPPL inference then it would readily create and manipulate imagined situations, and this could explain both why the frequency framing of Bayesian probability judgment is natural to people and how people cope with rarer and more novel situations.  The numbers given in the frequency formulation (or close approximations thereof) can be read off a tree of evaluation histories for 1000 calls of the WebPPL program that specifies the causal model for this problem:
 
 <center><img src="../assets/img/Cancer-world-tree.png" width="40%" height="40%" ></center>
 
-Each path from root to leaf of this tree represents a sequence of random choices made in evaluating the above program (the first flip for breast-cancer, the second for positive-mammogram), with the number of traversals and the sampled value labeling each edge. (Because this is 1000 *random* samples, the number are close (but not exactly) those in the Gigerenzer, et al, story.) Selecting just the 106 hypothetical cases of women with a positive mammogram, and computing the fraction of those who also have breast cancer (7/106), corresponds exactly to `Infer({method: 'rejection'})`. Thus, we have used the causal representation in the above church program to manufacture frequencies which can be used to arrive at the inference that relatively few women with positive mammograms actually have breast cancer.
+Each path from root to leaf of this tree represents a sequence of random choices made in evaluating the above program (the first flip for breast-cancer, the second for positive-mammogram), with the number of traversals and the sampled value labeling each edge. (Because this is 1000 *random* samples, the number are close (but not exactly) those in the Gigerenzer, et al, story.) Selecting just the 106 hypothetical cases of women with a positive mammogram, and computing the fraction of those who also have breast cancer (7/106), corresponds exactly to `Infer({method: 'rejection'})`. Thus, we have used the causal representation in the above program to manufacture frequencies which can be used to arrive at the inference that relatively few women with positive mammograms actually have breast cancer.
 
-Yet unlike the rejection sampler people are quite bad at reasoning in this scenario. Why? One answer is that people don't represent their knowledge in quite the form of this simple church program.
+Yet unlike the rejection sampler people are quite bad at reasoning in this scenario. Why? One answer is that people don't represent their knowledge in quite the form of this simple program.
 Indeed, @Krynski2007 have argued that human statistical judgment is fundamentally based on conditioning more explicit causal models:  they suggested that "base rate neglect" and other judgment errors may occur when people are given statistical information that cannot be easily mapped to the parameters of the causal models they intuitively adopt to describe the situation.  In the above example, they suggested that the notion of a false alarm rate is not intuitive to many people---particularly when the false alarm rate is ten times higher than the base rate of the disease that the test is intended to diagnose!  They showed that "base rate neglect" could be eliminated by reformulating the breast cancer problem in terms of more intuitive causal models.  For example, consider their version of the breast cancer problem (the exact numbers and wording differed slightly):
 
 > 1% of women at age 40 who participate in a routine screening will have breast cancer.  Of those with breast cancer, 80% will receive a positive mammogram.  20% of women at age 40 who participate in a routine screening will have a benign cyst.  Of those with a benign cyst, 50% will receive a positive mammogram due to unusually dense tissue of the cyst.  All others will receive a negative mammogram.  Suppose that a woman in this age group has a positive mammography in a routine screening. What is the probability that she actually has breast cancer?
@@ -527,15 +528,15 @@ Indeed, @Krynski2007 have argued that human statistical judgment is fundamentall
 This question is easy for people to answer---empirically, just as easy as the frequency-based formulation given above.  We may conjecture this is because the relevant frequencies can be computed from a simple inference on the following more intuitive causal model:
 
 ~~~~
-var samples = Infer({method: 'enumerate'},
+var cancerDist = Infer({method: 'enumerate'},
   function () {
     var breastCancer = flip(0.01)
     var benignCyst = flip(0.2)
     var positiveMammogram = (breastCancer && flip(0.8)) || (benignCyst && flip(0.5))
     condition(positiveMammogram)
-    return breastCancer
+    return {breastCancer: breastCancer}
 });
-viz.auto(samples, 'breast cancer')
+viz(cancerDist)
 ~~~~
 
 Because this causal model---this WebPPL program---is more intuitive to people, they can imagine the appropriate situations, despite having been given percentages rather than frequencies.
@@ -573,12 +574,12 @@ var dist = Infer({method: 'enumerate'},
     condition(cough && fever && chestPain && shortnessOfBreath)
     return {lungCancer: lungCancer, TB: TB}
 })
-viz.auto(dist, 'Joint inferences for lung cancer and TB')
+viz(dist)
 ~~~~
 
-You can use this model to infer conditional probabilities for any subset of diseases conditioned on any pattern of symptoms.  Try varying the symptoms in the conditioning set or the diseases in the inference, and see how the model's inferences compare with your intuitions.  For example, what happens to inferences about lung cancer and TB in the above model if you remove chest pain and shortness of breath as symptoms?  (Why?  Consider the alternative explanations.)  More generally, we can condition on any set of events -- any combination of symptoms and diseases -- and query any others.  We can also condition on the negation of an event $X$ using `!X`: e.g., how does the probability of lung cancer (versus TB) change if we observe that the patient does *not* have a fever, does *not* have a cough, or does not have either symptom?
+You can use this model to infer conditional probabilities for any subset of diseases conditioned on any pattern of symptoms.  Try varying the symptoms in the conditioning set or the diseases in the inference, and see how the model's inferences compare with your intuitions.  For example, what happens to inferences about lung cancer and TB in the above model if you remove chest pain and shortness of breath as symptoms?  (Why?  Consider the alternative explanations.)  More generally, we can condition on any set of events -- any combination of symptoms and diseases -- and query any others.  We can also condition on the negation of an event (using the JavaScript negation operator `!`): how does the probability of lung cancer (versus TB) change if we observe that the patient does *not* have a fever (i.e. `condition(!fever)`), does *not* have a cough, or does not have either symptom?
 
-A WebPPL program thus effectively encodes the answers to a very large number of possible questions in a very compact form, where each question has the form, "Suppose we observe X, what can we infer about Y?".  In the program above, there are $3^9=19683$ possible simple conditioners (possible X's) corresponding to conjunctions of events or their negations (because the program has 9 stochastic Boolean-valued functions, each of which can be observed true, observed false, or not observed). Then for each of those X's there are a roughly comparable number of Y's, corresponding to all the possible conjunctions of variables that can be in the query set Y, making the total number of simple questions encoded on the order of 100 million. In fact, as we will see below when we describe complex queries, the true number of possible questions encoded in just a short WebPPL program like this one is very much larger than that; usually the set is infinite. With `Infer` we can in principle compute the answer to every one of these questions.  We are beginning to see the sense in which probabilistic programming provides the foundations for constructing a *language of thought*, as described in the Introduction: a finite system of knowledge that compactly and efficiently supports an infinite number of inference and decision tasks.
+As we discussed above, WebPPL program thus effectively encodes the answers to a very large number of possible questions in a very compact form.  In the program above, there are $3^9=19683$ possible simple conditions corresponding to conjunctions of events or their negations (because the program has 9 stochastic Boolean-valued functions, each of which can be observed true, observed false, or not observed). Then for each of those conditions there are a roughly comparable number of queries, corresponding to all the possible conjunctions of variables that can be in the return value expression. This makes the total number of simple questions encoded on the order of 100 million. We are beginning to see the sense in which probabilistic programming provides the foundations for constructing a *language of thought*, as described in the Introduction: a finite system of knowledge that compactly and efficiently supports an infinite number of inference and decision tasks.
 
 Expressing our knowledge as a probabilistic program of this form also makes it easy to add in new relevant knowledge we may acquire, without altering or interfering with what we already know.  For instance, suppose we decide to consider behavioral and demographic factors that might contribute causally to whether a patient has a given disease:
 
@@ -614,7 +615,7 @@ var dist = Infer({method: 'enumerate'},
     return {lungCancer: lungCancer, TB: TB}
 })
 
-viz.auto(dist)
+viz(dist)
 ~~~~
 
 Under this model, a patient with coughing, chest pain and shortness of breath is likely to have either lung cancer or TB.  Modify the above code to see how these conditional inferences shift if you also know that the patient smokes or works in a hospital (where they could be exposed to various infections, including many worse infections than the typical person encounters).  More generally, the causal structure of knowledge representation in a probabilistic program allows us to model intuitive theories that can grow in complexity continually over a lifetime, adding new knowledge without bound.
