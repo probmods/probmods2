@@ -381,7 +381,7 @@ Each table has a *dish* associated with it. Each dish $$v$$ is a label on the ta
 
 The following animation demonstrates the Chinese restaurant process (click on it).
 
-<center><embed width="512" height="384" src="CRP.swf" style='border: 1px solid black'></center>
+<center><embed width="512" height="384" src="{{site.base}}/assets/img/CRP.swf" style='border: 1px solid black'></center>
 
 The CRP can be used to define a stochastic memoizer just as the Dirichlet process. We let the dish at each table be drawn from the underlying procedure. When we seat a customer we emit the dish labeling the table where the customer sat. To use a CRP as a memoization distribution we associate our underlying procedure with a set of restaurants---one for each combination of a procedure with its arguments. We let customers represent particular instances in which a procedure is evaluated, and we let the dishes labeling each table represent the values that result from those procedure applications. The base distribution which generates dishes corresponds to the underlying procedure which we have memoized.
 
