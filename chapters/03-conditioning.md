@@ -315,7 +315,35 @@ The `factor` construct is very general. Both `condition` and `observe` can be wr
 
 # Example: Reasoning about Tug of War
 
-Returning to the earlier example of a series of tug-of-war matches, we can use `Infer` to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
+Imagine a game of tug of war, where each person may be strong or weak, and may be lazy or not on each match.
+If a person is lazy they only pull with half their strength.
+The team that pulls hardest will win.
+We assume that strength is a continuous property of an individual, and that on any match, each person has a 25% chance of being lazy.
+This WebPPL program runs a tournament between several teams, mixing up players across teams.
+Can you guess who is strong or weak, looking at the tournament results?
+
+~~~~
+var strength = mem(function (person) { gaussian(0, 1) });
+var lazy = function (person) { flip(0.25) }
+var pulling = function (person) { lazy(person) ? strength(person)/2 : strength(person);}
+var totalPulling = function (team) { sum(map(pulling, team)) }
+var winner = function (team1, team2) {
+    totalPulling(team1) < totalPulling(team2) ? team2 : team1
+    };
+[
+    winner(['alice', 'bob'], ['sue', 'tom']),
+    winner(['alice', 'bob'], ['sue', 'tom']),
+    winner(['alice', 'sue'], ['bob', 'tom']),
+    winner(['alice', 'sue'], ['bob', 'tom']),
+    winner(['alice', 'tom'], ['bob', 'sue']),
+    winner(['alice', 'tom'], ['bob', 'sue'])
+];
+~~~~
+
+Notice that `strength` is memoized because this is a property of a person true across many matches, while `lazy` isn't.
+Each time you run this program, however, a new "random world" will be created: people's strengths will be randomly re-generated, then used in all the matches.
+
+We can use `Infer` to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been on a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
 ~~~~
 var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 25000},

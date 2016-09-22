@@ -478,38 +478,6 @@ of all the others. The outcome of each, once determined, will always have the sa
 In computer science memoization is an important technique for optimizing programs by avoiding repeated work.
 In the probabilistic setting, such as in WebPPL, memoization actually affects the meaning of the memoized function.
 
-# Example: Bayesian Tug of War
-
-<!-- possibly save tug of war for next chapter? -->
-
-Imagine a game of tug of war, where each person may be strong or weak, and may be lazy or not on each match.
-If a person is lazy they only pull with half their strength.
-The team that pulls hardest will win.
-We assume that strength is a continuous property of an individual, and that on any match, each person has a 25% chance of being lazy.
-This WebPPL program runs a tournament between several teams, mixing up players across teams.
-Can you guess who is strong or weak, looking at the tournament results?
-
-~~~~
-var strength = mem(function (person) { gaussian(0, 1) });
-var lazy = function (person) { flip(0.25) }
-var pulling = function (person) { lazy(person) ? strength(person)/2 : strength(person);}
-var totalPulling = function (team) { sum(map(pulling, team)) }
-var winner = function (team1, team2) {
-    totalPulling(team1) < totalPulling(team2) ? team2 : team1
-    };
-[
-    winner(['alice', 'bob'], ['sue', 'tom']),
-    winner(['alice', 'bob'], ['sue', 'tom']),
-    winner(['alice', 'sue'], ['bob', 'tom']),
-    winner(['alice', 'sue'], ['bob', 'tom']),
-    winner(['alice', 'tom'], ['bob', 'sue']),
-    winner(['alice', 'tom'], ['bob', 'sue'])
-];
-~~~~
-
-Notice that `strength` is memoized because this is a property of a person true across many matches, while `lazy` isn't.
-Each time you run this program, however, a new "random world" will be created: people's strengths will be randomly re-generated, then used in all the matches.
-
 # Example: Intuitive physics
 
 Humans have a deep intuitive understanding of everyday physics---this allows us to make furniture, appreciate sculpture, and play baseball.
