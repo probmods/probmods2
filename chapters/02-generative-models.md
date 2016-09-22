@@ -8,6 +8,14 @@ custom_js:
 - assets/js/plinko.js
 ---
 
+<!--
+robert_hawkins [11:49 AM]  
+a couple issues with the chapter:
+1. the heading structure is a bit confusing — the “Building Generative Models” section starts with some info on webppl, has a subsection “example: flipping coins”, and then pops out to the outer level for “example: medical diagnosis”. Maybe we could signpost that better, like create a subsection where we explicitly describe webppl, a subsection about sampling, and indent the medical diagnosis example one level?
+2. the “prediction, simulation, and probabilities” section uses both bayesian and frequentist notions of probability without labeling them or distinguishing them (e.g. “A probability is… a degree of belief”, but “We may define the probability … to be the fraction of times (in the long run) that this value is returned”). It’d be nice to say that these are alternate ways of formalizing probability?
+3. I like the new "constructing marginal distributions with `Infer`" section… Should we rewrite other models in future chapters that use `repeat` to use `forward` instead?
+-->
+
 # Models, simulation, and degrees of belief
 
 One view of knowledge is that the mind maintains working models of parts of the world.
@@ -178,7 +186,7 @@ var data = repeat(1000, function() { sum(map(function (x) { x ? 1 : 0 },
 viz(data, {xLabel: '# heads'})
 ~~~~
 
-# Example: Causal Models in Medical Diagnosis
+## Example: Causal Models in Medical Diagnosis
 
 Generative knowledge is often *causal* knowledge that describes how events or states of the world are related to each other.
 As an example of how causal knowledge can be encoded in WebPPL expressions, consider a simplified medical scenario:
@@ -469,38 +477,6 @@ of all the others. The outcome of each, once determined, will always have the sa
 
 In computer science memoization is an important technique for optimizing programs by avoiding repeated work.
 In the probabilistic setting, such as in WebPPL, memoization actually affects the meaning of the memoized function.
-
-# Example: Bayesian Tug of War
-
-<!-- possibly save tug of war for next chapter? -->
-
-Imagine a game of tug of war, where each person may be strong or weak, and may be lazy or not on each match.
-If a person is lazy they only pull with half their strength.
-The team that pulls hardest will win.
-We assume that strength is a continuous property of an individual, and that on any match, each person has a 25% chance of being lazy.
-This WebPPL program runs a tournament between several teams, mixing up players across teams.
-Can you guess who is strong or weak, looking at the tournament results?
-
-~~~~
-var strength = mem(function (person) { gaussian(0, 1) });
-var lazy = function (person) { flip(0.25) }
-var pulling = function (person) { lazy(person) ? strength(person)/2 : strength(person);}
-var totalPulling = function (team) { sum(map(pulling, team)) }
-var winner = function (team1, team2) {
-    totalPulling(team1) < totalPulling(team2) ? team2 : team1
-    };
-[
-    winner(['alice', 'bob'], ['sue', 'tom']),
-    winner(['alice', 'bob'], ['sue', 'tom']),
-    winner(['alice', 'sue'], ['bob', 'tom']),
-    winner(['alice', 'sue'], ['bob', 'tom']),
-    winner(['alice', 'tom'], ['bob', 'sue']),
-    winner(['alice', 'tom'], ['bob', 'sue'])
-];
-~~~~
-
-Notice that `strength` is memoized because this is a property of a person true across many matches, while `lazy` isn't.
-Each time you run this program, however, a new "random world" will be created: people's strengths will be randomly re-generated, then used in all the matches.
 
 # Example: Intuitive physics
 
