@@ -143,6 +143,19 @@ pre.highlight, .container .wpedit .CodeMirror {
     font-size: 10px;
 }
 
+.container .wpedit .result pre {
+    background-color: transparent
+}
+
+.container .wpedit .clearButton {
+    padding: 10px;
+    border: none;
+    background-color: transparent;
+    color: #ccc;
+    margin-right: 0 !important;
+    z-index: 9999;
+}
+
 
 /* Tables */
 

@@ -63,103 +63,106 @@ Ultimately we would like to define a distribution on an infinite set of discrete
 $$\beta_k = \prod_{i=1}^{k-1}\left(1-\beta'_i\right)\cdot\beta'_k$$
 How can this be interpreted as a generative process? Imagine "walking" down the natural numbers in order, flipping a coin with weight $$\beta'_i$$  for each one; if the coin comes up `false`, we continue to the next natural number; if the coin comes up `true`,  we stop and return the current natural number. Convince yourself that the probability of getting natural number $$k$$ is given by $$\beta_k$$ above.
 
-To formalize this as a WebPPL program, we define a procedure, `pick-a-stick`, that walks down the list of $$\beta'_k$$s (called *sticks* in the statistics and machine learning literatures) and flips a coin at each one: if the coin comes up `true`, it returns the index associated with that stick, if the coin comes up `false` the procedure recurses to the next natural number.
+To formalize this as a WebPPL program, we define a procedure, `pickStick`, that walks down the list of $$\beta'_k$$s (called *sticks* in the statistics and machine learning literatures) and flips a coin at each one: if the coin comes up `true`, it returns the index associated with that stick, if the coin comes up `false` the procedure recurses to the next natural number.
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define sticks
- (mem (lambda (index) (beta 1 alpha))))
+var sticks = mem(function(index) {
+  return beta(1, alpha)
+});
 ~~~~
 
-`pick-a-stick` is a higher-order procedure that takes another procedure called `sticks`, which returns the stick weight for each stick. `pick-a-stick` is also a *recursive* function---one that calls itself.
+`pickStick` is a higher-order procedure that takes another procedure called `sticks`, which returns the stick weight for each stick. `pickStick` is also a *recursive* function---one that calls itself.
 
 Notice that `sticks` uses `mem` to associate a particular draw from `beta` with each natural number. When we call it again with the same index we will get back the same stick weight. This (crucially) means that we construct the $$\beta'_k$$s only "lazily" when we need them&mdash;even though we started by imagining an infinite set of "sticks" we only ever construct a finite subset of them.
 
-We can put these ideas together in a procedure called `make-sticks` which takes the $$\alpha$$ parameter as an input and returns a procedure which samples stick indices.
+We can put these ideas together in a procedure called `makeSticks` which takes the $$\alpha$$ parameter as an input and returns a procedure which samples stick indices.
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (make-sticks alpha)
-  (let ((sticks (mem (lambda (x) (beta 1.0 alpha)))))
-    (lambda () (pick-a-stick sticks 1))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+var mySticks = makeSticks(1);
 
-(define my-sticks (make-sticks 1))
-
-(hist (repeat 1000 my-sticks) "Dirichlet Process")
+viz(repeat(1000, mySticks))
 ~~~~
 
-`my-sticks` samples from the natural numbers by walking down the list starting at 1 and flipping a coin weighted by a fixed $$\beta'_k$$ for each $$k$$. When the coin comes up `true` it returns $$k$$ otherwise it keeps going. It does this by drawing the individual $$\beta'_k$$ *lazily*, only generating new ones when we have walked out further than furthest previous time.<ref>
-This way of constructing a Dirichlet Process is known as the *stick-breaking* construction and was first defined in:
-<br/>
-Sethuraman, J. (1994). A constructive definition of dirichlet priors. Statistica Sinica, 4(2):639–650.
-<br/>
+`mySticks` samples from the natural numbers by walking down the list starting at 1 and flipping a coin weighted by a fixed $$\beta'_k$$ for each $$k$$. When the coin comes up `true` it returns $$k$$ otherwise it keeps going. It does this by drawing the individual $$\beta'_k$$ *lazily*, only generating new ones when we have walked out further than furthest previous time.
+
+This way of constructing a Dirichlet Process is known as the *stick-breaking* construction and was first defined in @Sethuraman1994.
 There are many other ways of defining a Dirichlet Process, one of which&mdash;the Chinese Restaurant Process&mdash;we will see below.
-</ref>
+
 
 ## Stochastic Memoization with `DPmem`
 
 The above construction of the Dirichlet process defines a distribution over the infinite set of natural numbers. We quite often want a distribution not over the natural numbers themselves, but over an infinite set of samples from some other distribution (called the *base distribution*): we can generalize the Dirichlet process to this setting by using `mem` to associate to each natural number a draw from the base distribution.
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
 
-(define (make-sticks alpha)
-  (let ((sticks (mem (lambda (x) (beta 1.0 alpha)))))
-    (lambda () (pick-a-stick sticks 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (DPthunk alpha base-dist)
-  (let ((augmented-proc (mem (lambda (stick-index) (base-dist))))
-        (DP (make-sticks alpha)))
-    (lambda () (augmented-proc (DP)))))
-
-
-(define memoized-gaussian (DPthunk 1.0 (lambda () (gaussian 0.0 1.0))))
-(density (repeat 10000 (lambda () (gaussian 0.0 1.0))) "Base Distribution" true)
-(density (repeat 10000 memoized-gaussian) "Dirichlet Process" true)
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+var DPthunk = function(alpha, baseDist) {
+  var augmentedProc = mem(function(stickIndex) {return sample(baseDist)});
+  var DP = makeSticks(alpha);
+  return function() {return augmentedProc(DP())}
+}
+    
+var memoizedGaussian = DPthunk(1, Gaussian({mu: 0, sigma: 1}));
+viz(repeat(10000, function() {return gaussian(0, 1)}));
+viz(repeat(10000, memoizedGaussian));
 ~~~~
 
 We can do a similar transformation to *any* WebPPL procedure: we associate to every argument and natural number pair a sample from the procedure, then use the Dirichlet process to define a new procedure with the same signature. In WebPPL this useful higher-order distribution is called `DPmem`:
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (make-sticks alpha)
-  (let ((sticks (mem (lambda (x) (beta 1.0 alpha)))))
-    (lambda () (pick-a-stick sticks 1))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+        
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
 
-(define (DPmem alpha base-dist)
-  (let ((augmented-proc (mem (lambda (args stick-index) (apply base-dist args))))
-        (DP (mem (lambda (args) (make-sticks alpha)))))
-    (lambda argsin
-      (let ((stick-index (sample (DP argsin))))
-        (augmented-proc argsin stick-index)))))
+var geometric = function(p) {
+  return flip(p) ? 0 : 1 + geometric(p);
+}
 
-(define (geometric p)
-  (if (flip p)
-      0
-      (+ 1 (geometric p))))
-
-(define memoized-gaussian (DPmem 1.0 gaussian))
-
-(density (repeat 10000 (lambda () (gaussian 0.0 1.0))) "Base Distribution" true)
-(density (repeat 10000 (lambda () (memoized-gaussian 0.0 1.0))) "Dirichlet Process" true)
+var memoizedGeometric = DPmem(1, geometric);
+viz(repeat(10000, function() {geometric(.5)}));
+viz(repeat(10000, function() {memoizedGeometric(.5)}))
 ~~~~
 
-In a probabilistic setting a procedure applied to some inputs may evaluate to a different value on each execution. By wrapping such a procedure in `mem` we associate a randomly sampled value with each combination of arguments. We have seen how this is useful in defining *random world* style semantics, by persistently associating individual random draws with particular `mem`'d values. However, it is also natural to consider generalizing the notion of memoization itself to the stochastic case. Since `DPmem` is a higher-order procedure that transforms a procedure into one that *sometimes* reuses it's return values we call it a *stochastic memoizer*<ref>Goodman, Mansighka, Roy, Bonawaitz, Tenenbaum, 2008</ref>.
+In a probabilistic setting a procedure applied to some inputs may evaluate to a different value on each execution. By wrapping such a procedure in `mem` we associate a randomly sampled value with each combination of arguments. We have seen how this is useful in defining *random world* style semantics, by persistently associating individual random draws with particular `mem`'d values. However, it is also natural to consider generalizing the notion of memoization itself to the stochastic case. Since `DPmem` is a higher-order procedure that transforms a procedure into one that *sometimes* reuses it's return values we call it a *stochastic memoizer* [@Goodman2008].
 <!--
 A stochastic memoizer wraps a stochastic procedure in another distribution, called the *memoization distribution* which tells us whether to reuse one of the previously computed values or to compute a fresh value from the underlying procedure. To accomplish this we generalize the notion of a memoization such that it we associate a **distribution** with each argument combination that we pass to the procedure.
 Since, in general, a probabilistic procedure may define a distribution over an unbounded number of observations (in general an uncountable number) we need a memoization distribution that is also unbounded. This distribution should also be exchangeable. These factors lead us to define `DPmem` a stochastic generalization of `mem` which uses the Dirichlet process as a memoization distribution.
@@ -168,23 +171,23 @@ Here we have defined the procedure `DPmem`. `DPmem` takes two arguments, the fir
 `DPmem` then constructs a Dirichlet process and associates it with the combination of arguments. It returns a procedure that when called first samples a stick index from the DP associated with the arguments and then calls the augmented procedure with the arguments and that stick index. `DPmem` can be thought of in the following way. If we had infinite time and resources we could enumerate all possible argument combinations that `proc` accepts and all the natural numbers. For all combinations of arguments plus a natural number we would draw a value from `proc` and permanently associate that value with that combination. In practice, of course, we do this lazily, only associating the new values with new combinations of arguments and stick indices as we need them.  If that combination of arguments and stick has been sampled before the previously computed value will simply be returned. Otherwise, a new value will be sampled from the underlying procedure and associated with the argument-stick combination.
 -->
 
+**TODO: The order of these sections doesn't make sense. The reader (or at least me) has already spent quite some time puzzling over the output of the above code boxes, and it'd be helpful to fold this exposition in above. Especially since it's literally the same output...** 
+
 ## Properties of DP Memoized Procedures
 
 A procedure in WebPPL defines a distribution. When we wrap such a procedure in `DPmem` the resulting procedure defines a new Dirichlet process distribution. The underlying distribution associated with `proc` in the code above is called the *base measure* of the Dirichlet process and is often written $$\mu$$ or sometimes $$G_0$$. In the following example we stochastically memoize a normal distribution.
 
 ~~~~
-(define memoized-normal (DPmem 1.0 (lambda () (gaussian 0 1.0))))
-
-(density (repeat 100 memoized-normal) "DPmem normal")
+var memoizedGaussian = DPmem(1, gaussian);
+viz(repeat(10000, function() {return memoizedGaussian(0,1)}));
 ~~~~
 
 The DP is said to *concentrate* the base measure.  Draws from a normal distribution are real-valued. However, draws from a DP are discrete (with probability one). By probabilistically memoizing a normal distribution we take the probability mass that the Gaussian spreads across the real line and *concentrate* it into a countable number of specific points. Compare the result of the previous computation with the result of sampling from a normal distribution itself.
 
 ~~~~
-(define memoized-gaussian (DPmem 1.0 gaussian))
-
-(density (repeat 10000 (lambda () (gaussian 0.0 1.0))) "Base Distribution")
-(density (repeat 10000 (lambda () (memoized-gaussian 0.0 1.0))) "Dirichlet Process")
+var memoizedGaussian = DPmem(1, gaussian);
+viz(repeat(10000, function() {return gaussian(0, 1)}));
+viz(repeat(10000, function() {return memoizedGaussian(0,1)}));
 ~~~~
 
 The way that the DP concentrates the underlying base measure is illustrated in the following figure.
@@ -199,69 +202,158 @@ When we use the DP to construct `DPmem` the memoized function will therefore ten
 We now return to the problem of categorization with an unknown number of categories. We can use the Dirichlet process to construct a distribution over an infinite set of (potential) bags:
 
 ~~~~
-(define colors '(blue green red))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define samples
- (mh-query
-   200 100
+var observeBag = function(bag, values) {
+  return sum(map(function(v) {return bag.score(v)}, values));
+}
 
-   (define phi (dirichlet '(1 1 1)))
-   (define alpha 0.1)
-   (define prototype (map (lambda (w) (* alpha w)) phi))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-   (define bag->prototype (mem (lambda (bag) (dirichlet prototype))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-   ;;the prior distribution on bags is simply a DPmem of a gensym function:
-   (define get-bag (DPmem 1.0 gensym))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var colors = ['blue', 'green', 'red'];
 
-   ;;each observation comes from one of the bags:
-   (define obs->bag (mem (lambda (obs-name) (get-bag))))
+var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
+  var phi = dirichlet(ones([3, 1]))
+  var alpha = 0.1
+  var prototype = T.mul(phi, alpha)
+  
+  var makeBag = mem(function(bag){
+    return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
+  })
+  
+  // the prior distribution on bags is simply a DPmem of a gensym function:
+  var getBag = DPmem(1, uuid);
 
-   (define draw-marble
-     (mem (lambda (obs-name)
-            (multinomial colors (bag->prototype (obs->bag obs-name))))))
+  // each observation comes from one of the bags:
+  var obsToBag = mem(function(obsName) {return getBag()});
+  
+  factor(observeBag(makeBag(obsToBag('obs1')), ['red']) +
+         observeBag(makeBag(obsToBag('obs2')), ['red']) +
+         observeBag(makeBag(obsToBag('obs3')), ['blue']) +
+         observeBag(makeBag(obsToBag('obs4')), ['blue']) +
+         observeBag(makeBag(obsToBag('obs5')), ['red']) +
+         observeBag(makeBag(obsToBag('obs6')), ['blue']))
 
-   ;;did obs1 and obs2 come from the same bag? obs1 and obs3?
-   (list (equal? (obs->bag 'obs1) (obs->bag 'obs2))
-         (equal? (obs->bag 'obs1) (obs->bag 'obs3)))
+  return {sameBag12: obsToBag('obs1') == obsToBag('obs2'),
+          sameBag13: obsToBag('obs1') == obsToBag('obs3')}
+});
 
-   (and
-    (equal? 'red (draw-marble 'obs1))
-    (equal? 'red (draw-marble 'obs2))
-    (equal? 'blue (draw-marble 'obs3))
-    (equal? 'blue (draw-marble 'obs4))
-    (equal? 'red (draw-marble 'obs5))
-    (equal? 'blue (draw-marble 'obs6))
-    )))
-
-(hist (map first samples) "obs1 and obs2 same category?")
-(hist (map second samples) "obs1 and obs3 same category?")
+viz.marginals(predictives);
 ~~~~
-A model like this is called an *infinite mixture model*; in this case an infinite Dirichlet-multinomial mixture model, since the observations (the colors) come from a multinomial distribution with Dirichlet prior. The essential addition in this model is that we have `DPmem`'d a `gensym` function to provide a collection of reusable category (bag) labels:
+A model like this is called an *infinite mixture model*; in this case an infinite Dirichlet-multinomial mixture model, since the observations (the colors) come from a multinomial distribution with Dirichlet prior. The essential addition in this model is that we have `DPmem`'d a `uuid` (Universally Unique IDentifier) function to provide a collection of reusable category (bag) labels:
 
 ~~~~
-(define reusable-categories (DPmem 1.0 gensym))
-(hist (repeat 20 reusable-categories))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
+
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var reusableCategories = DPmem(1, uuid)
+viz(repeat(20, reusableCategories));
 ~~~~
 
-To generate our observation in this infinite mixture model we first sample a category label from the memoized `gensym`.  Since the Dirichlet process tends to reuse earlier choices (more than later ones), our data will tend to cluster together in earlier components. However, there is no a priori bound on the number of latent classes, rather there is just a bias towards fewer classes.
+To generate our observation in this infinite mixture model we first sample a category label from the memoized `uuid`.  Since the Dirichlet process tends to reuse earlier choices (more than later ones), our data will tend to cluster together in earlier components. However, there is no a priori bound on the number of latent classes, rather there is just a bias towards fewer classes.
 The strength of this bias is controlled by the DP concentration parameter $$\alpha$$. When $$\alpha$$ is high, we will tolerate a larger number of classes, when it is low we will strongly favor fewer classes. In general, the number of classes grows proportional to $$\alpha \log(N)$$ where $$N$$ is the number of observations.
 
 We can use this basic template to create infinite mixture models with any type of observation distribution. For instance here is an infinite Gaussian mixture model:
 
 ~~~~
-(define class-distribution (DPmem 1.0 gensym))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define object->class
-  (mem (lambda (object) (class-distribution))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define class->gaussian-parameters
-  (mem (lambda (klass) (list  (gaussian 65 10) (gaussian 0 8)))))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var classDistribution = DPmem(1, uuid);
+var objectToClass = mem(function(obj) {return classDistribution()});
+var classToGaussianParams = mem(function(classID) {
+  return {mu: gaussian(65, 10), sigma: gaussian(0, 8)}
+});
+var observe = function(obj) {
+  var params = classToGaussianParams(objectToClass(obj));
+  return gaussian({mu: params.mu, sigma: params.sigma});
+}
 
-(define (observe object)
-  (apply gaussian (class->gaussian-parameters (object->class object))))
-
-(map observe '(tom dick harry bill fred))
+map(observe, ['tom', 'dick', 'harry', 'bill', 'fred']);
 ~~~~
 
 There are, of course, many possible observation models that can be used in the infinite mixture. One advantage of using abstract objects to represent our data is that we can associate different observation models with different aspects of the data. For instance, we could have a model which both models height and propensity to smoke for the same set of individuals, based on their sex.
@@ -289,7 +381,7 @@ Each table has a *dish* associated with it. Each dish $$v$$ is a label on the ta
 
 The following animation demonstrates the Chinese restaurant process (click on it).
 
-<center><embed width="512" height="384" src="CRP.swf" style='border: 1px solid black'></center>
+<center><embed width="512" height="384" src="{{site.base}}/assets/img/CRP.swf" style='border: 1px solid black'></center>
 
 The CRP can be used to define a stochastic memoizer just as the Dirichlet process. We let the dish at each table be drawn from the underlying procedure. When we seat a customer we emit the dish labeling the table where the customer sat. To use a CRP as a memoization distribution we associate our underlying procedure with a set of restaurants---one for each combination of a procedure with its arguments. We let customers represent particular instances in which a procedure is evaluated, and we let the dishes labeling each table represent the values that result from those procedure applications. The base distribution which generates dishes corresponds to the underlying procedure which we have memoized.
 
@@ -331,29 +423,50 @@ WebPPL provides a higher-order procedure which implements CRP based stochastic m
 
 ## Example: Goldwater Model 1
 
-(Adapted from Goldwater, S., Griffiths, T. L., and Johnson, M. (2009). A Bayesian framework for word segmentation: Exploring the effects of context. Cognition, 112:21–54)
+Adapted from @Goldwater2009.
 
 ~~~~
-(define phones '(a e i o u k t p g d b s th f))
-(define phone-weights (dirichlet (make-list (length phones) 1)))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define num-words 10)
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (sample-phone)
-  (multinomial phones phone-weights))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define (sample-phone-sequence)
-  (repeat (poisson 3.0) sample-phone))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+///
 
-(define sample-word
-  (DPmem 1.0
-         (lambda ()
-           (sample-phone-sequence))))
+var phoneVals = ['a', 'e', 'i', 'o', 'u', 
+                 'k', 't', 'p', 'g', 'd', 'b', 's', 'th', 'f'];
+var phoneProbs = getProbs(dirichlet(ones([phoneVals.length, 1])));
+var phones = Categorical({vs: phoneVals, ps: phoneProbs});
+var numWords = 10;
 
-(define (sample-utterance)
-  (repeat num-words sample-word))
+var samplePhoneSequence = function() {
+  return repeat(poisson(3), function() {return sample(phones)});
+};
 
-(sample-utterance)
+samplePhoneSequence()
+var sampleWord = DPmem(1, function() {return samplePhoneSequence()})
+var sampleUtterance = repeat(numWords, sampleWord);
+
+sampleUtterance
 ~~~~
 
 
@@ -362,36 +475,61 @@ WebPPL provides a higher-order procedure which implements CRP based stochastic m
 Just as when we considered a mixture model over an unknown number of latent categories, we may wish to have a hidden Markov model over an unknown number of latent symbols. We can do this by again using a reusable source of state symbols:
 
 ~~~~
-(define vocabulary '(chef omelet soup eat work bake))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define (get-state) (DPmem 0.5 gensym))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define state->transition-model
-  (mem (lambda (state) (DPmem 1.0 (get-state)))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define (transition state)
-  (sample (state->transition-model state)))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var vocabulary = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake'];
+var getState = function() {return DPmem(0.5, uuid)};
 
-(define state->observation-model
-  (mem (lambda (state) (dirichlet (make-list (length vocabulary) 1)))))
+var stateToTransitionModel = mem(function(state) {return DPmem(1, getState())});
+var transition = function(state) {return stateToTransitionModel(state)()};
 
-(define (observation state)
-  (multinomial vocabulary (state->observation-model state)))
-
-(define (sample-words last-state)
-  (if (flip 0.2)
-      '()
-      (pair (observation last-state) (sample-words (transition last-state)))))
-
-(sample-words 'start)
+var stateToObservationModel = mem(function(state) {return dirichlet(ones([vocabulary.length, 1]))});
+var observation = function(state) {return categorical({vs: vocabulary, 
+                                                       ps: getProbs(stateToObservationModel(state))})};
+var sampleWords = function(lastState) {
+  return flip(.2) ? [] : [observation(lastState)].concat(sampleWords(transition(lastState)));
+}
+sampleWords('start')
 ~~~~
 
-This model is known as the "infinite hidden Markov model". Notice how the transition model uses a separate DPmemoized function for each latent state: with some probability it will reuse a transition from this state, otherwise it will transition to a new state drawn from the globally shared source or state symbols---a DPmemoized `gensym`.
+This model is known as the "infinite hidden Markov model". Notice how the transition model uses a separate DPmemoized function for each latent state: with some probability it will reuse a transition from this state, otherwise it will transition to a new state drawn from the globally shared source or state symbols---a DPmemoized `uuid`.
 
 
 # Example: The Infinite Relational Model
 
-(Adapted from: Kemp, C., Tenenbaum, J. B., Griffiths, T. L., Yamada, T. & Ueda, N. (2006).  Learning systems of concepts with an infinite relational model. Proceedings of the 21st National Conference on Artificial Intelligence.)
+Adapted from @Kemp2006.
 
 Much semantic knowledge is inherently *relational*. For example, verb meanings can often be formalized as relations between their arguments. The verb "give" is a three-way relation between a giver, something given, and a receiver. These relations are also inherently *typed*. For example, the giver in the relation above is typically an agent. In a preceding section, we discussed the infinite mixture models, where observations were generated from a potentially unbounded set of latent classes. In this section we introduce an extension of this model to relational data: the infinite relational model (IRM).
 
@@ -410,47 +548,72 @@ $$
 Given some relational data, the IRM learns to cluster objects into classes such that whether or not the relation holds depends on the *pair* of object classes. For instance, we can imagine trying to infer social groups from the relation of who talks to who:
 
 ~~~~
-(define samples
-  (mh-query
-   300 100
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-   (define class-distribution (DPmem 1.0 gensym))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-   (define object->class
-     (mem (lambda (object) (class-distribution))))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var results = Infer({method: "MCMC", samples: 10000}, function() {
+  var classDistribution = DPmem(1, uuid);
+  var objectToClass = mem(function(obj) {return classDistribution()});
+  var classesToParams = mem(function(class1, class2) {
+    return {p: beta(.5, .5)}
+  });
+  var talkScore = function(person1, person2, val) {
+    var params = classesToParams(objectToClass(person1), objectToClass(person2));
+    return Bernoulli({p: params.p}).score(val);
+  }
+  
+  factor(talkScore('tom', 'fred', true) + 
+         talkScore('tom', 'jim', true) + 
+         talkScore('jim', 'fred', true) +
+         talkScore('mary', 'fred', false) + 
+         talkScore('mary', 'jim', false) + 
+         talkScore('sue', 'fred', false) +
+         talkScore('sue', 'tom', false) + 
+         talkScore('ann', 'jim', false) + 
+         talkScore('ann', 'tom', false) +
+         talkScore('mary', 'sue', true) + 
+         talkScore('mary', 'ann', true) + 
+         talkScore('ann', 'sue', true))	
+  
+  return {tomVsFred: objectToClass('tom') == objectToClass('fred'),
+          tomVsMary: objectToClass('tom') == objectToClass('mary')};
+})
 
-   (define classes->parameters
-     (mem (lambda (class1 class2) (beta 0.5 0.5))))
-
-   (define (talks object1 object2)
-     (flip (classes->parameters (object->class object1) (object->class object2))))
-
-   (list (equal? (object->class 'tom) (object->class 'fred))
-         (equal? (object->class 'tom) (object->class 'mary)))
-
-   (and (talks 'tom 'fred)
-        (talks 'tom 'jim)
-        (talks 'jim 'fred)
-        (not (talks 'mary 'fred))
-        (not (talks 'mary 'jim))
-        (not (talks 'sue 'fred))
-        (not (talks 'sue 'tom))
-        (not (talks 'ann 'jim))
-        (not (talks 'ann 'tom))
-        (talks 'mary 'sue)
-        (talks 'mary 'ann)
-        (talks 'ann 'sue)
-        )))
-
-(hist (map first samples) "tom and fred in same group?")
-(hist (map second samples) "tom and mary in same group?")
+viz.marginals(results)
 ~~~~
 
 We see that the model invents two classes (the "boys" and the "girls") such that the boys talk to each other and the girls talk to each other, but girls don't talk to boys. Note that there is much missing data (unobserved potential relations) in this example.
 
 # Example: CrossCat
 
-(Adapted from: Shafto, P. Kemp, C., Mansignhka, V., Gordon, M., and Tenenbaum, J. B. (2006).  Learning cross-cutting systems of categories.  Proceedings of the Twenty-Eighth Annual Conference of the Cognitive Science Society.)
+Adapted from: @Shafto2006.
 
 Often we have data where each object is associated with a number of features. In many cases, we can predict how these features generalize by assigning the objects to classes and predicting feature values on a class-by-class basis. In fact, we can encode this kind of structure using the IRM above if we interpret the relations as the presence of absence of a feature. However, in some cases this approach does not work because objects can be categorized into multiple categories, and different features are predicted by different category memberships.
 
@@ -467,25 +630,52 @@ These features depend on different systems of categories that foods fall into, f
                            "served with coffee" "served with wine" "water added"))
 -->
 
+**TODO: this is a pretty uninformative example without some kind of inference or distributional result to look at**
+
 ~~~~
-(define kind-distribution (DPmem 1.0 (make-gensym "kind")))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define feature->kind
-  (mem (lambda (feature) (kind-distribution))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define kind->class-distribution
-  (mem (lambda (kind) (DPmem 1.0 (make-gensym "class")))))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function(key) {
+  return function() {
+    var s4 = function() {
+      return (Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1));
+    }
+    return key + s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+}
+///
+var kindDistribution = DPmem(1, uuid('kind'))
+var featureToKind = mem(function(feature) {return kindDistribution()});
+var kindToClassDistribution = mem(function(kind) {return DPmem(1, uuid("class"))});
+var featureKindObjectToClass = mem(function(kind, object) {return kindToClassDistribution(kind)()});
+var classToParameters = mem(function(objectClass) {return {p: beta(1,1)}});
+var observe = function(object, feature) {
+  var params = classToParameters(featureKindObjectToClass(featureToKind(feature), object));
+  return flip(params.p)
+}
 
-(define feature-kind/object->class
-  (mem (lambda (kind object) (sample (kind->class-distribution kind)))))
-
-(define class->parameters
-  (mem (lambda (object-class) (beta 1 1))))
-
-(define (observe object feature)
-  (flip (class->parameters (feature-kind/object->class (feature->kind feature) object))))
-
-(observe 'eggs 'breakfast)
+observe('eggs', 'breakfast')
 ~~~~
 
 # Other Non-Parametric Distributions
@@ -532,7 +722,7 @@ The Indian Buffet Process is an infinite distribution on *sets* of draws from a 
 
 # Hierarchical Combinations of Non-parametric Processes 
 
-In the [Hierarchical Models](hierarchical-models.html) chapter, we explored how additional levels of abstraction can lead to important effects in learning dynamics, such as transfer learning and the blessing of abstraction. In this section, we talk about two ways in which hierarchical non-parametric models can be built.
+In the [Hierarchical Models]({{site.base}}/chapters/09-hierarchical-models.html) chapter, we explored how additional levels of abstraction can lead to important effects in learning dynamics, such as transfer learning and the blessing of abstraction. In this section, we talk about two ways in which hierarchical non-parametric models can be built.
 
 ## The Nested Chinese Restaurant Process
 
@@ -540,29 +730,59 @@ We have seen how the Dirichlet Process/CRP can be used to learn mixture models w
 However, the categories associated with each table or stick in the DP/CRP are unstructured, whereas real life categories have complex relationships with one another.
 For example, they are often organized into hierarchies: a German shepherd is a type of dog, which is a type of animal, which is type of living thing, and so on.
 
-In [Example: One-shot learning of visual categories](hierarchical-models.html#example-one-shot-learning-of-visual-categories), we saw how such hierarchies  could lead to efficient one-shot learning, but we did not talk about how such a hierarchy itself could be learned.
-The *Nested Chinese Restaurant Process* (nCRP) is one way of doing this. (Blei, D. M., Griffiths, T. L., Jordan, M. I., and Tenenbaum, J. B, 2004. Hierarchical topic models and the nested chinese restaurant process. In Advances in Neural Information Processing Systems 16).
+In [Example: One-shot learning of visual categories]({{site.base}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories), we saw how such hierarchies  could lead to efficient one-shot learning, but we did not talk about how such a hierarchy itself could be learned.
+The *Nested Chinese Restaurant Process* (nCRP) is one way of doing this [@Blei2003b].
 The idea behind the nCRP is that tables in a CRP, which typically represent categories, can refer to *other restaurants* that represent lower-level categories.
 
 ~~~~
-(define top-gensym (make-gensym "t"))
-(define top-level-category (DPmem 1.0 top-gensym))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define subordinate-gensym (make-gensym "s"))
-(define subordinate-category
-  (DPmem 1.0
-         (lambda (parent-category)
-           (list (subordinate-gensym) parent-category))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define (sample-category) (subordinate-category (top-level-category)))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function(key) {
+  return function() {
+    var s4 = function() {
+      return (Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1));
+    }
+    return key + s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+}
+///
+var topUUID = uuid("t");
+var topLevelCategory = DPmem(1, topUUID)
 
-(table (pair (list "subordinate" "top")
-             (repeat 10 sample-category)))
+var subordinateUUID = uuid("s");
+var subordinateCategory = DPmem(1, function(parent) {
+  return {sub: subordinateUUID().slice(0, 2),
+          top: parent.slice(0,2)}});
+
+var sampleCategory = function() {return subordinateCategory(topLevelCategory())};
+
+viz.table(repeat(20, sampleCategory))
 ~~~~
 
-Each call to `sample-category` returns a list that consists of a subordinate-level category followed by the corresponding top-level category.
-These categories are represented by gensyms, and, because they are
-drawn from a DP-memoized version of gensym, there is no *a priori*
+Each call to `sampleCategory` returns a list that consists of a subordinate-level category followed by the corresponding top-level category.
+These categories are represented by UUIDs, and, because they are
+drawn from a DP-memoized version of UUID, there is no *a priori*
 limit on the number of possible categories at each level.
 
 The nCRP gives us a way of constructing unbounded sets of
@@ -570,92 +790,195 @@ hierarchically nested categories, but how can we use such structured
 categories to generate data? The code below shows one way:
 
 ~~~~
-(define top-gensym (make-gensym "t"))
-(define possible-observations '(a b c d e f g))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define top-level-category (DPmem 1.0 top-gensym))
-(define top-level-category->parameters
-  (mem (lambda (cat) (dirichlet (make-list (length possible-observations) 1.0)))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define subordinate-gensym (make-gensym "s"))
-(define subordinate-category
-  (DPmem 1.0
-         (lambda (parent-category)
-           (list (subordinate-gensym) parent-category))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define subordinate-category->parameters
-  (mem (lambda (cat) (dirichlet (top-level-category->parameters (second cat)))))) 
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function(key) {
+  return function() {
+    var s4 = function() {
+      return (Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1));
+    }
+    return key + s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+}
+///
+var possibleObservations = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
-(define (sample-category) (subordinate-category (top-level-category)))
+var topUUID = uuid("t");
+var topLevelCategory = DPmem(1, topUUID)
+var topLevelCategoryToParams = mem(function(cat) {
+  return dirichlet(ones([possibleObservations.length, 1]));
+});
 
-(define (sample-observation) (multinomial possible-observations (subordinate-category->parameters (sample-category))))
+var subordinateUUID = uuid("s");
+var subordinateCategory = DPmem(1, function(parent) {
+  return {sub: subordinateUUID().slice(0, 2),
+          top: parent.slice(0,2)}});
 
-(repeat 10 sample-observation)
+var subordinateCategoryToParams = mem(function(cat) {
+  var params = getProbs(dirichlet(topLevelCategoryToParams(cat.top)));
+  return params
+})
+
+var sampleCategory = function() {return subordinateCategory(topLevelCategory())};
+
+var sampleObservation = function() {
+  var cat = sampleCategory()
+  var probs = subordinateCategoryToParams(cat)
+  return categorical({vs: possibleObservations, 
+                      ps: probs})
+}
+
+viz.table(repeat(20, sampleObservation))
 ~~~~
 
-This code shows a model where each category is associated with a multinomial distribution over the following possible observations: `(a b c d e f g)`. This distribution is drawn from a Dirichlet prior for each subordinate-level category. However, the *pseudocounts* for the Dirichlet distribution for each subordinate-level category are drawn from another Dirichlet distribution which is associated with the **top-level** category&mdash;all of the subordinate level categories which share a top-level category also have similar distributions over observations.
+This code shows a model where each category is associated with a multinomial distribution over the following possible observations: `['a', 'b', 'c', 'd', 'e', 'f', 'g']`. This distribution is drawn from a Dirichlet prior for each subordinate-level category. However, the *pseudocounts* for the Dirichlet distribution for each subordinate-level category are drawn from another Dirichlet distribution which is associated with the **top-level** category&mdash;all of the subordinate level categories which share a top-level category also have similar distributions over observations.
 
-In fact, the model presented in [Example: One-shot learning of visual categories](hierarchical-models.html#example-one-shot-learning-of-visual-categories) works in the same way, except that each category is associated with Gaussian distribution and the mean and variance parameters are shared between subordinate level categories.
+In fact, the model presented in [Example: One-shot learning of visual categories]({{site.base}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories) works in the same way, except that each category is associated with Gaussian distribution and the mean and variance parameters are shared between subordinate level categories.
 
 ## The Hierarchical Dirichlet Process
 
-In the last section, we saw an example where subordinate-level categories drew their hyperparameters from a shared Dirichlet distribution. It is also possible to build a similar model using a Dirichlet Process at each level. This model is known as the *Hierarchical Dirichlet Process* (HDP). (Teh, Y. W., Jordan, M. I., Beal, M. J., and Blei, D. M. (2006). Hierarchical dirichlet processes. Journal of the American Statistical Association, 101(476):1566–1581.)
+In the last section, we saw an example where subordinate-level categories drew their hyperparameters from a shared Dirichlet distribution. It is also possible to build a similar model using a Dirichlet Process at each level [@Teh2012]. This model is known as the *Hierarchical Dirichlet Process* (HDP).
 
 ~~~~
-(define base-measure (lambda () (poisson 20)))
-(define top-level  (DPmem 10.0 base-measure))
-(define sample-observation
-  (DPmem 1.0
-         (lambda (component)
-           (top-level))))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(hist (repeat 1000 base-measure) "Draws from Base Measure (poisson 20)")
-(hist (repeat 1000 top-level) "Draws from Top Level DP")
-(hist (repeat 1000 (lambda () (sample-observation 'component1))) "Draws from Component DP 1")
-(hist (repeat 1000 (lambda () (sample-observation 'component2))) "Draws from Component DP 2")
-(hist (repeat 1000 (lambda () (sample-observation 'component3))) "Draws from Component DP 3")
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function(key) {
+  return function() {
+    var s4 = function() {
+      return (Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1));
+    }
+    return key + s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+}
+///
+var baseMeasure = function() {return poisson(20)};
+var topLevel = DPmem(10, baseMeasure)
+var sampleObservation = DPmem(1, function(component) {return topLevel()})
+
+print("Draws from Base Measure (poisson 20)")
+viz(repeat(1000,  baseMeasure))
+print("Draws from Top Level DP")
+viz(repeat(1000, topLevel))
+print("Draws from Component DP 1")
+viz(repeat(1000, function() {return sampleObservation('component1')}));
+print("Draws from Component DP 2")
+viz(repeat(1000, function() {return sampleObservation('component2')}));
+print("Draws from Component DP 2")
+viz(repeat(1000, function() {return sampleObservation('component2')}));
 ~~~~
 
-In an HDP, there are several component Dirichlet Processes (labeled here as `component1`, `component2`, etc.). These component DPs all share another DP (called `top-level`) as their base measure.
+In an HDP, there are several component Dirichlet Processes (labeled here as `component1`, `component2`, etc.). These component DPs all share another DP (called `topLevel`) as their base measure.
 
 In the example above, we have used a `poisson` distribution as the base measure. The top-level DP concentrates this distribution into a number of points. Each of the component DPs then further concentrate this distribution---sharing the points chosen by the top-level DP, but further concentrating it, each in their own way.
 
 A natural move is to combine the nCRP and HDP: the nCRP can be used to sample an unbounded set of hierarchically structured categories, and the HDP can be used to make these categories share observations in interesting ways.
 
+**Note: I'm pretty sure that was an error in the old probmods (they printed "sampleObservation(category)" and labeled it both "Root category" and "top level: ..., subordinate level:..." I just printed the root category for "Root category"...**
+
 ~~~~
-(define top-gensym (make-gensym "t"))
-(define top-level-category (DPmem 1.0 top-gensym))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define root-category (DPmem 10.0 (lambda () (poisson 20))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define sample-from-top-level-category (DPmem 1.0 (lambda (cat) (root-category))))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function(key) {
+  return function() {
+    var s4 = function() {
+      return (Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1));
+    }
+    return key + s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+}
+///
+var topUUID = uuid('t');
+var topLevelCategory = DPmem(1, topUUID)
 
-(define subordinate-gensym (make-gensym "s"))
-(define subordinate-category
-  (DPmem 1.0
-         (lambda (parent-category)
-           (list (subordinate-gensym) parent-category))))
+var rootCategory = DPmem(10.0, function(){return poisson(20)});
+var sampleFromTop = DPmem(1, function(cat) {return rootCategory()});
+var subordinateUUID = uuid('s');
+var subordinateCategory = DPmem(1, function(parent) {
+  return {sub: subordinateUUID().slice(0, 2),
+          top: parent.slice(0,2)}});
 
-(define (sample-category) (subordinate-category (top-level-category)))
+var sampleCategory = function() {subordinateCategory(topLevelCategory())}
 
-(define sample-observation
-  (DPmem 1.0
-         (lambda (cat)
-           (sample-from-top-level-category (rest cat)))))
+var sampleObservation = DPmem(1, function(cat){return sampleFromTop(cat.top)});
 
-(repeat
- 10
- (lambda ()
-   (let* ([category (sample-category)]
-          [subordinate (first category)]
-          [top (second category)]
-          [h1 (hist (repeat 1000 (lambda () (sample-observation category)))
-                    (string-append  "Top Level: " top ", Subordinate Level: " subordinate))]
-          [h2 (hist (repeat 1000 (lambda () (sample-from-top-level-category top)))
-                    (string-append  "Top Level: " top))]
-          [h3 (hist (repeat 1000 (lambda () (sample-observation category)))
-                    "Root Category")])
-     'dummy)))
+print("Root Category");
+viz(repeat(1000, function() {rootCategory()}));
+repeat(10, function() {
+  var category = sampleCategory();
+  var subordinate = category.sub;
+  var top = category.top;
+  print("Top level: " + top + ", Subordinate Level: " + subordinate);
+  viz(repeat(1000, function() {sampleObservation(category)}));
+  print("Top level: " + top);
+  viz(repeat(1000, function() {sampleFromTop(top)}));
+})
 ~~~~
 
 Note that the nCRP and the HDP represent very different ways to
@@ -665,29 +988,19 @@ HDP shares observations between multiple DPs.
 
 ## Example: Prototypes and Exemplars
 
-An important debate in psychology and philosophy has concerned the
-nature of *concepts*. The classical theory of concepts holds that
-they can defined in terms of  necessary and sufficient conditions.
-For example, the concept **dog** might consist of a list of
-features--- such as **furry**, **barks**, etc. If an object in
-the world matches the right  features, then it is a dog.
+An important debate in psychology and philosophy has concerned the nature of *concepts*. 
+The classical theory of concepts holds that they can defined in terms of  necessary and sufficient conditions.
+For example, the concept **dog** might consist of a list of features--- such as **furry**, **barks**, etc. 
+If an object in the world matches the right  features, then it is a dog.
 
-However, it appears that, at least for some concepts, the classical
-theory faces some difficulties. For example, some concepts appear to
-be *family resemblance categories* (FRC). Members of a FRC share
-many features in commone, but the overlap is not total, and there is
-the possibility that two members of the category can share *no*
-feature in common, instead, each sharing features with *other*
-members of the category.
+However, it appears that, at least for some concepts, the classical theory faces some difficulties. 
+For example, some concepts appear to be *family resemblance categories* (FRC). 
+Members of a FRC share many features in commone, but the overlap is not total, and there is the possibility that two members of the category can share *no* feature in common, instead, each sharing features with *other* members of the category.
 
-The philosopher Wittgenstein---who introduced the concept of
-Family Resemblance Categories---famously discussed the example of
-*games*. There are many different kinds of games: ball games,
-drinking games, children's playground games, card games, video games,
-role-playing games, etc. It is not clear that there is a single list
-of features which they all share and which can uniquely identify them
-all as **game** (See: *Murphy, G. L. 2004. The Big Book of Concepts. The MIT Press.*
-For an in-depth discussion of many issues surrounding concepts.).
+The philosopher Wittgenstein---who introduced the concept of Family Resemblance Categories---famously discussed the example of *games*. 
+There are many different kinds of games: ball games, drinking games, children's playground games, card games, video games, role-playing games, etc. 
+It is not clear that there is a single list of features which they all share and which can uniquely identify them all as **game**. 
+See @Murphy2004 for an in-depth discussion of many issues surrounding concepts.
 
 Two theories have emerged to explain FRCs (and other related phenomena): *prototype* theories and *exemplar* theories.
 In prototype theories, concepts are considered to be based on a single stored prototype.
@@ -709,9 +1022,9 @@ $$\eta_{N,i} = \eta_{N,p_i}$$
 Notice that these two models can be seen as opposite ends of a spectrum; one estimates the category based on every member, while the other estimates based on a single member.
 There are clearly many intermediate points where each category can be viewed as a mixture over $$K$$ clusters.
 
-Griffiths et al. (2007) show how a large number of different models of categorization can be unified by viewing them all as special cases of a HDP which learns how many clusters each category should be represented by. (Griffiths, T. L., Canini, K. R., Sanborn, A. N., and Navarro, D. J. (2007). Unifying rational models of categorization via the hierarchical dirichlet process. In Proceedings of the Twenty-Ninth Annual Conference of the Cognitive Science Society.)
+@Griffiths2007 show how a large number of different models of categorization can be unified by viewing them all as special cases of a HDP which learns how many clusters each category should be represented by.
 
-In particular, Griffiths et al. (2007) examine the data from Smith and Minda (1998), which shows how learners undergo a transition from ptototype to exemplar representations during the course of learning. (Smith, J. D. and Minda, J. P. (1998). Prototypes in the mist: The early epochs of category learning. Journal of Experimental Psychology: Learning, Memory, and Cognition)
+In particular, @Griffiths2007 examine the data from @Smith1998, which shows how learners undergo a transition from ptototype to exemplar representations during the course of learning. 
 
 The results are shown below.
 

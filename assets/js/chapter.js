@@ -47,8 +47,8 @@ function setupCodeBoxes(){
 
 $(setupCodeBoxes);
 
-if (typeof ERP !== 'undefined') {
-  ERP.prototype.__print__ = viz.print;
+if (typeof Distribution !== 'undefined') {
+  Distribution.prototype.__print__ = viz.print;
 }
 
 // Footnotes

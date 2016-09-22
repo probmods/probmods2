@@ -1,5 +1,5 @@
 #header {
-    padding: 3.5em 0em 2.5em 0em;
+    padding: 3em 0em 1.5em 0em;
     text-align: center;
     margin: 0em -5em 1em -5em;
     color: white;
@@ -19,12 +19,35 @@
     font-size: 20px;
 }
 
+
+hr.edition {
+    padding: 0;
+    border: none;
+    border-top: medium double #92E1AC;
+    color: white;
+    text-align: center;
+    width: 650px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+hr.edition:after {
+    content: "2nd Edition";
+    display: inline-block;
+    position: relative;
+    top: -0.8em;
+    padding: 0 1em;
+    background: #4ECC77;
+    opacity: 1.0;
+}
+
 .ampersand {
     opacity: 0.4
 }
 
 pre#bibtex {
-   display: none;
+    display: none;
+    font-size: 9px;
+    margin-top: 1em;
 }
 
 ul.nav {
@@ -32,12 +55,12 @@ ul.nav {
 }
 
 #left {
-    width: 48%;
+    width: 49%;
     float: left;
 }
 
 #right {
-    width: 48%;
+    width: 49%;
     float: right;
 }
 
@@ -50,5 +73,10 @@ h3 {
 }
 
 .container {
-    width: 840px;
+    width: 850px;
+    margin-bottom: 3em;
+}
+
+li {
+    padding-bottom: 7px;
 }
