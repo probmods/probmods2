@@ -115,7 +115,6 @@ function plinkoinit() {
     isMouseDown = false;
     mouseX = undefined;
     mouseY = undefined;
-    e.preventDefault();
   }, true);
 
   //falling marble
