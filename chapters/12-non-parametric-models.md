@@ -426,26 +426,47 @@ WebPPL provides a higher-order procedure which implements CRP based stochastic m
 Adapted from @Goldwater2009.
 
 ~~~~
-(define phones '(a e i o u k t p g d b s th f))
-(define phone-weights (dirichlet (make-list (length phones) 1)))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define num-words 10)
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (sample-phone)
-  (multinomial phones phone-weights))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define (sample-phone-sequence)
-  (repeat (poisson 3.0) sample-phone))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+///
 
-(define sample-word
-  (DPmem 1.0
-         (lambda ()
-           (sample-phone-sequence))))
+var phoneVals = ['a', 'e', 'i', 'o', 'u', 
+                 'k', 't', 'p', 'g', 'd', 'b', 's', 'th', 'f'];
+var phoneProbs = getProbs(dirichlet(ones([phoneVals.length, 1])));
+var phones = Categorical({vs: phoneVals, ps: phoneProbs});
+var numWords = 10;
 
-(define (sample-utterance)
-  (repeat num-words sample-word))
+var samplePhoneSequence = function() {
+  return repeat(poisson(3), function() {return sample(phones)});
+};
 
-(sample-utterance)
+samplePhoneSequence()
+var sampleWord = DPmem(1, function() {return samplePhoneSequence()})
+var sampleUtterance = repeat(numWords, sampleWord);
+
+sampleUtterance
 ~~~~
 
 
@@ -454,31 +475,56 @@ Adapted from @Goldwater2009.
 Just as when we considered a mixture model over an unknown number of latent categories, we may wish to have a hidden Markov model over an unknown number of latent symbols. We can do this by again using a reusable source of state symbols:
 
 ~~~~
-(define vocabulary '(chef omelet soup eat work bake))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define (get-state) (DPmem 0.5 gensym))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define state->transition-model
-  (mem (lambda (state) (DPmem 1.0 (get-state)))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define (transition state)
-  (sample (state->transition-model state)))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var vocabulary = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake'];
+var getState = function() {return DPmem(0.5, uuid)};
 
-(define state->observation-model
-  (mem (lambda (state) (dirichlet (make-list (length vocabulary) 1)))))
+var stateToTransitionModel = mem(function(state) {return DPmem(1, getState())});
+var transition = function(state) {return stateToTransitionModel(state)()};
 
-(define (observation state)
-  (multinomial vocabulary (state->observation-model state)))
-
-(define (sample-words last-state)
-  (if (flip 0.2)
-      '()
-      (pair (observation last-state) (sample-words (transition last-state)))))
-
-(sample-words 'start)
+var stateToObservationModel = mem(function(state) {return dirichlet(ones([vocabulary.length, 1]))});
+var observation = function(state) {return categorical({vs: vocabulary, 
+                                                       ps: getProbs(stateToObservationModel(state))})};
+var sampleWords = function(lastState) {
+  return flip(.2) ? [] : [observation(lastState)].concat(sampleWords(transition(lastState)));
+}
+sampleWords('start')
 ~~~~
 
-This model is known as the "infinite hidden Markov model". Notice how the transition model uses a separate DPmemoized function for each latent state: with some probability it will reuse a transition from this state, otherwise it will transition to a new state drawn from the globally shared source or state symbols---a DPmemoized `gensym`.
+This model is known as the "infinite hidden Markov model". Notice how the transition model uses a separate DPmemoized function for each latent state: with some probability it will reuse a transition from this state, otherwise it will transition to a new state drawn from the globally shared source or state symbols---a DPmemoized `uuid`.
 
 
 # Example: The Infinite Relational Model
@@ -502,40 +548,65 @@ $$
 Given some relational data, the IRM learns to cluster objects into classes such that whether or not the relation holds depends on the *pair* of object classes. For instance, we can imagine trying to infer social groups from the relation of who talks to who:
 
 ~~~~
-(define samples
-  (mh-query
-   300 100
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-   (define class-distribution (DPmem 1.0 gensym))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-   (define object->class
-     (mem (lambda (object) (class-distribution))))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var results = Infer({method: "MCMC", samples: 10000}, function() {
+  var classDistribution = DPmem(1, uuid);
+  var objectToClass = mem(function(obj) {return classDistribution()});
+  var classesToParams = mem(function(class1, class2) {
+    return {p: beta(.5, .5)}
+  });
+  var talkScore = function(person1, person2, val) {
+    var params = classesToParams(objectToClass(person1), objectToClass(person2));
+    return Bernoulli({p: params.p}).score(val);
+  }
+  
+  factor(talkScore('tom', 'fred', true) + 
+         talkScore('tom', 'jim', true) + 
+         talkScore('jim', 'fred', true) +
+         talkScore('mary', 'fred', false) + 
+         talkScore('mary', 'jim', false) + 
+         talkScore('sue', 'fred', false) +
+         talkScore('sue', 'tom', false) + 
+         talkScore('ann', 'jim', false) + 
+         talkScore('ann', 'tom', false) +
+         talkScore('mary', 'sue', true) + 
+         talkScore('mary', 'ann', true) + 
+         talkScore('ann', 'sue', true))	
+  
+  return {tomVsFred: objectToClass('tom') == objectToClass('fred'),
+          tomVsMary: objectToClass('tom') == objectToClass('mary')};
+})
 
-   (define classes->parameters
-     (mem (lambda (class1 class2) (beta 0.5 0.5))))
-
-   (define (talks object1 object2)
-     (flip (classes->parameters (object->class object1) (object->class object2))))
-
-   (list (equal? (object->class 'tom) (object->class 'fred))
-         (equal? (object->class 'tom) (object->class 'mary)))
-
-   (and (talks 'tom 'fred)
-        (talks 'tom 'jim)
-        (talks 'jim 'fred)
-        (not (talks 'mary 'fred))
-        (not (talks 'mary 'jim))
-        (not (talks 'sue 'fred))
-        (not (talks 'sue 'tom))
-        (not (talks 'ann 'jim))
-        (not (talks 'ann 'tom))
-        (talks 'mary 'sue)
-        (talks 'mary 'ann)
-        (talks 'ann 'sue)
-        )))
-
-(hist (map first samples) "tom and fred in same group?")
-(hist (map second samples) "tom and mary in same group?")
+viz.marginals(results)
 ~~~~
 
 We see that the model invents two classes (the "boys" and the "girls") such that the boys talk to each other and the girls talk to each other, but girls don't talk to boys. Note that there is much missing data (unobserved potential relations) in this example.
@@ -559,25 +630,52 @@ These features depend on different systems of categories that foods fall into, f
                            "served with coffee" "served with wine" "water added"))
 -->
 
+**TODO: this is a pretty uninformative example without some kind of inference or distributional result to look at**
+
 ~~~~
-(define kind-distribution (DPmem 1.0 (make-gensym "kind")))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define feature->kind
-  (mem (lambda (feature) (kind-distribution))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define kind->class-distribution
-  (mem (lambda (kind) (DPmem 1.0 (make-gensym "class")))))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function(key) {
+  return function() {
+    var s4 = function() {
+      return (Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1));
+    }
+    return key + s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+}
+///
+var kindDistribution = DPmem(1, uuid('kind'))
+var featureToKind = mem(function(feature) {return kindDistribution()});
+var kindToClassDistribution = mem(function(kind) {return DPmem(1, uuid("class"))});
+var featureKindObjectToClass = mem(function(kind, object) {return kindToClassDistribution(kind)()});
+var classToParameters = mem(function(objectClass) {return {p: beta(1,1)}});
+var observe = function(object, feature) {
+  var params = classToParameters(featureKindObjectToClass(featureToKind(feature), object));
+  return flip(params.p)
+}
 
-(define feature-kind/object->class
-  (mem (lambda (kind object) (sample (kind->class-distribution kind)))))
-
-(define class->parameters
-  (mem (lambda (object-class) (beta 1 1))))
-
-(define (observe object feature)
-  (flip (class->parameters (feature-kind/object->class (feature->kind feature) object))))
-
-(observe 'eggs 'breakfast)
+observe('eggs', 'breakfast')
 ~~~~
 
 # Other Non-Parametric Distributions
