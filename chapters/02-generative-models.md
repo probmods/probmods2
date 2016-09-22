@@ -8,6 +8,14 @@ custom_js:
 - assets/js/plinko.js
 ---
 
+<!--
+robert_hawkins [11:49 AM]  
+a couple issues with the chapter:
+1. the heading structure is a bit confusing — the “Building Generative Models” section starts with some info on webppl, has a subsection “example: flipping coins”, and then pops out to the outer level for “example: medical diagnosis”. Maybe we could signpost that better, like create a subsection where we explicitly describe webppl, a subsection about sampling, and indent the medical diagnosis example one level?
+2. the “prediction, simulation, and probabilities” section uses both bayesian and frequentist notions of probability without labeling them or distinguishing them (e.g. “A probability is… a degree of belief”, but “We may define the probability … to be the fraction of times (in the long run) that this value is returned”). It’d be nice to say that these are alternate ways of formalizing probability?
+3. I like the new "constructing marginal distributions with `Infer`" section… Should we rewrite other models in future chapters that use `repeat` to use `forward` instead?
+-->
+
 # Models, simulation, and degrees of belief
 
 One view of knowledge is that the mind maintains working models of parts of the world.
