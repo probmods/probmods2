@@ -213,6 +213,36 @@ If we replace the conditioner with `true`in the code above, that is equivalent t
 
 Bayes' rule simply says that, in special situations where the model decomposes nicely into a part "before" the value to be returned (hypothesis) and a part "after" the value to be returned, then the conditional probability can be expressed simply in terms of the prior and likelihood components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in other terms.
 
+## Othe implementations of `Infer`
+
+Much of the difficulty of implementing the WebPPL language (or probabilistic models in general) is in finding useful ways to do conditional inference---to implement `Infer`.
+We have already seen rejection sampling and enumeration, but the AI literature is replete with other algorithms and techniques for dealing with conditional probabilistic inference.
+Many of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
+Switching from one method to another is as simple as changing the options passed to `Infer`. We have already seen two methods: `{method: 'enumerate'}` and `{method: 'rejection', samples: X}`; other methods include `'MCMC'`, `'SMC'`, and `'variational'`. The [Infer documentation](http://docs.webppl.org/en/master/inference/index.html) provides many more usage details.
+
+**levels of analysis?**
+We will explore the different algorithms used in these implementations in the section on [Algorithms for inference](inference-process.html).
+
+<!--
+One implementation that we will often use is based on the *Metropolis Hastings* (MH) algorithm, a member of the class of Markov chain Monte Carlo (MCMC) methods:
+
+~~~~
+var dist = Infer({method: "MCMC", kernel: 'MH', samples: 50000},
+  function () {
+    var A = flip() ? 1 : 0
+    var B = flip() ? 1 : 0
+    var C = flip() ? 1 : 0
+    var D = A + B + C;
+    condition(D >= 2)
+    return A
+});
+viz.auto(dist)
+~~~~
+
+The workings of MH will be explored in a later chapter, but very roughly: The algorithm implements a random walk or diffusion process (a *Markov chain*) in the space of possible program evaluations that lead to the conditioner being true.  Each MH iteration is one step of this random walk, and the process is specially designed to visit each program evaluation with a long-run frequency proportional to its conditional probability.
+-->
+
+
 # Conditions, observations, and factors
 
 A very common pattern is to conditioned directly on the value of a sample from some distribution. For instance here we try to recover a true number from a noisy observation of it:
@@ -283,40 +313,7 @@ Play with this example. Can you use `factor` to make the sum close to (but not n
 
 The `factor` construct is very general. Both `condition` and `observe` can be written easily in terms of `factor`. However models are often clearer when written with the more specialized forms. In machine learning it is common to talk of *directed* and *undirected* generative models; directed models can be thought of as those made from only `sample` and `observe`, while undirected models include `factor` (and often have only factors).
 
-
-# Implementations of `Infer`
-
-**TODO: link to inference documentation, decide which methods to introduce here (e.g. enumerate, HMC, variational?)**
-
-Much of the difficulty of implementing the WebPPL language (or probabilistic models in general) is in finding useful ways to do conditional inference---to implement `Infer`.
-The WebPPL implementation that we will use in this tutorial has several different methods available for `Infer`, each of which has its own limitations.
-We will explore the different algorithms used in these implementations in the section on [Algorithms for inference](inference-process.html), for now we just need to note a few differences in usage.
-
-As we have seen already, the method of rejection sampling is implemented using the `rejection` method.
-This is a very useful starting point, but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very long time to find evaluations that do so.
-The AI literature is replete with other algorithms and techniques for dealing with conditional probabilistic inference.
-Several of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
-
-One implementation that we will often use is based on the *Metropolis Hastings* (MH) algorithm, a member of the class of Markov chain Monte Carlo (MCMC) methods:
-
-~~~~
-var dist = Infer({method: "MCMC", kernel: 'MH', samples: 50000},
-  function () {
-    var A = flip() ? 1 : 0
-    var B = flip() ? 1 : 0
-    var C = flip() ? 1 : 0
-    var D = A + B + C;
-    condition(D >= 2)
-    return A
-});
-viz.auto(dist)
-~~~~
-
-The workings of MH will be explored in a later chapter, but very roughly: The algorithm implements a random walk or diffusion process (a *Markov chain*) in the space of possible program evaluations that lead to the conditioner being true.  Each MH iteration is one step of this random walk, and the process is specially designed to visit each program evaluation with a long-run frequency proportional to its conditional probability.
-
-**TODO: talk about levels of analysis, and why we are ignoring the algorithms as much as possible to start with?**
-
-# Example: Reasoning about the Tug of War
+# Example: Reasoning about Tug of War
 
 Returning to the earlier example of a series of tug-of-war matches, we can use `Infer` to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
