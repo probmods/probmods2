@@ -186,7 +186,7 @@ var data = repeat(1000, function() { sum(map(function (x) { x ? 1 : 0 },
 viz(data, {xLabel: '# heads'})
 ~~~~
 
-# Example: Causal Models in Medical Diagnosis
+## Example: Causal Models in Medical Diagnosis
 
 Generative knowledge is often *causal* knowledge that describes how events or states of the world are related to each other.
 As an example of how causal knowledge can be encoded in WebPPL expressions, consider a simplified medical scenario:

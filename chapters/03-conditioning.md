@@ -42,6 +42,7 @@ Infer(options,
 Consider the following simple generative model:
 
 ~~~~
+var options = {method: 'forward', samples: 1000}
 var model = function() {
   var A = flip()
   var B = flip()
@@ -49,23 +50,24 @@ var model = function() {
   var D = A + B + C
   return D
 }
-model()
+var dist = Infer(options, model)
+viz(dist)
 ~~~~
 
-This process samples three numbers and adds the results (recall JavaScript converts booleans to $$0$$ or $$1$$ when they enter arithmetic). The value of the final expression here is 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following WebPPL inference, where we use `condition` to express the desired assumption:
+This process described in `model` samples three numbers and adds the results (recall JavaScript converts booleans to $$0$$ or $$1$$ when they enter arithmetic). The value of the final expression here is 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following WebPPL inference, where we use `condition` to express the desired assumption:
 
 ~~~~
 var options = {method: 'enumerate'}
 var model = function () {
-  var A = flip() ? 1 : 0
-  var B = flip() ? 1 : 0
-  var C = flip() ? 1 : 0
+  var A = flip()
+  var B = flip()
+  var C = flip()
   var D = A + B + C
   condition(D == 3)
   return A
 };
 var dist = Infer(options, model)
-viz.auto(dist)
+viz(dist)
 ~~~~
 
 The output of `Infer` describes appropriate beliefs about the likely value of `A`, conditioned on `D` being equal to 3. Because `A` must necessarily equal `1`, the histogram shows 100% of the sampled values are `1`.
@@ -75,38 +77,55 @@ Now suppose that we condition on `D` being greater than or equal to 2.  Then `A`
 ~~~~
 var options = {method: 'enumerate'}
 var model = function () {
-  var A = flip() ? 1 : 0
-  var B = flip() ? 1 : 0
-  var C = flip() ? 1 : 0
+  var A = flip()
+  var B = flip()
+  var C = flip()
   var D = A + B + C
+  //add the desired assumption:
   condition(D >= 2)
   return A
 };
 var dist = Infer(options, model)
-viz.auto(dist)
+viz(dist)
 ~~~~
 
 Predicting the outcome of a generative process is simply a special case of inference, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`; try removing this line altogether.
 
-Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical operation of *conditioning* a distribution.
+Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation in the presence of `condition` can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical formulation of a *conditional distribution*.
 
 ## Rejection Sampling
 
-How can we imagine answering a hypothetical such as those above? We have already seen how to get a sample from a generative model, without constraint, by simply running the evaluation process "forward"  (i.e. simulating the process). We can get conditional samples by forward sampling the entire model, but only keeping the sample if the value returned by the conditioner expression is *true*. For instance, to sample from the above model "A given that D is greater than 2" we could:
+How can we imagine answering a hypothetical such as those above? We have already seen how to get a sample from a generative model, without constraint, by simply running the evaluation process "forward"  (i.e. simulating the process). We can get conditional samples by forward sampling the entire model, but only keeping the sample if the value passed to `condition` is *true*. For instance, to sample from the above model "A given that D is greater than 2" we could:
 
 ~~~~
 var takeSample = function () {
-    var A = flip() ? 1 : 0
-    var B = flip() ? 1 : 0
-    var C = flip() ? 1 : 0
+    var A = flip()
+    var B = flip()
+    var C = flip()
     var D = A + B + C
     return D >= 2 ? A : takeSample()
 }
-viz.auto(repeat(100, takeSample))
+viz(repeat(100, takeSample))
 ~~~~
 
-Notice that we have used a stochastic recursion to sample the definitions repeatedly until `D >= 2` is `true`, and we then return `A`: we generate and test until the condition is satisfied.
-This process is known as *rejection sampling*; we can use this technique to make a more general function that implements `Infer`---called `Rejection`, schematically defined as:
+Notice that we have used a stochastic recursion to sample the model repeatedly until `D >= 2` is `true`, and we then return `A`: we generate and test until the condition is satisfied.
+This process is known as *rejection sampling*; we can use this technique to make a more general function that implements `Infer`, which we access in WebPPL with the `'rejection'` method:
+
+~~~~
+var model = function () {
+    var A = flip()
+    var B = flip()
+    var C = flip()
+    var D = A + B + C
+    condition(D >= 2)
+    return A
+}
+var dist = Infer({method: 'rejection', samples: 100}, model)
+viz(dist)
+~~~~
+
+<!--
+, schematically defined as:
 
 **TODO: cut? rewrite in js?**
 
@@ -121,6 +140,7 @@ This process is known as *rejection sampling*; we can use this technique to make
 ~~~~
 
 While many implementations of `Infer` are possible, and others are discussed later, we can take the `rejection` process to *define* the distribution of values returned by a `Infer` expression.
+-->
 
 ## Conditional Distributions
 
@@ -131,16 +151,32 @@ $$ P(A=a \mid B=b)=\frac{ P(A=a,B=b)}{P(B=b)} $$
 Here $$P(A=a \mid B=b)$$ is the probability that "event" $$A$$ has value $$a$$ given that $$B$$ has value $$b$$. (The meaning of events $$A$$ and $$B$$ must be given elsewhere in this notation, unlike a WebPPL program, which contains the full model specification within the `Infer` call.)
 The *joint probability*, $$P(A=a,B=b)$$,  is the probability that $$A$$ has value $$a$$ and $$B$$ has value $$b$$.
 So the conditional probability is simply the ratio of the joint probability to the probability of the condition.
-In the case of a WebPPL `Infer` statement, $$A=a$$ will be the "event" returned with value $$a$$, while $$B=b$$ will be the condition statement returning true (so $$b$$ will be *True*).
 
-The above definition of conditional distribution in terms of rejection sampling is equivalent to this mathematical definition, when both are well-defined. (There are special cases when only one definition makes sense. For instance, when continuous random choices are used it is possible to find situations where rejection sampling almost never returns a sample but the conditional distribution is still well defined. Why?)
+In the case of a WebPPL `Infer` statement with a `condition`, $$A=a$$ will be the "event" that the return value is $$a$$, while $$B=b$$ will be the event that the value passed to condition is `true` (so $$b$$ will be *True*). Because each of these is a regular (unconditional) probability, they and their ratio can often be computed exactly using the rules of probability. In WebPPL the inference method `'enumerate'` attempts to do this calculation (by first enumerating all the possible executions of the model):
+
+~~~~
+var model = function () {
+    var A = flip()
+    var B = flip()
+    var C = flip()
+    var D = A + B + C
+    condition(D >= 2)
+    return A
+}
+var dist = Infer({method: 'enumerate'}, model)
+viz(dist)
+~~~~
+
+### Connection to rejection sampling
+
+The above notion of conditional distribution in terms of rejection sampling is equivalent to this mathematical definition, when both are well-defined. (There are special cases when only one definition makes sense. For instance, when continuous random choices are used it is possible to find situations where rejection sampling almost never returns a sample but the conditional distribution is still well defined. Why?)
+
 Indeed, we can use the process of rejection sampling to understand this alternative definition of the conditional probability $$P(A=a \mid B=b)$$. We imagine sampling many times, but only keeping those samples in which the condition is true. The frequency of the query expression returning a particular value $$a$$ (i.e. $$A=a$$) *given* that the condition is true, will be the number of times that $$A=a$$ **and** $$B=True$$ divided by the number of times that $$B=True$$. Since the frequency of the conditioner returning true will be $$P(B=True)$$ in the long run, and the frequency that the condition returns true *and* the query expression returns a given value $$a$$ will be $$P(A=a, B=True)$$, we get the above formula for the conditional probability.
 <!-- FIXME: clarify this last argument? -->
 
 Try using the above formula for conditional probability to compute the probability of the different return values in the above examples. Check that you get the same probability that you observe when using rejection sampling.
 
-
-## Bayes Rule
+### Bayes Rule
 
 One of the most famous rules of probability is *Bayes' rule*, which states:
 
@@ -150,32 +186,60 @@ It is first worth noting that this follows immediately from the definition of co
 
 $$P(h \mid d) = \frac{P(d,h)}{P(d)} = \frac{ P(d, h)P(h) }{ P(d)P(h)} = \frac{P(d \mid h)P(h)}{P(d)}$$
 
-Next we can ask what this rule means in terms of sampling processes. Consider the Church program:
+Next we can ask what this rule means in terms of sampling processes. Consider the program:
 
 ~~~~
 var observedData = true;
 var prior = function () { flip() }
-var observe = function (h) { h ? flip(0.9) : flip(0.1) }
-var posterior = Infer({method: "rejection", samples: 10},
+var likelihood = function (h) { h ? flip(0.9) : flip(0.1) }
+
+var posterior = Infer({method: "enumerate"},
   function () {
     var hypothesis = prior()
-    var data = observe(hypothesis)
+    var data = likelihood(hypothesis)
     condition(data == observedData)
-    return hypothesis
+    return {hypothesis: hypothesis}
 })
-viz.auto(posterior)
+
+viz(posterior)
 ~~~~
 
-We have generated a value, the *hypothesis*, from some distribution called the *prior*, then used an observation function which generates data given this hypothesis, the probability of such an observation function is called the *likelihood*. Finally we have returned the hypothesis, conditioned on the observation being equal to some observed data---this conditional distribution is called the *posterior*. This is a typical setup in which Bayes' rule is used. Notice that in this case the conditional distribution $$P(\text{data} \mid \text{hypothesis})$$ is just the probability distribution on return values from the `observe` function given an input value.
+We have generated a value, the *hypothesis*, from some distribution called the *prior*, then used an observation function `likelihood` which generates data given this hypothesis, the probability of such an observation function is usually called the *likelihood*. Finally we have returned the hypothesis, conditioned on the observation being equal to some observed data---this conditional distribution is called the *posterior*. This is a typical setup in which Bayes' rule is used.
+<!--Notice that in this case the conditional distribution $$P(\text{data} \mid \text{hypothesis})$$ is just the probability distribution on return values from the `likelihood` function given an input value.-->
 
 <!--
 If we replace the conditioner with `true`in the code above, that is equivalent to observing no data.  Then query draws samples from the prior distribution, rather than the posterior.
 -->
 
-Bayes rule simply says that, in special situations where the model decomposes nicely into a part "before" the `condition` statement and a part "after" the `condition` statement, then the conditional probability can be expressed in terms of these components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in terms of sampling.
+Bayes rule simply says that, in special situations where the model decomposes nicely into a part "before" the value to be returned (hypothesis) and a part "after" the value to be returned, then the conditional probability can be expressed simply in terms of the prior and likelihood components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in other terms.
+
+# Generalizing `condition`: `observe`, `factor`, etc
+
+**TODO: observe, factor, condition**
+
+# Reasoning with Arbitrary Propositions
+
+It is natural to condition a generative model on a value for one of the variables declared in this model. However, one may also wish to ask for more complex hypotheticals: "what if P," where P is a complex proposition composed out of variables declared in the model.
+Consider the following WebPPL inference:
+
+~~~~
+var dist = Infer({method: "MCMC", kernel: "MH", samples: 50000},
+  function () {
+    var A = flip() ? 1 : 0
+    var B = flip() ? 1 : 0
+    var C = flip() ? 1 : 0
+    condition(A + B + C >= 2)
+    return A
+});
+viz.auto(dist)
+~~~~
+
+This inference has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above inference in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
+
+Writing models in WebPPL allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `Infer` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
 
 
-## Implementations of `Infer`
+# Implementations of `Infer`
 
 **TODO: link to inference documentation, decide which methods to introduce here (e.g. enumerate, HMC, variational?)**
 
@@ -207,29 +271,7 @@ The workings of MH will be explored in a later chapter, but very roughly: The al
 
 **TODO: talk about levels of analysis, and why we are ignoring the algorithms as much as possible to start with?**
 
-
-# Reasoning with Arbitrary Propositions
-
-It is natural to condition a generative model on a value for one of the variables declared in this model. However, one may also wish to ask for more complex hypotheticals: "what if P," where P is a complex proposition composed out of variables declared in the model.
-Consider the following WebPPL inference:
-
-~~~~
-var dist = Infer({method: "MCMC", kernel: "MH", samples: 50000},
-  function () {
-    var A = flip() ? 1 : 0
-    var B = flip() ? 1 : 0
-    var C = flip() ? 1 : 0
-    condition(A + B + C >= 2)
-    return A
-});
-viz.auto(dist)
-~~~~
-
-This inference has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above inference in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
-
-Writing models in WebPPL allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `Infer` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
-
-## Example: Reasoning about the Tug of War
+# Example: Reasoning about the Tug of War
 
 Returning to the earlier example of a series of tug-of-war matches, we can use `Infer` to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been in a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
 
