@@ -106,12 +106,9 @@ blockquote em {
     font-family: Inconsolata, monospace;
 }
 
-/* norun */
-.container pre > code {
-    border: none;
-}
 
-.container code {
+/* inline code */
+code.highlighter-rouge {
     color: black;
     border: 1px solid #ddd;
 }
@@ -123,11 +120,20 @@ pre.highlight, .container .wpedit .CodeMirror {
     background: none;
     font-size: 14px;
     line-height: 20px;
-    margin-bottom: 0.5em;
+}
+
+pre.highlight code {
+    color: #aaa;
+}
+
+pre.highlight {
+    margin-bottom: 4.5em;
+    padding: 4px;
 }
 
 .container .wpedit .CodeMirror {
-    padding: 0.5em
+    padding: 0;
+    margin-bottom: 0.5em;
 }
 
 .container .wpedit button {
