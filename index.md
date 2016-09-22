@@ -45,7 +45,7 @@ N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</
 
 <h3>Acknowledgments</h3>
 
-<p>We are grateful to the following people, who contributed content or technical expertise: Timothy J. O’Donnell, Andreas Stuhlmuller, Tomer Ullman, John McCoy, Long Ouyang, Julius Cheng.</p>
+<p>We are grateful to the following people, who contributed content or technical expertise: Timothy J. O’Donnell, Andreas Stuhlmuller, Tomer Ullman, John McCoy, Long Ouyang, Julius Cheng, and Robert Hawkins.</p>
 
 <p>The construction and ongoing support of this tutorial are made possible by grants from the Office of Naval Research, the James S. McDonnell Foundation, the Stanford VPOL, and the Center for Brains, Minds, and Machines (funded by NSF STC award CCF-1231216).</p>
 </div>
