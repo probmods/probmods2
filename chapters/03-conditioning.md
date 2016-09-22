@@ -323,49 +323,51 @@ This WebPPL program runs a tournament between several teams, mixing up players a
 Can you guess who is strong or weak, looking at the tournament results?
 
 ~~~~
-var strength = mem(function (person) { gaussian(0, 1) });
-var lazy = function (person) { flip(0.25) }
-var pulling = function (person) { lazy(person) ? strength(person)/2 : strength(person);}
-var totalPulling = function (team) { sum(map(pulling, team)) }
+var strength = mem(function (person) {return gaussian(0, 1)})
+var lazy = function(person) {return flip(1/3) }
+var pulling = function(person) {
+  return lazy(person) ? strength(person) / 2 : strength(person) }
+var totalPulling = function (team) {return sum(map(pulling, team))}
 var winner = function (team1, team2) {
-    totalPulling(team1) < totalPulling(team2) ? team2 : team1
-    };
-[
+  totalPulling(team1) > totalPulling(team2) ? team1 : team2 }
+
+print([
     winner(['alice', 'bob'], ['sue', 'tom']),
     winner(['alice', 'bob'], ['sue', 'tom']),
     winner(['alice', 'sue'], ['bob', 'tom']),
     winner(['alice', 'sue'], ['bob', 'tom']),
     winner(['alice', 'tom'], ['bob', 'sue']),
     winner(['alice', 'tom'], ['bob', 'sue'])
-];
+])
 ~~~~
 
 Notice that `strength` is memoized because this is a property of a person true across many matches, while `lazy` isn't.
 Each time you run this program, however, a new "random world" will be created: people's strengths will be randomly re-generated, then used in all the matches.
 
-We can use `Infer` to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been on a series of winning teams? (Note that we have written the `winner` function slightly differently here, to return the labels `'team1` or `'team2` rather than the list of team members.  This makes for more compact conditioning statements.)
+We can use `Infer` to ask a variety of different questions. For instance, how likely is it that Bob is strong, given that he's been on a series of winning teams? (Note that we have added the helper function `beat` as in "team1 beat team2"; this just makes for more compact conditioning statements.)
 
 ~~~~
+var model = function() {
+  var strength = mem(function (person) {return gaussian(0, 1)})
+  var lazy = function(person) {return flip(1/3) }
+  var pulling = function(person) {
+    return lazy(person) ? strength(person) / 2 : strength(person) }
+  var totalPulling = function (team) {return sum(map(pulling, team))}
+  var winner = function (team1, team2) {
+    totalPulling(team1) > totalPulling(team2) ? team1 : team2 }
+  var beat = function(team1,team2){winner(team1,team2) == team1}
+
+  condition(beat(['bob', 'mary'], ['tom', 'sue']))
+  condition(beat(['bob', 'sue'],  ['tom', 'jim']))
+
+  return strength('bob')
+}
+
 var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 25000},
-  function () {
-    var strength = mem(function (person) { gaussian(0, 1)})
-    var lazy = function (person) { flip(1/3) }
-    var totalPulling = function (team) {
-      sum(map(function (person) {
-        lazy(person) ? strength(person) / 2 : strength(person)
-      }, team))
-    }
-    var winner = function (team1, team2) {
-      totalPulling(team1) > totalPulling(team2) ? 'team1' : 'team2'
-    }
+                 model)
 
-    condition(winner(['bob', 'mary'], ['tom', 'sue']) == 'team1' &&
-              winner(['bob', 'sue'], ['tom', 'jim']) == 'team1')
-
-    return strength('bob')
-})
 print('Expected strength: ' + expectation(dist))
-viz.auto(dist)
+viz(dist)
 ~~~~
 
 Try varying the number of different teams and teammates that Bob plays with. How does this change the estimate of Bob's strength?
@@ -373,29 +375,28 @@ Do these changes agree with your intuitions? Can you modify this example to make
 
 A model very similar to this was used in @Gerstenberg2012 to predict human judgements about the strength of players in ping-pong tournaments. It achieved very accurate quantitative predictions without many free parameters.
 
-We can form many complex queries from this simple model. We could ask how likely a team of Bob and Mary is to win over a team of Jim and Sue, given that Mary is at least as strong as sue, and Bob was on a team that won against Jim previously:
+We can form many complex queries from this simple model. We could ask how likely a team of Bob and Mary is to beat a team of Jim and Sue, given that Mary is at least as strong as sue, and Bob beat Jim in a previous direct match up:
 
 ~~~~
-var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 10000},
-  function () {
-    var strength = mem(function (person) { gaussian(0, 1)})
-    var lazy = function (person) { flip(1/3) }
-    var totalPulling = function (team) {
-      sum(map(function (person) {
-        lazy(person) ? strength(person) / 2 : strength(person)
-      }, team))
-    }
-    var winner = function (team1, team2) {
-      totalPulling(team1) > totalPulling(team2) ? 'team1' : 'team2'
-    }
+var model = function() {
+  var strength = mem(function (person) {return gaussian(0, 1)})
+  var lazy = function(person) {return flip(1/3) }
+  var pulling = function(person) {
+    return lazy(person) ? strength(person) / 2 : strength(person) }
+  var totalPulling = function (team) {return sum(map(pulling, team))}
+  var winner = function (team1, team2) {
+    totalPulling(team1) > totalPulling(team2) ? team1 : team2 }
+  var beat = function(team1,team2){winner(team1,team2) == team1}
 
-    condition(strength('mary') >= strength('sue') &&
-              winner(['bob','francis'], ['tom','jim']) == 'team1')
+  condition(strength('mary') >= strength('sue'))
+  condition(beat(['bob'], ['jim']))
 
-    return winner(['bob','mary'], ['jim','sue']) == 'team1'
-})
-print('Expected strength: ' + expectation(dist))
-viz.auto(dist)
+  return beat(['bob','mary'], ['jim','sue'])
+}
+
+var dist = Infer({method: 'MCMC', kernel: 'MH', samples: 25000},
+                 model)
+viz(dist)
 ~~~~
 
 # Example: Inverse intuitive physics
