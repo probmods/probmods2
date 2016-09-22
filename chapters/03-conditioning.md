@@ -211,32 +211,77 @@ We have generated a value, the *hypothesis*, from some distribution called the *
 If we replace the conditioner with `true`in the code above, that is equivalent to observing no data.  Then query draws samples from the prior distribution, rather than the posterior.
 -->
 
-Bayes rule simply says that, in special situations where the model decomposes nicely into a part "before" the value to be returned (hypothesis) and a part "after" the value to be returned, then the conditional probability can be expressed simply in terms of the prior and likelihood components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in other terms.
+Bayes' rule simply says that, in special situations where the model decomposes nicely into a part "before" the value to be returned (hypothesis) and a part "after" the value to be returned, then the conditional probability can be expressed simply in terms of the prior and likelihood components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in other terms.
 
-# Generalizing `condition`: `observe`, `factor`, etc
+# Conditions, observations, and factors
 
-**TODO: observe, factor, condition**
+A very common pattern is to conditioned directly on the value of a sample from some distribution. For instance here we try to recover a true number from a noisy observation of it:
 
-# Reasoning with Arbitrary Propositions
+~~~
+var model = function(){
+  var trueX = sample(Gaussian({mu: 0, sigma: 1}))
+  var obsX = sample(Gaussian({mu: trueX, sigma: 0.1}))
+  condition(obsX == 0.2)
+  return trueX
+}
+viz(Infer({method: 'rejection'}, model))
+~~~
 
-It is natural to condition a generative model on a value for one of the variables declared in this model. However, one may also wish to ask for more complex hypotheticals: "what if P," where P is a complex proposition composed out of variables declared in the model.
+In WebPPL we have a special operator, `observe`, to express this pattern. In addition to being clearer, it also gives the implementation some hints about how to do inference.
+
+~~~
+var model = function(){
+  var trueX = sample(Gaussian({mu: 0, sigma: 1}))
+  observe(Gaussian({mu: trueX, sigma: 0.1}), obsX)
+  return trueX
+}
+viz(Infer({method: 'rejection'}, model))
+~~~
+
+
+It is natural and common to condition a generative model on a value for one of the variables declared in this model (i.e. to `observe` its value). However, there are many situations in which we desire the greater expressivity of `condition`; one may wish to ask for more complex hypotheticals: "what if P," where P is a complex proposition composed out of variables declared in the model.
 Consider the following WebPPL inference:
 
 ~~~~
-var dist = Infer({method: "MCMC", kernel: "MH", samples: 50000},
+var dist = Infer({method: 'enumerate'},
   function () {
-    var A = flip() ? 1 : 0
-    var B = flip() ? 1 : 0
-    var C = flip() ? 1 : 0
+    var A = flip()
+    var B = flip()
+    var C = flip()
     condition(A + B + C >= 2)
     return A
 });
-viz.auto(dist)
+viz(dist)
 ~~~~
 
-This inference has the same meaning as the example above, but the formulation is importantly different. We have defined a generative model that samples 3 instances of `0`/`1` digits, then we have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new random variable, `(>= (+ A B C) 2)`. This latter random variable *did not appear* anywhere in the generative model (the definitions). In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above inference in this way, we could add the complex variable to the generative model, then condition on it. However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
+This inference has the same meaning as the earlier example, but the formulation is importantly different. We have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new value or "random variable", `A + B + C >= 2` that *did not appear* anywhere in the generative model (the var definitions).
+We could have instead added a definition `var D = (A + B + C >= 2)` to the generative model and conditioned (or observed) its value.
+<!--
+In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above inference in this way, we could add the complex variable to the generative model, then condition on it.
+-->
+However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
+Using `condition` allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `Infer` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
 
-Writing models in WebPPL allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `Infer` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
+In WebPPL, `condition` is actually a special case of a more general operator: `factor`. The `factor` operator takes a real number, and it adjusts the probability of the execution by multiplying the probability by the exponent of this number.
+If `condition` is like making an assumption that must be true, then `factor` is like making a *soft* assumption that is merely preferred to be true.
+
+For instance, we can encourage the sum `A+B+C` to be bigger in the above example:
+
+~~~~
+var dist = Infer({method: 'enumerate'},
+  function () {
+    var A = flip()
+    var B = flip()
+    var C = flip()
+    factor(A + B + C)
+    return A
+});
+viz(dist)
+~~~~
+
+Play with this example. Can you use `factor` to make the sum close to (but not necessarily equal to) 2?
+
+The `factor` construct is very general. Both `condition` and `observe` can be written easily in terms of `factor`. However models are often clearer when written with the more specialized forms. In machine learning it is common to talk of *directed* and *undirected* generative models; directed models can be thought of as those made from only `sample` and `observe`, while undirected models include `factor` (and often have only factors).
 
 
 # Implementations of `Infer`
