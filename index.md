@@ -13,13 +13,14 @@ custom_css:
   <span class="authors">by Noah D. Goodman <span class='ampersand'>&amp;</span> Joshua B. Tenenbaum</span>
 </div>
 
+<br />
 This book explores the probabilistic approach to cognitive science, which models learning and reasoning as inference in complex probabilistic models.
 We examine how a broad range of empirical phenomena, including intuitive physics, concept learning, causal reasoning, social cognition, and language understanding, can be modeled using a functional probabilistic programming language called WebPPL.
 
 <div id='left'>
 
 <h3>Citation</h3>
-N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</i> (2nd ed.). Retrieved <span class="date">YYYY-MM-DD</span> from <code>http://probmods.org/v2</code>. <a id="toggle-bibtex" href="#">[bibtex]</a>
+N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</i> (2nd ed.). Retrieved <span class="date">YYYY-MM-DD</span> from <code>http://probmods.org/v2</code><br /><a id="toggle-bibtex" href="#">[bibtex]</a>
 
 <pre id="bibtex">
 @misc{probmods2,
