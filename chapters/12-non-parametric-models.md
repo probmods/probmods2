@@ -202,69 +202,158 @@ When we use the DP to construct `DPmem` the memoized function will therefore ten
 We now return to the problem of categorization with an unknown number of categories. We can use the Dirichlet process to construct a distribution over an infinite set of (potential) bags:
 
 ~~~~
-(define colors '(blue green red))
+///fold:
+var getProbs = function(vector) {
+  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
+}
 
-(define samples
- (mh-query
-   200 100
+var observeBag = function(bag, values) {
+  return sum(map(function(v) {return bag.score(v)}, values));
+}
 
-   (define phi (dirichlet '(1 1 1)))
-   (define alpha 0.1)
-   (define prototype (map (lambda (w) (* alpha w)) phi))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-   (define bag->prototype (mem (lambda (bag) (dirichlet prototype))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-   ;;the prior distribution on bags is simply a DPmem of a gensym function:
-   (define get-bag (DPmem 1.0 gensym))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var colors = ['blue', 'green', 'red'];
 
-   ;;each observation comes from one of the bags:
-   (define obs->bag (mem (lambda (obs-name) (get-bag))))
+var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
+  var phi = dirichlet(ones([3, 1]))
+  var alpha = 0.1
+  var prototype = T.mul(phi, alpha)
+  
+  var makeBag = mem(function(bag){
+    return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
+  })
+  
+  // the prior distribution on bags is simply a DPmem of a gensym function:
+  var getBag = DPmem(1, uuid);
 
-   (define draw-marble
-     (mem (lambda (obs-name)
-            (multinomial colors (bag->prototype (obs->bag obs-name))))))
+  // each observation comes from one of the bags:
+  var obsToBag = mem(function(obsName) {return getBag()});
+  
+  factor(observeBag(makeBag(obsToBag('obs1')), ['red']) +
+         observeBag(makeBag(obsToBag('obs2')), ['red']) +
+         observeBag(makeBag(obsToBag('obs3')), ['blue']) +
+         observeBag(makeBag(obsToBag('obs4')), ['blue']) +
+         observeBag(makeBag(obsToBag('obs5')), ['red']) +
+         observeBag(makeBag(obsToBag('obs6')), ['blue']))
 
-   ;;did obs1 and obs2 come from the same bag? obs1 and obs3?
-   (list (equal? (obs->bag 'obs1) (obs->bag 'obs2))
-         (equal? (obs->bag 'obs1) (obs->bag 'obs3)))
+  return {sameBag12: obsToBag('obs1') == obsToBag('obs2'),
+          sameBag13: obsToBag('obs1') == obsToBag('obs3')}
+});
 
-   (and
-    (equal? 'red (draw-marble 'obs1))
-    (equal? 'red (draw-marble 'obs2))
-    (equal? 'blue (draw-marble 'obs3))
-    (equal? 'blue (draw-marble 'obs4))
-    (equal? 'red (draw-marble 'obs5))
-    (equal? 'blue (draw-marble 'obs6))
-    )))
-
-(hist (map first samples) "obs1 and obs2 same category?")
-(hist (map second samples) "obs1 and obs3 same category?")
+viz.marginals(predictives);
 ~~~~
-A model like this is called an *infinite mixture model*; in this case an infinite Dirichlet-multinomial mixture model, since the observations (the colors) come from a multinomial distribution with Dirichlet prior. The essential addition in this model is that we have `DPmem`'d a `gensym` function to provide a collection of reusable category (bag) labels:
+A model like this is called an *infinite mixture model*; in this case an infinite Dirichlet-multinomial mixture model, since the observations (the colors) come from a multinomial distribution with Dirichlet prior. The essential addition in this model is that we have `DPmem`'d a `uuid` (Universally Unique IDentifier) function to provide a collection of reusable category (bag) labels:
 
 ~~~~
-(define reusable-categories (DPmem 1.0 gensym))
-(hist (repeat 20 reusable-categories))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
+
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var reusableCategories = DPmem(1, uuid)
+viz(repeat(20, reusableCategories));
 ~~~~
 
-To generate our observation in this infinite mixture model we first sample a category label from the memoized `gensym`.  Since the Dirichlet process tends to reuse earlier choices (more than later ones), our data will tend to cluster together in earlier components. However, there is no a priori bound on the number of latent classes, rather there is just a bias towards fewer classes.
+To generate our observation in this infinite mixture model we first sample a category label from the memoized `uuid`.  Since the Dirichlet process tends to reuse earlier choices (more than later ones), our data will tend to cluster together in earlier components. However, there is no a priori bound on the number of latent classes, rather there is just a bias towards fewer classes.
 The strength of this bias is controlled by the DP concentration parameter $$\alpha$$. When $$\alpha$$ is high, we will tolerate a larger number of classes, when it is low we will strongly favor fewer classes. In general, the number of classes grows proportional to $$\alpha \log(N)$$ where $$N$$ is the number of observations.
 
 We can use this basic template to create infinite mixture models with any type of observation distribution. For instance here is an infinite Gaussian mixture model:
 
 ~~~~
-(define class-distribution (DPmem 1.0 gensym))
+///fold:
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define object->class
-  (mem (lambda (object) (class-distribution))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
 
-(define class->gaussian-parameters
-  (mem (lambda (klass) (list  (gaussian 65 10) (gaussian 0 8)))))
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
+var uuid = function() {
+  var s4 = function() {
+    return (Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1));
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+///
+var classDistribution = DPmem(1, uuid);
+var objectToClass = mem(function(obj) {return classDistribution()});
+var classToGaussianParams = mem(function(classID) {
+  return {mu: gaussian(65, 10), sigma: gaussian(0, 8)}
+});
+var observe = function(obj) {
+  var params = classToGaussianParams(objectToClass(obj));
+  return gaussian({mu: params.mu, sigma: params.sigma});
+}
 
-(define (observe object)
-  (apply gaussian (class->gaussian-parameters (object->class object))))
-
-(map observe '(tom dick harry bill fred))
+map(observe, ['tom', 'dick', 'harry', 'bill', 'fred']);
 ~~~~
 
 There are, of course, many possible observation models that can be used in the infinite mixture. One advantage of using abstract objects to represent our data is that we can associate different observation models with different aspects of the data. For instance, we could have a model which both models height and propensity to smoke for the same set of individuals, based on their sex.
@@ -292,7 +381,7 @@ Each table has a *dish* associated with it. Each dish $$v$$ is a label on the ta
 
 The following animation demonstrates the Chinese restaurant process (click on it).
 
-<center><embed width="512" height="384" src="CRP.swf" style='border: 1px solid black'></center>
+<center><embed width="512" height="384" src="{{site.base}}/assets/img/CRP.swf" style='border: 1px solid black'></center>
 
 The CRP can be used to define a stochastic memoizer just as the Dirichlet process. We let the dish at each table be drawn from the underlying procedure. When we seat a customer we emit the dish labeling the table where the customer sat. To use a CRP as a memoization distribution we associate our underlying procedure with a set of restaurants---one for each combination of a procedure with its arguments. We let customers represent particular instances in which a procedure is evaluated, and we let the dishes labeling each table represent the values that result from those procedure applications. The base distribution which generates dishes corresponds to the underlying procedure which we have memoized.
 
