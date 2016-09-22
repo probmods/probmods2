@@ -255,20 +255,20 @@ var model = function(){
   condition(obsX == 0.2)
   return trueX
 }
-viz(Infer({method: 'rejection'}, model))
+viz(Infer({method: 'rejection', samples:1000}, model))
 ~~~
 
-In WebPPL we have a special operator, `observe`, to express this pattern. In addition to being clearer, it also gives the implementation some hints about how to do inference.
+You will note that this never finishes. (Why? Think about what rejection sampling tries to do here....)
+In WebPPL we have a special operator, `observe`, to express the pattern of conditioning on a value sampled directly from a distribution. In addition to being clearer, it also gives the implementation some hints about how to do inference.
 
 ~~~
 var model = function(){
   var trueX = sample(Gaussian({mu: 0, sigma: 1}))
-  observe(Gaussian({mu: trueX, sigma: 0.1}), obsX)
+  observe(Gaussian({mu: trueX, sigma: 0.1}), 0.2)
   return trueX
 }
-viz(Infer({method: 'rejection'}, model))
+viz(Infer({method: 'rejection', samples:1000, maxScore: 2}, model))
 ~~~
-
 
 It is natural and common to condition a generative model on a value for one of the variables declared in this model (i.e. to `observe` its value). However, there are many situations in which we desire the greater expressivity of `condition`; one may wish to ask for more complex hypotheticals: "what if P," where P is a complex proposition composed out of variables declared in the model.
 Consider the following WebPPL inference:
