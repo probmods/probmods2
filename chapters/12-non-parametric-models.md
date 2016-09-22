@@ -63,103 +63,106 @@ Ultimately we would like to define a distribution on an infinite set of discrete
 $$\beta_k = \prod_{i=1}^{k-1}\left(1-\beta'_i\right)\cdot\beta'_k$$
 How can this be interpreted as a generative process? Imagine "walking" down the natural numbers in order, flipping a coin with weight $$\beta'_i$$  for each one; if the coin comes up `false`, we continue to the next natural number; if the coin comes up `true`,  we stop and return the current natural number. Convince yourself that the probability of getting natural number $$k$$ is given by $$\beta_k$$ above.
 
-To formalize this as a WebPPL program, we define a procedure, `pick-a-stick`, that walks down the list of $$\beta'_k$$s (called *sticks* in the statistics and machine learning literatures) and flips a coin at each one: if the coin comes up `true`, it returns the index associated with that stick, if the coin comes up `false` the procedure recurses to the next natural number.
+To formalize this as a WebPPL program, we define a procedure, `pickStick`, that walks down the list of $$\beta'_k$$s (called *sticks* in the statistics and machine learning literatures) and flips a coin at each one: if the coin comes up `true`, it returns the index associated with that stick, if the coin comes up `false` the procedure recurses to the next natural number.
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define sticks
- (mem (lambda (index) (beta 1 alpha))))
+var sticks = mem(function(index) {
+  return beta(1, alpha)
+});
 ~~~~
 
-`pick-a-stick` is a higher-order procedure that takes another procedure called `sticks`, which returns the stick weight for each stick. `pick-a-stick` is also a *recursive* function---one that calls itself.
+`pickStick` is a higher-order procedure that takes another procedure called `sticks`, which returns the stick weight for each stick. `pickStick` is also a *recursive* function---one that calls itself.
 
 Notice that `sticks` uses `mem` to associate a particular draw from `beta` with each natural number. When we call it again with the same index we will get back the same stick weight. This (crucially) means that we construct the $$\beta'_k$$s only "lazily" when we need them&mdash;even though we started by imagining an infinite set of "sticks" we only ever construct a finite subset of them.
 
-We can put these ideas together in a procedure called `make-sticks` which takes the $$\alpha$$ parameter as an input and returns a procedure which samples stick indices.
+We can put these ideas together in a procedure called `makeSticks` which takes the $$\alpha$$ parameter as an input and returns a procedure which samples stick indices.
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (make-sticks alpha)
-  (let ((sticks (mem (lambda (x) (beta 1.0 alpha)))))
-    (lambda () (pick-a-stick sticks 1))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+var mySticks = makeSticks(1);
 
-(define my-sticks (make-sticks 1))
-
-(hist (repeat 1000 my-sticks) "Dirichlet Process")
+viz(repeat(1000, mySticks))
 ~~~~
 
-`my-sticks` samples from the natural numbers by walking down the list starting at 1 and flipping a coin weighted by a fixed $$\beta'_k$$ for each $$k$$. When the coin comes up `true` it returns $$k$$ otherwise it keeps going. It does this by drawing the individual $$\beta'_k$$ *lazily*, only generating new ones when we have walked out further than furthest previous time.<ref>
-This way of constructing a Dirichlet Process is known as the *stick-breaking* construction and was first defined in:
-<br/>
-Sethuraman, J. (1994). A constructive definition of dirichlet priors. Statistica Sinica, 4(2):639–650.
-<br/>
+`mySticks` samples from the natural numbers by walking down the list starting at 1 and flipping a coin weighted by a fixed $$\beta'_k$$ for each $$k$$. When the coin comes up `true` it returns $$k$$ otherwise it keeps going. It does this by drawing the individual $$\beta'_k$$ *lazily*, only generating new ones when we have walked out further than furthest previous time.
+
+This way of constructing a Dirichlet Process is known as the *stick-breaking* construction and was first defined in @Sethuraman1994.
 There are many other ways of defining a Dirichlet Process, one of which&mdash;the Chinese Restaurant Process&mdash;we will see below.
-</ref>
+
 
 ## Stochastic Memoization with `DPmem`
 
 The above construction of the Dirichlet process defines a distribution over the infinite set of natural numbers. We quite often want a distribution not over the natural numbers themselves, but over an infinite set of samples from some other distribution (called the *base distribution*): we can generalize the Dirichlet process to this setting by using `mem` to associate to each natural number a draw from the base distribution.
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
 
-(define (make-sticks alpha)
-  (let ((sticks (mem (lambda (x) (beta 1.0 alpha)))))
-    (lambda () (pick-a-stick sticks 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (DPthunk alpha base-dist)
-  (let ((augmented-proc (mem (lambda (stick-index) (base-dist))))
-        (DP (make-sticks alpha)))
-    (lambda () (augmented-proc (DP)))))
-
-
-(define memoized-gaussian (DPthunk 1.0 (lambda () (gaussian 0.0 1.0))))
-(density (repeat 10000 (lambda () (gaussian 0.0 1.0))) "Base Distribution" true)
-(density (repeat 10000 memoized-gaussian) "Dirichlet Process" true)
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+var DPthunk = function(alpha, baseDist) {
+  var augmentedProc = mem(function(stickIndex) {return sample(baseDist)});
+  var DP = makeSticks(alpha);
+  return function() {return augmentedProc(DP())}
+}
+    
+var memoizedGaussian = DPthunk(1, Gaussian({mu: 0, sigma: 1}));
+viz(repeat(10000, function() {return gaussian(0, 1)}));
+viz(repeat(10000, memoizedGaussian));
 ~~~~
 
 We can do a similar transformation to *any* WebPPL procedure: we associate to every argument and natural number pair a sample from the procedure, then use the Dirichlet process to define a new procedure with the same signature. In WebPPL this useful higher-order distribution is called `DPmem`:
 
 ~~~~
-(define (pick-a-stick sticks J)
-  (if (flip (sticks J))
-      J
-      (pick-a-stick sticks (+ J 1))))
+var pickStick = function(sticks, J) {
+  return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
+}; 
 
-(define (make-sticks alpha)
-  (let ((sticks (mem (lambda (x) (beta 1.0 alpha)))))
-    (lambda () (pick-a-stick sticks 1))))
+var makeSticks = function(alpha) {
+  var sticks = mem(function(index) {return beta(1, alpha)});
+  return function() {
+    return pickStick(sticks,1)
+  };
+} 
+        
+var DPmem = function(alpha, baseDist) {
+  var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
+  var DP = mem(function(args) {return makeSticks(alpha)});
+  return function(argsin) {
+    var stickIndex = DP(argsin)()
+    return augmentedProc(argsin, stickIndex);
+  }
+}
 
-(define (DPmem alpha base-dist)
-  (let ((augmented-proc (mem (lambda (args stick-index) (apply base-dist args))))
-        (DP (mem (lambda (args) (make-sticks alpha)))))
-    (lambda argsin
-      (let ((stick-index (sample (DP argsin))))
-        (augmented-proc argsin stick-index)))))
+var geometric = function(p) {
+  return flip(p) ? 0 : 1 + geometric(p);
+}
 
-(define (geometric p)
-  (if (flip p)
-      0
-      (+ 1 (geometric p))))
-
-(define memoized-gaussian (DPmem 1.0 gaussian))
-
-(density (repeat 10000 (lambda () (gaussian 0.0 1.0))) "Base Distribution" true)
-(density (repeat 10000 (lambda () (memoized-gaussian 0.0 1.0))) "Dirichlet Process" true)
+var memoizedGeometric = DPmem(1, geometric);
+viz(repeat(10000, function() {geometric(.5)}));
+viz(repeat(10000, function() {memoizedGeometric(.5)}))
 ~~~~
 
-In a probabilistic setting a procedure applied to some inputs may evaluate to a different value on each execution. By wrapping such a procedure in `mem` we associate a randomly sampled value with each combination of arguments. We have seen how this is useful in defining *random world* style semantics, by persistently associating individual random draws with particular `mem`'d values. However, it is also natural to consider generalizing the notion of memoization itself to the stochastic case. Since `DPmem` is a higher-order procedure that transforms a procedure into one that *sometimes* reuses it's return values we call it a *stochastic memoizer*<ref>Goodman, Mansighka, Roy, Bonawaitz, Tenenbaum, 2008</ref>.
+In a probabilistic setting a procedure applied to some inputs may evaluate to a different value on each execution. By wrapping such a procedure in `mem` we associate a randomly sampled value with each combination of arguments. We have seen how this is useful in defining *random world* style semantics, by persistently associating individual random draws with particular `mem`'d values. However, it is also natural to consider generalizing the notion of memoization itself to the stochastic case. Since `DPmem` is a higher-order procedure that transforms a procedure into one that *sometimes* reuses it's return values we call it a *stochastic memoizer* [@Goodman2008].
 <!--
 A stochastic memoizer wraps a stochastic procedure in another distribution, called the *memoization distribution* which tells us whether to reuse one of the previously computed values or to compute a fresh value from the underlying procedure. To accomplish this we generalize the notion of a memoization such that it we associate a **distribution** with each argument combination that we pass to the procedure.
 Since, in general, a probabilistic procedure may define a distribution over an unbounded number of observations (in general an uncountable number) we need a memoization distribution that is also unbounded. This distribution should also be exchangeable. These factors lead us to define `DPmem` a stochastic generalization of `mem` which uses the Dirichlet process as a memoization distribution.
@@ -168,23 +171,23 @@ Here we have defined the procedure `DPmem`. `DPmem` takes two arguments, the fir
 `DPmem` then constructs a Dirichlet process and associates it with the combination of arguments. It returns a procedure that when called first samples a stick index from the DP associated with the arguments and then calls the augmented procedure with the arguments and that stick index. `DPmem` can be thought of in the following way. If we had infinite time and resources we could enumerate all possible argument combinations that `proc` accepts and all the natural numbers. For all combinations of arguments plus a natural number we would draw a value from `proc` and permanently associate that value with that combination. In practice, of course, we do this lazily, only associating the new values with new combinations of arguments and stick indices as we need them.  If that combination of arguments and stick has been sampled before the previously computed value will simply be returned. Otherwise, a new value will be sampled from the underlying procedure and associated with the argument-stick combination.
 -->
 
+**TODO: The order of these sections doesn't make sense. The reader (or at least me) has already spent quite some time puzzling over the output of the above code boxes, and it'd be helpful to fold this exposition in above. Especially since it's literally the same output...** 
+
 ## Properties of DP Memoized Procedures
 
 A procedure in WebPPL defines a distribution. When we wrap such a procedure in `DPmem` the resulting procedure defines a new Dirichlet process distribution. The underlying distribution associated with `proc` in the code above is called the *base measure* of the Dirichlet process and is often written $$\mu$$ or sometimes $$G_0$$. In the following example we stochastically memoize a normal distribution.
 
 ~~~~
-(define memoized-normal (DPmem 1.0 (lambda () (gaussian 0 1.0))))
-
-(density (repeat 100 memoized-normal) "DPmem normal")
+var memoizedGaussian = DPmem(1, gaussian);
+viz(repeat(10000, function() {return memoizedGaussian(0,1)}));
 ~~~~
 
 The DP is said to *concentrate* the base measure.  Draws from a normal distribution are real-valued. However, draws from a DP are discrete (with probability one). By probabilistically memoizing a normal distribution we take the probability mass that the Gaussian spreads across the real line and *concentrate* it into a countable number of specific points. Compare the result of the previous computation with the result of sampling from a normal distribution itself.
 
 ~~~~
-(define memoized-gaussian (DPmem 1.0 gaussian))
-
-(density (repeat 10000 (lambda () (gaussian 0.0 1.0))) "Base Distribution")
-(density (repeat 10000 (lambda () (memoized-gaussian 0.0 1.0))) "Dirichlet Process")
+var memoizedGaussian = DPmem(1, gaussian);
+viz(repeat(10000, function() {return gaussian(0, 1)}));
+viz(repeat(10000, function() {return memoizedGaussian(0,1)}));
 ~~~~
 
 The way that the DP concentrates the underlying base measure is illustrated in the following figure.
@@ -331,7 +334,7 @@ WebPPL provides a higher-order procedure which implements CRP based stochastic m
 
 ## Example: Goldwater Model 1
 
-(Adapted from Goldwater, S., Griffiths, T. L., and Johnson, M. (2009). A Bayesian framework for word segmentation: Exploring the effects of context. Cognition, 112:21–54)
+Adapted from @Goldwater2009.
 
 ~~~~
 (define phones '(a e i o u k t p g d b s th f))
@@ -391,7 +394,7 @@ This model is known as the "infinite hidden Markov model". Notice how the transi
 
 # Example: The Infinite Relational Model
 
-(Adapted from: Kemp, C., Tenenbaum, J. B., Griffiths, T. L., Yamada, T. & Ueda, N. (2006).  Learning systems of concepts with an infinite relational model. Proceedings of the 21st National Conference on Artificial Intelligence.)
+Adapted from @Kemp2006.
 
 Much semantic knowledge is inherently *relational*. For example, verb meanings can often be formalized as relations between their arguments. The verb "give" is a three-way relation between a giver, something given, and a receiver. These relations are also inherently *typed*. For example, the giver in the relation above is typically an agent. In a preceding section, we discussed the infinite mixture models, where observations were generated from a potentially unbounded set of latent classes. In this section we introduce an extension of this model to relational data: the infinite relational model (IRM).
 
@@ -450,7 +453,7 @@ We see that the model invents two classes (the "boys" and the "girls") such that
 
 # Example: CrossCat
 
-(Adapted from: Shafto, P. Kemp, C., Mansignhka, V., Gordon, M., and Tenenbaum, J. B. (2006).  Learning cross-cutting systems of categories.  Proceedings of the Twenty-Eighth Annual Conference of the Cognitive Science Society.)
+Adapted from: @Shafto2006.
 
 Often we have data where each object is associated with a number of features. In many cases, we can predict how these features generalize by assigning the objects to classes and predicting feature values on a class-by-class basis. In fact, we can encode this kind of structure using the IRM above if we interpret the relations as the presence of absence of a feature. However, in some cases this approach does not work because objects can be categorized into multiple categories, and different features are predicted by different category memberships.
 
@@ -532,7 +535,7 @@ The Indian Buffet Process is an infinite distribution on *sets* of draws from a 
 
 # Hierarchical Combinations of Non-parametric Processes 
 
-In the [Hierarchical Models](hierarchical-models.html) chapter, we explored how additional levels of abstraction can lead to important effects in learning dynamics, such as transfer learning and the blessing of abstraction. In this section, we talk about two ways in which hierarchical non-parametric models can be built.
+In the [Hierarchical Models]({{site.base}}/chapters/09-hierarchical-models.html) chapter, we explored how additional levels of abstraction can lead to important effects in learning dynamics, such as transfer learning and the blessing of abstraction. In this section, we talk about two ways in which hierarchical non-parametric models can be built.
 
 ## The Nested Chinese Restaurant Process
 
@@ -540,8 +543,8 @@ We have seen how the Dirichlet Process/CRP can be used to learn mixture models w
 However, the categories associated with each table or stick in the DP/CRP are unstructured, whereas real life categories have complex relationships with one another.
 For example, they are often organized into hierarchies: a German shepherd is a type of dog, which is a type of animal, which is type of living thing, and so on.
 
-In [Example: One-shot learning of visual categories](hierarchical-models.html#example-one-shot-learning-of-visual-categories), we saw how such hierarchies  could lead to efficient one-shot learning, but we did not talk about how such a hierarchy itself could be learned.
-The *Nested Chinese Restaurant Process* (nCRP) is one way of doing this. (Blei, D. M., Griffiths, T. L., Jordan, M. I., and Tenenbaum, J. B, 2004. Hierarchical topic models and the nested chinese restaurant process. In Advances in Neural Information Processing Systems 16).
+In [Example: One-shot learning of visual categories]({{site.base}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories), we saw how such hierarchies  could lead to efficient one-shot learning, but we did not talk about how such a hierarchy itself could be learned.
+The *Nested Chinese Restaurant Process* (nCRP) is one way of doing this [@Blei2003b].
 The idea behind the nCRP is that tables in a CRP, which typically represent categories, can refer to *other restaurants* that represent lower-level categories.
 
 ~~~~
@@ -595,11 +598,11 @@ categories to generate data? The code below shows one way:
 
 This code shows a model where each category is associated with a multinomial distribution over the following possible observations: `(a b c d e f g)`. This distribution is drawn from a Dirichlet prior for each subordinate-level category. However, the *pseudocounts* for the Dirichlet distribution for each subordinate-level category are drawn from another Dirichlet distribution which is associated with the **top-level** category&mdash;all of the subordinate level categories which share a top-level category also have similar distributions over observations.
 
-In fact, the model presented in [Example: One-shot learning of visual categories](hierarchical-models.html#example-one-shot-learning-of-visual-categories) works in the same way, except that each category is associated with Gaussian distribution and the mean and variance parameters are shared between subordinate level categories.
+In fact, the model presented in [Example: One-shot learning of visual categories]({{site.base}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories) works in the same way, except that each category is associated with Gaussian distribution and the mean and variance parameters are shared between subordinate level categories.
 
 ## The Hierarchical Dirichlet Process
 
-In the last section, we saw an example where subordinate-level categories drew their hyperparameters from a shared Dirichlet distribution. It is also possible to build a similar model using a Dirichlet Process at each level. This model is known as the *Hierarchical Dirichlet Process* (HDP). (Teh, Y. W., Jordan, M. I., Beal, M. J., and Blei, D. M. (2006). Hierarchical dirichlet processes. Journal of the American Statistical Association, 101(476):1566–1581.)
+In the last section, we saw an example where subordinate-level categories drew their hyperparameters from a shared Dirichlet distribution. It is also possible to build a similar model using a Dirichlet Process at each level [@Teh2012]. This model is known as the *Hierarchical Dirichlet Process* (HDP).
 
 ~~~~
 (define base-measure (lambda () (poisson 20)))
@@ -665,29 +668,19 @@ HDP shares observations between multiple DPs.
 
 ## Example: Prototypes and Exemplars
 
-An important debate in psychology and philosophy has concerned the
-nature of *concepts*. The classical theory of concepts holds that
-they can defined in terms of  necessary and sufficient conditions.
-For example, the concept **dog** might consist of a list of
-features--- such as **furry**, **barks**, etc. If an object in
-the world matches the right  features, then it is a dog.
+An important debate in psychology and philosophy has concerned the nature of *concepts*. 
+The classical theory of concepts holds that they can defined in terms of  necessary and sufficient conditions.
+For example, the concept **dog** might consist of a list of features--- such as **furry**, **barks**, etc. 
+If an object in the world matches the right  features, then it is a dog.
 
-However, it appears that, at least for some concepts, the classical
-theory faces some difficulties. For example, some concepts appear to
-be *family resemblance categories* (FRC). Members of a FRC share
-many features in commone, but the overlap is not total, and there is
-the possibility that two members of the category can share *no*
-feature in common, instead, each sharing features with *other*
-members of the category.
+However, it appears that, at least for some concepts, the classical theory faces some difficulties. 
+For example, some concepts appear to be *family resemblance categories* (FRC). 
+Members of a FRC share many features in commone, but the overlap is not total, and there is the possibility that two members of the category can share *no* feature in common, instead, each sharing features with *other* members of the category.
 
-The philosopher Wittgenstein---who introduced the concept of
-Family Resemblance Categories---famously discussed the example of
-*games*. There are many different kinds of games: ball games,
-drinking games, children's playground games, card games, video games,
-role-playing games, etc. It is not clear that there is a single list
-of features which they all share and which can uniquely identify them
-all as **game** (See: *Murphy, G. L. 2004. The Big Book of Concepts. The MIT Press.*
-For an in-depth discussion of many issues surrounding concepts.).
+The philosopher Wittgenstein---who introduced the concept of Family Resemblance Categories---famously discussed the example of *games*. 
+There are many different kinds of games: ball games, drinking games, children's playground games, card games, video games, role-playing games, etc. 
+It is not clear that there is a single list of features which they all share and which can uniquely identify them all as **game**. 
+See @Murphy2004 for an in-depth discussion of many issues surrounding concepts.
 
 Two theories have emerged to explain FRCs (and other related phenomena): *prototype* theories and *exemplar* theories.
 In prototype theories, concepts are considered to be based on a single stored prototype.
@@ -709,9 +702,9 @@ $$\eta_{N,i} = \eta_{N,p_i}$$
 Notice that these two models can be seen as opposite ends of a spectrum; one estimates the category based on every member, while the other estimates based on a single member.
 There are clearly many intermediate points where each category can be viewed as a mixture over $$K$$ clusters.
 
-Griffiths et al. (2007) show how a large number of different models of categorization can be unified by viewing them all as special cases of a HDP which learns how many clusters each category should be represented by. (Griffiths, T. L., Canini, K. R., Sanborn, A. N., and Navarro, D. J. (2007). Unifying rational models of categorization via the hierarchical dirichlet process. In Proceedings of the Twenty-Ninth Annual Conference of the Cognitive Science Society.)
+@Griffiths2007 show how a large number of different models of categorization can be unified by viewing them all as special cases of a HDP which learns how many clusters each category should be represented by.
 
-In particular, Griffiths et al. (2007) examine the data from Smith and Minda (1998), which shows how learners undergo a transition from ptototype to exemplar representations during the course of learning. (Smith, J. D. and Minda, J. P. (1998). Prototypes in the mist: The early epochs of category learning. Journal of Experimental Psychology: Learning, Memory, and Cognition)
+In particular, @Griffiths2007 examine the data from @Smith1998, which shows how learners undergo a transition from ptototype to exemplar representations during the course of learning. 
 
 The results are shown below.
 
