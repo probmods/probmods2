@@ -16,10 +16,13 @@ window.requestAnimFrame = (function(){
 })();
 
 function plinkoinit() {
+  $('#plinko-wrapper').hide();
+  $('#plinkocanvas').show();
+
   var canvas = $('#plinkocanvas')[0];
-  canvas.width = 600
-  canvas.height = 600
-  var SCALE = 30; // 1 meter = 30 pixels
+  //canvas.width = 400
+  //canvas.height = 400
+  var SCALE = 20; // 1 meter = 30 pixels
 
   var  b2World = Box2D.Dynamics.b2World,
   b2Vec2 = Box2D.Common.Math.b2Vec2,
@@ -104,6 +107,7 @@ function plinkoinit() {
     isMouseDown = true;
     handleMouseMove(e);
     canvas.addEventListener("mousemove", handleMouseMove, true);
+    e.preventDefault();
   }, true);
 
   canvas.addEventListener("mouseup", function() {
@@ -111,6 +115,7 @@ function plinkoinit() {
     isMouseDown = false;
     mouseX = undefined;
     mouseY = undefined;
+    e.preventDefault();
   }, true);
 
   //falling marble

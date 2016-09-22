@@ -16,7 +16,12 @@ One view of knowledge is that the mind maintains working models of parts of the 
 As an example take the Plinko machine: a box with uniformly spaced pegs, with bins at the bottom.
 Into this box we can drop marbles:
 
-<canvas id="plinkocanvas" width="10" height="10" style="background-color:#333333;"></canvas>
+<div id='plinko-wrapper' style='position: relative; width: 400px; height: 400px; background-color: #333333; color: white;'>
+<div style='position: absolute; top: 50%; width: 100%; text-align: center'>Loading...</div>
+</div>
+
+<canvas id="plinkocanvas" width="400" height="400" style="display: none; background-color:#333333;"></canvas>
+
 
 The plinko machine is a 'working model' for many physical processes in which many small perturbations accumulate---for instance a leaf falling from a tree.
 It is an approximation to these systems because we use a discrete grid (the pegs) and discrete bins.
