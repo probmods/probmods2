@@ -18,7 +18,7 @@ B) $$ 4 + \frac{62}{7} $$
 ~~~~
 ~~~~
   
-C) The circumfrance of a 12-inch (diameter) pizza.
+C) The circumference of a 12-inch (diameter) pizza.
 
 ~~~~
 ~~~~
@@ -153,6 +153,12 @@ C) Without running any code, guess the result of each expression below. Some of 
 `_.keys({a:1,b:2,c:3})`
 
 `[1, 2, 3, [4, 5, 6], 7].length`
+
+`["a","b"].concat("c","d")`
+
+`["a","b"].concat(["c","d"])`
+
+`["a","b"].concat([["c","d"]])`
 
 `_.values({a:x,b:y,c:z})`
 
