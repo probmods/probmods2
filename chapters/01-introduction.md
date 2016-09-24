@@ -19,6 +19,7 @@ The *generative* approach to cognition posits that some mental representations a
 A generative model describes a process, usually one by which observable data is generated, that represents knowledge about the causal structure of the world -- simplified, "working models" of a domain.
 Other mental computations operate over these generative models to draw inferences: many different questions can be answered by interrogating the mental model.
 This contrasts to a more procedural or mechanistic approach in which knowledge represents the input-output mapping for a particular question directly.
+<!--mht: I would break the above paragraph up into 2, perhaps at the "A different approach" line-->
 
 It is possible to use deterministic generative models to describe possible ways a process could unfold, but due to sparsity of observations or actual randomness there will often be many ways that our observations could have been generated.
 How can we choose amongst them? Probability theory provides a system for reasoning under exactly this kind of uncertainty.
