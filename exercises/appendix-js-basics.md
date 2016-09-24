@@ -131,56 +131,14 @@ var Q = function(f, g){
 }
 ~~~~
 
-## Exercise 3
+## Exercise 3: Arrays and Objects
 
-Two important data structures in Scheme/Church are pairs and lists. A pair is just a combination of two things, a head and a tail. In Church, if you already have `x` and `y`, you can combine them into a pair by calling `(pair x y)`:
 
-~~~~ 
-(define x 3)
-(define y 9)
-(pair x y)
-~~~~
-
-Observe that this code returns the result `(3 . 9)` - you can recognize a pair by the dot in the middle.
-
-Lists are built out of pairs. In particular, a list is just a sequence of nested pairs whose last element is `'()` (pronounced "null"). So, this would be the list containing `'a`, `'6`, `'b`, `'c`, `7`, and `'d`:
+A) Write a list an array of even numbers between 0 and 10 inclusive.
 
 ~~~~
-(pair 'a
-    (pair '6
-          (pair 'b
-                (pair 'c
-                      (pair 7
-                            (pair 'd '()))))))
 ~~~~
 
-Of course, stringing together a bunch of `pair` statements gets tedious, so there is a shorthand - the `list` function:
-
-~~~~
-(list 'a 6 'b 'c 7 'd)
-~~~~
-
-An alternate way of specifying the above list is using the quote syntax:
-
-~~~~
-'(a 6 b c 7 d)
-~~~~
-
-A) The following code tries to define a list but gives an error instead. Why?
-
-~~~~ {.shouldfail}
-(3 4 7 8)
-~~~~
-
-B) Using `list` syntax, write a list of the even numbers between 0 and 10 inclusive.
-
-~~~~ {data-exercise="3b"}
-~~~~
-
-C) Using quote syntax, write a list of the odd numbers between 1 and 9 inclusive.
-
-~~~~ {data-exercise="3c"}
-~~~~ 
 
 D) Without running any code, guess the result of each expression below. Some of these expressions have intentional errors---see if you can spot them.
 
@@ -200,58 +158,65 @@ D) Without running any code, guess the result of each expression below. Some of 
 
 Check your guesses by actually running the code. If you made any mistakes, explain why your initial guess was incorrect.
 
-~~~~ {data-exercise="ex3d"}
-;; run code here
+~~~~
 ~~~~
 
 ## Exercise 4
 
-Two common patterns for working with lists are called `map` and `fold` (fold is also sometimes called `reduce`).
+Two common patterns for working with arrays are called `map` and `reduce` (reduce is also sometimes called "fold").
 
-Map takes two arguments, a function, `f`, and a list, `(list a b c ...)`, and returns a list with `f` applied to every item of the list: `(list (f a) (f b) (f c) ...)`. In the example below, we map `square` (which squares numbers) over the first five natural numbers:
-
-~~~~ {data-exercise="ex4square"}
-(define (square x) (* x x))
-(map square '(1 2 3 4 5))
-~~~~
-
-Fold takes three arguments, a function, `f`, an initial value, `i`, and a list, `(list a b c ...)`, and returns `(f ... (f c (f b (f a i))))`. In the example below, we define a function that computes the product of a list:
+Map takes two arguments, a function, `f`, and an array, `[a, b, c, ...]`, and returns a list with `f` applied to every item of the list: `[f(a), f(b), f(c), ...]`.
+In the example below, we map `square` (which squares numbers) over the first five natural numbers:
 
 ~~~~
-(define (my-product lst)
-(fold
-
- ;; function
- (lambda (list-item cumulative-value) (* list-item cumulative-value))
- 
- ;; initial value
- 1
- 
- ;; list
- lst))
-
-(my-product '(1 2 3 4 5))
+var square = function(x){
+  return x * x
+}
+map(square, [1, 2, 3, 4, 5])
 ~~~~
 
-Note the use of the "anonymous" function here---we don't care about using this function outside the context of the fold, so we don't bother giving it a name with `define`.
+Reduce takes three arguments, a function, `f`, an initial value, `i`, and an array, `[a, b, c, ...]`, and returns `f(...,f(c, f(b, f(a, i))))`.
+In the example below, we define a function that computes the product of a list:
 
-A) Write `my-sum-squares` using `fold`. This function should take in a list of numbers and return the sum of the squares of all those numbers. Use it on the list `'(1 2 3 4 5)`
+~~~~
+var myProduct = function(arr){
+  return reduce( 
+    function(listItem, cumulativeValue){ // function
+      return listItem * cumulativeValue
+    },
+    1, //initial value
+    arr // array
+  )
+}
 
-~~~~ {data-exercise="ex4a"}
-(define (square x) (* x x))
-(define (my-sum-squares lst) ...)
-(my-sum-squares '(1 2 3 4 5))
+myProduct([1, 2, 3, 4, 5])
 ~~~~
 
-B) Write `my-sum-squares` *without* using `fold`---instead use `map` and `apply`:
+Note the use of the "anonymous" function here---we don't care about using this function outside the context of the fold, so we don't bother giving it a name with `var`.
 
-~~~~ {data-exercise="ex4b"}
-(define (square x) (* x x))
-(define (my-sum-squares lst) ...)
-(my-sum-squares '(1 2 3 4 5))
+A) Write `mySumSquares` using `reduce`.
+This function should take in an array of numbers and return the sum of the squares of all those numbers.
+Use it on the array `[1, 2, 3, 4, 5]`
+
+~~~~
+var square = function(x) { return x * x }
+var mySumSquares = function(arr) {
+  return ...
+}
+mySumSquares([1, 2, 3, 4, 5])
 ~~~~
 
-## Exercise 3
+B) Write `mySumSquares` *without* using `reduce`---instead use `map` and `sum`:
+
+~~~~
+var square = function(x) { return x * x }
+var mySumSquares = function(arr) {
+  return sum(map(square, arr))
+}
+mySumSquares([1, 2, 3, 4, 5])
+~~~~
+
+## Exercise 5
 
 One benefit of functional programming languages is that they make it possible to elegantly and concisely write down interesting programs that would be complicated and ugly to express in non-functional languages (if you have some time, it is well worth understanding the [change counting example](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1) from SICP). Elegance and concision usually derive from recursion, i.e., expressing a problem in terms of a smaller subproblem.
 
