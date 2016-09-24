@@ -34,24 +34,23 @@ For example, consider a simpler variant of our medical diagnosis scenario:
 
 ~~~~
 var marg = Infer({method: 'enumerate'}, function() {
-  var smokes = flip(0.2);
-  var lungDisease = (smokes && flip(0.1)) || flip(0.001);
-  var cold = flip(0.02);
-  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
-  var fever = (cold && flip(0.3)) || flip(0.01);
-  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
-  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
+  var smokes = flip(0.2)
+  var lungDisease = (smokes && flip(0.1)) || flip(0.001)
+  var cold = flip(0.02)
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001)
+  var fever = (cold && flip(0.3)) || flip(0.01)
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01)
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01)
+
   condition(cough)
   return {cold: cold, lungDisease: lungDisease}
 })
 
 viz.marginals(marg)
-viz.auto(marg)
 ~~~~
 
 Here, `cough` depends causally on both `lungDisease` and `cold`, while `fever` depends causally on `cold` but not `lungDisease`.
- We can see that `cough` depends causally on `smokes` but only indirectly: although `cough` does not call `smokes` directly, in order to evaluate whether a patient coughs, we first have to evaluate the expression `lungDisease` that must itself evaluate `smokes`.
+We can see that `cough` depends causally on `smokes` but only indirectly: although `cough` does not call `smokes` directly, in order to evaluate whether a patient coughs, we first have to evaluate the expression `lungDisease` that must itself evaluate `smokes`.
 
 
 We haven't made the notion of "direct" causal dependence precise: do we want to say that `cough` depends directly on `cold`, or only directly on the expression `(cold && flip(0.5)) || ...`? This can be resolved in several ways that all result in similar intuitions.
@@ -64,9 +63,9 @@ In some cases, whether expression A requires expression B will depend on the val
 
 ~~~~
 var C = flip()
-var B = flip() 
-var A = (C ? 
-         (B ? flip(.85) : false) : 
+var B = flip()
+var A = (C ?
+         (B ? flip(.85) : false) :
          false)
 A
 ~~~~
@@ -83,57 +82,74 @@ Why?)
 ## Detecting Dependence Through Intervention
 
 The causal dependence structure is not always immediately clear from examining a program, particularly where there are complex functions calls.
-Another way to detect (or according to some philosophers, such as Jim Woodward, to *define*) causal dependence is more operational, in terms of "difference making": If we manipulate A, does B tend to change? By *manipulate* here we don't mean an assumption in the sense of `Infer`.
+Another way to detect (or according to some philosophers, such as Jim Woodward, to *define*) causal dependence is more operational, in terms of "difference making": If we manipulate A, does B tend to change? By *manipulate* here we don't mean an assumption in the sense of `condition`.
 Instead we mean actually edit, or *intervene on*, the program in order to make an expression have a particular value independent of its (former) causes.
 If setting A to different values in this way changes the distribution of values of B, then B causally depends on A.
+
+~~~
+var BdoA = function(Aval) {
+  return Infer({method: 'enumerate'}, function() {
+    var C = flip()
+    var A = Aval //we directly set A to the target value
+    var B = A ? flip(.1) : flip(.4)
+    condition(A == Aval)
+    return {B: B}
+  })
+}
+
+viz(BdoA(true))
+viz(BdoA(false))
+~~~
+
 This method is known in the causal Bayesian network literature as the "do operator" or graph surgery (Pearl, 1988).
 It is also the basis for interesting theories of counterfactual reasoning by Pearl and colleagues (Halpern, Hitchcock and others).
 
-For example, this code represents whether a patient is likely to have a cold or a cough *a priori*, conditioned on no observations (we use `method: 'forward'` to build a distribution of "forward samples" run through the model:
+For example, this code represents whether a patient is likely to have a cold or a cough *a priori*, without conditions or observations:
 
 ~~~~
-var medicalDist = Infer({method: 'forward', samples: 10000}, function() {
+var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2)
-  var lungDisease = flip(0.001) || (smokes && flip(0.1));
-  var cold = flip(0.02);
-  
-  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
-  var fever = (cold && flip(0.3)) || flip(0.01);
-  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
-  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
-  return {cough: cough, cold: cold};
+  var lungDisease = flip(0.001) || (smokes && flip(0.1))
+  var cold = flip(0.02)
+
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001)
+  var fever = (cold && flip(0.3)) || flip(0.01)
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01)
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01)
+
+  return {cough: cough, cold: cold}
 })
 viz.marginals(medicalDist)
 ~~~~
 
 Imagine we now *give* our hypothetical patient a  cold---for example, by exposing him to a strong cocktail of cold viruses.
-We should not model this as an observation (conditioning on having a cold using query), because we have taken direct action to change the normal causal structure.
-Instead we implement intervention by directly editing the program: first do `var cold = true`, then do `var cold = false`:
+We should not model this as an observation (e.g. by conditioning on having a cold), because we have taken direct action to change the normal causal structure.
+Instead we implement intervention by directly editing the program: try to first do `var cold = true`, then do `var cold = false`:
 
 ~~~~
-var medicalDist = Infer({method: 'forward', samples: 10000}, function() {
+var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2)
-  var lungDisease = flip(0.001) || (smokes && flip(0.1));
+  var lungDisease = flip(0.001) || (smokes && flip(0.1))
   var cold = true // we intervene to make cold true
-  
-  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
-  var fever = (cold && flip(0.3)) || flip(0.01);
-  var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
-  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
-  return {cough: cough, cold: cold};
+
+  var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001)
+  var fever = (cold && flip(0.3)) || flip(0.01)
+  var chestPain = (lungDisease && flip(0.2)) || flip(0.01)
+  var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01)
+
+  return {cough: cough, cold: cold}
 })
 viz.marginals(medicalDist)
 ~~~~
 
 You should see that the distribution on `cough` changes: coughing becomes more likely if we know that a patient has been given a cold by external intervention.
-But the reverse is not true.
+But the reverse is not true:
 Try forcing the patient to have a  cough (e.g., with some unusual drug or by exposure to some cough-inducing dust) by writing `var cough = true`: the distribution on `cold` is unaffected.
 We have captured a familiar fact: treating the symptoms of a disease directly doesn't cure the disease (taking cough medicine doesn't make your cold go away), but treating the disease *does* relieve the symptoms.
 
 Verify in the program above that the method of manipulation works also to identify causal relations that are only indirect: for example, force a patient to smoke and show that it increases their probability of coughing, but not vice versa.
-If we are given a program representing a causal model, and the model is simple enough, it is straightforward to read off causal dependencies from the structure of the program.
+
+If we are given a program representing a causal model, and the model is simple enough, it is straightforward to read off causal dependencies from the program code itself.
 However, the notion of causation as difference-making may be easier to compute in much larger, more complex models---and it does not require an analysis of the program code.
 As long as we can modify (or imagine modifying) the definitions in the program and can run the resulting model, we can compute whether two events or functions are causally related by the difference-making criterion.
 
@@ -142,56 +158,55 @@ As long as we can modify (or imagine modifying) the definitions in the program a
 One often hears the warning, "correlation does not imply causation".
 By "correlation" we mean a different kind of dependence between events or functions---*statistical dependence*.
 We say that A and B are statistically dependent, if learning information about A tells us something about B, and vice versa.
-In the language of webppl: using `Infer` to make an assumption about A changes the value expected for B.
+In the language of webppl: using `condition` to make an assumption about A changes the value expected for B.
 Statistical dependence is a *symmetric* relation between events referring to how information flows between them when we observe or reason about them.
-(If using `Infer` to condition on A changes B, then conditioning on B also changes A.
+(If conditioning on A changes B, then conditioning on B also changes A.
 Why?)
 The fact that we need to be warned against confusing statistical and causal dependence suggests they are related, and indeed, they are.
 In general, if A causes B, then A and B will be statistically dependent.
 (One might even say the two notions are "causally related", in the sense that causal dependencies give rise to statistical dependencies.)
 
-Diagnosing statistical dependence using query is similar to diagnosing causal dependence through intervention.
-We query on the target variable, here `A`, conditioning on various values of the possible statistical dependent, here `B`:
+Diagnosing statistical dependence using `condition` is similar to diagnosing causal dependence through intervention. We condition on various values of the possible statistical dependent, here `A`, and see whether it changes the distribution on the target, here `B`:
 
 ~~~~
-var Aposterior = function(Bval) {
+var BcondA = function(Aval) {
   return Infer({method: 'enumerate'}, function() {
-    var C = flip();
-    var B = flip();
-    var A = B ? flip(.1) : flip(.4);
-    condition(B == Bval);
-    return A;
+    var C = flip()
+    var A = flip()
+    var B = A ? flip(.1) : flip(.4)
+    condition(A == Aval) //condition on new information about A
+    return {B: B}
   })
 }
 
-viz.auto(Aposterior(true))
-viz.auto(Aposterior(false))
+viz(BcondA(true))
+viz(BcondA(false))
 ~~~~
 
-Because the two distributions on `A` (when we have different information about `B`) are different, we can conclude that `A` statistically depends on `B`.
-Do the same procedure for testing if `B` statistically depends on `A`.
+Because the two distributions on `B` (when we have different information about `A`) are different, we can conclude that `B` statistically depends on `A`.
+Do the same procedure for testing if `A` statistically depends on `B`.
 How is this similar (and different) from the causal dependence between these two?
 As an exercise, make a version of the above medical example to test the statistical dependence between `cough` and `cold`.
 Verify that statistical dependence holds symmetrically for events that are connected by an indirect causal chain, such as `smokes` and `coughs`.
 
 Correlation is not just a symmetrized version of causality.
 Two events may be statistically dependent even if there is no causal chain running between them, as long as they have a common cause (direct or indirect).
-That is, two expressions in a webppl program can be statistically dependent if one calls the other, directly or indirectly, *or* if they both at some point in their evaluation histories refer to some other expression (a "common cause").
+That is, two expressions in a WebPPL program can be statistically dependent if one calls the other, directly or indirectly, *or* if they both at some point in their evaluation histories refer to some other expression (a "common cause").
 Here is an example of statistical dependence generated by a common cause:
 
 ~~~~
-var Aposterior = function(Bval) {
+var BcondA = function(Aval) {
   return Infer({method: 'enumerate'}, function() {
     var C = flip();
-    var B = C ? flip(.5) : flip(.9);
-    var A = C ? flip(.1) : flip(.4);
-    condition(B == Bval);
-    return A;
+    var A = C ? flip(.5) : flip(.9);
+    var B = C ? flip(.1) : flip(.4);
+    condition(A == Aval);
+    return {B: B};
   })
 }
 
-viz.auto(Aposterior(true))
-viz.auto(Aposterior(false))
+viz(BcondA(true))
+viz(BcondA(false))
 ~~~~
 
 Situations like this are extremely common.
@@ -304,7 +319,7 @@ We can express the general phenomenon of explaining away with the following sche
 ~~~~norun
 Infer({...}, function() {
   var a = ...
-  var b = ... 
+  var b = ...
   var data = f(a, b)
   condition(data == someVal && a == someOtherVal)
   return b;
@@ -390,14 +405,14 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2);
   var lungDisease = flip(0.001) || (smokes && flip(0.1));
   var cold = flip(0.02);
-  
+
   var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
   var fever = (cold && flip(0.3)) || flip(0.01);
   var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
   var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
+
   condition(cough && chestPain && shortnessOfBreath);
-  
+
   return smokes
 })
 viz.auto(medicalDist)
@@ -415,14 +430,14 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2);
   var lungDisease = flip(0.001) || (smokes && flip(0.1));
   var cold = flip(0.02);
-  
+
   var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
   var fever = (cold && flip(0.3)) || flip(0.01);
   var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
   var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
+
   condition(lungDisease && (cough && chestPain && shortnessOfBreath));
-  
+
   return smokes
 })
 
@@ -445,14 +460,14 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2);
   var lungDisease = flip(0.001) || (smokes && flip(0.1));
   var cold = flip(0.02);
-  
+
   var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
   var fever = (cold && flip(0.3)) || flip(0.01);
   var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
   var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
+
   condition(cough);
-  
+
   return {cold: cold, lungDisease: lungDisease}
 })
 
@@ -468,14 +483,14 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2);
   var lungDisease = flip(0.001) || (smokes && flip(0.1));
   var cold = flip(0.02);
-  
+
   var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
   var fever = (cold && flip(0.3)) || flip(0.01);
   var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
   var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
+
   condition(cough && !cold);
-  
+
   return {cold: cold, lungDisease: lungDisease}
 })
 
@@ -490,14 +505,14 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2);
   var lungDisease = flip(0.001) || (smokes && flip(0.1));
   var cold = flip(0.02);
-  
+
   var cough = (cold && flip(0.5)) || (lungDisease && flip(0.5)) || flip(0.001);
   var fever = (cold && flip(0.3)) || flip(0.01);
   var chestPain = (lungDisease && flip(0.2)) || flip(0.01);
   var shortnessOfBreath = (lungDisease && flip(0.2)) || flip(0.01);
-  
+
   condition(cough && cold);
-  
+
   return {cold: cold, lungDisease: lungDisease}
 })
 
@@ -548,7 +563,7 @@ If a student doesn't pass an exam, what can you say about why he failed?  Maybe 
 var examPosterior = Infer({method: 'enumerate'}, function() {
   var examFair = flip(.8);
   var doesHomework = flip(.8);
-  var pass = flip(examFair ? 
+  var pass = flip(examFair ?
                   (doesHomework ? 0.9 : 0.4) :
                   (doesHomework ? 0.6 : 0.2))
   condition(!pass)
@@ -570,13 +585,13 @@ var examPosterior = Infer({method: 'enumerate'}, function() {
   var doesHomework = mem(function(student){return sample(doesHomeworkPrior)})
 
   var pass = function(student, exam) {
-    return flip(examFair(exam) ? 
+    return flip(examFair(exam) ?
                 (doesHomework(student) ? 0.9 : 0.4) :
                 (doesHomework(student) ? 0.6 : 0.2))
   };
-  
+
   condition(!pass('bill', 'exam1'))
-  
+
   return {doesHomework: doesHomework('bill'), examFair: examFair('exam1')}
 })
 
@@ -605,28 +620,28 @@ What does each new piece of the larger data set contribute to your intuition abo
 
 !pass('bill', 'exam1') && !pass('mary', 'exam1') && !pass('tim', 'exam1')
 
-!pass('bill', 'exam1') && !pass('bill', 'exam2') && 
-  !pass('mary', 'exam1') && 
+!pass('bill', 'exam1') && !pass('bill', 'exam2') &&
+  !pass('mary', 'exam1') &&
   !pass('tim', 'exam1')
 
-!pass('bill', 'exam1') && 
-  !pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+!pass('bill', 'exam1') &&
+  !pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
   !pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
 
-!pass('bill', 'exam1') && 
-  pass('mary', 'exam1') && 
+!pass('bill', 'exam1') &&
+  pass('mary', 'exam1') &&
   pass('tim', 'exam1')
 
-!pass('bill', 'exam1') && 
-  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+!pass('bill', 'exam1') &&
+  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
   pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
 
 !pass('bill', 'exam1') && !pass('bill', 'exam2') &&
-  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
   pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
 
 !pass('bill', 'exam1') && !pass('bill', 'exam2') && pass('bill', 'exam3') && pass('bill', 'exam4') && pass('bill', 'exam5') &&
-  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') && 
+  pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
   pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
 
 ~~~~
@@ -662,9 +677,9 @@ var blicketPosterior = Infer({method: 'enumerate'}, function() {
             flip(.05) :
             flip(power(_.first(blocks))) || machine(_.rest(blocks)));
   }
-  
+
   condition(machine(['A', 'B']));
-  
+
   return blicket('A');
 });
 
@@ -780,4 +795,4 @@ condition on effect of observing contour
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/04-patterns-of-inference.html)
 
-Next chapter: [Models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html) 
+Next chapter: [Models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)
