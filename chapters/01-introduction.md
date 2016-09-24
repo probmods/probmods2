@@ -13,10 +13,12 @@ But what kind of program?
 A natural assumption is that these programs take the inputs -- percepts from the senses, facts from memory, etc -- and compute the outputs -- the intelligent behaviors.
 Thus the mental representations that lead to thinking are functions from inputs to outputs.
 However, this input-output view suffers from a combinatorial explosion: we must posit an input-output program for each task in which humans draw intelligent inferences.
+
 A different approach is to assume that mental representations are more like theories in science: pieces of knowledge that can support many inferences in many different situations.
-For instance, Newton's theory of motion makes predictions about infinitely many different configurations of objects and can be used to reason both forward in time and from final state of a physical system to the initial state.
+For instance, Newton's theory of motion makes predictions about infinitely many different configurations of objects and can be used to reason both forward in time and backward, from final state of a physical system to the initial state.
 The *generative* approach to cognition posits that some mental representations are more like theories in this way: they capture general descriptions of how the world *works*.
-A generative model describes a process, usually one by which observable data is generated, that represents knowledge about the causal structure of the world -- simplified, "working models" of a domain.
+A generative model describes a process, usually one by which observable data is generated, that represents knowledge about the causal structure of the world.
+These generative processes are simplified "working models" of a domain.
 Other mental computations operate over these generative models to draw inferences: many different questions can be answered by interrogating the mental model.
 This contrasts to a more procedural or mechanistic approach in which knowledge represents the input-output mapping for a particular question directly.
 

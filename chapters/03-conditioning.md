@@ -222,7 +222,7 @@ Switching from one method to another is as simple as changing the options passed
 
 There is an interesting parallel between the `Infer` abstraction and the engineering challenge of different inference methods and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
 In parallel, WebPPL allows us to specify generative knowledge and inference questions, largely abstracting away the methods of inference (they show up only in the options argument to `Infer`).
-We will further explore some of the algorithms used in these implementations, and ask whether they may be useful algorithmic levels models for human thinking, in the section on [Algorithms for inference](inference-process.html). For most of this book, however, we work at the cimputational level, abstracting away from algorithmic details.
+We will further explore some of the algorithms used in these implementations, and ask whether they may be useful algorithmic levels models for human thinking, in the section on [Algorithms for inference](07-inference-process.html). For most of this book, however, we work at the cimputational level, abstracting away from algorithmic details.
 
 <!--
 One implementation that we will often use is based on the *Metropolis Hastings* (MH) algorithm, a member of the class of Markov chain Monte Carlo (MCMC) methods:
