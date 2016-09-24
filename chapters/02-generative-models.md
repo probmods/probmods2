@@ -182,8 +182,7 @@ Try varying the coin weight or the number of repetitions to see how the expected
 var makeCoin = function(weight) { return function() { return flip(weight) } }
 var coin = makeCoin(0.8)
 
-var data = repeat(1000, function() { sum(map(function (x) { x ? 1 : 0 },
-                                             repeat(10, coin))) })
+var data = repeat(1000, function() { sum(repeat(10, coin)) })
 viz(data, {xLabel: '# heads'})
 ~~~~
 
