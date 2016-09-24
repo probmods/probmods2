@@ -161,7 +161,7 @@ Check your guesses by actually running the code. If you made any mistakes, expla
 ~~~~
 ~~~~
 
-## Exercise 4
+## Exercise 4: Map and reduce
 
 Two common patterns for working with arrays are called `map` and `reduce` (reduce is also sometimes called "fold").
 
@@ -216,45 +216,49 @@ var mySumSquares = function(arr) {
 mySumSquares([1, 2, 3, 4, 5])
 ~~~~
 
-## Exercise 5
+## Exercise 5: Recursion
 
-One benefit of functional programming languages is that they make it possible to elegantly and concisely write down interesting programs that would be complicated and ugly to express in non-functional languages (if you have some time, it is well worth understanding the [change counting example](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1) from SICP). Elegance and concision usually derive from recursion, i.e., expressing a problem in terms of a smaller subproblem.
+One benefit of functional programming languages is that they make it possible to elegantly and concisely write down interesting programs that would be complicated and ugly to express in non-functional languages (if you have some time, it is well worth understanding the [change counting example](http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1) from SICP).
+Elegance and concision usually derive from recursion, i.e., expressing a problem in terms of a smaller subproblem.
 
 Here is a very simple recursive function, one that computes the length of a list:
 
-~~~~ {data-exercise="my-length"}
-(define (my-length lst)
-(if (null? lst)
-    0
-    (+ 1 (my-length (rest lst)))))
+~~~~
+var myLength = function(arr){
+  return _.isEmpty(arr) ? 0 :
+          1 + myLength(arr.slice(1))
+}
 
-(my-length '(a b c d e))
+myLength(["a", "b", "c", "d", "e"])
 ~~~~
 
-A) How does `my-length` work?
+A) How does `myLength` work?
 
-B) Below, `my-max` is intended to be a recursive function that returns the largest item in a list. Finish writing it and use it to compute the largest item in `'(1 2 3 6 7 4 2 9 8 -5 0 12 3)`
+B) Below, `myMax` is intended to be a recursive function that returns the largest item in a list. Finish writing it and use it to compute the largest item in `[1, 2, 3, 6, 7, 4, 2, 9, 8, -5, 0, 12, 3]`
 
-~~~~ {data-exercise="5b"}
-; returns the larger of a and b.
-(define (bigger a b) (if (> a b) a b))
+~~~~
+// returns the larger of a and b.
+var bigger = function(a, b){
+  return a > b ? a : b
+}
 
-(define (my-max lst)
-  (if (= (length lst) 1)
-      (first lst)
-      ...))
+var myMax = function(arr){
+ return (arr.length == 1) ? lst[0] : 
+}
 
-(my-max '(1 2 3 6 7 4 2 9 8 -5 0 12 3))
+myMax([1, 2, 3, 6, 7, 4, 2, 9, 8, -5, 0, 12, 3])
 ~~~~
 
-C) Write a version of `my-max` using `fold`.
+C) Write a version of `myMax` using `reduce`.
 
-~~~~ {data-exercise="5c"}
-(define (bigger a b) (if (> a b) a b))
+~~~~
+var bigger = function(a, b){
+  return a > b ? a : b
+}
 
-(define (my-max lst) 
-  (fold
-   ...))
+var myMax = function(arr){
+ return reduce(..., ..., ...)
+}
 
-(my-max '(1 2 3 6 7 4 2 9 8 -5 0 12 3))
+myMax([1, 2, 3, 6, 7, 4, 2, 9, 8, -5, 0, 12, 3])
 ~~~~
