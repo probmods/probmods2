@@ -222,9 +222,9 @@ On the other hand, with a causal model already in place, reasoning about the sta
 # Graphical Notations for Dependence
 
 *Graphical models* are an extremely important idea in modern machine learning: a graphical diagram is used to represent the direct dependence structure between random choices in a probabilistic model.
-A special case are *Bayesian networks*, in which there is a node for each random variable (and expression in our terms) and a link between two nodes if there is a direct conditional dependence between them (a direct causal dependence in our terms).
+A special case are *Bayesian networks*, in which there is a node for each random variable (an expression in our terms) and a link between two nodes if there is a direct conditional dependence between them (a direct causal dependence in our terms).
 The sets of nodes and links define a *directed acyclic graph* (hence the term graphical model), a data structure over which many efficient algorithms can be defined.
-Each node has a *conditional probability table* (CPT), which represents the conditional probability distribution of that node, given its parents.
+Each node has a *conditional probability table* (CPT), which represents the probability distribution of that node, given values of its parents.
 The joint probability distribution over random variables is given by the product of the conditional distributions for each variable in the graph.
 
 The figure below defines a Bayesian network for the medical diagnosis example.
@@ -248,35 +248,35 @@ Recursive models generally give rise to such ambiguous (or loopy) Bayes nets.
 # From *A Priori* Dependence to Conditional Dependence
 
 The relationships between causal structure and statistical dependence become particularly interesting and subtle when we look at the effects of additional observations or assumptions.
-Events that are statistically dependent *a priori* (sometimes called *marginally* dependent) may become independent when we condition on some other observation; this is called *screening off*, or sometimes *context-specific independence*.
-Also, events that are statistically independent *a priori* (marginally independent) may become dependent when we condition on other observations; this is known as *explaining away*.
+Events that are statistically dependent *a priori* may become independent when we condition on some observation; this is called *screening off*.
+Also, events that are statistically independent *a priori* may become dependent when we condition on observations; this is known as *explaining away*.
 The dynamics of screening off and explaining away are extremely important for understanding patterns of inference---reasoning and learning---in probabilistic models.
 
 ## Screening off
 
 *Screening off* refers to a pattern of statistical inference that is quite common in both scientific and intuitive reasoning.
 If the statistical dependence between two events A and B is only indirect, mediated strictly by one or more other events C, then conditioning on (observing) C should render A and B statistically independent.
-This can occur if A and B are connected by one or more causal chains, and all such chains run through the set of events C, or if C comprises one or more common causes of A and B.
+This can occur if A and B are connected by one or more causal chains, and all such chains run through the set of events C, or if C comprises all of the common causes of A and B.
 
 For instance, let's look again at our common cause example, this time assuming that we *already* know the value of `C`:
 
 ~~~~
-var Aposterior = function(Bval) {
+var BcondA = function(Aval) {
   return Infer({method: 'enumerate'}, function() {
-    var C = flip();
-    var B = C ? flip(.5) : flip(.9);
-    var A = C ? flip(.1) : flip(.4);
-    condition(C && B == Bval);
-    return A;
+    var C = flip()
+    var B = C ? flip(.5) : flip(.9)
+    var A = C ? flip(.1) : flip(.4)
+    condition(C)
+    condition(A == Aval)
+    return {B: B}
   })
 }
 
-viz.auto(Aposterior(true))
-viz.auto(Aposterior(false))
+viz(BcondA(true))
+viz(BcondA(false))
 ~~~~
 
 We see that `A` an `B` are statistically *independent* given knowledge of `C`.
-(Note: it can be tricky to diagnose statistical *in*dependence from samples, such as returned by methods like `MCMC` or `forward`, since natural variation due to random sampling can look like differences between conditions.)
 
 Screening off is a purely statistical phenomenon.
 For example, consider the the causal chain model, where A directly causes C, which in turn directly causes B.
@@ -291,18 +291,19 @@ If two events A and B are statistically (and hence causally) independent, but th
 Here is an example where `A` and `B` have a common *effect*:
 
 ~~~~
-var Aposterior = function(Bval) {
+var BcondA = function(Aval) {
   return Infer({method: 'enumerate'}, function() {
-    var A = flip();
-    var B = flip();
-    var C = (A || B) ? flip(.9) : flip(.2);
-    condition(C && B == Bval);
-    return A;
+    var A = flip()
+    var B = flip()
+    var C = (A || B) ? flip(.9) : flip(.2)
+    condition(C)
+    condition(A == Aval)
+    return {B: B}
   })
 }
 
-viz.auto(Aposterior(true))
-viz.auto(Aposterior(false))
+viz(BcondA(true))
+viz(BcondA(false))
 ~~~~
 
 As with screening off, we only induce statistical dependence from learning about `C`, not causal dependence: when we observe `C`, `A` and `B` remain causally independent in our model of the world; it is our beliefs about A and B that become correlated.
@@ -323,7 +324,7 @@ Infer({...}, function() {
   var data = f(a, b)
   condition(data == someVal && a == someOtherVal)
   return b;
-});
+})
 ~~~~
 
 We have defined two independent variables `a` and `b` both of which are used to define the value of our data.
