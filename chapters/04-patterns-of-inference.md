@@ -617,38 +617,34 @@ Try using each of the below expressions as the condition for the above inference
 Try to explain the different inferences that result at each stage.
 What does each new piece of the larger data set contribute to your intuition about Bill  and exam 1?
 
-**TODO: Rewrite some of these more efficiently? Like with map or repeat?**
+* `!pass('bill', 'exam1') && !pass('bill', 'exam2')`
 
-~~~~norun
-!pass('bill', 'exam1') && !pass('bill', 'exam2')
+* `!pass('bill', 'exam1') && !pass('mary', 'exam1') && !pass('tim', 'exam1')`
 
-!pass('bill', 'exam1') && !pass('mary', 'exam1') && !pass('tim', 'exam1')
-
-!pass('bill', 'exam1') && !pass('bill', 'exam2') &&
+* `!pass('bill', 'exam1') && !pass('bill', 'exam2') &&
   !pass('mary', 'exam1') &&
-  !pass('tim', 'exam1')
+  !pass('tim', 'exam1')`
 
-!pass('bill', 'exam1') &&
+* `!pass('bill', 'exam1') &&
   !pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
-  !pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
+  !pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')`
 
-!pass('bill', 'exam1') &&
+* `!pass('bill', 'exam1') &&
   pass('mary', 'exam1') &&
-  pass('tim', 'exam1')
+  pass('tim', 'exam1')`
 
-!pass('bill', 'exam1') &&
+* `!pass('bill', 'exam1') &&
   pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
-  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
+  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')`
 
-!pass('bill', 'exam1') && !pass('bill', 'exam2') &&
+* !`pass('bill', 'exam1') && !pass('bill', 'exam2') &&
   pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
-  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
+  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')`
 
-!pass('bill', 'exam1') && !pass('bill', 'exam2') && pass('bill', 'exam3') && pass('bill', 'exam4') && pass('bill', 'exam5') &&
+* `!pass('bill', 'exam1') && !pass('bill', 'exam2') && pass('bill', 'exam3') && pass('bill', 'exam4') && pass('bill', 'exam5') &&
   pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
-  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')
+  pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')`
 
-~~~~
 
 This example is inspired by the work of Harold Kelley (and many others) on causal attribution in social settings [@Kelley1973].
 Kelley identified three important dimensions of variation in the evidence, which affect the attributions people make of the cause of an outcome.
@@ -760,12 +756,14 @@ The variables `reflectance` and `illumination` are conditionally independent in 
 This phenomenon has important consequences for cognitive science.
 Although the model of (our knowledge of) the world has a certain kind of modularity implied by conditional independence, as soon as we start using the model to do conditional inference on some data, formerly modularly isolated variables can become dependent.
 
+<!--
 ## Other vision examples (to be developed)
 Kersten's [colored Mach card](http://vision.psych.umn.edu/users/kersten/kersten-lab/Mutual_illumination/BlojKerstenHurlbertDemo99.pdf) illusion is a beautiful example of both explaining away and screening off in visual surface perception, as well as a switch between these two patterns of inference conditioned on an auxiliary variable.
 Depending on how we perceive the geometry of a surface folded down the middle -- whether it is concave so that the two halves face each other or convex so that they face away -- the perceived colors of the faces will change as the visual system either discounts (explains away) or ignores (screens off) the effects of inter-reflections between the surfaces.
 
 The [two cylinders illusion](http://vision.psych.umn.edu/users/kersten/kersten-lab/images/twocylinders.gif) of Kersten is another nice example of explaining away.
 The gray shading patterns are identical in the left and right images, but on the left the shading is perceived as reflectance difference, while on the right (the "two cylinders") the same shading is perceived as due to shape variation on surfaces with uniform reflectance.
+-->
 
 <!--
 
