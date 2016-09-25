@@ -136,8 +136,10 @@ A) Write an array of even numbers between 0 and 10 inclusive.
 ~~~~
 ~~~~
 
-B) Write an array of objects of you and your two best friends: Have first name, age, gender, and university properties.
+B) Write an array of objects of you and your two best friends: Include first name, age, gender, and university properties.
 
+~~~~
+~~~~
 
 C) Without running any code, guess the result of each expression below. Some of these expressions have intentional errors---see if you can spot them.
 
@@ -148,7 +150,7 @@ C) Without running any code, guess the result of each expression below. Some of 
 
 `["a","b","c"].indexOf(1)`
 
-`[1,3,5].slice(2)`
+`[1,3,5].slice(3)`
 
 `_.keys({a:1,b:2,c:3})`
 
