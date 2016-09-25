@@ -323,48 +323,51 @@ Infer({...}, function() {
   var b = ...
   var data = f(a, b)
   condition(data == someVal && a == someOtherVal)
-  return b;
+  return b
 })
 ~~~~
 
 We have defined two independent variables `a` and `b` both of which are used to define the value of our data.
-If we condition on the data and `a` the posterior distribution on `b` will now be dependent on `a`: observing additional information about `a` changes our conclusions about `b`.
+If we condition on `data` and `a` the posterior distribution on `b` will now be dependent on `a`: observing additional information about `a` changes our conclusions about `b`.
 
 The most typical pattern of explaining away we see in causal reasoning is a kind of *anti-correlation*: the probabilities of two possible causes for the same effect increase when the effect is observed, but they are conditionally anti-correlated, so that observing additional evidence in favor of one cause should lower our degree of belief in the other cause.
+(This pattern is where the term explaining away comes from.)
 However, the coupling induced by conditioning on common effects depends on the nature of the interaction between the causes, it is not always an anti-correlation.
 Explaining away takes the form of an anti-correlation when the causes interact in a roughly disjunctive or additive form: the effect tends to happen if any cause happens; or the effect happens if the sum of some continuous influences exceeds a threshold.
 The following simple mathematical examples show this and other patterns.
 
 Suppose we condition on observing the sum of two integers drawn uniformly from 0 to 9:
 
-**TODO: figure out how to do scatter plot...**
-
 ~~~~
 var sumPosterior = Infer({method: 'enumerate'}, function() {
-  var A = sample(RandomInteger({n: 10}));
-  var B = sample(RandomInteger({n: 10}));
+  var A = randomInteger({n: 10})
+  var B = randomInteger({n: 10})
   condition(A + B == 9);
-  return [A, B]
+  return {A:A, B:B}
 })
 
-viz.auto(sumPosterior)
+viz(sumPosterior)
+//sometimes this scatter plot is easier to interpret:
+viz.scatter(sumPosterior.support())
 ~~~~
 
 This gives perfect anti-correlation in conditional inferences for `A` and `B`. But suppose we instead condition on observing that `A` and `B` are equal:
 
 ~~~~
 var sumPosterior = Infer({method: 'enumerate'}, function() {
-  var A = sample(RandomInteger({n: 10}));
-  var B = sample(RandomInteger({n: 10}));
-  condition(A == B);
-  return [A, B]
+  var A = randomInteger({n: 10})
+  var B = randomInteger({n: 10})
+  condition(A == B)
+  return {A:A, B:B}
 })
 
-viz.auto(sumPosterior)
+viz(sumPosterior)
+//sometimes this scatter plot is easier to interpret:
+viz.scatter(sumPosterior.support())
 ~~~~
 
 Now, of course, A and B go from being independent a priori to being perfectly correlated in the conditional distribution.
-Try out these other conditioners to see other possible patterns of conditional dependence for a priori independent functions:
+Try out these other conditions to see other possible patterns of conditional dependence for *a priori* independent functions:
 
 * `Math.abs(A - B) < 2`
 * `(A + B >= 9) && (A + B <= 11)`
@@ -392,7 +395,7 @@ That is our "confidence" in any conclusion only increases (and only does so in o
 In a probabilistic approach, by contrast, belief comes in a whole spectrum of degrees.
 We can think of confidence as a measure of how far our beliefs are from a uniform distribution---how close to the extremes of 0 or 1.
 In probabilistic inference, unlike in traditional logic, our confidence in a proposition can both increase and decrease.
-Even fairly simple probabilistic models can induce complex explaining-away dynamics that lead our degree of belief in a proposition to reverse directions multiple times as the conditioning set expands.
+Even fairly simple probabilistic models can induce complex explaining-away dynamics that lead our degree of belief in a proposition to reverse directions multiple times as observations accumulate.
 
 
 ## Example: Medical Diagnosis
