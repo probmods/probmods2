@@ -47,7 +47,7 @@ A summary of comparison and logical operators can be found [here](http://www.w3s
 
 # Mathematical functions and constants
 
-JavaScript has a built-in object with properties and methods for mathematical constants and functions. ("Objects" will be described in more detail below.)
+JavaScript has a built-in "Math" object with properties and methods for mathematical constants and functions. ("Objects" will be described in more detail below.)
 
 For example, to write: $$ 3^2 $$
 
@@ -64,14 +64,17 @@ Math.round(Math.PI*Math.pow(radius, 2)) + " square inches"
 
 A full list of the functions and constants can be found [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math).
 
+# Building More Complex Programs
 
-
-# Budilding More Complex Programs
+Consider the following complex expression:
 
 ~~~~
 true && (true || false)
 ~~~~
-The above expression has an *operator*---the logical function `&&` ("and")---and *arguments*---`true` and the *subexpression* which is itself an application of `||` ("or"). When reasoning about evaluation, it is best to think of evaluating the subexpressions first, then applying the function to the return values of its arguments. In this example `||` is first applied to `true` and `false`, returning true, then `&&` is applied to `true` and the subexpression's return value, again returning true.
+
+The above expression has an *operator*---the logical function `&&` ("and")---and *arguments*---`true` and the *subexpression* which is itself an application of `||` ("or").
+When reasoning about the evaluation of a program, it is best to think of evaluating the subexpressions first, then applying the function to the return values of its arguments.
+In this example `||` is first applied to `true` and `false`, returning true, then `&&` is applied to `true` and the subexpression's return value, again returning true.
 
 As a slightly more complex example, consider:
 
@@ -108,7 +111,8 @@ If statements can be strung together to create multiple different conditions
            500
 ~~~~
 
-Note the particular indentation style used above (called ''pretty-printing''). To clarify the structure of a function call, the arguments can split up across different lines, but keeping them vertically aligned helps readability:
+Note the particular indentation style used above (called ''pretty-printing'').
+To clarify the structure of a function call, the arguments can split up across different lines and can aid readability:
 
 ~~~~
 (3 * (
@@ -119,19 +123,22 @@ Note the particular indentation style used above (called ''pretty-printing''). T
 )
 ~~~~
 
-The online editor will automatically pretty-print for you. You can re-indent according to this style by selecting some lines and pressing the TAB key.
+The online editor will automatically pretty-print for you.
+You can re-indent according to this style by selecting some lines and pressing the TAB key.
 
-We often want to name objects in our programs so that they can be reused. This can be done with the `var` statement. `var` looks like this:
+We often want to name objects in our programs so that they can be reused.
+This can be done with the `var` statement.
+`var` looks like this:
 
 ~~~~ norun
 var variableName = expression
 ~~~~
 
-`variableName` is a *symbol* that is bound to the value that `expression` evaluates to. When variables themselves are evaluated they return the value that they have been bound to:
+`variableName` is a *symbol* that is bound to the value that `expression` evaluates to.
+When variables themselves are evaluated they return the value that they have been bound to:
 
 ~~~~
 var someVariable = 3 // assign the value 3 to the variable someVariable
-
 someVariable // when this is evaluated it looks up and returns the value 3
 ~~~~
 
@@ -142,12 +149,18 @@ someVariable = 3
 someVariable
 ~~~
 
+Multiple variable can be assigned in the same line using a `,`.
+To declare the end a line in JavaScript, use a `;`.
+In WebPPL as in standard JavaScript, the use of `;` is optional, but can be useful for readability.
+
+~~~~
+var x = 3, y = 2;
+y
+~~~~
+
 # Arrays and objects
 
-There are several special kinds of values in WebPPL. 
-
-## Arrays
-
+There are several special kinds of values in JavaScript. 
 One kind of special value is an *array*: a sequence of other values. 
 
 ~~~~
@@ -202,9 +215,16 @@ print( myArray.toString() )
 print( myArray.indexOf("my") )
 ~~~~
 
-A list of all the properties of arrays can be found [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of). Use caution with these. Not all JavaScript methods are supported on arrays in WebPPL. Some of these JavaScript methods will have their own WebPPL version. A list of the WebPPL functions for arrays can be found [here](http://docs.webppl.org/en/master/functions/arrays.html). 
+A list of all the properties of arrays can be found [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of).
+Use caution with these.
+Not all JavaScript methods are supported on arrays in WebPPL.
+Some of these JavaScript methods will have their own WebPPL version.
+A list of the WebPPL functions for arrays can be found [here](http://docs.webppl.org/en/master/functions/arrays.html). 
 
-In addition, the WebPPL language has available a JavaScript library useful for data munging, called Underscore. Underscore functions can be accessed using the `_.` prefix. A full list of functions available from Underscore can be found [here](http://underscorejs.org/). Note: underscore librarys that take functions (called predicates in underscore) as arguments are not available in WebPPL (e.g., `_.map`, `_.filter`, ...). 
+In addition, the WebPPL language has available a JavaScript library useful for dealing with arrays and objects, called Underscore.
+Underscore functions can be accessed using the `_.` prefix.
+A full list of functions available from Underscore can be found [here](http://underscorejs.org/).
+Note: underscore functions that take others functions (called predicates in underscore) as arguments are not available in WebPPL (e.g., `_.map`, `_.filter`, ...). 
 
 Here is one example, for reshaping arrays:
 
@@ -212,14 +232,12 @@ Here is one example, for reshaping arrays:
 _.zip(['frodo', 'gandalf', 'gimli'], ["hobbit", "wizard", "dwarf"], [true, false, false])
 ~~~~
 
-## Objects
-
 In real life, you encounter objects. 
 Objects have properties.
-Properties can be accessed using `.property` or `[property]` syntax. 
+Properties can be accessed using `.property` or `["property"]` syntax. 
 
 ~~~~
-var bilbo = { firstName: "Bilbo", lastName: "Baggins"}
+var bilbo = { firstName: "Bilbo", lastName: "Baggins" }
 print( bilbo.lastName )
 print( bilbo["lastName"] )
 ~~~~
@@ -248,10 +266,11 @@ var bilbo = {
 _.keys(bilbo)
 ~~~~
 
-
 # Building Functions: `function`
 
-The power of programming languages as a model of computation comes from the ability to make new functions. To do so, we use the `function` primitive. For example, we can construct a function that doubles any number it is applied to:
+The power of programming languages as a model of computation comes from the ability to make new functions.
+To do so, we use the `function` primitive.
+For example, we can construct a function that doubles any number it is applied to:
 
 ~~~~
 var double = function(x) {
@@ -261,16 +280,25 @@ var double = function(x) {
 double(3)
 ~~~~
 
-The general form of a function expression is: `function(arguments){ body }`.
-The first sub-expression of the function, the arguments, is a list of symbols that tells us what the inputs to the function will be called; the second sub-expression, the body, tells us what to do with these inputs. The value which results from a function is called a *compound procedure*. When a compound procedure is applied to input values (e.g. when `double` was applied to `3`) we imagine identifying (also called *binding*) the argument variables with these inputs, then evaluating the body. 
+In WebPPL, the use of the `return` keyword is optional.
+By default, WebPPL will return the last line of the function.
+We use the `return` keyword for explicitness and clarity.
 
-In functional programming, we can build procedures that manipulate any kind of value---even other procedures. Here we define a function `twice` which takes a procedure and returns a new procedure that applies the original twice:
+The general form of a function expression is: `function(arguments){ body }`.
+The first sub-expression of the function, the arguments, is a list of symbols that tells us what the inputs to the function will be called; the second sub-expression, the body, tells us what to do with these inputs.
+The value which results from a function is called a *compound procedure*.
+When a compound procedure is applied to input values (e.g. when `double` was applied to `3`) we imagine identifying (also called *binding*) the argument variables with these inputs, then evaluating the body. 
+
+In functional programming, we can build procedures that manipulate any kind of value---even other procedures.
+Here we define a function `twice` which takes a procedure and returns a new procedure that applies the original twice:
 
 ~~~~
 var double = function(x) { return x + x }
 
 var twice = function(f) { 
-	return function(x) { return f(f(x)) }
+  return function(x) { 
+    return f(f(x)) 
+  }
 }
 
 var twiceDouble = twice(double)
@@ -284,9 +312,11 @@ When functions take other functions as arguments, that is called a higher-order 
 
 # Higher-Order Functions
 
-Higher-order functions can be used to represent common patterns of computation. Several such higher-order functions are provided in WebPPL. 
+Higher-order functions can be used to represent common patterns of computation.
+Several such higher-order functions are provided in WebPPL. 
 
-`map` is a higher-order function that takes a procedure and applies it to each element of a list. For instance we could use map to test whether each element of a list of numbers is greater than zero:
+`map` is a higher-order function that takes a procedure and applies it to each element of a list.
+For instance we could use map to test whether each element of a list of numbers is greater than zero:
 
 ~~~~
 map(function(x){
@@ -294,7 +324,8 @@ map(function(x){
 }, [1, -3, 2, 0])
 ~~~~ 
 
-The `map` higher-order function can also be used to map a function of more than one argument over multiple lists, element by element.  For example, here is the MATLAB "dot-star" function (or ".*") written using `map2`:
+The `map` higher-order function can also be used to map a function of more than one argument over multiple lists, element by element. 
+For example, here is the MATLAB "dot-star" function (or ".*") written using `map2`, which maps over 2 lists at the same time:
 
 ~~~~
 var dotStar = function(v1, v2){
