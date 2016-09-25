@@ -1,10 +1,7 @@
 ---
 layout: exercise
-title: Generative models - exercises
-description: Generative models
-custom_js:
-- assets/js/box2d.js
-- assets/js/phys.js
+title: JavaScript basics - exercises
+description: JavaScript basics
 ---
 
 ## Exercise 1
@@ -21,7 +18,7 @@ B) $$ 4 + \frac{62}{7} $$
 ~~~~
 ~~~~
   
-C) The circumfrance of a 12-inch (diameter) pizza.
+C) The circumference of a 12-inch (diameter) pizza.
 
 ~~~~
 ~~~~
@@ -134,38 +131,53 @@ var Q = function(f, g){
 ## Exercise 3: Arrays and Objects
 
 
-A) Write a list an array of even numbers between 0 and 10 inclusive.
+A) Write an array of even numbers between 0 and 10 inclusive.
 
 ~~~~
 ~~~~
 
+B) Write an array of objects of you and your two best friends: Have first name, age, gender, and university properties.
 
-D) Without running any code, guess the result of each expression below. Some of these expressions have intentional errors---see if you can spot them.
 
-`(pair 1 (pair 'foo (pair 'bar '() ))`
+C) Without running any code, guess the result of each expression below. Some of these expressions have intentional errors---see if you can spot them.
 
-`(pair (1 2))`
 
-`(length '(1 2 3 (4 5 6) 7))`
+`"2" == 2`
 
-`(append '(1 2 3) '(4 5) '( 7 (8 9) ))`
+`"a" == a`
 
-`(length (apple pear banana))`
+`["a","b","c"].indexOf(1)`
 
-`(equal? (pair 'a (pair 'b (pair 'c '() ))) (append '(a b) '(c)))`
+`[1,3,5].slice(2)`
 
-`(equal? (pair 'd (pair 'e (pair 'f 'g))) '(d e f g))`
+`_.keys({a:1,b:2,c:3})`
+
+`[1, 2, 3, [4, 5, 6], 7].length`
+
+`["a","b"].concat("c","d")`
+
+`["a","b"].concat(["c","d"])`
+
+`["a","b"].concat([["c","d"]])`
+
+`_.values({a:x,b:y,c:z})`
+
+`[a, 3, 1].length`
+
+`[3,2] == [3,2]`
+
+`_.isEqual([3,2], [3,2])`
 
 Check your guesses by actually running the code. If you made any mistakes, explain why your initial guess was incorrect.
 
 ~~~~
 ~~~~
 
-## Exercise 4: Map and reduce
+## Exercise 4: Map, reduce, and filter
 
-Two common patterns for working with arrays are called `map` and `reduce` (reduce is also sometimes called "fold").
+Three common patterns for working with arrays are called `map`, `reduce`, and `filter` (reduce is also sometimes called "fold").
 
-Map takes two arguments, a function, `f`, and an array, `[a, b, c, ...]`, and returns a list with `f` applied to every item of the list: `[f(a), f(b), f(c), ...]`.
+Map takes two arguments, a function, `f`, and an array, `[a, b, c, ...]`, and returns an array with `f` applied to every item of the array: `[f(a), f(b), f(c), ...]`.
 In the example below, we map `square` (which squares numbers) over the first five natural numbers:
 
 ~~~~
@@ -173,6 +185,17 @@ var square = function(x){
   return x * x
 }
 map(square, [1, 2, 3, 4, 5])
+~~~~
+
+Like map, filter also takes 2 arguments: a function `f` and an array `[a, b, c, ...]`, and returns an array that is a subset of the original array with only those values that return true when the function is applied.
+In the example belwo, we filter the first five natural numbers by a function that checks if the number is even.
+Note the `%` operator returns the remainder leftover when one operand is divided by the other.
+
+~~~~
+var isEven = function(x){
+  return (x % 2) == 0
+}
+filter(isEven, [1, 2, 3, 4, 5])
 ~~~~
 
 Reduce takes three arguments, a function, `f`, an initial value, `i`, and an array, `[a, b, c, ...]`, and returns `f(...,f(c, f(b, f(a, i))))`.
@@ -211,10 +234,16 @@ B) Write `mySumSquares` *without* using `reduce`---instead use `map` and `sum`:
 ~~~~
 var square = function(x) { return x * x }
 var mySumSquares = function(arr) {
-  return sum(map(square, arr))
+  return ...
 }
 mySumSquares([1, 2, 3, 4, 5])
 ~~~~
+
+C) Filter `[1,2,3,4,5]` for those items whose squares are greater than 10.
+
+~~~~
+~~~~
+
 
 ## Exercise 5: Recursion
 

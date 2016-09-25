@@ -20,6 +20,7 @@ a couple issues with the chapter:
 
 One view of knowledge is that the mind maintains working models of parts of the world.
 'Model' in the sense that it captures some of the structure in the world, but not all (and what it captures need not be exactly what is in the world---just useful).
+<!--mht: "just useful" -> "just whatever is useful" -->
 'Working' in the sense that it can be used to simulate this part of the world, imagining what will follow from different initial conditions.
 As an example take the Plinko machine: a box with uniformly spaced pegs, with bins at the bottom.
 Into this box we can drop marbles:

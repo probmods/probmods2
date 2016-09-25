@@ -154,7 +154,7 @@ One kind of special value is an *array*: a sequence of other values.
 ["this", "is", "an", "array"]
 ~~~~
 
-Arrays can be indexed using `[index]` (note: indexing starts at 0).
+Arrays can be indexed using `[index]` Note: indexing starts at 0).
 
 ~~~~
 var myArray = ["this", "is", "my", "array"]
@@ -174,12 +174,24 @@ You can grab subsets of the array using `.slice(being, end)`.
 var myArray = ["this", "is", "my", "array"]
 x.slice(1,3)
 ~~~~
+
 If you don't put an `end`, it will default to the end.
 
 ~~~~
 var myArray = ["this", "is", "my", "array"]
 x.slice(1)
 ~~~~
+
+Arrays can be concatenated together, forming new arrays.
+
+~~~~
+var myFirstArray = ["this", "is"]
+var mySecondArray = ["my", "array"]
+
+myFirstArray.concat(mySecondArray)
+~~~~
+
+`.concat` can take multiple arguments, concatenating together multiple arrays or values simultaneously.
 
 Other helpful methods:
 
