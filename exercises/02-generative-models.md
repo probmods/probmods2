@@ -4,7 +4,7 @@ title: Generative models - exercises
 description: Generative models
 custom_js:
 - assets/js/box2d.js
-- assets/js/phys.js
+- assets/js/physics.js
 ---
 
 ## Exercise 1
@@ -41,9 +41,11 @@ var foo = function() {return flip()};
 display([foo(), foo(), foo()]);
 ~~~~
 
+How could you use `mem` to make the second program have the same distribution as the first?
+
 ## Exercise 3
 
-In the simple medical diagnosis example we imagined a generative process for the diseases and symptoms of a single patient. If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a ''function'' from a person to whether they have that disease, like this:
+In the simple medical diagnosis example we imagined a generative process for the diseases and symptoms of a single patient. If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a *function* from a person to whether they have that disease, like this:
 
 ~~~~
 var lungCancer = function(person) {return flip(.01)};
@@ -54,7 +56,7 @@ var cough = function(person) {return cold(person) || lungCancer(person)}
 display([cough('bob'), cough('alice')])
 ~~~~
 
-Why doesn't this work correctly if we try to do the same thing for the more complex medical diagnosis example? How could we fix it?
+Why doesn't this capture our intuitions correctly if we try to do the same thing for the more complex medical diagnosis example? How could we fix it?
 
 ## Exercise 4
 
@@ -63,22 +65,22 @@ Work through the evaluation process for the `bend` higher-order function in this
 ~~~~
 var makeCoin = function(weight) {
   return function() {
-    return flip(weight) ? 'h' : 't';
+    return flip(weight) ? 'h' : 't'
   }
 }
 var bend = function(coin) {
   return function() {
-    return coin() == 'h' ? makeCoin(.7)() : makeCoin(.1)();
+    return coin() == 'h' ? makeCoin(.7)() : makeCoin(.1)()
+  }
 }
 
 var fairCoin = makeCoin(.5)
-var bentCoin = bend(fairCoin);
-
-viz.auto(repeat(100, bentCoin))
+var bentCoin = bend(fairCoin)
 ~~~~
 
-Directly compute the probability of the bent coin in the example. Check your answer by comparing to the histogram of many samples.
+Directly compute the probability distribution of the bent coin in the example. Check your answer by using `Infer`.
 
+<!-- ToW was moved to next chapter....
 ## Exercise 5
 
 Here is a modified version of the tug of war game. Instead of drawing strength from the continuous Gaussian distribution, strength is either 5 or 10 with equal probability. Also the probability of laziness is changed from 1/4 to 1/3. Here are four expressions you could evaluate using this modified model:
@@ -120,17 +122,19 @@ b) Directly compute the probability for each possible return value from each exp
 
 c) Why are the probabilities different for the last two? Explain both in terms of the probability calculations you did and in terms of the "causal" process of evaluating and making random choices.
 
-## Exercise 6
+-->
 
-Use the rules of probability, described above, to compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5.
+## Exercise 5
+
+Use the rules of probability to compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5. Check your answer by using `Infer`.
 
 ~~~~
 var geometric = function(p) {
-  return flip(p) ? 0 : 1 + geometric(p);
+  return flip(p) ? 0 : 1 + geometric(p)
 };
 ~~~~
 
-## Exercise 7
+## Exercise 6
 
 Convert the following probability table to a compact Church program:
 
@@ -141,36 +145,19 @@ Convert the following probability table to a compact Church program:
 |T|      F|     0.4|
 |T|      T|     0.4|
 
-<!--
-<table>
-  <tr>
-    <th>A</th> <th>B</th> <th>P(A,B)</th>
-  </tr>
-  <tr>
-    <td>F</td> <td>F</td> <td>0.14</td>
-  </tr>
-  <tr>
-    <td>F</td> <td>T</td> <td>0.06</td>
-  </tr>
-  <tr>
-    <td>T</td> <td>F</td> <td>0.4</td>
-  </tr>
-  <tr>
-    <td>T</td> <td>T</td> <td>0.4</td>
-  </tr>
-</table>
--->
-Hint: fix the probability of A and then define the probability of B to *depend* on whether A is true or not. Run your WebPPL program and build a histogram to check that you get the correct distribution
+Hint: fix the probability of A and then define the probability of B to *depend* on whether A is true or not.
 
 ~~~~
-var a = ...;
-var b = ...;
-display([a, b])
+var a = ...
+var b = ...
+[a, b]
 ~~~~
 
-## Exercise 8
+Run your WebPPL program and use `Infer` to check that you get the correct distribution.
 
-In [Example: Intuitive physics] above we modeled stability of a tower as the probability that the tower falls when perturbed, and we modeled "falling" as getting shorter. It would be reasonable to instead measure *how much shorter* the tower gets.
+## Exercise 7
+
+In **Example: Intuitive physics** we modeled stability of a tower as the probability that the tower falls when perturbed, and we modeled "falling" as getting shorter. It would be reasonable to instead measure *how much shorter* the tower gets.
 
 a) Below, modify the stability model by writing a continuous measure, `towerFallDegree`. Make sure that your continuous measure is in some way numerically comparable to the discrete measure, `doesTowerFall` (defined here as either 0 or 1). Mathematically, what is your continuous measure?
 
@@ -226,9 +213,9 @@ var visualizeStabilityMeasure = function(measureFunction) {
   var initialWorld = noisify(almostUnstableWorld)
   var finalWorld = physics.run(1000, initialWorld)
   var measureValue = measureFunction(initialWorld, finalWorld);
-  display("Stability measure: " + measureValue + "//" +
-          "Initial height: " + getTowerHeight(initialWorld) + "//" +
-	  "Final height: " + getTowerHeight(finalWorld));
+  print("Stability measure: " + measureValue)
+  print("Initial height: " + getTowerHeight(initialWorld))
+  print("Final height: " + getTowerHeight(finalWorld))
   physics.animate(1000, initialWorld)
 };
 
