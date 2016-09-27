@@ -18,20 +18,26 @@ You can do basic arithmetical operations:
 3 + 3
 ~~~~
 
-Numeric variables can be automatically modified into strings
+The `+` symbol is also used to concatenate strings: 
+
+~~~~
+"My favorite food is " + "pizza"
+~~~~
+
+Numeric variables will automatically modified into strings during concatenation:
 
 ~~~~
 3 + " is my favorite number"
 ~~~~
 
-Boolean variables can be automatically changed into numbers
+Boolean variables will be automatically changed into numbers when added (`false` becomes 0 and `true` becomes 1)
 
 ~~~~
 true + true
 ~~~~
 
 Equality can be checked using `==` and `===`. 
-`===` cares about the type of variable (e.g., string, numeric, boolean).
+`===` is a stricter comparison which cares about the type of variable (e.g., string, numeric, boolean).
 
 ~~~~
 print(3 == 3)
@@ -66,15 +72,17 @@ A full list of the functions and constants can be found [here](https://developer
 
 # Building More Complex Programs
 
-Consider the following complex expression:
+Consider the following complex expression built out of Boolean operators `||` (*or*) and `&&` (*and*):
 
 ~~~~
 true && (true || false)
 ~~~~
 
-The above expression has an *operator*---the logical function `&&` ("and")---and *arguments*---`true` and the *subexpression* which is itself an application of `||` ("or").
-When reasoning about the evaluation of a program, it is best to think of evaluating the subexpressions first, then applying the function to the return values of its arguments.
-In this example `||` is first applied to `true` and `false`, returning true, then `&&` is applied to `true` and the subexpression's return value, again returning true.
+This expression has an *operator*---the function `&&`---and *arguments*---`true` on the left and `(true || false)` on the right.
+The latter argument itself is a *subexpression* consisting of a different operator---the function `||`---and different arguments---`true` and `false`.
+When reasoning about the evaluation of a program, it is best to think of evaluating the subexpressions first, then substituting their return value into the larger expression.
+In this example, we first evaluate the expression `true || false`, returning true.
+After we substitute this into the larger expression, we have `true && true`, against returning true.
 
 As a slightly more complex example, consider:
 
@@ -91,7 +99,7 @@ This expression is composed of an `if` conditional that evaluates the first expr
 The operator `if` is strictly not a function, because it does not evaluate all of its arguments, but instead *short-circuits* evaluating only the second or third. It has a value like any other function.
 (We have also used comments here: anything after a `//` is ignored when evaluating.) 
 
-JavaScript has a very useful and common shorthand for `if` statements: it is called the "ternary" operator `?`
+JavaScript has a very useful and common shorthand for `if` statements: it is called the "ternary" operator, using a question mark `?` and colon `:` to demarcate the three components.
 
 The syntax is: `condition ? consequent : alternative`
 
@@ -101,7 +109,7 @@ The syntax is: `condition ? consequent : alternative`
   (true || false)  // the alternative ("else")
 ~~~~
 
-If statements can be strung together to create multiple different conditions
+Ternary statements can be strung together to create multiple different conditions
 
 ~~~~
 (1 == 2) ? 100 :
@@ -274,7 +282,7 @@ For example, we can construct a function that doubles any number it is applied t
 
 ~~~~
 var double = function(x) {
-	return x + x
+  return x + x
 }
 
 double(3)
@@ -320,7 +328,7 @@ For instance we could use map to test whether each element of a list of numbers 
 
 ~~~~
 map(function(x){
-	return x > 0
+  return x > 0
 }, [1, -3, 2, 0])
 ~~~~ 
 
@@ -329,7 +337,7 @@ For example, here is the MATLAB "dot-star" function (or ".*") written using `map
 
 ~~~~
 var dotStar = function(v1, v2){
-  map2( 
+  return map2( 
     function(x,y){ return x * y }, 
     v1, v2)
 }
