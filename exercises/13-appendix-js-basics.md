@@ -131,7 +131,8 @@ var Q = function(f, g){
 ## Exercise 3: Arrays and Objects
 
 
-A) Write an array of even numbers between 0 and 10 inclusive.
+A) Write an array of even numbers between 0 and 10 inclusive. 
+(You can either write this out manually, using the underscore `_.range()` function, or writing a recursive function.)
 
 ~~~~
 ~~~~
