@@ -352,4 +352,4 @@ var g = function(){ return 8 }
 repeat(100, g)
 ~~~~
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/appendix-js-basics.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/13-appendix-js-basics.html)

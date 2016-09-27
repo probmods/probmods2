@@ -6,9 +6,9 @@ description: JavaScript basics
 
 ## Exercise 1
 
-Write the following mathematical expressions
+Write the following mathematical expressions in WebPPL
 
-A) $$ 3 * 4 $$
+A) $$ 3 \times 4 $$
 
 ~~~~
 ~~~~
@@ -30,7 +30,7 @@ D) $$ 3 \times ( 4+ (\frac{62}{7})^2 ) $$
 
 E) Convert this WebPPL expression into an arithmetic expression:
 
-~~~~
+~~~~norun
 Math.abs(-3 * Math.exp(Math.pow(3, 4)))
 ~~~~
 
@@ -274,7 +274,7 @@ var bigger = function(a, b){
 }
 
 var myMax = function(arr){
- return (arr.length == 1) ? lst[0] : 
+ return (arr.length == 1) ? lst[0] : ... // finish this line
 }
 
 myMax([1, 2, 3, 6, 7, 4, 2, 9, 8, -5, 0, 12, 3])
