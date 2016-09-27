@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Appendix - JavaScript basics
-description: Appendix - JavaScript basics
+description: 
 ---
 
 # Introduction to JavaScript
