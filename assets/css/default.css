@@ -153,6 +153,10 @@ pre.highlight {
     background-color: transparent
 }
 
+.container .graphComponent .settings {
+    background-color: transparent
+}
+
 .container .wpedit .clearButton {
     padding: 10px;
     border: none;
