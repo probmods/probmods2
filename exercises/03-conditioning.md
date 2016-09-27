@@ -17,7 +17,7 @@ b) Why would this procedure give different answers than conditioning for more ge
 
 ## Exercise 2: Computing marginals
 
-Use the rules for computing probabilities to compute the marginal distribution on return values from these WebPPL programs
+Use the rules for computing probabilities to compute the marginal distribution on return values from these WebPPL programs by hand (use `viz()` to check your answers):
 
 ~~~~
 Infer({method: "enumerate"}, function() {
@@ -40,6 +40,9 @@ Infer({method: "enumerate"}, function() {
 ## Exercise 3: Extending the smiles model
 
 a) Describe (using ordinary English) what the second WebPPL program above means.
+
+~~~~
+~~~~
 
 b) Write a version of the model that captures these two intuitions: (1) people are more likely to smile if they want something and (2) *nice* people are less likely to want something.
 
@@ -83,11 +86,7 @@ var distribution = Infer({method: 'enumerate'}, function() {
 viz.auto(distribution);
 ~~~~
 
-**TODO: what to do with this question? I rewrote code snippet using `indexOf`. Should we ask about what `indexOf` does, or just take out the question?**
-
-c) What does the `my-list-index` function do? What would happen if you ran `(my-list-index 'mango '(apple banana) 1)`?
-
-d) What does the `Categorical` function do? Use `Categorical` to express this distribution:
+c) What does the `Categorical` function do (hint: check the [docs](http://webppl.readthedocs.io/en/master/distributions.html))? Use `Categorical` to express this distribution:
 
 |x    | P(x)|
 |---- | -----|
@@ -100,8 +99,8 @@ d) What does the `Categorical` function do? Use `Categorical` to express this di
 var distribution = Categorical(...)
 ~~~~
 
-e) Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$. Include a screenshot of the resulting graph. What letter has the highest posterior probability? In English, what does it mean that this letter has the highest posterior? Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
+d) Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$. Include a screenshot of the resulting graph. What letter has the highest posterior probability? In English, what does it mean that this letter has the highest posterior? Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
-f) Which is higher, $$p(\text{vowel} \mid \text{win})$$ or $$p(\text{consonant} \mid \text{win})$$? Answer this using the WebPPL code you wrote (hint: use the `checkVowel` function)
+e) Which is higher, $$p(\text{vowel} \mid \text{win})$$ or $$p(\text{consonant} \mid \text{win})$$? Answer this using the WebPPL code you wrote (hint: use the `checkVowel` function)
 
-g) What difference do you see between your code and the mathematical notation? What are the advantages and disadvantages of each? Which do you prefer?
+f) What difference do you see between your code and the mathematical notation? What are the advantages and disadvantages of each? Which do you prefer?
