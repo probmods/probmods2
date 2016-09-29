@@ -193,14 +193,14 @@ You can grab subsets of the array using `.slice(being, end)`.
 
 ~~~~
 var myArray = ["this", "is", "my", "array"]
-x.slice(1,3)
+myArray.slice(1,3)
 ~~~~
 
 If you don't put an `end`, it will default to the end.
 
 ~~~~
 var myArray = ["this", "is", "my", "array"]
-x.slice(1)
+myArray.slice(1)
 ~~~~
 
 Arrays can be concatenated together, forming new arrays.
