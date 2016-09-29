@@ -136,7 +136,7 @@ var geometric = function(p) {
 
 ## Exercise 6
 
-Convert the following probability table to a compact Church program:
+Convert the following probability table to a compact WebPPL program:
 
 |A|    B|    P(A,B)|
 |--- | --- | ---|
