@@ -231,7 +231,7 @@ The figure below defines a Bayesian network for the medical diagnosis example.
 The graph contains a node for each `var` statement in our WebPPL program, with links to that node from each variable that appears in the assignment expression.
 There is a probability table ("CPT") for each node, with a column for each value of the variable, and a row for each combination of values for its parents in the graph.
 
-![A Bayes net for the medical diagnosis example.]({{site.baseURL}}/assets/img/Med-diag-bnet1.jpg)
+![A Bayes net for the medical diagnosis example.]({{site.baseurl}}/assets/img/Med-diag-bnet1.jpg)
 
 Simple generative models will have a corresponding graphical model that captures all of the dependencies (and *in*dependencies) of the model, without capturing the precise *form* of these functions.
 For example, while the graphical model shown above faithfully represents the probability distribution encoded by the WebPPL program, it captures the *noisy-OR* form of the causal dependencies only implicitly.
@@ -553,18 +553,14 @@ even though fever itself is not at all diagnostic of lung disease, and there is 
 
 # Example: Trait Attribution
 
-People often have to make inferences about entities and their interactions.
-Such problems tend to have dense relations between the entities, leading to very challenging explaining away problems.
-Inference is computationally difficult in these situations but the inferences come very naturally to people, suggesting these are important problems that our brains have specialized somewhat to solve (or perhaps that they have evolved general solutions to these tough inferences).
-
-A familiar example comes from reasoning about the causes of students' success and failure in the classroom.
+A familiar example of rich patterns of inference comes from reasoning about the causes of students' success and failure in the classroom.
 Imagine yourself in the position of an interested outside observer---a parent, another teacher, a guidance counselor or college admissions officer---in thinking about these conditional inferences.
 If a student doesn't pass an exam, what can you say about why he failed?  Maybe he doesn't do his homework, maybe the exam was unfair, or maybe he was just unlucky?
 
 ~~~~
 var examPosterior = Infer({method: 'enumerate'}, function() {
-  var examFair = flip(.8);
-  var doesHomework = flip(.8);
+  var examFair = flip(.8)
+  var doesHomework = flip(.8)
   var pass = flip(examFair ?
                   (doesHomework ? 0.9 : 0.4) :
                   (doesHomework ? 0.6 : 0.2))
@@ -573,18 +569,15 @@ var examPosterior = Infer({method: 'enumerate'}, function() {
 })
 
 viz.marginals(examPosterior)
-viz.auto(examPosterior)
+viz(examPosterior)
 ~~~~
 
 Now what if you have evidence from several students and several exams? We first re-write the above model to allow many students and exams:
 
 ~~~~
-var examFairPrior = Bernoulli({p: .8});
-var doesHomeworkPrior = Bernoulli({p: .8});
-
 var examPosterior = Infer({method: 'enumerate'}, function() {
-  var examFair = mem(function(exam){return sample(examFairPrior)})
-  var doesHomework = mem(function(student){return sample(doesHomeworkPrior)})
+  var examFair = mem(function(exam){return flip(0.8)})
+  var doesHomework = mem(function(student){return flip(0.8)})
 
   var pass = function(student, exam) {
     return flip(examFair(exam) ?
@@ -598,7 +591,7 @@ var examPosterior = Infer({method: 'enumerate'}, function() {
 })
 
 viz.marginals(examPosterior)
-viz.auto(examPosterior)
+viz(examPosterior)
 ~~~~
 
 Initially we observe that Bill failed exam 1.
@@ -651,6 +644,11 @@ These three dimensions are: Persons---is the outcome consistent across different
 <!--- wikipedia:
 1) Consistency: "Is the behavior consistent across most people in the given situation?" 2) Distinctiveness: "Does the behavior vary across different situations?" and 3) Consensus: "Do most people engage in this behavior in this situation?"
 --->
+
+As in this example, people often have to make inferences about entities and their interactions.
+Such problems tend to have dense relations between the entities, leading to very challenging explaining away problems.
+These inferences often come very naturally to people, yet they are computationally difficult.
+Perhaps these are important problems that our brains have specialized somewhat to solve, or perhaps that they have evolved general solutions to these tough inferences. What do you think?
 
 
 # Example: Of Blickets and Blocking
@@ -706,12 +704,12 @@ Thus luminance is inherently ambiguous.
 The visual system has to determine what proportion of the luminance is due to reflectance and what proportion is due to the illumination of the scene.
 This has led to a famous illusion known as the *checker shadow illusion* discovered by Ted Adelson.
 
-![Are the two squares the same shade of grey?]({{site.baseURL}}/assets/img/Checkershadow_illusion_small.png)
+![Are the two squares the same shade of grey?]({{site.baseurl}}/assets/img/Checkershadow_illusion_small.png)
 
 Despite appearances, in the image above both the square labeled A and the square labeled B are actually the same shade of gray.
 This can be seen in the figure below where they are connected by solid gray bars on either side.
 
-![]({{site.baseURL}}/assets/img/Checkershadow_proof_small.png)
+![]({{site.baseurl}}/assets/img/Checkershadow_proof_small.png)
 
 The presence of the cylinder is providing evidence that the illumination of square B is actually less than that of square A (because it is expected to cast a shadow).
 Thus we perceive square B as having higher reflectance since its luminance is identical to square A and we believe there is less light hitting it.
