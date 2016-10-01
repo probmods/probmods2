@@ -402,7 +402,7 @@ Even fairly simple probabilistic models can induce complex explaining-away dynam
 
 The medical scenario is a great model to explore screening off and explaining away.
 In this model `smokes` is statistically dependent on several symptoms---`cough`, `chestPain`, and `shortnessOfBreath`---due to a causal chain between them mediated by `lungDisease`.
-We can see this easily by conditioning on these symptoms and querying `smokes`:
+We can see this easily by conditioning on these symptoms and looking at `smokes`:
 
 ~~~~
 var medicalDist = Infer({method: 'enumerate'}, function() {
@@ -419,12 +419,11 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
 
   return smokes
 })
-viz.auto(medicalDist)
+viz(medicalDist)
 ~~~~
 
 The conditional probability of `smokes` is much higher than the base rate, 0.2, because observing all these symptoms gives strong evidence for smoking.
-See how much evidence the different symptoms contribute by dropping them out of the conditioning set.
-For instance, try conditioning on `cough && chestPain`, or just `cough`; you should observe the probability of `smokes` decrease as fewer symptoms are observed.
+See how much evidence the different symptoms contribute by dropping them out of the conditioning set. (For instance, try conditioning on `cough && chestPain`, or just `cough`; you should observe the probability of `smokes` decrease as fewer symptoms are observed.)
 
 Now, suppose we condition also on knowledge about the function that mediates these causal links: `lungDisease`.
 Is there still an informational dependence between these various symptoms and `smokes`?  In the Inference below, try adding and removing various symptoms (`cough`, `chestPain`, `shortnessOfBreath`) but maintaining the observation `lungDisease`:
@@ -445,17 +444,16 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
   return smokes
 })
 
-viz.auto(medicalDist)
+viz(medicalDist)
 ~~~~
 
-You should see an effect of whether the patient has lung disease on conditional inferences about smoking---a person is judged to be substantially more likely to be a smoker if they have lung disease than otherwise---but there is no separate effects of chest pain, shortness of breath or cough, over and above the evidence provided by knowing whether the patient has lung-disease.
-We say that the intermediate variable lung disease *screens off* the root cause (smoking) from the more distant effects (coughing, chest pain and shortness of breath).
+You should see an effect of whether the patient has lung disease on conditional inferences about smoking---a person is judged to be substantially more likely to be a smoker if they have lung disease than otherwise---but there are no separate effects of chest pain, shortness of breath, or cough over and above the evidence provided by knowing whether the patient has lung-disease.
+The intermediate variable lung disease *screens off* the root cause (smoking) from the more distant effects (coughing, chest pain and shortness of breath).
 
 Here is a concrete example of explaining away in our medical scenario.
 Having a cold and having lung disease are *a priori* independent both causally and statistically.
 But because they are both causes of coughing if we observe `cough` then `cold` and `lungDisease` become statistically dependent.
-That is, learning something about whether a patient has `cold` or `lungDisease` will, in the presence of their common effect `cough`, convey information about the other condition.
-We say that `cold` and `lungCancer` are marginally (or *a priori*) independent, but *conditionally dependent* given `cough`.
+That is, learning something about whether a patient has `cold` or `lungDisease` will, in the presence of their common effect `cough`, convey information about the other condition. `cold` and `lungCancer` are *a priori* independent, but *conditionally dependent* given `cough`.
 
 To illustrate, observe how the probabilities of `cold` and `lungDisease` change when we observe `cough` is true:
 
@@ -544,13 +542,13 @@ Notice how far up or down knowledge about whether the patient has a cold can pus
 
 Explaining away effects can be more indirect.
 Instead of observing the truth value of `cold`, a direct alternative cause of `cough`, we might simply observe another symptom that provides evidence for `cold`, such as `fever`.
-Compare these conditioners with the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lungDisease`.
+Compare these conditions using the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lungDisease`.
 
-**TODO: smokes && chestPain && cough doesn't occur anywhere above; seems like this only makes sense with the little commented-out?**
-
+<!--
 Replace `(and smokes chestPain cough)`  with `(and smokes chest-pain cough fever)` or `(and smokes chest-pain cough (not fever))`.
 In this case, finding out that the patient either does or does not have a fever makes a crucial difference in whether we think that the patient has lung disease...
 even though fever itself is not at all diagnostic of lung disease, and there is no causal connection between them.
+-->
 
 
 # Example: Trait Attribution
