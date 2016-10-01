@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Conditioning
-description: Using generative models to ask questions
+description: Asking questions of models by conditional inference.
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js

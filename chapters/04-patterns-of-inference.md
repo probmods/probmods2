@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Patterns of inference
-description: Setting up types of conditional dependence
+description: Causal and statistical dependence. Conditional dependence.
 ---
 
 # Causal Dependence
@@ -657,7 +657,7 @@ A number of researchers have explored children's causal learning abilities by us
 Children are shown a set of evidence and then asked which blocks are blickets.
 For instance, if block A makes the detector go off, it is probably a blicket.
 Ambiguous patterns are particularly interesting.
-Imagine that blocks A and B are put on the detector together, making the detector go off; it is likely that A is a blicket.
+Imagine that blocks A and B are put on the detector together, making the detector go off; it is fairly likely that A is a blicket.
 Now B is put on the detector alone, making the detector go off; it is now less plausible that A is a blicket.
 This is called "backward blocking", and it is an example of explaining away.
 
@@ -666,27 +666,25 @@ Finally, the machine goes off if any of the blocks on it is a blicket (but noisi
 
 ~~~~
 var blicketPosterior = Infer({method: 'enumerate'}, function() {
-  var blicket = mem(function(block) {return flip(.2)})
-  var power = function(block) {return blicket(block) ? .9 : .05};
+  var blicket = mem(function(block) {return flip(.4)})
+  var power = function(block) {return blicket(block) ? .9 : .05}
   var machine = function(blocks) {
     return (blocks.length == 0 ?
             flip(.05) :
-            flip(power(_.first(blocks))) || machine(_.rest(blocks)));
+            flip(power(first(blocks))) || machine(rest(blocks)))
   }
-
-  condition(machine(['A', 'B']));
-
-  return blicket('A');
+  condition(machine(['A', 'B']))
+  return blicket('A')
 });
 
-viz.auto(blicketPosterior)
+viz(blicketPosterior)
 ~~~~
 
 Try the backward blocking scenario described above.
 @Sobel2004 tried this with children, finding that four year-olds perform similarly to the model: evidence that B is a blicket explains away the evidence that A and B made the detector go away.
 
 
-# A Case Study in Modularity: Visual Perception of Surface Lightness and Color
+# A Case Study in Modularity: Visual Perception of Surface Color
 
 Visual perception is full of rich conditional inference phenomena, including both screening off and explaining away.
 Some very impressive demonstrations have been constructed using the perception of surface structure by mid-level vision researchers; see the work of Dan Kersten, David Knill, Ted Adelson, Bart Anderson, Ken Nakayama, among others.
@@ -695,10 +693,10 @@ Neuroscientists have developed an understanding of the primate visual system in 
 This view is consistent with findings by cognitive psychologists that at least in early vision, these different stimulus dimensions are not integrated but processed in a sequential, modular fashion.
 Yet vision is at heart about constructing a unified and coherent percept of a three-dimensional scene from the patterns of light falling on our retinas.
 That is, vision is causal inference on a grand scale.
-Its output is a rich description of the objects, surface properties and relations in the world that are not themselves directly grasped by the brain but that are the true causes of the input---low-level stimulation of the retinal.
+Its output is a rich description of the objects, surface properties and relations in the world that are not themselves directly grasped by the brain but that are the true causes of the input---low-level stimulation of the retina.
 Solving this problem requires integration of many appearance features across an image, and this results in the potential for massive effects of explaining away and screening off.
 
-In vision, the luminance of a surface depends on two factors, the illumination of the surface (how much light is hitting it) and its reflectance.
+In vision, the luminance of a surface depends on two factors, the illumination of the surface (how much light is hitting it) and its intrinsic reflectance.
 The actual luminance is the product of the two factors.
 Thus luminance is inherently ambiguous.
 The visual system has to determine what proportion of the luminance is due to reflectance and what proportion is due to the illumination of the scene.
@@ -718,39 +716,39 @@ The following program implements a simple version of this scenario "before" we s
 ~~~~
 var observedLuminance = 3;
 
-var reflectancePosterior = Infer({method: 'MCMC', samples: 100000}, function() {
-  var reflectance = sample(Gaussian({mu: 1, sigma: 1}));
-  var illumination = sample(Gaussian({mu: 3, sigma: 0.5}));
-  var luminance = reflectance * illumination;
-  factor(Gaussian({mu: observedLuminance, sigma: 0.1}).score(luminance));
-  return reflectance;
+var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var reflectance = gaussian({mu: 1, sigma: 1})
+  var illumination = gaussian({mu: 3, sigma: 1})
+  var luminance = reflectance * illumination
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance)
+  return reflectance
 });
 
-print(expectation(reflectancePosterior));
-viz.auto(reflectancePosterior);
+print(expectation(reflectancePosterior))
+viz(reflectancePosterior)
 ~~~~
 
-Now let's condition on the presence of the cylinder, by conditioning on the presence of it's "shadow" (i.e. lower illumination than expected *a priori*):
+Now let's condition on the presence of the cylinder, by conditioning on the presence of it's "shadow" (i.e. gaining a noisy observation suggesting that illumination is lower than expected *a priori*):
 
 ~~~~
 var observedLuminance = 3;
 
-var reflectancePosterior = Infer({method: 'MCMC', samples: 100000}, function() {
-  var reflectance = sample(Gaussian({mu: 1, sigma: 1}));
-  var illumination = sample(Gaussian({mu: 3, sigma: 0.5}));
-  var luminance = reflectance * illumination;
-  factor(Gaussian({mu: observedLuminance, sigma: 0.1}).score(luminance)
-         + Gaussian({mu: .5, sigma: .1}).score(illumination));
-  return reflectance;
+var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var reflectance = gaussian({mu: 1, sigma: 1})
+  var illumination = gaussian({mu: 3, sigma: 1})
+  var luminance = reflectance * illumination
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance)
+  observe(Gaussian({mu: illumination, sigma: 0.1}), 0.5)
+  return reflectance
 });
 
-print(expectation(reflectancePosterior));
-viz.auto(reflectancePosterior);
+print(expectation(reflectancePosterior))
+viz(reflectancePosterior)
 ~~~~
 
 The variables `reflectance` and `illumination` are conditionally independent in the generative model, but after we condition on `luminance` they become dependent: changing one of them affects the probability of the other.
-This phenomenon has important consequences for cognitive science.
 Although the model of (our knowledge of) the world has a certain kind of modularity implied by conditional independence, as soon as we start using the model to do conditional inference on some data, formerly modularly isolated variables can become dependent.
+This general phenomenon has important consequences for cognitive science.
 
 <!--
 ## Other vision examples (to be developed)

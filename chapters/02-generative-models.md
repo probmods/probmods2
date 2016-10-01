@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Generative models
-description: Generative models
+description: Representing working models with probabilistic programs.
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js
