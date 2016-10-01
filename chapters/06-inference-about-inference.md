@@ -501,7 +501,7 @@ var learner = function(side, depth) {
 
 To make this concrete, assume that there are two dice, A and B, which each have three sides (red, green, blue) that have weights like so:
 
-<img src='../assets/img/pedagogy-pic.png ' width='300' />
+<img src='{{site.baseurl}}/assets/img/pedagogy-pic.png ' width='300' />
 
 Which hypothesis will the learner infer if the teacher shows the green side?
 
