@@ -117,7 +117,9 @@ Basics from [PPAML school](http://probmods.github.io/ppaml2016/chapters/5-data.h
 
 # Linking functions
 
-# Model comparison, Savage-Dickey
+# Model comparison, Bayes Factor, Savage-Dickey
+
+Discuss difficulties with model comparison? (harmonic mean estimators, mcmc for likelihoods)
 
 # Example: Linear regression and tug of war
 
