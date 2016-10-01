@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Introduction
-description: Course overview and brief introduction.
+description: A brief introduction to the philosophy.
 ---
 
 What is thought?

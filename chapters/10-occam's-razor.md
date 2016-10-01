@@ -12,7 +12,7 @@ In learning, perceiving or thinking about the world, we are fitting models to th
 
 Fitting curves (or smooth functions) to sparsely sampled, noisy data provides a familiar example of the problem.
 
-<center><img src='{{site.base}}/assets/img/Curve_fitting.png' width='600' /></center>
+<center><img src='{{site.baseurl}}/assets/img/Curve_fitting.png' width='600' /></center>
 
 The figure above shows three polynomial fits: a 1st-order (linear), a 2nd-order (quadratic), and a 12th-order polynomial.  How do our minds decide which of these functions provides the best account of the data?  The 1st-order model captures the rough trend of the data but seems too coarse; it attributes some of the variation that we see as "signal" to "noise".   The 2nd-order model seems best; it seems to be just complex enough to fit the main shape of the data without over-fitting the noise.  The 12th-order model seems ridiculously over-fit; with 13 data points, the parameters can be adjusted so as to make the curve pass exactly through every data point, thus taking as "signal" all of what we see as "noise".   Again we can think of this as a causal inference problem: each function represents a hypothesis about the causal process that gave rise to the observed data, including the shape of the function from inputs to outputs, as well as the level of noise added to the output.
 
@@ -467,11 +467,11 @@ var observedYs = [2, 1.6, 0.9, 0.3, -0.1, -0.45, -1.2];
 # Example: Scene Inference
 Imagine you are in a world of colored blocks that typically looks something like this:
 
-<img src='{{site.base}}/assets/img/blocks-world.png' width='200' />
+<img src='{{site.baseurl}}/assets/img/blocks-world.png' width='200' />
 
 And one day you see this 1x2 red patch... is it one 1x2 block or two 1x1 blocks?
 
-<img src='{{site.base}}/assets/img/blocks.png' width='400' />
+<img src='{{site.baseurl}}/assets/img/blocks.png' width='400' />
 
 We can model this inference by building a generative model of scenes. To do so we use simple models of geometry and of rendering geometric objects to an image (in this case by layering them):
 

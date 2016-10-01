@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Generative models
-description: Generative models
+description: Representing working models with probabilistic programs.
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js
@@ -460,15 +460,15 @@ var eyeColor = mem(function (person) {
 This type of modeling is called *random world* style [@Mcallester2008].
 Note that we don't have to specify ahead of time the people whose eye color we will ask about: the distribution on eye colors is implicitly defined over the infinite set of possible people, but only constructed "lazily" when needed.
 Memoizing stochastic functions thus provides a powerful toolkit to represent and reason about an unbounded set of properties of an unbounded set of objects.
-For instance, here we define a function `flipN` that encodes the outcome of the $$n$$th flip of a particular coin:
+For instance, here we define a function `flipAlot` that maps from an integer (or any other value) to a coin flip. We could use it to implicitly represent the $$n$$th flip of a particular coin, without having to actually flip the coin $n$ times.
 
 ~~~~
-var flipN = mem(function (n) {
+var flipAlot = mem(function (n) {
     return flip()
 });
 [
-    [flipN(1), flipN(12), flipN(47), flipN(1548)],
-    [flipN(1), flipN(12), flipN(47), flipN(1548)]
+    [flipAlot(1), flipAlot(12), flipAlot(47), flipAlot(1548)],
+    [flipAlot(1), flipAlot(12), flipAlot(47), flipAlot(1548)]
 ];
 ~~~~
 

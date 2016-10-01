@@ -192,7 +192,7 @@ viz(repeat(10000, function() {return memoizedGaussian(0,1)}));
 
 The way that the DP concentrates the underlying base measure is illustrated in the following figure.
 
-<img src='{{site.base}}/assets/img/Concentration.png' width='300' />
+<img src='{{site.baseurl}}/assets/img/Concentration.png' width='300' />
 
 In the stick-breaking construction stick heights become shorter on average as we walk further down the number line. This means that earlier draws from the DP are more likely to be redrawn than later draws.
 When we use the DP to construct `DPmem` the memoized function will therefore tend to favor *reuse* of earlier computed values. Intuitively, we will use `DPmem` when we need to model reuse of samples in a scenario where we do not know in advance how many samples we need.
@@ -381,7 +381,7 @@ Each table has a *dish* associated with it. Each dish $$v$$ is a label on the ta
 
 The following animation demonstrates the Chinese restaurant process (click on it).
 
-<center><embed width="512" height="384" src="{{site.base}}/assets/img/CRP.swf" style='border: 1px solid black'></center>
+<center><embed width="512" height="384" src="{{site.baseurl}}/assets/img/CRP.swf" style='border: 1px solid black'></center>
 
 The CRP can be used to define a stochastic memoizer just as the Dirichlet process. We let the dish at each table be drawn from the underlying procedure. When we seat a customer we emit the dish labeling the table where the customer sat. To use a CRP as a memoization distribution we associate our underlying procedure with a set of restaurants---one for each combination of a procedure with its arguments. We let customers represent particular instances in which a procedure is evaluated, and we let the dishes labeling each table represent the values that result from those procedure applications. The base distribution which generates dishes corresponds to the underlying procedure which we have memoized.
 
@@ -722,7 +722,7 @@ The Indian Buffet Process is an infinite distribution on *sets* of draws from a 
 
 # Hierarchical Combinations of Non-parametric Processes 
 
-In the [Hierarchical Models]({{site.base}}/chapters/09-hierarchical-models.html) chapter, we explored how additional levels of abstraction can lead to important effects in learning dynamics, such as transfer learning and the blessing of abstraction. In this section, we talk about two ways in which hierarchical non-parametric models can be built.
+In the [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html) chapter, we explored how additional levels of abstraction can lead to important effects in learning dynamics, such as transfer learning and the blessing of abstraction. In this section, we talk about two ways in which hierarchical non-parametric models can be built.
 
 ## The Nested Chinese Restaurant Process
 
@@ -730,7 +730,7 @@ We have seen how the Dirichlet Process/CRP can be used to learn mixture models w
 However, the categories associated with each table or stick in the DP/CRP are unstructured, whereas real life categories have complex relationships with one another.
 For example, they are often organized into hierarchies: a German shepherd is a type of dog, which is a type of animal, which is type of living thing, and so on.
 
-In [Example: One-shot learning of visual categories]({{site.base}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories), we saw how such hierarchies  could lead to efficient one-shot learning, but we did not talk about how such a hierarchy itself could be learned.
+In [Example: One-shot learning of visual categories]({{site.baseurl}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories), we saw how such hierarchies  could lead to efficient one-shot learning, but we did not talk about how such a hierarchy itself could be learned.
 The *Nested Chinese Restaurant Process* (nCRP) is one way of doing this [@Blei2003b].
 The idea behind the nCRP is that tables in a CRP, which typically represent categories, can refer to *other restaurants* that represent lower-level categories.
 
@@ -858,7 +858,7 @@ viz.table(repeat(20, sampleObservation))
 
 This code shows a model where each category is associated with a multinomial distribution over the following possible observations: `['a', 'b', 'c', 'd', 'e', 'f', 'g']`. This distribution is drawn from a Dirichlet prior for each subordinate-level category. However, the *pseudocounts* for the Dirichlet distribution for each subordinate-level category are drawn from another Dirichlet distribution which is associated with the **top-level** category&mdash;all of the subordinate level categories which share a top-level category also have similar distributions over observations.
 
-In fact, the model presented in [Example: One-shot learning of visual categories]({{site.base}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories) works in the same way, except that each category is associated with Gaussian distribution and the mean and variance parameters are shared between subordinate level categories.
+In fact, the model presented in [Example: One-shot learning of visual categories]({{site.baseurl}}/chapters/09-hierarchical-models.html#example-one-shot-learning-of-visual-categories) works in the same way, except that each category is associated with Gaussian distribution and the mean and variance parameters are shared between subordinate level categories.
 
 ## The Hierarchical Dirichlet Process
 
@@ -1028,6 +1028,6 @@ In particular, @Griffiths2007 examine the data from @Smith1998, which shows how 
 
 The results are shown below.
 
-<center><img src='{{site.base}}/assets/img/unifying-table.png' width='500' /></center>
+<center><img src='{{site.baseurl}}/assets/img/unifying-table.png' width='500' /></center>
 
-<center><img src='{{site.base}}/assets/img/unifying.png' width='600' /></center>
+<center><img src='{{site.baseurl}}/assets/img/unifying.png' width='600' /></center>

@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Patterns of inference
-description: Setting up types of conditional dependence
+description: Causal and statistical dependence. Conditional dependence.
 ---
 
 # Causal Dependence
@@ -231,7 +231,7 @@ The figure below defines a Bayesian network for the medical diagnosis example.
 The graph contains a node for each `var` statement in our WebPPL program, with links to that node from each variable that appears in the assignment expression.
 There is a probability table ("CPT") for each node, with a column for each value of the variable, and a row for each combination of values for its parents in the graph.
 
-![A Bayes net for the medical diagnosis example.]({{site.baseURL}}/assets/img/Med-diag-bnet1.jpg)
+![A Bayes net for the medical diagnosis example.]({{site.baseurl}}/assets/img/Med-diag-bnet1.jpg)
 
 Simple generative models will have a corresponding graphical model that captures all of the dependencies (and *in*dependencies) of the model, without capturing the precise *form* of these functions.
 For example, while the graphical model shown above faithfully represents the probability distribution encoded by the WebPPL program, it captures the *noisy-OR* form of the causal dependencies only implicitly.
@@ -402,7 +402,7 @@ Even fairly simple probabilistic models can induce complex explaining-away dynam
 
 The medical scenario is a great model to explore screening off and explaining away.
 In this model `smokes` is statistically dependent on several symptoms---`cough`, `chestPain`, and `shortnessOfBreath`---due to a causal chain between them mediated by `lungDisease`.
-We can see this easily by conditioning on these symptoms and querying `smokes`:
+We can see this easily by conditioning on these symptoms and looking at `smokes`:
 
 ~~~~
 var medicalDist = Infer({method: 'enumerate'}, function() {
@@ -419,12 +419,11 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
 
   return smokes
 })
-viz.auto(medicalDist)
+viz(medicalDist)
 ~~~~
 
 The conditional probability of `smokes` is much higher than the base rate, 0.2, because observing all these symptoms gives strong evidence for smoking.
-See how much evidence the different symptoms contribute by dropping them out of the conditioning set.
-For instance, try conditioning on `cough && chestPain`, or just `cough`; you should observe the probability of `smokes` decrease as fewer symptoms are observed.
+See how much evidence the different symptoms contribute by dropping them out of the conditioning set. (For instance, try conditioning on `cough && chestPain`, or just `cough`; you should observe the probability of `smokes` decrease as fewer symptoms are observed.)
 
 Now, suppose we condition also on knowledge about the function that mediates these causal links: `lungDisease`.
 Is there still an informational dependence between these various symptoms and `smokes`?  In the Inference below, try adding and removing various symptoms (`cough`, `chestPain`, `shortnessOfBreath`) but maintaining the observation `lungDisease`:
@@ -445,17 +444,16 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
   return smokes
 })
 
-viz.auto(medicalDist)
+viz(medicalDist)
 ~~~~
 
-You should see an effect of whether the patient has lung disease on conditional inferences about smoking---a person is judged to be substantially more likely to be a smoker if they have lung disease than otherwise---but there is no separate effects of chest pain, shortness of breath or cough, over and above the evidence provided by knowing whether the patient has lung-disease.
-We say that the intermediate variable lung disease *screens off* the root cause (smoking) from the more distant effects (coughing, chest pain and shortness of breath).
+You should see an effect of whether the patient has lung disease on conditional inferences about smoking---a person is judged to be substantially more likely to be a smoker if they have lung disease than otherwise---but there are no separate effects of chest pain, shortness of breath, or cough over and above the evidence provided by knowing whether the patient has lung-disease.
+The intermediate variable lung disease *screens off* the root cause (smoking) from the more distant effects (coughing, chest pain and shortness of breath).
 
 Here is a concrete example of explaining away in our medical scenario.
 Having a cold and having lung disease are *a priori* independent both causally and statistically.
 But because they are both causes of coughing if we observe `cough` then `cold` and `lungDisease` become statistically dependent.
-That is, learning something about whether a patient has `cold` or `lungDisease` will, in the presence of their common effect `cough`, convey information about the other condition.
-We say that `cold` and `lungCancer` are marginally (or *a priori*) independent, but *conditionally dependent* given `cough`.
+That is, learning something about whether a patient has `cold` or `lungDisease` will, in the presence of their common effect `cough`, convey information about the other condition. `cold` and `lungCancer` are *a priori* independent, but *conditionally dependent* given `cough`.
 
 To illustrate, observe how the probabilities of `cold` and `lungDisease` change when we observe `cough` is true:
 
@@ -544,29 +542,25 @@ Notice how far up or down knowledge about whether the patient has a cold can pus
 
 Explaining away effects can be more indirect.
 Instead of observing the truth value of `cold`, a direct alternative cause of `cough`, we might simply observe another symptom that provides evidence for `cold`, such as `fever`.
-Compare these conditioners with the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lungDisease`.
+Compare these conditions using the above WebPPL program to see an "explaining away" conditional dependence in belief between `fever` and `lungDisease`.
 
-**TODO: smokes && chestPain && cough doesn't occur anywhere above; seems like this only makes sense with the little commented-out?**
-
+<!--
 Replace `(and smokes chestPain cough)`  with `(and smokes chest-pain cough fever)` or `(and smokes chest-pain cough (not fever))`.
 In this case, finding out that the patient either does or does not have a fever makes a crucial difference in whether we think that the patient has lung disease...
 even though fever itself is not at all diagnostic of lung disease, and there is no causal connection between them.
+-->
 
 
 # Example: Trait Attribution
 
-People often have to make inferences about entities and their interactions.
-Such problems tend to have dense relations between the entities, leading to very challenging explaining away problems.
-Inference is computationally difficult in these situations but the inferences come very naturally to people, suggesting these are important problems that our brains have specialized somewhat to solve (or perhaps that they have evolved general solutions to these tough inferences).
-
-A familiar example comes from reasoning about the causes of students' success and failure in the classroom.
+A familiar example of rich patterns of inference comes from reasoning about the causes of students' success and failure in the classroom.
 Imagine yourself in the position of an interested outside observer---a parent, another teacher, a guidance counselor or college admissions officer---in thinking about these conditional inferences.
 If a student doesn't pass an exam, what can you say about why he failed?  Maybe he doesn't do his homework, maybe the exam was unfair, or maybe he was just unlucky?
 
 ~~~~
 var examPosterior = Infer({method: 'enumerate'}, function() {
-  var examFair = flip(.8);
-  var doesHomework = flip(.8);
+  var examFair = flip(.8)
+  var doesHomework = flip(.8)
   var pass = flip(examFair ?
                   (doesHomework ? 0.9 : 0.4) :
                   (doesHomework ? 0.6 : 0.2))
@@ -575,18 +569,15 @@ var examPosterior = Infer({method: 'enumerate'}, function() {
 })
 
 viz.marginals(examPosterior)
-viz.auto(examPosterior)
+viz(examPosterior)
 ~~~~
 
 Now what if you have evidence from several students and several exams? We first re-write the above model to allow many students and exams:
 
 ~~~~
-var examFairPrior = Bernoulli({p: .8});
-var doesHomeworkPrior = Bernoulli({p: .8});
-
 var examPosterior = Infer({method: 'enumerate'}, function() {
-  var examFair = mem(function(exam){return sample(examFairPrior)})
-  var doesHomework = mem(function(student){return sample(doesHomeworkPrior)})
+  var examFair = mem(function(exam){return flip(0.8)})
+  var doesHomework = mem(function(student){return flip(0.8)})
 
   var pass = function(student, exam) {
     return flip(examFair(exam) ?
@@ -600,7 +591,7 @@ var examPosterior = Infer({method: 'enumerate'}, function() {
 })
 
 viz.marginals(examPosterior)
-viz.auto(examPosterior)
+viz(examPosterior)
 ~~~~
 
 Initially we observe that Bill failed exam 1.
@@ -654,6 +645,11 @@ These three dimensions are: Persons---is the outcome consistent across different
 1) Consistency: "Is the behavior consistent across most people in the given situation?" 2) Distinctiveness: "Does the behavior vary across different situations?" and 3) Consensus: "Do most people engage in this behavior in this situation?"
 --->
 
+As in this example, people often have to make inferences about entities and their interactions.
+Such problems tend to have dense relations between the entities, leading to very challenging explaining away problems.
+These inferences often come very naturally to people, yet they are computationally difficult.
+Perhaps these are important problems that our brains have specialized somewhat to solve, or perhaps that they have evolved general solutions to these tough inferences. What do you think?
+
 
 # Example: Of Blickets and Blocking
 
@@ -661,7 +657,7 @@ A number of researchers have explored children's causal learning abilities by us
 Children are shown a set of evidence and then asked which blocks are blickets.
 For instance, if block A makes the detector go off, it is probably a blicket.
 Ambiguous patterns are particularly interesting.
-Imagine that blocks A and B are put on the detector together, making the detector go off; it is likely that A is a blicket.
+Imagine that blocks A and B are put on the detector together, making the detector go off; it is fairly likely that A is a blicket.
 Now B is put on the detector alone, making the detector go off; it is now less plausible that A is a blicket.
 This is called "backward blocking", and it is an example of explaining away.
 
@@ -670,27 +666,25 @@ Finally, the machine goes off if any of the blocks on it is a blicket (but noisi
 
 ~~~~
 var blicketPosterior = Infer({method: 'enumerate'}, function() {
-  var blicket = mem(function(block) {return flip(.2)})
-  var power = function(block) {return blicket(block) ? .9 : .05};
+  var blicket = mem(function(block) {return flip(.4)})
+  var power = function(block) {return blicket(block) ? .9 : .05}
   var machine = function(blocks) {
     return (blocks.length == 0 ?
             flip(.05) :
-            flip(power(_.first(blocks))) || machine(_.rest(blocks)));
+            flip(power(first(blocks))) || machine(rest(blocks)))
   }
-
-  condition(machine(['A', 'B']));
-
-  return blicket('A');
+  condition(machine(['A', 'B']))
+  return blicket('A')
 });
 
-viz.auto(blicketPosterior)
+viz(blicketPosterior)
 ~~~~
 
 Try the backward blocking scenario described above.
 @Sobel2004 tried this with children, finding that four year-olds perform similarly to the model: evidence that B is a blicket explains away the evidence that A and B made the detector go away.
 
 
-# A Case Study in Modularity: Visual Perception of Surface Lightness and Color
+# A Case Study in Modularity: Visual Perception of Surface Color
 
 Visual perception is full of rich conditional inference phenomena, including both screening off and explaining away.
 Some very impressive demonstrations have been constructed using the perception of surface structure by mid-level vision researchers; see the work of Dan Kersten, David Knill, Ted Adelson, Bart Anderson, Ken Nakayama, among others.
@@ -699,21 +693,21 @@ Neuroscientists have developed an understanding of the primate visual system in 
 This view is consistent with findings by cognitive psychologists that at least in early vision, these different stimulus dimensions are not integrated but processed in a sequential, modular fashion.
 Yet vision is at heart about constructing a unified and coherent percept of a three-dimensional scene from the patterns of light falling on our retinas.
 That is, vision is causal inference on a grand scale.
-Its output is a rich description of the objects, surface properties and relations in the world that are not themselves directly grasped by the brain but that are the true causes of the input---low-level stimulation of the retinal.
+Its output is a rich description of the objects, surface properties and relations in the world that are not themselves directly grasped by the brain but that are the true causes of the input---low-level stimulation of the retina.
 Solving this problem requires integration of many appearance features across an image, and this results in the potential for massive effects of explaining away and screening off.
 
-In vision, the luminance of a surface depends on two factors, the illumination of the surface (how much light is hitting it) and its reflectance.
+In vision, the luminance of a surface depends on two factors, the illumination of the surface (how much light is hitting it) and its intrinsic reflectance.
 The actual luminance is the product of the two factors.
 Thus luminance is inherently ambiguous.
 The visual system has to determine what proportion of the luminance is due to reflectance and what proportion is due to the illumination of the scene.
 This has led to a famous illusion known as the *checker shadow illusion* discovered by Ted Adelson.
 
-![Are the two squares the same shade of grey?]({{site.baseURL}}/assets/img/Checkershadow_illusion_small.png)
+![Are the two squares the same shade of grey?]({{site.baseurl}}/assets/img/Checkershadow_illusion_small.png)
 
 Despite appearances, in the image above both the square labeled A and the square labeled B are actually the same shade of gray.
 This can be seen in the figure below where they are connected by solid gray bars on either side.
 
-![]({{site.baseURL}}/assets/img/Checkershadow_proof_small.png)
+![]({{site.baseurl}}/assets/img/Checkershadow_proof_small.png)
 
 The presence of the cylinder is providing evidence that the illumination of square B is actually less than that of square A (because it is expected to cast a shadow).
 Thus we perceive square B as having higher reflectance since its luminance is identical to square A and we believe there is less light hitting it.
@@ -722,39 +716,39 @@ The following program implements a simple version of this scenario "before" we s
 ~~~~
 var observedLuminance = 3;
 
-var reflectancePosterior = Infer({method: 'MCMC', samples: 100000}, function() {
-  var reflectance = sample(Gaussian({mu: 1, sigma: 1}));
-  var illumination = sample(Gaussian({mu: 3, sigma: 0.5}));
-  var luminance = reflectance * illumination;
-  factor(Gaussian({mu: observedLuminance, sigma: 0.1}).score(luminance));
-  return reflectance;
+var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var reflectance = gaussian({mu: 1, sigma: 1})
+  var illumination = gaussian({mu: 3, sigma: 1})
+  var luminance = reflectance * illumination
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance)
+  return reflectance
 });
 
-print(expectation(reflectancePosterior));
-viz.auto(reflectancePosterior);
+print(expectation(reflectancePosterior))
+viz(reflectancePosterior)
 ~~~~
 
-Now let's condition on the presence of the cylinder, by conditioning on the presence of it's "shadow" (i.e. lower illumination than expected *a priori*):
+Now let's condition on the presence of the cylinder, by conditioning on the presence of it's "shadow" (i.e. gaining a noisy observation suggesting that illumination is lower than expected *a priori*):
 
 ~~~~
 var observedLuminance = 3;
 
-var reflectancePosterior = Infer({method: 'MCMC', samples: 100000}, function() {
-  var reflectance = sample(Gaussian({mu: 1, sigma: 1}));
-  var illumination = sample(Gaussian({mu: 3, sigma: 0.5}));
-  var luminance = reflectance * illumination;
-  factor(Gaussian({mu: observedLuminance, sigma: 0.1}).score(luminance)
-         + Gaussian({mu: .5, sigma: .1}).score(illumination));
-  return reflectance;
+var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var reflectance = gaussian({mu: 1, sigma: 1})
+  var illumination = gaussian({mu: 3, sigma: 1})
+  var luminance = reflectance * illumination
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance)
+  observe(Gaussian({mu: illumination, sigma: 0.1}), 0.5)
+  return reflectance
 });
 
-print(expectation(reflectancePosterior));
-viz.auto(reflectancePosterior);
+print(expectation(reflectancePosterior))
+viz(reflectancePosterior)
 ~~~~
 
 The variables `reflectance` and `illumination` are conditionally independent in the generative model, but after we condition on `luminance` they become dependent: changing one of them affects the probability of the other.
-This phenomenon has important consequences for cognitive science.
 Although the model of (our knowledge of) the world has a certain kind of modularity implied by conditional independence, as soon as we start using the model to do conditional inference on some data, formerly modularly isolated variables can become dependent.
+This general phenomenon has important consequences for cognitive science.
 
 <!--
 ## Other vision examples (to be developed)
