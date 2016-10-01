@@ -10,7 +10,9 @@ Bayesian data analysis (in addition to Bayesian cognitive modeling) is equally u
 This can become confusing: a particular modeling assumption can be something we hypothesize that people assume about the world, or can be something that we as scientists want to assume (but don't assume that people assume). 
 A pithy way of saying this is that we can make assumptions about "Bayes in the head" (Bayesian cognitive models) or about "Bayes in the notebook" (Bayesian data analysis). 
 
-# People and coins
+# Prologue: Of people and coins
+
+## People's models of coins
 
 Consider a cognitive model of an observer who is trying to estimate the weight of a biased coin. 
 She flips the coin 20 times, observes 15 heads, and updates her beliefs accordingly.
@@ -79,5 +81,44 @@ Why is that?
 One way to understand this model is to example the prior.
 Try commenting out the `observe` statement and looking at the predictions.
 (You can also try to understand this by returning the `weight` variable as well.)
+
+## Scientist's models of people
+
+The above models make different predictions about what people will due in such situations. 
+We can create these situations in a laboratory, and record our participants' responses.
+But, how are we to decide which model is better?
+Another way of putting this is: How are we supposed to update our beliefs about these models in light of the experimental data we've observed?
+
+The question is of the exact same form of the questions we deal with in probabilistic models of cognition.
+Now instead of asking "what inference should be people draw?", we are asking "what inferences should *we* draw?".
+Instead of thinking about people's prior beliefs, we must consider our own.
+
+~~~~ norun
+var scientistModel = function(){
+  var theBetterModel = flip(0.5) ? ObserverModel : FairUnfairModel
+  observe(theBetterModel, experimentalData)
+  return theBetterModel
+}
+~~~~
+
+In the above, we specify prior beliefs about which is the better model.
+Here, we say that we don't have any bias in our prior beliefs: we think each model is equally likely to be better *a priori*. 
+We then seek to update our beliefs about which is the better model, by observing `experimentalData`, assuming that it came from `theBetterModel`. 
+(If it didn't come from the better model, then the model that wasn't the better model would be the better model, so it's safe to assume the data came from the better model.)
+
+
+#### Run this model
+
+#### Introduce a parameter into FairUnfair
+
+# Basics of BDA
+
+Basics from [PPAML school](http://probmods.github.io/ppaml2016/chapters/5-data.html)
+
+# Linking functions
+
+# Model comparison, Savage-Dickey
+
+# Example: Linear regression and tug of war
 
 
