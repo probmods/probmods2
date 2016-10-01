@@ -20,7 +20,7 @@ description: Induction and prediction
 The line between "reasoning" and "learning" is unclear in cognition.
 Just as reasoning can be seen as a form of conditional inference, so can learning: discovering persistent facts about the world (for example, causal processes or causal properties of objects).
 By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time.
-Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations]({{site.base}}/chapters/05-observing-sequences.html)---those that fit the pattern of [Bayes rule](03-conditioning.html#bayes-rule):
+Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)---those that fit the pattern of [Bayes rule](03-conditioning.html#bayes-rule):
 
 ~~~~ norun
 Infer({...}, function() {
