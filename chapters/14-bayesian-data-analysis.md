@@ -84,12 +84,12 @@ Try commenting out the `observe` statement and looking at the predictions.
 
 ## Scientist's models of people
 
-The above models make different predictions about what people will due in such situations. 
+The above models make different predictions about what people will do in such situations. 
 We can create these situations in a laboratory, and record our participants' responses.
 But, how are we to decide which model is better?
 Another way of putting this is: How are we supposed to update our beliefs about these models in light of the experimental data we've observed?
 
-The question is of the exact same form of the questions we deal with in probabilistic models of cognition.
+You'll notice this question directly parallels those we've been dealing with in probabilistic models of cognition.
 Now instead of asking "what inference should be people draw?", we are asking "what inferences should *we* draw?".
 Instead of thinking about people's prior beliefs, we must consider our own.
 
@@ -106,10 +106,69 @@ Here, we say that we don't have any bias in our prior beliefs: we think each mod
 We then seek to update our beliefs about which is the better model, by observing `experimentalData`, assuming that it came from `theBetterModel`. 
 (If it didn't come from the better model, then the model that wasn't the better model would be the better model, so it's safe to assume the data came from the better model.)
 
+Let's pretend we ran the "predict the next 10" experiment with 20 particiapnts, and observed the following responses:
 
-#### Run this model
 
-#### Introduce a parameter into FairUnfair
+<!--
+to generate expt data:
+var FairUnfairModel = function(){
+  var isFair = flip(0.5)
+  var weight = isFair ? 0.5 : uniform(0, 1)
+  var coinFlipper = Binomial({n:20, p:weight})
+  observe(coinFlipper, 15)
+  return binomial(weight, 10)
+}
+var opts = {method: "rejection", samples: 5000}
+var posteriorBeliefs = Infer(opts, FairUnfairModel)
+repeat(20, function(){sample(posteriorBeliefs)})
+-->
+
+~~~~ norun
+var experimentalData = [9,8,7,7,4,5,6,7,9,4,7,7,3,3,9,6,5,5,8,5]
+~~~~
+
+We are now ready to put all the pieces together:
+
+
+~~~~
+///fold:
+var opts = {method: "rejection", samples: 5000}
+print("running observer model")
+var ObserverModel = Infer(opts, function(){
+  var weight = uniform(0, 1)
+  var coinFlipper = Binomial({n:20, p:weight})
+  observe(coinFlipper, 15)
+  return binomial(weight, 10)
+})
+
+print("running fair unfair model")
+var FairUnfairModel = Infer(opts, function(){
+  var isFair = flip(0.5)
+  var weight = isFair ? 0.5 : uniform(0, 1)
+  var coinFlipper = Binomial({n:20, p:weight})
+  observe(coinFlipper, 15)
+  return binomial(weight, 10)
+})
+///
+
+var experimentalData = [9,8,7,7,4,5,6,7,9,4,7,7,3,3,9,6,5,5,8,5]
+
+// so we can use the name and the distribution
+var modelObject = {ObserverModel: ObserverModel, FairUnfairModel: FairUnfairModel};
+
+var scientistModel = function(){
+  var theBetterModel_name = flip(0.5) ? "ObserverModel" : "FairUnfairModel"
+  var theBetterModel = modelObject[theBetterModel_name]
+  map(function(d){ observe(theBetterModel, d) }, experimentalData)
+  return {betterModel: theBetterModel_name}
+}
+
+var modelPosterior = Infer({method: "enumerate"}, scientistModel)
+
+viz(modelPosterior)
+~~~~
+
+#### Introduce a parameter into FairUnfair?
 
 # Basics of BDA
 
