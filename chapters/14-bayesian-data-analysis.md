@@ -401,12 +401,42 @@ viz.hist(_.pluck(towData, "ratingZ"))
 
 The most likely ratings are one standard deviation above or below the mean, though some ratings are at the mean of 0.
 
-Let's explore the hypothesis that subjects ratings of how strong the target character ("Alice") is depends upon the number of times she won.
+Let's explore the hypothesis that subjects ratings of the strength of the target character ("Alice") depends upon the number of times she won.
+We'll formalize this in a Bayesian regression framework, where ratings of strength $$r$$ are a linear combination of a fixed slope $$\beta_0$$ and weighted component of number of wins $$\beta_1 *  n_{wins}$$.
+
+$$y_{predicted} = \beta_0 + \beta_1 * n_{wins}$$
+
+Because we're in the realm of generative models, we will have to be explicit about how $$y_{predicted}$$ relates to the actual rating data we observed.
+We make the standard assumption that the actual ratings are normally distributed around $$y_{predicted}$$, with some noise $$\sigma$$.
+
+$$d \sim \mathcal{N}(y_{predicted}, \sigma)$$
+
+This is a model of our data.
+As in cognitive models, we will put priors on the parameters: $$\beta_0, \beta_1, \sigma$$, and infer their likely values by conditioning on the observed data.
 
 ~~~~
 var singleRegression = function(){ 
-  ...
+  var b0 = uniform(-1, 1)
+  var b1 = uniform(-1, 1)
+  var sigma = uniform(0, 5)
+
+  map(function(d){
+
+    var predicted_y = b0 + d.nWins*b1
+    observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)
+
+  }, towData)
+
+  return {b0: b0, b1: b1, sigma: sigma}
 }
+
+var nSamples = 5000
+var opts = { method: "MCMC", callbacks: [editor.MCMCProgress()],
+             samples: nSamples, burn: nSamples/2 }
+             
+var posterior = Infer(opts, singleRegression)
+
+viz.marginals(posterior)
 ~~~~
 
 Now, some of the conditions has Alice winning against the same person, so maybe it's also important how many unique wins she has.
