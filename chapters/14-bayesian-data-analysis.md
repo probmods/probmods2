@@ -2,6 +2,8 @@
 layout: chapter
 title: Bayesian data analysis
 description: Making scientific inferences about data and models
+custom_js:
+- assets/js/towData.js
 ---
 
 
@@ -366,5 +368,18 @@ viz(modelPosterior)
 # Example: Subjective randomness
 
 # Example: Linear regression and tug of war
+
+One of the main virtues of Bayesian data analysis is it's ability to interface with Bayesian cognitive models in a natural way.
+Bayesian cognitive models should be thought of as formalizations of hypotheses, which we then can test with an experiment.
+We can contrast our rich Bayesian cognitive models with more standard models from data science, like linear regression.
+
+Regression models are the workhorse of data science.
+They are useful in situations when you have data and some potentially vague hypotheses about how variables relate to each other (e.g., that demographics might predict political party affiliation [in some unspecified way]).
+In psychology and many other behavioral sciences, experiments are often constructed with discrete/categorical manipulations (e.g., measuring processing time of words vs. pseudowords).
+The question of "is A greater than B?" (is the processing time of words faster than the processing time of pseudowords?) can be answered using a regression model.
+This kind of question represents a categorical manipulation; categorical manipulations provide 1 bit of information (answering the question: "Is it higher or lower in X than Y?").
+
+
+These data are usually analyzed using "statistical tests" (e.g., a t-test), or more often today, regression models. 
 
 
