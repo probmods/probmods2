@@ -377,8 +377,49 @@ Regression models are the workhorse of data science.
 They are useful in situations when you have data and some potentially vague hypotheses about how variables relate to each other (e.g., that demographics might predict political party affiliation [in some unspecified way]).
 In psychology and many other behavioral sciences, experiments are often constructed with discrete/categorical manipulations (e.g., measuring processing time of words vs. pseudowords).
 The question of "is A greater than B?" (is the processing time of words faster than the processing time of pseudowords?) can be answered using a regression model.
+
+To explore a Bayesian linear regression model, we will use data from the Tug of War experiment by Gerstenberg et al. (2012). Let's start by just taking a look at the data set, found in the `towData` variable. 
+
+~~~~
+var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+
+// display single row of the data frame
+print(towData[0])
+// display unique levels of "pattern" variable
+print(levels(towData, "pattern"))
+// display unique levels of "tournament" variable
+print(levels(towData, "tournament"))
+// display unique levels of "id" variable [participant id]
+print(levels(towData, "id"))
+~~~~
+
+Let's look at the `ratingZ` variable (a normalized rating).
+
+~~~~
+viz.hist(_.pluck(towData, "ratingZ"))
+~~~~
+
+The most likely ratings are one standard deviation above or below the mean, though some ratings are at the mean of 0.
+
+Let's explore the hypothesis that subjects ratings of how strong the target character ("Alice") is depends upon the number of times she won.
+
+~~~~
+var singleRegression = function(){ 
+  ...
+}
+~~~~
+
+Now, some of the conditions has Alice winning against the same person, so maybe it's also important how many unique wins she has.
+
+~~~~
+var multipleRegression = function(){
+  
+}
+~~~~
+
 This kind of question represents a categorical manipulation; categorical manipulations provide 1 bit of information (answering the question: "Is it higher or lower in X than Y?").
 
+Instantiating a hypothesis in a cognitive, generative model 
 
 These data are usually analyzed using "statistical tests" (e.g., a t-test), or more often today, regression models. 
 
