@@ -401,6 +401,9 @@ viz.hist(_.pluck(towData, "ratingZ"))
 
 The most likely ratings are one standard deviation above or below the mean, though some ratings are at the mean of 0.
 
+## Single regression
+
+
 Let's explore the hypothesis that subjects ratings of the strength of the target character ("Alice") depends upon the number of times she won.
 We'll formalize this in a Bayesian regression framework, where ratings of strength $$r$$ are a linear combination of a fixed slope $$\beta_0$$ and weighted component of number of wins $$\beta_1 *  n_{wins}$$.
 
@@ -451,11 +454,17 @@ We see that the intercept $$\beta_0$$ is around 0, which we might expect given t
 The slope weight $$\beta_1$$ is around 0.35, with relatively low variance around that.
 The fact that it's very unlikely for $$\beta_1$$ to be 0 suggests that there is an effect of the number of times the actor has won in Tug of War on participants' judgments of the relative strength of that actor, as we might hope.
 
-### Model fitting with posterior prediction
+### Model criticism with posterior prediction
 
-We can now examine how well our regression model matches our data.
+We can now critique the model by asking how well it would generate our data.
+To do this, we look at the posterior predictive distribution.
 
 ~~~~
+var merge = function(m, d){
+  var keys = _.keys(d)
+  map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
+}
+
 var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
 
 var outcomes = levels(towData, "outcome");
@@ -466,9 +475,9 @@ var patterns = {
 };
 
 var singleRegression = function(){ 
-  var b0 = uniform(-1, 1)
-  var b1 = uniform(-1, 1)
-  var sigma = uniform(0, 2)
+  var b0 = uniformDrift({a: -1,b: 1, width: 0.2})
+  var b1 = uniformDrift({a: -1,b: 1, width: 0.2})
+  var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
   
   var predictions = map(function(tournament){
     return map(function(outcome){
@@ -480,11 +489,11 @@ var singleRegression = function(){
         // each unique item has just one nWins
         var predicted_y = b0 + itemData[0]["nWins"]*b1
 
-        map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}) )}, itemData)
+        map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)}, itemData)
         
         return _.object([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
 
-      }, patterns[tournament])
+      }, patterns[tournament]) // singles tournaments don't have all patterns
     }, outcomes)
   }, tournaments)
 
@@ -497,28 +506,129 @@ var opts = { method: "MCMC", callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: nSamples/2 }
 
 var posterior = Infer(opts, singleRegression)
-viz.scatter(_.values(posterior.MAP().val), _.values(towMeans))
+
+var modelDataDF = merge(posterior.MAP().val, towMeans)
+
+viz.scatter(modelDataDF)
 editor.put('singleRegression', posterior)
+editor.put('modelDataDF', modelDataDF)
+
 ~~~~
 
-// To do: have summary data include match schematics (Tables 2 & 3)
-// or just include tables 2 and 3 from paper
+<!-- // To do: have summary data include match schematics (Tables 2 & 3)
+// or just include tables 2 and 3 from paper -->
 
 ~~~
-var posterior = editor.get('singleRegression')
+var modelDataDF = editor.get('modelDataDF')
 
-var summaryData = map2(function(x,y){ 
-  return {item: x[0], model: x[1], data: y, sqErr: Math.pow(x[1]-y,2)}
-}, _.pairs(posterior.MAP().val), _.values(towMeans))
+var summaryData = map(function(x){ 
+  return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
+}, modelDataDF)
 
 viz.table(summaryData)
+print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 ~~~
+
+## Mutiple regression
+
 Now, some of the conditions has Alice winning against the same person, so maybe it's also important how many unique wins she has.
 
+$$y_{predicted} = \beta_0 + \beta_1 * n_{wins} + \beta_2 * wins_{unique}$$
+
+
 ~~~~
-var multipleRegression = function(){
+///fold: 
+var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+
+var outcomes = levels(towData, "outcome");
+var tournaments = levels(towData, "tournament");
+var patterns = {
+  single: levels(_.where(towData, {tournament: "single"}), "pattern"),
+  double: levels(_.where(towData, {tournament: "double"}), "pattern")
+};
+///
+
+var multipleRegression = function(){ 
+  var b0 = uniformDrift({a: -1,b: 1, width: 0.2})
+  var b1 = uniformDrift({a: -1,b: 1, width: 0.2})
+  var b2 = uniformDrift({a: -1,b: 1, width: 0.2})
+  var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
   
+  var predictions = map(function(tournament){
+    return map(function(outcome){
+      return map(function(pattern){
+        
+        var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
+        var itemData = _.where(towData, itemInfo)
+
+        // each unique item has just one nWins
+        var predicted_y = b0 + itemData[0]["nWins"]*b1 + itemData[0]["nUniqueWins"]*b2
+
+        map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ) }, itemData)
+        
+        return _.object([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
+
+      }, patterns[tournament]) // singles tournaments don't have all patterns
+    }, outcomes)
+  }, tournaments)
+
+  return {
+    parameters: {b0: b0, b1: b1, b2: b2, sigma: sigma},
+    predictives: _.object(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+  }
 }
+
+var nSamples = 250
+var opts = { method: "MCMC", kernel: {HMC: {steps: 5, stepSize: 0.01}}, 
+            callbacks: [editor.MCMCProgress()], 
+             samples: nSamples, burn: nSamples/2 }
+
+var posterior = Infer(opts, multipleRegression)
+editor.put('multiRegression', posterior)
+~~~~
+
+Look at parameters.
+
+~~~~
+///fold: 
+var marginalize = function(dist, key){
+  return Infer({method: "enumerate"}, function(){
+    return sample(dist)[key];
+  })
+}
+///
+var posterior = editor.get('multiRegression');
+var parameterPosterior = marginalize(posterior, "parameters")
+viz.marginals(parameterPosterior)
+~~~~
+
+Critique posterior predictive
+
+~~~~
+///fold: 
+var marginalize = function(dist, key){
+  return Infer({method: "enumerate"}, function(){
+    return sample(dist)[key];
+  })
+}
+var merge = function(m, d){
+  var keys = _.keys(d)
+  return map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
+}
+///
+var posterior = editor.get('multiRegression');
+var posteriorPredictive = marginalize(posterior, "predictives")
+
+var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
+
+viz.scatter(modelDataDF)
+
+var summaryData = map(function(x){ 
+  return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
+}, modelDataDF)
+
+viz.table(summaryData)
+print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 ~~~~
 
 This kind of question represents a categorical manipulation; categorical manipulations provide 1 bit of information (answering the question: "Is it higher or lower in X than Y?").
