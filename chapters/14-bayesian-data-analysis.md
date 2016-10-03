@@ -633,8 +633,37 @@ print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 
 This kind of question represents a categorical manipulation; categorical manipulations provide 1 bit of information (answering the question: "Is it higher or lower in X than Y?").
 
-Instantiating a hypothesis in a cognitive, generative model 
+Instantiating a hypothesis in a cognitive model can answer more than just categorical questions.
 
-These data are usually analyzed using "statistical tests" (e.g., a t-test), or more often today, regression models. 
+## BDA of Tug-of-war model
+
+~~~~
+var model = function() {
+
+  var strength = mem(function(person){
+    return gaussian(0, 1)
+  })
+  var lazy = function(person){
+    return flip(lazinessPrior) 
+  }
+  
+  var pulling = function(person) {
+    return lazy(person) ? 
+            strength(person) / lazinessFactor : 
+            strength(person) 
+  }
+
+  var totalPulling = function(team){return sum(map(pulling, team)) }
+  var winner = function(team1, team2){
+    totalPulling(team1) > totalPulling(team2) ? team1 : team2 
+  }
+  var beat = function(team1,team2){winner(team1,team2) == team1}
+
+  condition(beat(['bob', 'mary'], ['tom', 'sue']))
+  condition(beat(['bob', 'sue'],  ['tom', 'jim']))
+
+  return strength('bob')
+}
+~~~~
 
 
