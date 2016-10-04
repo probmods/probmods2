@@ -46,7 +46,7 @@ f(5, 3)
 B) Below, we have already defined $$h(x,y) = x + 2y$$. 
 Write a function $$g(x, y, z) = x - y \times z$$ and use it to compute $$g(1, 4, h(6,3))$$.
 
-~~~~ {data-exercise="ex2b-short"}
+~~~~
 var h = function(x, y){ return x + 2*y }
 ...
 ~~~~
