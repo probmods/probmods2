@@ -1,10 +1,6 @@
 ---
 layout: exercise
-title: Generative models - exercises
-description: Generative models
-custom_js:
-- assets/js/box2d.js
-- assets/js/phys.js
+title: Observing sequences - exercises
 ---
 
 No exercises exist for this chapter
