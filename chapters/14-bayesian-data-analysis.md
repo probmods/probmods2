@@ -4,6 +4,7 @@ title: Bayesian data analysis
 description: Making scientific inferences about data and models
 custom_js:
 - assets/js/towData.js
+- assets/js/towConfigurations.js
 ---
 
 
@@ -637,7 +638,14 @@ Instantiating a hypothesis in a cognitive model can answer more than just catego
 
 ## BDA of Tug-of-war model
 
+Recall the tug-of-war model from the chapter on [conditioning]({{site.baseurl}}/chapters/03-conditioning.html).
+
 ~~~~
+var options = {method: 'MCMC', samples: 2500}
+
+var lazinessPrior = 0.3;
+var lazyPulling = 0.5;
+
 var model = function() {
 
   var strength = mem(function(person){
@@ -646,24 +654,190 @@ var model = function() {
   var lazy = function(person){
     return flip(lazinessPrior) 
   }
-  
   var pulling = function(person) {
     return lazy(person) ? 
-            strength(person) / lazinessFactor : 
+            strength(person) * lazyPulling : 
             strength(person) 
   }
-
   var totalPulling = function(team){return sum(map(pulling, team)) }
   var winner = function(team1, team2){
     totalPulling(team1) > totalPulling(team2) ? team1 : team2 
   }
   var beat = function(team1,team2){winner(team1,team2) == team1}
 
-  condition(beat(['bob', 'mary'], ['tom', 'sue']))
-  condition(beat(['bob', 'sue'],  ['tom', 'jim']))
+  condition(beat(["bob", "mary"], ["tom", "sue"]))
 
-  return strength('bob')
+  return strength("bob")
 }
+
+var posterior = Infer(options, model)
+print("Bob's strength, given that he and Mary beat Tom and Sue")
+
+print("Expected value = " + expectation(posterior))
+viz(posterior)
 ~~~~
+
+### Learning about the Tug-of-War model
+
+To learn more about the tug-of-war model, we're going to connect it the data from the experiment.
+You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazyPulling`).
+(Technical note: Because we are comparing relative heights, we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`. 
+We just use the standard normal distribution.)
+Before, we set these parameters to be `0.5` and `0.3`, respectively. 
+(People are lazy about a third of the time, and when they are lazy, they pull with half their strength.)
+
+Those parameter values aren't central to our hypothesis.
+They are peripheral details to the larger hypothesis which is that people reason about team games like Tug of War by running a structured, generative model in their heads and doing posterior inference. 
+Rather than guessing at what values we should put for these parameters, we can use the data to inform our beliefs about what those parameters are likely to be (assuming the general model is a good one).
+
+
+
+
+~~~~
+///fold:
+var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+
+var outcomes = levels(towData, "outcome");
+var tournaments = levels(towData, "tournament");
+var patterns = {
+  single: levels(_.where(towData, {tournament: "single"}), "pattern"),
+  double: levels(_.where(towData, {tournament: "double"}), "pattern")
+};
+
+var round = function(x){
+  return Math.round(x*10)/10
+}
+
+var bins = map(round, _.range(-2.2, 2.2, 0.1))
+///
+
+// add a tiny bit of noise, and make sure every bin has at least epsilon probability
+var smoothToBins = function(dist, sigma, bins){
+  Infer({method: "enumerate"}, function(){
+    var x = sample(dist);
+    var smoothedProbs = map(function(b){return Number.EPSILON+Math.exp(Gaussian({mu: x, sigma: sigma}).score(b)) }, bins)
+    return categorical(smoothedProbs, bins)
+  })
+}
+
+var tugOfWarOpts = {method: "MCMC", samples: 1000, burn: 500}
+
+var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
+  Infer(tugOfWarOpts, function(){
+
+    var strength = mem(function(person){
+      return gaussianDrift({mu: 0, sigma: 1, width: 0.3})
+    })
+
+    var lazy = function(person){
+      return flip(lazinessPrior) 
+    }
+    var pulling = function(person) {
+      return lazy(person) ? 
+              strength(person) * lazyPulling : 
+              strength(person) 
+    }
+    var totalPulling = function(team){return sum(map(pulling, team)) }
+    var winner = function(team1, team2){
+      totalPulling(team1) > totalPulling(team2) ? team1 : team2 
+    }
+    var beat = function(team1,team2){winner(team1,team2) == team1}
+
+    condition(beat(matchInfo.winner1, matchInfo.loser1))
+    condition(beat(matchInfo.winner2, matchInfo.loser2))
+    condition(beat(matchInfo.winner3, matchInfo.loser3))
+
+    return round(strength("A"))
+
+  })
+}
+
+
+var dataAnalysisModel = function(){
+  var lazinessPrior = uniformDrift({a:0, b:0.5, width: 0.1})
+  var lazyPulling =  uniformDrift({a:0, b:1, width: 0.2})
+
+  var predictions = map(function(tournament){
+    return map(function(outcome){
+      return map(function(pattern){
+
+
+        var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
+        // participants' ratings
+        var itemData = _.where(towData, itemInfo)
+
+        // information about the winners and losers
+        var matchInformation = _.where(matchConfigurations, itemInfo)[0]
+
+        var modelPosterior = tugOfWarModel(lazyPulling, lazinessPrior, matchInformation)
+        var smoothedPredictions = smoothToBins(modelPosterior, 0.05, bins)
+
+        map(function(d){ observe(smoothedPredictions, d.roundedRating) }, itemData)
+        
+        return _.object([[pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]])
+
+      }, patterns[tournament]) // singles tournaments don't have all patterns
+    }, outcomes)
+  }, tournaments)
+
+  return {
+    parameters: {lazinessPrior: lazinessPrior, lazyPulling: lazyPulling},
+    predictives: _.object(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+  }
+}
+
+var nSamples = 20
+var opts = { method: "MCMC", //kernel: {HMC: {steps: 5, stepSize: 0.01}}, 
+            callbacks: [editor.MCMCProgress()], 
+             samples: nSamples, burn: 0 }
+
+var posterior = Infer(opts, dataAnalysisModel)
+editor.put("bda_bcm", posterior)
+~~~~
+
+Look at parameters.
+
+~~~~
+///fold: 
+var marginalize = function(dist, key){
+  return Infer({method: "enumerate"}, function(){
+    return sample(dist)[key];
+  })
+}
+///
+var posterior = editor.get('bda_bcm');
+var parameterPosterior = marginalize(posterior, "parameters")
+viz.marginals(parameterPosterior)
+~~~~
+
+Critique posterior predictive
+
+~~~~
+///fold: 
+var marginalize = function(dist, key){
+  return Infer({method: "enumerate"}, function(){
+    return sample(dist)[key];
+  })
+}
+var merge = function(m, d){
+  var keys = _.keys(d)
+  return map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
+}
+///
+var posterior = editor.get('bda_bcm');
+var posteriorPredictive = marginalize(posterior, "predictives")
+
+var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
+
+viz.scatter(modelDataDF)
+
+var summaryData = map(function(x){ 
+  return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
+}, modelDataDF)
+
+viz.table(summaryData)
+print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
+~~~~
+
 
 
