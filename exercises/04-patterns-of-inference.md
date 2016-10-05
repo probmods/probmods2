@@ -1,10 +1,6 @@
 ---
 layout: exercise
-title: Generative models - exercises
-description: Generative models
-custom_js:
-- assets/js/box2d.js
-- assets/js/phys.js
+title: Patterns of inference - exercises
 ---
 
 ## Exercise 1: Causal and statistical dependency.

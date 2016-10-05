@@ -319,7 +319,7 @@ The `factor` construct is very general. Both `condition` and `observe` can be wr
 Imagine a game of tug of war, where each person may be strong or weak, and may be lazy or not on each match.
 If a person is lazy they only pull with half their strength.
 The team that pulls hardest will win.
-We assume that strength is a continuous property of an individual, and that on any match, each person has a 25% chance of being lazy.
+We assume that strength is a continuous property of an individual, and that on any match, each person has a 1 in 3 chance of being lazy.
 This WebPPL program runs a tournament between several teams, mixing up players across teams.
 Can you guess who is strong or weak, looking at the tournament results?
 
