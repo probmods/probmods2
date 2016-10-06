@@ -15,9 +15,9 @@ mht: some similar ideas (and examples) are presented in occams razor chapter. ma
 
 
 Inference by conditioning a generative model is also a basic building block of Bayesian statistics.
-In cognitive science this tool can be used two ways.
+In cognitive science this tool can be used in two ways.
 If the generative model is a hypothesis about a person's model of the world, then we have a Bayesian *cognitive model* -- the main topic of this book.
-If the generative model is instead the scientists model of how the data are generated, then we have *Bayesian data analysis*.
+If the generative model is instead the scientist's model of how the data are generated, then we have *Bayesian data analysis*.
 Bayesian data analysis can be an extremely useful tool to us as scientists, when we are trying to understand what our data mean about psychological hypotheses.
 This can become confusing: a particular modeling assumption can be something we hypothesize that people assume about the world, or can be something that we as scientists want to assume (but don't assume that people assume).
 A pithy way of saying this is that we can make assumptions about "Bayes in the head" (Bayesian cognitive models) or about "Bayes in the notebook" (Bayesian data analysis).
@@ -39,7 +39,7 @@ var observerModel = function(){
 
 var opts = {method: "rejection", samples: 5000}
 var posteriorBeliefs = Infer(opts, observerModel)
-print("Maximum a posteriori value = " + posteriorBeliefs.MAP().val)
+print("Expected value = " + expectation(posteriorBeliefs))
 viz.density(posteriorBeliefs, {bounds: [0,1]})
 ~~~~
 
@@ -94,7 +94,7 @@ One way to understand this model is to example the prior.
 Try commenting out the `observe` statement and looking at the predictions.
 (You can also try to understand this by returning the `weight` variable as well.)
 
-## Scientist's models of people
+## Scientists' models of people
 
 The above models make different predictions about what people will do in such situations.
 We can create these situations in a laboratory, and record our participants' responses.
@@ -104,6 +104,8 @@ Another way of putting this is: How are we supposed to update our beliefs about 
 You'll notice this question directly parallels those we've been dealing with in probabilistic models of cognition.
 Now instead of asking "what inference should be people draw?", we are asking "what inferences should *we* draw?".
 Instead of thinking about people's prior beliefs, we must consider our own.
+
+Here, we consider the case of trying to decide which is the better model: 
 
 ~~~~ norun
 var scientistModel = function(){
@@ -137,6 +139,9 @@ repeat(20, function(){sample(posteriorBeliefs)})
 ~~~~ norun
 var experimentalData = [9,8,7,7,4,5,6,7,9,4,7,7,3,3,9,6,5,5,8,5]
 ~~~~
+
+Look again at the model predictions for `nextTenOutcomes` for the two models above.
+Which model do you think is better?
 
 We are now ready to put all the pieces together:
 
@@ -184,7 +189,7 @@ viz(modelPosterior)
 
 # Learning about a model
 
-Bayesian data analysis is a general purpose data analysis approach for making explicit hypotheses about where the data came from (e.g. the hypothesis that data from 2 experimental conditions came from two different distributions).
+Bayesian data analysis is a general purpose data analysis approach for making explicit hypotheses about where the data came from (e.g., the hypothesis that data from two experimental conditions came from two different distributions).
 Inference is then performed to *invert* the model: go from data to beliefs.
 
 For further reading on Bayesian data analysis: see [Lee & Wagenmakers (2013)](https://bayesmodels.com/),
@@ -192,17 +197,28 @@ For further reading on Bayesian data analysis: see [Lee & Wagenmakers (2013)](ht
 
 ## Parameters and predictives
 
+Models have parameters.
+Parameters are in general unobservable.
+For instance, we may build a data analysis model where we're trying to estimate how many people in a population prefer Candidate A to Candidate B.
+It would be impractical to measure the whole distribution.
+Instead, we measure a sample (maybe we ask 1000 people), and use that to make inference about the "true population proportion" (an unobservable parameter).
+
 Bayes’ rule provides a bridge between the unobserved parameters of models and the observed data.
-Usually we update our beliefs about parameters from data.
-The bridge can handle two-way traffic, however: there is a richer set of possibilities for relating parameters to data.
+We can update our beliefs about parameters from data.
+The "Bayes bridge" can handle two-way traffic, however: we can use our updated beliefs about a parameter to make predictions about future data sets.
+
 For a given Bayesian model (together with data), there are four conceptually distinct distributions of interest:
 
-+ The *prior distribution over parameters* captures our initial beliefs about the latent variables those parameters represent.
+For parameters, we have priors and posteriors:
+
++ The *prior distribution over parameters* captures our initial state of knowledge (or, our beliefs) about the latent variables those parameters represent.
++ The *posterior distribution over parameters* captures what we know about the latent variables having updated our beliefs with the evidence provided by data.
+
+We can run either the prior or the posterior model forward, and have it make predictions about data sets:
+
 + The *prior predictive distribution* tells us what data to expect, given our model and our initial beliefs about the parameters.
 The prior predictive is a distribution over data, and gives the relative probability of different *observable* outcomes before we have seen any data.
-+ The *posterior distribution over parameters* captures what we know about the latent variables having updated our beliefs with the evidence provided by data.
-+ The *posterior predictive distribution* tells us what data to expect, given the same model we started with, but with beliefs that have been updated by the observed data.
-Again, the posterior predictive is a distribution over data, and gives the relative probability of different observable outcomes, after some data has been seen.
++ The *posterior predictive distribution* tells us what data to expect, given the same model we started with, but with beliefs that have been updated by the observed data. The posterior predictive is a distribution over data, and gives the relative probability of different observable outcomes, after some data has been seen.
 
 Loosely speaking, *predictive* distributions are in "data space" and *parameter* distributions are in "latent space".
 
@@ -242,20 +258,22 @@ var posterior = Infer(opts, model);
 viz.marginals(posterior)
 ~~~~
 
-<!--
-1. Make sure you understand the prior, posterior, prior predictive, and posterior predictive distributions, and how they relate to each other. Why are some plots densities and others bar graphs? Understanding these ideas is a key to understanding Bayesian analysis. Check your understanding by trying other data sets, varying both k and n.
 
-2. Try different priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions.
+Make sure you understand the prior, posterior, prior predictive, and posterior predictive distributions, and how they relate to each other.
+Why are some plots densities and others bar graphs?
+Understanding these ideas is a key to understanding Bayesian analysis.
+Check your understanding by trying other data sets, varying both `k` and `n`.
+
+<!-- 2. Try different priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions.
 
 3. Predictive distributions are not restricted to exactly the same experiment as the observed data, and can be used in the context of any experiment where the inferred model parameters make predictions. In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations. Change the model to implement an example of this.
--->
+ -->
 
 ## Posterior prediction and model checking
 
 One important use of posterior predictive distributions is to examine the descriptive adequacy of a model.
-The posterior predictive can be viewed as a set of predictions about what data the model expects to see, based on the posterior distribution over parameters.
-If these predictions do not match the data *already seen*, the model is descriptively inadequate.
-
+The posterior predictive can be viewed as a set of predictions about the data by the model, based on the posterior distribution over parameters.
+If these predictions do not match the data *already seen* (i.e., the data used to arrive at the posterior distribution over parameters), the model is descriptively inadequate.
 
 Imagine we're running a visual perception experiment.
 The task is fairly simple: say whether or not a dot on the screen appears above or below another dot on the screen.
@@ -263,6 +281,13 @@ We ran one group of 10 participants in the morning, and then went to lunch, and 
 Suppose we observed the following data from those groups of participants: `k1=0; k2=10`.
 
 ~~~~
+///fold:
+var marginalize = function(dist, key){
+  return Infer({method: "enumerate"}, function(){
+    return sample(dist)[key]
+  })
+}
+///
 // Successes in 2 experiments
 var k1 = 0;
 var k2 = 10;
@@ -281,9 +306,12 @@ var model = function() {
   var posteriorPredictive1 = binomial(p, n1)
   var posteriorPredictive2 = binomial(p, n2)
 
-  return {posterior : p,
-          posteriorPredictive1: posteriorPredictive1,
-          posteriorPredictive2: posteriorPredictive2
+  return {
+    parameter : p,
+    predictive: {
+      predictive1: posteriorPredictive1, 
+      predictive2: posteriorPredictive2
+    }
   };
 }
 
@@ -294,11 +322,20 @@ var opts = {
 
 var posterior = Infer(opts, model);
 
-viz.marginals(posterior)
+var parameterPosterior = marginalize(posterior, "parameter")
+viz.density(parameterPosterior, {bounds: [0, 1]})
+
+var posteriorPredictive = marginalize(posterior, "predictive")
+viz.heatMap(posteriorPredictive)
 ~~~~
 
-**TODO: This doesn't yet quite make the point about what a model check is. Show example of typical posterior predictive scatter plot?**
+Examine the heat map displaying the posterior predictive.
+What sort of data is this model expecting to see?
+Where in this 2-d grid does our observed data land?
+What can you conclude about the parametere `p`?
 
+<!-- **TODO: This doesn't yet quite make the point about what a model check is. Show example of typical posterior predictive scatter plot?**
+ -->
 <!--
 ### Exercises 2
 
@@ -314,7 +351,8 @@ Basics from [PPAML school](http://probmods.github.io/ppaml2016/chapters/5-data.h
 # Comparing models
 
 In the above examples, we've had a single data-analysis model and used the experimental data to learn about the parameters of that model.
-Often as scientists, we have multiple, distinct models in hand, and want to decide if one or another is a better description of the data. Indeed, we saw an example above when we decided whether `"ObserverModel"` or  `"FairUnfairModel"` was a better explanation of some (made-up) data.
+Often as scientists, we have multiple, distinct models in hand, and want to decide if one or another is a better description of the data.
+Indeed, we saw an example above when we decided whether `"ObserverModel"` or  `"FairUnfairModel"` was a better explanation of some (made-up) data.
 
 This is actually a special case of learning about the parameters of a model.
 We can define an uber model, that has a binary decision parameter that we'd like to learn about.
@@ -341,10 +379,11 @@ var compareModels = function() {
   var x = flip(0.5) ? "simple" : "complex";
   var p = (x == "simple") ? 0.5 : uniform(0, 1);
   observe(Binomial({p: p, n: n}), k);
-  return x
+  return {model: x}
 }
 
 var opts = {method: "rejection", samples: 2000};
+print("We observed " + k + " successes out of " + n + " attempts")
 var modelPosterior = Infer(opts, compareModels);
 viz(modelPosterior)
 ~~~~
@@ -371,7 +410,7 @@ On the other hand, you put all your money on horse A (100 on A, 0 on B).
 If A wins, you will gain more money because you put more money down.
 
 This idea is called the principle of parsimony or Occam's razor, and will be discussed at length later in this book.
-For now, it's sufficient to know that more complex models will be penalized for being more complexed intuitively because they will be diluting their predictions.
+For now, it's sufficient to know that more complex models will be penalized for being more complex intuitively because they will be diluting their predictions.
 At the same time, more complex models are more flexible and can capture a wider variety of data.
 Bayesian model comparison lets us weigh these costs and benefits.
 
@@ -379,8 +418,8 @@ Bayesian model comparison lets us weigh these costs and benefits.
 ## Bayes' factor
 
 What we are plotting above are **posterior model probabilities**.
-These are a function of the prior model probabilities (here, defined to be equal: `flip(0.5)`) and the marginal likelihoods of the data under each hypothesis.
-Sometimes, scientists feel a bit strange about reporting values that are based on prior model probabilities (what if scientists have different priors as to the plausibility of the hypothesis?) and so often report the ratio of marginal likelihoods, a quantity known as a *Bayes Factor*.
+These are a function of the marginal likelihoods of the data under each hypothesis and the prior model probabilities (here, defined to be equal: `flip(0.5)`).
+Sometimes, scientists feel a bit strange about reporting values that are based on prior model probabilities (what if scientists have different priors as to the relative plausibility of the hypotheses?) and so often report the ratio of marginal likelihoods, a quantity known as a *Bayes Factor*.
 
 Let's compute the Bayes' Factor, by computing the likelihood of the data under each hypothesis.
 
@@ -399,12 +438,15 @@ var bayesFactor_01 = simpleLikelihood / complexLikelihood
 bayesFactor_01
 ~~~~
 
-Compare this with the posterior model probabilities above.
+How does the Bayes Factor in this case relate to posterior model probabilities above?
 
 ## Savage-Dickey method
 
-For this example, the Bayes factor can be obtained by integrating out the model parameter ( using`Infer` with `{method: "forward"}`). However it is not always easy to get good estimates of the two marginal probabilities.
-It turns out, the Bayes factor can also be obtained by only considering the more complex hypothesis ($$\mathcal{H}_1$$), by dividing the density of the posterior over the parameter of interest (here, $$p$$) at the point of interest (here, $$p = 0.5$$) by the density of the prior of the parameter at the point of interest.
+For this example, the Bayes factor can be obtained by integrating out the model parameter (using `Infer` with `{method: "forward"}`).
+However, it is not always easy to get good estimates of the two marginal probabilities.
+It turns out, the Bayes factor can also be obtained by considering *only* the more complex hypothesis ($$\mathcal{H}_1$$). 
+What you do is look at the distribution over the parameter of interest (here, $$p$$) at the point of interest (here, $$p = 0.5$$).
+Dividing the probability density of the posterior by the density of the prior (of the parameter at the point of interest) also gives you the Bayes Factor!
 This perhaps surprising result was described by Dickey and Lientz (1970), and they attribute it to Leonard "Jimmie" Savage.
 The method is called the *Savage-Dickey density ratio* and is widely used in experimental science.
 
