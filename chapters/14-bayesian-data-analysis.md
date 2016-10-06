@@ -364,9 +364,8 @@ viz(modelPosterior)
 
 #### Discuss difficulties with model comparison? (harmonic mean estimators, mcmc for likelihoods)
 
-# Linking functions
-
-# Example: Subjective randomness
+<!-- # Linking functions
+ -->
 
 # Example: Linear regression and tug of war
 
@@ -786,7 +785,7 @@ var dataAnalysisModel = function(){
   }
 }
 
-var nSamples = 20
+var nSamples = 10
 var opts = { method: "MCMC", //kernel: {HMC: {steps: 5, stepSize: 0.01}}, 
             callbacks: [editor.MCMCProgress()], 
              samples: nSamples, burn: 0 }
