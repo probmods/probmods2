@@ -483,16 +483,17 @@ print( savageDickeyRatio )
 
 # Example: Linear regression and tug of war
 
-One of the main virtues of Bayesian data analysis is it's ability to interface with Bayesian cognitive models in a natural way.
+One of the main virtues of Bayesian data analysis is its ability to interface with Bayesian cognitive models in a natural way.
 Bayesian cognitive models should be thought of as formalizations of hypotheses, which we then can test with an experiment.
 We can contrast our rich Bayesian cognitive models with more standard models from data science, like linear regression.
 
-Regression models are the workhorse of data science.
-They are useful in situations when you have data and some potentially vague hypotheses about how variables relate to each other (e.g., that demographics might predict political party affiliation [in some unspecified way]).
+Regression is the workhorse of data science.
+Regression models are useful in situations when you have (1) data and (2) some (potentially vague) hypotheses about how variables relate to each other (e.g., that demographics might predict political party affiliation [in some unspecified way]).
 In psychology and many other behavioral sciences, experiments are often constructed with discrete/categorical manipulations (e.g., measuring processing time of words vs. pseudowords).
-The question of "is A greater than B?" (is the processing time of words faster than the processing time of pseudowords?) can be answered using a regression model.
+The question "is A greater than B?" (is the processing time of words faster than the processing time of pseudowords?) can be answered using a regression model.
 
-To explore a Bayesian linear regression model, we will use data from the Tug of War experiment by Gerstenberg et al. (2012). Let's start by just taking a look at the data set, found in the `towData` variable.
+To explore a Bayesian linear regression model, we will use data from the Tug-of-War experiment by @Gerstenberg2012.
+Let's be good data scientists, and start by just taking a look at the data set, found in the `towData` variable (available in this page only).
 
 ~~~~
 var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
@@ -503,22 +504,31 @@ print(towData[0])
 print(levels(towData, "pattern"))
 // display unique levels of "tournament" variable
 print(levels(towData, "tournament"))
+// display unique levels of "nWins" variable
+print(levels(towData, "nWins"))
 // display unique levels of "id" variable [participant id]
 print(levels(towData, "id"))
 ~~~~
 
-Let's look at the `ratingZ` variable (a normalized rating).
+The first line printed is a line from our data set: one participant on one trial.
+We see that it has many different fields, including the trial number, their raw rating ("rating"), a normalized score ("ratingZ"), and information about the experimental condition.
+Here, this was the condition "confounded evidence" in a "singles" tournament: here, the target player won 3 times against the same player (for a full list of the experimental conditions see @Gerstenberg2012 Tables 2 and 3).
+
+The other lines show the unique values different variables can take on.
+
+Let's plot the `ratingZ` variable (a normalized rating).
 
 ~~~~
 viz.hist(_.pluck(towData, "ratingZ"))
 ~~~~
 
+This distribution of ratings is from all trials, all participants, all experimental conditions.
+We see that the ratings range from about -2 to 2.
 The most likely ratings are one standard deviation above or below the mean, though some ratings are at the mean of 0.
 
 ## Single regression
 
-
-Let's explore the hypothesis that subjects ratings of the strength of the target character ("Alice") depends upon the number of times she won.
+Let's say we ran this experiment and hypothesized that the number of times the target character won (`"nWins"` in the data set) is a predictor of how participants' ratings of strength.
 We'll formalize this in a Bayesian regression framework, where ratings of strength $$r$$ are a linear combination of a fixed slope $$\beta_0$$ and weighted component of number of wins $$\beta_1 *  n_{wins}$$.
 
 $$y_{predicted} = \beta_0 + \beta_1 * n_{wins}$$
@@ -534,9 +544,9 @@ We'll use the `editor.put()` function to save our results.
 
 ~~~~
 var singleRegression = function(){
-  var b0 = uniform(-1, 1)
-  var b1 = uniform(-1, 1)
-  var sigma = uniform(0, 2)
+  var b0 = uniformDrift({a: -1, b: 1, width: 0.2})
+  var b1 = uniformDrift({a: -1, b: 1, width: 0.2})
+  var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
 
   map(function(d){
 
@@ -548,7 +558,7 @@ var singleRegression = function(){
   return {b0: b0, b1: b1, sigma: sigma}
 }
 
-var nSamples = 5000
+var nSamples = 2500
 var opts = { method: "MCMC", callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: nSamples/2 }
 
@@ -567,11 +577,14 @@ The posteriors are somewhat noisy because we haven't taken that many samples.
 We see that the intercept $$\beta_0$$ is around 0, which we might expect given that our data is normalized.
 The slope weight $$\beta_1$$ is around 0.35, with relatively low variance around that.
 The fact that it's very unlikely for $$\beta_1$$ to be 0 suggests that there is an effect of the number of times the actor has won in Tug of War on participants' judgments of the relative strength of that actor, as we might hope.
+$$\sigma$$ is almost around 0.5, which seems a little bit high given that the full range of the response ratings is 4 (-2 to +2).
 
 ### Model criticism with posterior prediction
 
 We can now critique the model by asking how well it would generate our data.
 To do this, we look at the posterior predictive distribution.
+There are 20 different experimental conditions (wins vs. loss, singles vs. doubles, and 4 - 6 different kinds of tournaments).
+We want to examine our predictions for each of these conditions separately, so we rewrite the model slightly by mapping over each condition variable separately.
 
 ~~~~
 var merge = function(m, d){
@@ -600,7 +613,7 @@ var singleRegression = function(){
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
         var itemData = _.where(towData, itemInfo)
 
-        // each unique item has just one nWins
+        // linear equation
         var predicted_y = b0 + itemData[0]["nWins"]*b1
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)}, itemData)
@@ -633,6 +646,17 @@ editor.put('modelDataDF', modelDataDF)
 // or just include tables 2 and 3 from paper -->
 
 ~~~
+///fold: 
+var correlation = function(xs, ys) {
+    var mx = sum(xs)/xs.length,
+        my = sum(ys)/ys.length;
+    var num = sum(map2(function(x,y) { (x-mx) * (y-my)}, xs, ys));
+    var den = Math.sqrt(sum(map(function(x) { (x-mx) * (x-mx)},xs))) *
+        Math.sqrt(sum(map(function(y) { (y-my) * (y-my)},ys)));
+    return num/den
+}
+///
+
 var modelDataDF = editor.get('modelDataDF')
 
 var summaryData = map(function(x){
@@ -641,7 +665,16 @@ var summaryData = map(function(x){
 
 viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
+
+var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
+print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 ~~~
+
+The simple linear regression does surprisingly well on this data set (at least at predicting the mean responses).
+This is important to know; it provides a standard against which we can evaluate richer models.
+
+At the same time, we observe in the posterior predictive scatterplot that not all the linear model is predicting certain symmetries that don't come out.
+Why might that be?
 
 ## Mutiple regression
 
@@ -675,7 +708,7 @@ var multipleRegression = function(){
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
         var itemData = _.where(towData, itemInfo)
 
-        // each unique item has just one nWins
+        // linear equation
         var predicted_y = b0 + itemData[0]["nWins"]*b1 + itemData[0]["nUniqueWins"]*b2
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ) }, itemData)
@@ -716,7 +749,8 @@ var parameterPosterior = marginalize(posterior, "parameters")
 viz.marginals(parameterPosterior)
 ~~~~
 
-Critique posterior predictive
+We see that $$\beta_2$$ is also probably not 0, suggesting that the number of *unique* wins a player has is relavent for predicting participants' judgments of their strength.
+How well does the model fit the data?
 
 ~~~~
 ///fold:
@@ -728,6 +762,14 @@ var marginalize = function(dist, key){
 var merge = function(m, d){
   var keys = _.keys(d)
   return map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
+}
+var correlation = function(xs, ys) {
+    var mx = sum(xs)/xs.length,
+        my = sum(ys)/ys.length;
+    var num = sum(map2(function(x,y) { (x-mx) * (y-my)}, xs, ys));
+    var den = Math.sqrt(sum(map(function(x) { (x-mx) * (x-mx)},xs))) *
+        Math.sqrt(sum(map(function(y) { (y-my) * (y-my)},ys)));
+    return num/den
 }
 ///
 var posterior = editor.get('multiRegression');
@@ -743,15 +785,19 @@ var summaryData = map(function(x){
 
 viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
+var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
+print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 ~~~~
 
-This kind of question represents a categorical manipulation; categorical manipulations provide 1 bit of information (answering the question: "Is it higher or lower in X than Y?").
+The multiple linear regression model fit is improved a little bit, but still fails to predict meaningful difference between certain conditions.
 
-Instantiating a hypothesis in a cognitive model can answer more than just categorical questions.
+With regressions like these, we're often asking binary questions (e.g., "is this parameter 0 or not?").
+These kinds of questions provide just a few bits of information.
+Instantiating a hypothesis in a cognitive model can answer more than just categorical questions by testing a richer theory of the data.
 
 ## BDA of Tug-of-war model
 
-Recall the tug-of-war model from the chapter on [conditioning]({{site.baseurl}}/chapters/03-conditioning.html).
+Recall the Tug-of-war model from the chapter on [conditioning]({{site.baseurl}}/chapters/03-conditioning.html).
 
 ~~~~
 var options = {method: 'MCMC', samples: 2500}
@@ -790,21 +836,20 @@ print("Expected value = " + expectation(posterior))
 viz(posterior)
 ~~~~
 
+<!-- Here, I've explicitly defined the `lazinessPrior` and `lazyPulling` parameters outside of the model.
+ -->
 ### Learning about the Tug-of-War model
 
-To learn more about the tug-of-war model, we're going to connect it the data from the experiment.
+To learn more about (and test) the tug-of-war model, we're going to connect it the data from the experiment.
 You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazyPulling`).
-(Technical note: Because we are comparing relative heights, we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`.
+(Technical note: Because we are comparing relative strengths, we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`.
 We just use the standard normal distribution.)
-Before, we set these parameters to be `0.5` and `0.3`, respectively.
+Above, we set these parameters to be `0.5` and `0.3`, respectively.
 (People are lazy about a third of the time, and when they are lazy, they pull with half their strength.)
 
 Those parameter values aren't central to our hypothesis.
 They are peripheral details to the larger hypothesis which is that people reason about team games like Tug of War by running a structured, generative model in their heads and doing posterior inference.
 Rather than guessing at what values we should put for these parameters, we can use the data to inform our beliefs about what those parameters are likely to be (assuming the general model is a good one).
-
-
-
 
 ~~~~
 ///fold:
