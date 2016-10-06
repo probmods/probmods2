@@ -952,4 +952,4 @@ viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 ~~~~
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.md)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.html)
