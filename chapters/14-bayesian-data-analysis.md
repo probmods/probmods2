@@ -326,7 +326,13 @@ var parameterPosterior = marginalize(posterior, "parameter")
 viz.density(parameterPosterior, {bounds: [0, 1]})
 
 var posteriorPredictive = marginalize(posterior, "predictive")
-viz.heatMap(posteriorPredictive)
+viz(posteriorPredictive)
+
+var posteriorPredictiveMAP = posteriorPredictive.MAP().val
+viz.scatter(
+  [{model: posteriorPredictiveMAP.predictive1, data: k1}, 
+   {model: posteriorPredictiveMAP.predictive2, data: k2}]
+)
 ~~~~
 
 Examine the heat map displaying the posterior predictive.
@@ -1007,4 +1013,4 @@ var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.plu
 print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 ~~~~
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.md)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.html)
