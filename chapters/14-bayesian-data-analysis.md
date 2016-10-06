@@ -878,7 +878,7 @@ var smoothToBins = function(dist, sigma, bins){
   })
 }
 
-var tugOfWarOpts = {method: "MCMC", samples: 1000, burn: 500}
+var tugOfWarOpts = {method: "rejection", samples: 50}
 
 var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
   Infer(tugOfWarOpts, function(){
@@ -981,6 +981,14 @@ var merge = function(m, d){
   var keys = _.keys(d)
   return map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
 }
+var correlation = function(xs, ys) {
+    var mx = sum(xs)/xs.length,
+        my = sum(ys)/ys.length;
+    var num = sum(map2(function(x,y) { (x-mx) * (y-my)}, xs, ys));
+    var den = Math.sqrt(sum(map(function(x) { (x-mx) * (x-mx)},xs))) *
+        Math.sqrt(sum(map(function(y) { (y-my) * (y-my)},ys)));
+    return num/den
+}
 ///
 var posterior = editor.get('bda_bcm');
 var posteriorPredictive = marginalize(posterior, "predictives")
@@ -995,6 +1003,8 @@ var summaryData = map(function(x){
 
 viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
+var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
+print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 ~~~~
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.md)
