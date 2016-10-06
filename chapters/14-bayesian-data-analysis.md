@@ -343,8 +343,7 @@ If A wins, you will gain more money because you put more money down.
 This idea is called the principle of parsimony or Occam's razor, and will be discussed at length later in this book.
 For now, it's sufficient to know that more complex models will be penalized for being more complexed intuitively because they will be diluting their predictions. 
 At the same time, more complex models are more flexible and can capture a wider variety of data.
-Bayesian model comparison let's us weigh these costs and benefits.
-
+Bayesian model comparison lets us weigh these costs and benefits.
 
 ~~~~
 var k = 7, n = 20;
@@ -361,8 +360,66 @@ var modelPosterior = Infer(opts, compareModels);
 viz(modelPosterior)
 ~~~~
 
+What we are plotting are the **posterior model probabilities**.
+These are a function of the prior model probabilities (here, defined to be equal: `flip(0.5)`) and the marginal likelihoods of the data under each hypothesis.
+Sometimes, scientists feel a bit strange about reporting values that are based on prior model probabilities (what if scientists have different priors as to the plausibility of the hypothesis?) and so often report the ratio of marginal likelihoods, a quantity known as a *Bayes Factor*.
 
-#### Discuss difficulties with model comparison? (harmonic mean estimators, mcmc for likelihoods)
+Let's compute the Bayes Factor, by computing the likelihood of the data under each hypothesis.
+
+~~~~
+var k = 7, n = 20;
+
+var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
+
+var complexModel = Infer({method: "forward", samples: 10000}, function(){
+  var p = uniform(0, 1); 
+  return binomial(p, n)
+})
+var complexLikelihood = Math.exp(complexModel.score(k))
+
+var bayesFactor_01 = simpleLikelihood / complexLikelihood
+bayesFactor_01
+~~~~
+
+Compare this with the posterior model probabilities above.
+
+## Savage-Dickey method
+
+The above model is an example from the classical hypothesis testing framework.
+We consider a model that fixes one of its parameters to a pre-specified value of interest (here $$\mathcal{H_0} : p = 0.5$$).
+This is sometimes referred to as a *null hypothesis*.
+The other model says that the parameter is free to vary.
+In the classical hypothesis testing framework, we would write: $${H_1} : p \neq 0.5$$.
+With Bayesian hypothesis testing, we must be explicit about what $$p$$ is (not just what p is not), so we write $${H_1} : p \sim \text{Uniform}(0, 1) $$. 
+
+For this example, the Bayes factor can be obtained by integrating out the model parameter, like we did in the above code-box using `{method: "forward"}`.
+It turns out, the Bayes factor can also be obtained by only considering the more complex hypothesis $$\mathcal{H}_1$$, by dividing the density of the posterior over the parameter of interest (here, $$p$$) at the point of interest (here, $$p = 0.5$$) by the density of the prior of the parameter at the point of interest.
+This perhaps surprising result by Dickey and Lientz (1970), and they attribute it to Leonard "Jimmie" Savage.
+The method is called the *Savage-Dickey density ratio* and is widely used in experimental science.
+
+Here is we would do this:
+
+**To do: This needs some discretization to work** 
+
+~~~~
+var k = 7, n = 20;
+
+var complexModelPrior = Infer({method: "forward", samples: 10000}, function(){
+  var p = uniform(0, 1); 
+  return p
+})
+
+var complexModelPosterior = Infer({method: "rejection", samples: 10000}, function(){
+  var p = uniform(0, 1);
+  observe(Binomial({p: p, n: n}), k);
+  return p
+})
+
+var savageDickeyDensityRatio = Math.exp(complexModelPosterior.score(0.5)) / Math.exp(complexModelPrior.score(0.5))
+savageDickeyDensityRatio
+~~~~
+
+**Discuss difficulties with model comparison? (harmonic mean estimators, mcmc for likelihoods)**
 
 <!-- # Linking functions
  -->
