@@ -10,59 +10,53 @@ custom_js:
 
 We saw in this chapter how to analyze our Bayesian models of cognition by using Bayesian statistical techniques. Pick either the enriched bias coin model or the generalized enriched bias coin model. What phenomena was it able to capture? What wasn’t it able to capture? How can you tell? Do you have an idea for a better model?
 
+<--
 ## Exercise 2: Bayes in the head vs. Bayes in the notebook.
 
 We’ve seen in this chapter how we can precisely separate assumptions about our computational-level theory of cognition from the assumptions that go into analyzing our data (and our theory). In this exercise, we will try to go between the two ways of looking at these things: by going from a theory and analysis in words, to a theory and analysis in Church (and back).
 
-Consider the reflectance and luminance model from Chapter 4. This model captured the illusion of increased reflectance in terms of explaining away the observed luminance by the observed decrease in illumination (caused by the shadow). Here is the model again
+Consider the [reflectance and luminance model](https://probmods.org/v2/chapters/04-patterns-of-inference.html#a-case-study-in-modularity-visual-perception-of-surface-color) from Chapter 4. This model captured the illusion of increased reflectance in terms of explaining away the observed luminance by the observed decrease in illumination (caused by the shadow). Here is the model again
 
 ~~~~
-(define observed-luminance 3.0)
+var observedLuminance = 3;
 
-(define samples
-   (mh-query
-    1000 10
+var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var reflectance = gaussian({mu: 1, sigma: 1})
+  var illumination = gaussian({mu: 3, sigma: 1})
+  var luminance = reflectance * illumination
+  // observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance) // observe luminance
+  // observe(Gaussian({mu: 0.5, sigma: 1}), illumination); // observe shadow
+  return reflectance
+});
 
-    (define reflectance (gaussian 1 1))
-    (define illumination (gaussian 3 0.5))
-    (define luminance (* reflectance illumination))
-
-    reflectance
-
-    ;true))
-    (condition (= luminance (gaussian observed-luminance 0.1))))) ; luminance is a property of the scene
-    ;(condition (= illumination (gaussian 0.5  0.1))) this illumination represents the shadow
-
-(display (list "Mean reflectance:" (mean samples)))
-(hist samples "Reflectance")
+print(expectation(reflectancePosterior))
+viz(reflectancePosterior)
 ~~~~
 
-Here I have included a commented true condition to make it easy for you to explore this model.
+A. Warmup: What does the prior for reflectance look like? How does the posterior shift when we observe luminance? What happens when you observe the shadow as well?
 
-A. Warmup: What does the prior for reflectance look like? How does the prior change when we condition on the observed luminance? What happens when you condition on the observed shadow as well?
-
-Just as a reminder, the illusion is observed in the model when we condition on this statement about illumination (condition (= illumination (gaussian 0.5 0.1))), which is a stand-in for the effect of the shadow from the cylinder on the scene.
-
-B. How many parameters does this model of perception have? (Hint: Go through each define and condition: Are the constituent variables of the statements (a) modeling assumptions or (b) part of the experimental setup / manipulation) For all of the variables you’ve categorized as (a), which ones do you think refer to aspects of the perceptual system and which refer to aspects of the environment? What do you think these parameters represent in terms of the perceptual system or environment? (Feel free to use super general, even colloquial, terms to answer this.)
+B. How many parameters does this model of perception have? (Hint: Go through each `var` and `observe` statement: Are the constituent variables of the statements (a) modeling assumptions or (b) part of the experimental setup / manipulation) For all of the variables you’ve categorized as (a), which ones do you think refer to aspects of the perceptual system and which refer to aspects of the environment? What do you think these parameters represent in terms of the perceptual system or environment? (Feel free to use super general, even colloquial, terms to answer this.)
 
 C. Replace the hard-coded parameters of this model with variables, defined outside the query. Give them the most intuitive names you can fashion. Use this starter (pseudo) code.
 
 ~~~~
-(define parameter1 ...)
-(define parameter2 ...)
-;...
-​
-(define observed-luminance 3.0)
-​
-(query
-​
- (define reflectance (gaussian 1 1))
- (define illumination (gaussian 3 0.5))
- (define luminance (* reflectance illumination))
-​
- reflectance
-​
- (= luminance (gaussian observed-luminance 0.1))))
+var parameter1 = ...
+var parameter2 = ...
+// ...
+
+var observedLuminance = 3;
+
+var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
+  var reflectance = gaussian({mu: 1, sigma: 1})
+  var illumination = gaussian({mu: 3, sigma: 1})
+  var luminance = reflectance * illumination
+  // observe luminance
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance) 
+  return reflectance
+});
+
+print(expectation(reflectancePosterior))
+viz(reflectancePosterior)
 ~~~~
 
 D. Are all of these parameters independent? (If you had to specify values for them, would you have to consider values of other parameters when specifying them?) If two are not independent, can you think of a reparameterization that would be more independent? (Hint: If you have two non-independent parameters, you could keep only one of them and introduce a parameter specifying the relation between the two. E.g., two points that are linearly associated can be expressed as an one of them and the distance between them).
@@ -75,18 +69,18 @@ F. We’re now in a position to write a data analysis model. The most common dis
 (define perceptual-model
   (lambda (parameter1 parameter2 ...))
   (query
-​
+
    ; fill in, copying where appropriate from the original model specification
    (define reflectance ...)
    (define illumination ...)
    (define luminance (* reflectance illumination))
-​
+
    reflectance
-​
+
    (= luminance ...))))
-​
-​
-​
+
+
+
 (define data-analysis-model
   (query
    ; replace with parameters you specified in Part C
@@ -105,6 +99,7 @@ F. We’re now in a position to write a data analysis model. The most common dis
 ~~~~
 
 G. What are you going to query for? Add it to your pseudocode above. What do each of things that you are querying for in the data analysis model represent?
+-->
 
 ## Exercise 3: Parameter fitting vs. Parameter integration
 
@@ -116,13 +111,13 @@ Why might this be important for model assessment? Imagine the following situatio
 
 ~~~~
 ;; Prior on task diffuclty is uniform on 0..0.9, with a spike on 0.9
-​
+
 (define (task-difficulty-prior)
   (if (flip) .9 (/ (sample-integer 10) 10)))
-​
+
 (barplot (enumeration-query (task-difficulty-prior) true) 
          "Prior on task difficulty")
-​
+
 ~~~~
 
 You have a model of how subjects perform on your task. You could have a structured, probabilistic model here. For simplicity, let’s assume you have the simplest model of task performance: it is a direct function of task-difficulty (define subject-perform-well? (not (flip task-difficulty))). Subjects perform well if the task isn’t too difficult. This is just a proxy for a more complicated model of inference we could have. For example, you could imagine having some notion of task-difficulty for the model used in Exercise 2.
@@ -148,43 +143,43 @@ One way to address this is to look at the posterior over your task-difficulty pa
 
 (define (most-probable-value vs ps)
   (%most-probable-value vs ps 0 0))
-​
+
 ;; Prior on task diffuclty is uniform on 0..0.9, with a spike on 0.9
-​
+
 (define (task-difficulty-prior)
   (if (flip) .9 (/ (sample-integer 10) 10)))
-​
+
 (barplot (enumeration-query (task-difficulty-prior) true) 
          "Prior on task difficulty")
-​
-​
+
+
 ;; Compute posterior after seeing one subject perform well on the task 
-​
+
 (define task-difficulty-posterior-dist
   (enumeration-query
    (define task-difficulty (task-difficulty-prior))   
    ; subject will perform well if the task is not too difficult
    (define subject-performs-well? (not (flip task-difficulty)))
-​
+
    task-difficulty
-​
+
    (condition (equal? subject-performs-well? #t))))
-​
-​
+
+
 ;; Most likely task-difficulty is still .9
-​
+
 (display "Most probable task-difficult after seeing 'one subject pass':" 
          (apply most-probable-value task-difficulty-posterior-dist))
-​
-​
+
+
 ;; But a lot of probability mass is on higher values
-​
+
 (barplot task-difficulty-posterior-dist
          "Posterior task-difficulty after observing 'one subject perform well'")
-​
-​
+
+
 ;; Indeed, the expected subject ability is around .5
-​
+
 (display "Expected coin weight after seeing 'one subject perform well':" 
          (apply expectation task-difficulty-posterior-dist))
 ~~~~
@@ -204,34 +199,34 @@ Here is the model, with slightly different names than the original example, and 
 (define blicket-power 0.9)
 (define non-blicket-power 0.05)
 (define machine-spontaneously-goes-off 0.05)
-​
+
 (define detecting-blickets
   (lambda 
     (evidence)
-​
+
     (enumeration-query
-​
+
      ; some objects are blickets
      (define blicket (mem (lambda (block) (flip blicket-base-rate))))
-​
+
      ; some blocks have the power to make the box go off
      (define block-power (lambda (block) (if (blicket block) blicket-power non-blicket-power)))
-​
+
      ; sometimes the machine goes off spontaneously
      ; otherwise, goes off if one of the blocks has the ability to make it go off (sequentially evaluated)
-​
+
      (define machine-goes-off
        (lambda (blocks)
          (if (null? blocks)
              (flip machine-spontaneously-goes-off)
              (or (flip (block-power (first blocks)))
                  (machine-goes-off (rest blocks))))))
-​
+
      (blicket 'A)
-​
+
      ; all checks to make sure all are true; i.e. all the of the lists of blickets made the machine-go-off
      (all (map machine-goes-off evidence)))))
-​
+
 ; A&B make the blicket-detector go off
 (barplot (detecting-blickets (list (list 'A 'B))) 
          "Is A a blicket, given A&B works?")
