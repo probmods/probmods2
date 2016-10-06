@@ -1,3 +1,26 @@
+
+var towMeans = {
+    "confounded evidence_single_loss": -0.9305,
+    "confounded evidence_single_win": 0.8581,
+    "confounded with opponent_double_loss": -0.8711,
+    "confounded with opponent_double_win": 1.0049,
+    "confounded with partner_double_loss": -0.752,
+    "confounded with partner_double_win": 0.8121,
+    "diverse evidence_double_loss": -0.9197,
+    "diverse evidence_double_win": 1.0703,
+    "diverse evidence_single_loss": -1.1887,
+    "diverse evidence_single_win": 1.3702,
+    "round robin_double_loss": -1.1487,
+    "round robin_double_win": 1.1855,
+    "strong indirect evidence_double_loss": -0.8732,
+    "strong indirect evidence_double_win": 0.7848,
+    "strong indirect evidence_single_loss": -0.7835,
+    "strong indirect evidence_single_win": 0.871,
+    "weak indirect evidence_double_loss": -0.4541,
+    "weak indirect evidence_double_win": 0.2905,
+    "weak indirect evidence_single_loss": -0.4183,
+    "weak indirect evidence_single_win": 0.0922
+}
 var towData = [
   {
     "id": 1,
@@ -9,7 +32,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.6
   },
   {
     "id": 1,
@@ -21,7 +46,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -2.2
   },
   {
     "id": 1,
@@ -33,7 +60,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.7
   },
   {
     "id": 1,
@@ -45,7 +74,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 1,
@@ -57,7 +88,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 1,
@@ -69,7 +102,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 1,
@@ -81,7 +116,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.4
   },
   {
     "id": 1,
@@ -93,7 +130,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 1,
@@ -105,7 +144,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.7
   },
   {
     "id": 1,
@@ -117,7 +158,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.6
   },
   {
     "id": 1,
@@ -129,7 +172,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1
   },
   {
     "id": 1,
@@ -141,7 +186,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.3
   },
   {
     "id": 1,
@@ -153,7 +200,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.4
   },
   {
     "id": 1,
@@ -165,7 +214,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.4
   },
   {
     "id": 1,
@@ -177,7 +228,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.3
   },
   {
     "id": 1,
@@ -189,7 +242,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.4
   },
   {
     "id": 1,
@@ -201,7 +256,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 1,
@@ -213,7 +270,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.3
   },
   {
     "id": 1,
@@ -225,7 +284,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 2.1
   },
   {
     "id": 1,
@@ -237,7 +298,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 2,
@@ -249,7 +312,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 2,
@@ -261,7 +326,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 2,
@@ -273,7 +340,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 2,
@@ -285,7 +354,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 2,
@@ -297,7 +368,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 2,
@@ -309,7 +382,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 2,
@@ -321,7 +396,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.7
   },
   {
     "id": 2,
@@ -333,7 +410,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 2,
@@ -345,7 +424,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.7
   },
   {
     "id": 2,
@@ -357,7 +438,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": 0.5
   },
   {
     "id": 2,
@@ -369,7 +452,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.7
   },
   {
     "id": 2,
@@ -381,7 +466,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.2
   },
   {
     "id": 2,
@@ -393,7 +480,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 2,
@@ -405,7 +494,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 2,
@@ -417,7 +508,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 2,
@@ -429,7 +522,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -1.3
   },
   {
     "id": 2,
@@ -441,7 +536,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 2,
@@ -453,7 +550,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 2,
@@ -465,7 +564,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.3
   },
   {
     "id": 2,
@@ -477,7 +578,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.9
   },
   {
     "id": 3,
@@ -489,7 +592,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.6
   },
   {
     "id": 3,
@@ -501,7 +606,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 3,
@@ -513,7 +620,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 3,
@@ -525,7 +634,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.1
   },
   {
     "id": 3,
@@ -537,7 +648,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.2
   },
   {
     "id": 3,
@@ -549,7 +662,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": 0
   },
   {
     "id": 3,
@@ -561,7 +676,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 3,
@@ -573,7 +690,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 3,
@@ -585,7 +704,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1
   },
   {
     "id": 3,
@@ -597,7 +718,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 3,
@@ -609,7 +732,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.1
   },
   {
     "id": 3,
@@ -621,7 +746,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.9
   },
   {
     "id": 3,
@@ -633,7 +760,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 3,
@@ -645,7 +774,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 3,
@@ -657,7 +788,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.3
   },
   {
     "id": 3,
@@ -669,7 +802,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.6
   },
   {
     "id": 3,
@@ -681,7 +816,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.2
   },
   {
     "id": 3,
@@ -693,7 +830,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 3,
@@ -705,7 +844,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.2
   },
   {
     "id": 3,
@@ -717,7 +858,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.2
   },
   {
     "id": 4,
@@ -729,7 +872,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.8
   },
   {
     "id": 4,
@@ -741,7 +886,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.1
   },
   {
     "id": 4,
@@ -753,7 +900,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 4,
@@ -765,7 +914,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": 0.1
   },
   {
     "id": 4,
@@ -777,7 +928,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.7
   },
   {
     "id": 4,
@@ -789,7 +942,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.8
   },
   {
     "id": 4,
@@ -801,7 +956,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.7
   },
   {
     "id": 4,
@@ -813,7 +970,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.8
   },
   {
     "id": 4,
@@ -825,7 +984,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.1
   },
   {
     "id": 4,
@@ -837,7 +998,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.6
   },
   {
     "id": 4,
@@ -849,7 +1012,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.2
   },
   {
     "id": 4,
@@ -861,7 +1026,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.1
   },
   {
     "id": 4,
@@ -873,7 +1040,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.5
   },
   {
     "id": 4,
@@ -885,7 +1054,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 4,
@@ -897,7 +1068,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": -0.3
   },
   {
     "id": 4,
@@ -909,7 +1082,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.5
   },
   {
     "id": 4,
@@ -921,7 +1096,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.3
   },
   {
     "id": 4,
@@ -933,7 +1110,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.8
   },
   {
     "id": 4,
@@ -945,7 +1124,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 0.7
   },
   {
     "id": 4,
@@ -957,7 +1138,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.8
   },
   {
     "id": 5,
@@ -969,7 +1152,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.5
   },
   {
     "id": 5,
@@ -981,7 +1166,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.7
   },
   {
     "id": 5,
@@ -993,7 +1180,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.3
   },
   {
     "id": 5,
@@ -1005,7 +1194,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 5,
@@ -1017,7 +1208,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 5,
@@ -1029,7 +1222,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 5,
@@ -1041,7 +1236,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 5,
@@ -1053,7 +1250,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 5,
@@ -1065,7 +1264,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.7
   },
   {
     "id": 5,
@@ -1077,7 +1278,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.7
   },
   {
     "id": 5,
@@ -1089,7 +1292,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.9
   },
   {
     "id": 5,
@@ -1101,7 +1306,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.7
   },
   {
     "id": 5,
@@ -1113,7 +1320,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 5,
@@ -1125,7 +1334,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.4
   },
   {
     "id": 5,
@@ -1137,7 +1348,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.4
   },
   {
     "id": 5,
@@ -1149,7 +1362,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.4
   },
   {
     "id": 5,
@@ -1161,7 +1376,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 5,
@@ -1173,7 +1390,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.7
   },
   {
     "id": 5,
@@ -1185,7 +1404,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.3
   },
   {
     "id": 5,
@@ -1197,7 +1418,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.4
   },
   {
     "id": 6,
@@ -1209,7 +1432,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 6,
@@ -1221,7 +1446,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 6,
@@ -1233,7 +1460,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.6
   },
   {
     "id": 6,
@@ -1245,7 +1474,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 6,
@@ -1257,7 +1488,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 6,
@@ -1269,7 +1502,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 6,
@@ -1281,7 +1516,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.3
   },
   {
     "id": 6,
@@ -1293,7 +1530,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 6,
@@ -1305,7 +1544,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.3
   },
   {
     "id": 6,
@@ -1317,7 +1558,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1.3
   },
   {
     "id": 6,
@@ -1329,7 +1572,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.3
   },
   {
     "id": 6,
@@ -1341,7 +1586,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.9
   },
   {
     "id": 6,
@@ -1353,7 +1600,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.4
   },
   {
     "id": 6,
@@ -1365,7 +1614,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.7
   },
   {
     "id": 6,
@@ -1377,7 +1628,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.3
   },
   {
     "id": 6,
@@ -1389,7 +1642,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.6
   },
   {
     "id": 6,
@@ -1401,7 +1656,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.3
   },
   {
     "id": 6,
@@ -1413,7 +1670,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 6,
@@ -1425,7 +1684,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.3
   },
   {
     "id": 6,
@@ -1437,7 +1698,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.1
   },
   {
     "id": 7,
@@ -1449,7 +1712,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.5
   },
   {
     "id": 7,
@@ -1461,7 +1726,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.9
   },
   {
     "id": 7,
@@ -1473,7 +1740,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 7,
@@ -1485,7 +1754,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": 0.1
   },
   {
     "id": 7,
@@ -1497,7 +1768,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 7,
@@ -1509,7 +1782,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 7,
@@ -1521,7 +1796,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.7
   },
   {
     "id": 7,
@@ -1533,7 +1810,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 7,
@@ -1545,7 +1824,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.2
   },
   {
     "id": 7,
@@ -1557,7 +1838,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.8
   },
   {
     "id": 7,
@@ -1569,7 +1852,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.7
   },
   {
     "id": 7,
@@ -1581,7 +1866,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.2
   },
   {
     "id": 7,
@@ -1593,7 +1880,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": -0.7
   },
   {
     "id": 7,
@@ -1605,7 +1894,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 7,
@@ -1617,7 +1908,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 7,
@@ -1629,7 +1922,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.6
   },
   {
     "id": 7,
@@ -1641,7 +1936,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 0.8
   },
   {
     "id": 7,
@@ -1653,7 +1950,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.3
   },
   {
     "id": 7,
@@ -1665,7 +1964,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 0.8
   },
   {
     "id": 7,
@@ -1677,7 +1978,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.5
   },
   {
     "id": 8,
@@ -1689,7 +1992,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 8,
@@ -1701,7 +2006,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 8,
@@ -1713,7 +2020,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 8,
@@ -1725,7 +2034,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 8,
@@ -1737,7 +2048,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 8,
@@ -1749,7 +2062,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": 0.6
   },
   {
     "id": 8,
@@ -1761,7 +2076,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 8,
@@ -1773,7 +2090,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 8,
@@ -1785,7 +2104,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.5
   },
   {
     "id": 8,
@@ -1797,7 +2118,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.6
   },
   {
     "id": 8,
@@ -1809,7 +2132,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1
   },
   {
     "id": 8,
@@ -1821,7 +2146,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.6
   },
   {
     "id": 8,
@@ -1833,7 +2160,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1.2
   },
   {
     "id": 8,
@@ -1845,7 +2174,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 8,
@@ -1857,7 +2188,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.1
   },
   {
     "id": 8,
@@ -1869,7 +2202,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": 0
   },
   {
     "id": 8,
@@ -1881,7 +2216,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.2
   },
   {
     "id": 8,
@@ -1893,7 +2230,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 8,
@@ -1905,7 +2244,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 0.8
   },
   {
     "id": 8,
@@ -1917,7 +2258,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.2
   },
   {
     "id": 9,
@@ -1929,7 +2272,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.5
   },
   {
     "id": 9,
@@ -1941,7 +2286,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.8
   },
   {
     "id": 9,
@@ -1953,7 +2300,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 9,
@@ -1965,7 +2314,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 9,
@@ -1977,7 +2328,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.1
   },
   {
     "id": 9,
@@ -1989,7 +2342,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 9,
@@ -2001,7 +2356,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.4
   },
   {
     "id": 9,
@@ -2013,7 +2370,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 9,
@@ -2025,7 +2384,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.4
   },
   {
     "id": 9,
@@ -2037,7 +2398,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.8
   },
   {
     "id": 9,
@@ -2049,7 +2412,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.2
   },
   {
     "id": 9,
@@ -2061,7 +2426,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.1
   },
   {
     "id": 9,
@@ -2073,7 +2440,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 9,
@@ -2085,7 +2454,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 9,
@@ -2097,7 +2468,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.3
   },
   {
     "id": 9,
@@ -2109,7 +2482,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.1
   },
   {
     "id": 9,
@@ -2121,7 +2496,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 9,
@@ -2133,7 +2510,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.8
   },
   {
     "id": 9,
@@ -2145,7 +2524,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.1
   },
   {
     "id": 9,
@@ -2157,7 +2538,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.2
   },
   {
     "id": 10,
@@ -2169,7 +2552,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.9
   },
   {
     "id": 10,
@@ -2181,7 +2566,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 10,
@@ -2193,7 +2580,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": -0.1
   },
   {
     "id": 10,
@@ -2205,7 +2594,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 10,
@@ -2217,7 +2608,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.1
   },
   {
     "id": 10,
@@ -2229,7 +2622,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 10,
@@ -2241,7 +2636,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.9
   },
   {
     "id": 10,
@@ -2253,7 +2650,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 10,
@@ -2265,7 +2664,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.1
   },
   {
     "id": 10,
@@ -2277,7 +2678,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.7
   },
   {
     "id": 10,
@@ -2289,7 +2692,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.4
   },
   {
     "id": 10,
@@ -2301,7 +2706,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.9
   },
   {
     "id": 10,
@@ -2313,7 +2720,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": -0.5
   },
   {
     "id": 10,
@@ -2325,7 +2734,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.8
   },
   {
     "id": 10,
@@ -2337,7 +2748,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 10,
@@ -2349,7 +2762,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 10,
@@ -2361,7 +2776,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 10,
@@ -2373,7 +2790,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.7
   },
   {
     "id": 10,
@@ -2385,7 +2804,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.1
   },
   {
     "id": 10,
@@ -2397,7 +2818,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 11,
@@ -2409,7 +2832,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.4
   },
   {
     "id": 11,
@@ -2421,7 +2846,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.5
   },
   {
     "id": 11,
@@ -2433,7 +2860,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 11,
@@ -2445,7 +2874,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 11,
@@ -2457,7 +2888,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 11,
@@ -2469,7 +2902,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 11,
@@ -2481,7 +2916,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.5
   },
   {
     "id": 11,
@@ -2493,7 +2930,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.1
   },
   {
     "id": 11,
@@ -2505,7 +2944,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.8
   },
   {
     "id": 11,
@@ -2517,7 +2958,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.9
   },
   {
     "id": 11,
@@ -2529,7 +2972,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.9
   },
   {
     "id": 11,
@@ -2541,7 +2986,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.6
   },
   {
     "id": 11,
@@ -2553,7 +3000,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 11,
@@ -2565,7 +3014,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 11,
@@ -2577,7 +3028,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.3
   },
   {
     "id": 11,
@@ -2589,7 +3042,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.5
   },
   {
     "id": 11,
@@ -2601,7 +3056,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.2
   },
   {
     "id": 11,
@@ -2613,7 +3070,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.8
   },
   {
     "id": 11,
@@ -2625,7 +3084,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1
   },
   {
     "id": 11,
@@ -2637,7 +3098,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.8
   },
   {
     "id": 12,
@@ -2649,7 +3112,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.4
   },
   {
     "id": 12,
@@ -2661,7 +3126,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 12,
@@ -2673,7 +3140,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.4
   },
   {
     "id": 12,
@@ -2685,7 +3154,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 12,
@@ -2697,7 +3168,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.4
   },
   {
     "id": 12,
@@ -2709,7 +3182,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.8
   },
   {
     "id": 12,
@@ -2721,7 +3196,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.3
   },
   {
     "id": 12,
@@ -2733,7 +3210,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.9
   },
   {
     "id": 12,
@@ -2745,7 +3224,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.5
   },
   {
     "id": 12,
@@ -2757,7 +3238,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": 0.4
   },
   {
     "id": 12,
@@ -2769,7 +3252,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.8
   },
   {
     "id": 12,
@@ -2781,7 +3266,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.9
   },
   {
     "id": 12,
@@ -2793,7 +3280,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.7
   },
   {
     "id": 12,
@@ -2805,7 +3294,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 12,
@@ -2817,7 +3308,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.5
   },
   {
     "id": 12,
@@ -2829,7 +3322,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.7
   },
   {
     "id": 12,
@@ -2841,7 +3336,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.3
   },
   {
     "id": 12,
@@ -2853,7 +3350,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 12,
@@ -2865,7 +3364,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.1
   },
   {
     "id": 12,
@@ -2877,7 +3378,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 13,
@@ -2889,7 +3392,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.7
   },
   {
     "id": 13,
@@ -2901,7 +3406,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.1
   },
   {
     "id": 13,
@@ -2913,7 +3420,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.8
   },
   {
     "id": 13,
@@ -2925,7 +3434,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 13,
@@ -2937,7 +3448,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 13,
@@ -2949,7 +3462,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 13,
@@ -2961,7 +3476,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 13,
@@ -2973,7 +3490,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -0.8
   },
   {
     "id": 13,
@@ -2985,7 +3504,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.5
   },
   {
     "id": 13,
@@ -2997,7 +3518,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 13,
@@ -3009,7 +3532,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.8
   },
   {
     "id": 13,
@@ -3021,7 +3546,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.6
   },
   {
     "id": 13,
@@ -3033,7 +3560,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1.7
   },
   {
     "id": 13,
@@ -3045,7 +3574,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 13,
@@ -3057,7 +3588,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.3
   },
   {
     "id": 13,
@@ -3069,7 +3602,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 13,
@@ -3081,7 +3616,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.4
   },
   {
     "id": 13,
@@ -3093,7 +3630,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 13,
@@ -3105,7 +3644,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.3
   },
   {
     "id": 13,
@@ -3117,7 +3658,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.7
   },
   {
     "id": 14,
@@ -3129,7 +3672,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 14,
@@ -3141,7 +3686,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.5
   },
   {
     "id": 14,
@@ -3153,7 +3700,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.8
   },
   {
     "id": 14,
@@ -3165,7 +3714,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 14,
@@ -3177,7 +3728,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.5
   },
   {
     "id": 14,
@@ -3189,7 +3742,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 14,
@@ -3201,7 +3756,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.9
   },
   {
     "id": 14,
@@ -3213,7 +3770,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 14,
@@ -3225,7 +3784,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.3
   },
   {
     "id": 14,
@@ -3237,7 +3798,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 14,
@@ -3249,7 +3812,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.5
   },
   {
     "id": 14,
@@ -3261,7 +3826,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.4
   },
   {
     "id": 14,
@@ -3273,7 +3840,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 14,
@@ -3285,7 +3854,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.3
   },
   {
     "id": 14,
@@ -3297,7 +3868,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.4
   },
   {
     "id": 14,
@@ -3309,7 +3882,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 14,
@@ -3321,7 +3896,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 14,
@@ -3333,7 +3910,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 14,
@@ -3345,7 +3924,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 0.7
   },
   {
     "id": 14,
@@ -3357,7 +3938,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.2
   },
   {
     "id": 15,
@@ -3369,7 +3952,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 15,
@@ -3381,7 +3966,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 15,
@@ -3393,7 +3980,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 15,
@@ -3405,7 +3994,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 15,
@@ -3417,7 +4008,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.2
   },
   {
     "id": 15,
@@ -3429,7 +4022,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 15,
@@ -3441,7 +4036,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 15,
@@ -3453,7 +4050,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 15,
@@ -3465,7 +4064,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.1
   },
   {
     "id": 15,
@@ -3477,7 +4078,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.9
   },
   {
     "id": 15,
@@ -3489,7 +4092,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.1
   },
   {
     "id": 15,
@@ -3501,7 +4106,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.9
   },
   {
     "id": 15,
@@ -3513,7 +4120,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 15,
@@ -3525,7 +4134,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 15,
@@ -3537,7 +4148,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.4
   },
   {
     "id": 15,
@@ -3549,7 +4162,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.6
   },
   {
     "id": 15,
@@ -3561,7 +4176,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 15,
@@ -3573,7 +4190,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 15,
@@ -3585,7 +4204,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.1
   },
   {
     "id": 15,
@@ -3597,7 +4218,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 16,
@@ -3609,7 +4232,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 16,
@@ -3621,7 +4246,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 16,
@@ -3633,7 +4260,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.1
   },
   {
     "id": 16,
@@ -3645,7 +4274,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": 0.1
   },
   {
     "id": 16,
@@ -3657,7 +4288,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 16,
@@ -3669,7 +4302,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 16,
@@ -3681,7 +4316,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 16,
@@ -3693,7 +4330,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 16,
@@ -3705,7 +4344,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.6
   },
   {
     "id": 16,
@@ -3717,7 +4358,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.6
   },
   {
     "id": 16,
@@ -3729,7 +4372,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.1
   },
   {
     "id": 16,
@@ -3741,7 +4386,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.3
   },
   {
     "id": 16,
@@ -3753,7 +4400,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 16,
@@ -3765,7 +4414,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 16,
@@ -3777,7 +4428,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 16,
@@ -3789,7 +4442,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": 0
   },
   {
     "id": 16,
@@ -3801,7 +4456,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 16,
@@ -3813,7 +4470,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.3
   },
   {
     "id": 16,
@@ -3825,7 +4484,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 0.9
   },
   {
     "id": 16,
@@ -3837,7 +4498,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.2
   },
   {
     "id": 17,
@@ -3849,7 +4512,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.5
   },
   {
     "id": 17,
@@ -3861,7 +4526,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 17,
@@ -3873,7 +4540,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.3
   },
   {
     "id": 17,
@@ -3885,7 +4554,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 17,
@@ -3897,7 +4568,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 17,
@@ -3909,7 +4582,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 17,
@@ -3921,7 +4596,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.5
   },
   {
     "id": 17,
@@ -3933,7 +4610,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.6
   },
   {
     "id": 17,
@@ -3945,7 +4624,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.4
   },
   {
     "id": 17,
@@ -3957,7 +4638,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.8
   },
   {
     "id": 17,
@@ -3969,7 +4652,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.6
   },
   {
     "id": 17,
@@ -3981,7 +4666,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.8
   },
   {
     "id": 17,
@@ -3993,7 +4680,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.9
   },
   {
     "id": 17,
@@ -4005,7 +4694,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.7
   },
   {
     "id": 17,
@@ -4017,7 +4708,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 17,
@@ -4029,7 +4722,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.4
   },
   {
     "id": 17,
@@ -4041,7 +4736,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 17,
@@ -4053,7 +4750,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.6
   },
   {
     "id": 17,
@@ -4065,7 +4764,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.5
   },
   {
     "id": 17,
@@ -4077,7 +4778,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.5
   },
   {
     "id": 18,
@@ -4089,7 +4792,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1
   },
   {
     "id": 18,
@@ -4101,7 +4806,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 18,
@@ -4113,7 +4820,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 18,
@@ -4125,7 +4834,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 18,
@@ -4137,7 +4848,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 18,
@@ -4149,7 +4862,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 18,
@@ -4161,7 +4876,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.5
   },
   {
     "id": 18,
@@ -4173,7 +4890,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.6
   },
   {
     "id": 18,
@@ -4185,7 +4904,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.2
   },
   {
     "id": 18,
@@ -4197,7 +4918,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.4
   },
   {
     "id": 18,
@@ -4209,7 +4932,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.8
   },
   {
     "id": 18,
@@ -4221,7 +4946,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.6
   },
   {
     "id": 18,
@@ -4233,7 +4960,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1.4
   },
   {
     "id": 18,
@@ -4245,7 +4974,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.6
   },
   {
     "id": 18,
@@ -4257,7 +4988,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.2
   },
   {
     "id": 18,
@@ -4269,7 +5002,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.3
   },
   {
     "id": 18,
@@ -4281,7 +5016,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 18,
@@ -4293,7 +5030,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 18,
@@ -4305,7 +5044,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.5
   },
   {
     "id": 18,
@@ -4317,7 +5058,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.5
   },
   {
     "id": 19,
@@ -4329,7 +5072,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1
   },
   {
     "id": 19,
@@ -4341,7 +5086,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 19,
@@ -4353,7 +5100,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 19,
@@ -4365,7 +5114,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 19,
@@ -4377,7 +5128,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 19,
@@ -4389,7 +5142,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 19,
@@ -4401,7 +5156,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 19,
@@ -4413,7 +5170,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.1
   },
   {
     "id": 19,
@@ -4425,7 +5184,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.9
   },
   {
     "id": 19,
@@ -4437,7 +5198,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 19,
@@ -4449,7 +5212,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1
   },
   {
     "id": 19,
@@ -4461,7 +5226,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1
   },
   {
     "id": 19,
@@ -4473,7 +5240,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 19,
@@ -4485,7 +5254,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 19,
@@ -4497,7 +5268,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 19,
@@ -4509,7 +5282,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 19,
@@ -4521,7 +5296,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1
   },
   {
     "id": 19,
@@ -4533,7 +5310,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 19,
@@ -4545,7 +5324,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 0.9
   },
   {
     "id": 19,
@@ -4557,7 +5338,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 20,
@@ -4569,7 +5352,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.7
   },
   {
     "id": 20,
@@ -4581,7 +5366,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.5
   },
   {
     "id": 20,
@@ -4593,7 +5380,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.5
   },
   {
     "id": 20,
@@ -4605,7 +5394,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.1
   },
   {
     "id": 20,
@@ -4617,7 +5408,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.6
   },
   {
     "id": 20,
@@ -4629,7 +5422,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 20,
@@ -4641,7 +5436,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.6
   },
   {
     "id": 20,
@@ -4653,7 +5450,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 20,
@@ -4665,7 +5464,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1
   },
   {
     "id": 20,
@@ -4677,7 +5478,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.5
   },
   {
     "id": 20,
@@ -4689,7 +5492,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.6
   },
   {
     "id": 20,
@@ -4701,7 +5506,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.7
   },
   {
     "id": 20,
@@ -4713,7 +5520,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.4
   },
   {
     "id": 20,
@@ -4725,7 +5534,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 20,
@@ -4737,7 +5548,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0
   },
   {
     "id": 20,
@@ -4749,7 +5562,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.1
   },
   {
     "id": 20,
@@ -4761,7 +5576,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 20,
@@ -4773,7 +5590,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.4
   },
   {
     "id": 20,
@@ -4785,7 +5604,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.4
   },
   {
     "id": 20,
@@ -4797,7 +5618,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.4
   },
   {
     "id": 21,
@@ -4809,7 +5632,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.7
   },
   {
     "id": 21,
@@ -4821,7 +5646,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 21,
@@ -4833,7 +5660,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 21,
@@ -4845,7 +5674,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 21,
@@ -4857,7 +5688,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.6
   },
   {
     "id": 21,
@@ -4869,7 +5702,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.7
   },
   {
     "id": 21,
@@ -4881,7 +5716,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 21,
@@ -4893,7 +5730,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.1
   },
   {
     "id": 21,
@@ -4905,7 +5744,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.6
   },
   {
     "id": 21,
@@ -4917,7 +5758,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.6
   },
   {
     "id": 21,
@@ -4929,7 +5772,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.9
   },
   {
     "id": 21,
@@ -4941,7 +5786,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.6
   },
   {
     "id": 21,
@@ -4953,7 +5800,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1.2
   },
   {
     "id": 21,
@@ -4965,7 +5814,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 21,
@@ -4977,7 +5828,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.3
   },
   {
     "id": 21,
@@ -4989,7 +5842,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 21,
@@ -5001,7 +5856,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 21,
@@ -5013,7 +5870,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 21,
@@ -5025,7 +5884,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.2
   },
   {
     "id": 21,
@@ -5037,7 +5898,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.4
   },
   {
     "id": 22,
@@ -5049,7 +5912,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.5
   },
   {
     "id": 22,
@@ -5061,7 +5926,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 22,
@@ -5073,7 +5940,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.5
   },
   {
     "id": 22,
@@ -5085,7 +5954,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 22,
@@ -5097,7 +5968,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.4
   },
   {
     "id": 22,
@@ -5109,7 +5982,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.4
   },
   {
     "id": 22,
@@ -5121,7 +5996,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.5
   },
   {
     "id": 22,
@@ -5133,7 +6010,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.5
   },
   {
     "id": 22,
@@ -5145,7 +6024,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.9
   },
   {
     "id": 22,
@@ -5157,7 +6038,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 22,
@@ -5169,7 +6052,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1
   },
   {
     "id": 22,
@@ -5181,7 +6066,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.4
   },
   {
     "id": 22,
@@ -5193,7 +6080,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 22,
@@ -5205,7 +6094,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.4
   },
   {
     "id": 22,
@@ -5217,7 +6108,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.5
   },
   {
     "id": 22,
@@ -5229,7 +6122,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.5
   },
   {
     "id": 22,
@@ -5241,7 +6136,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 22,
@@ -5253,7 +6150,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 22,
@@ -5265,7 +6164,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 0.9
   },
   {
     "id": 22,
@@ -5277,7 +6178,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.7
   },
   {
     "id": 23,
@@ -5289,7 +6192,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": -0
   },
   {
     "id": 23,
@@ -5301,7 +6206,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 23,
@@ -5313,7 +6220,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 23,
@@ -5325,7 +6234,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 23,
@@ -5337,7 +6248,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.3
   },
   {
     "id": 23,
@@ -5349,7 +6262,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 23,
@@ -5361,7 +6276,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 23,
@@ -5373,7 +6290,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.1
   },
   {
     "id": 23,
@@ -5385,7 +6304,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.2
   },
   {
     "id": 23,
@@ -5397,7 +6318,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 23,
@@ -5409,7 +6332,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.3
   },
   {
     "id": 23,
@@ -5421,7 +6346,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.3
   },
   {
     "id": 23,
@@ -5433,7 +6360,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1.2
   },
   {
     "id": 23,
@@ -5445,7 +6374,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.3
   },
   {
     "id": 23,
@@ -5457,7 +6388,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0
   },
   {
     "id": 23,
@@ -5469,7 +6402,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": 0.1
   },
   {
     "id": 23,
@@ -5481,7 +6416,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.3
   },
   {
     "id": 23,
@@ -5493,7 +6430,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 23,
@@ -5505,7 +6444,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.3
   },
   {
     "id": 23,
@@ -5517,7 +6458,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 24,
@@ -5529,7 +6472,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 24,
@@ -5541,7 +6486,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.7
   },
   {
     "id": 24,
@@ -5553,7 +6500,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 24,
@@ -5565,7 +6514,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 24,
@@ -5577,7 +6528,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 24,
@@ -5589,7 +6542,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 24,
@@ -5601,7 +6556,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 24,
@@ -5613,7 +6570,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.4
   },
   {
     "id": 24,
@@ -5625,7 +6584,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.1
   },
   {
     "id": 24,
@@ -5637,7 +6598,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 24,
@@ -5649,7 +6612,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.1
   },
   {
     "id": 24,
@@ -5661,7 +6626,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.8
   },
   {
     "id": 24,
@@ -5673,7 +6640,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.9
   },
   {
     "id": 24,
@@ -5685,7 +6654,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.4
   },
   {
     "id": 24,
@@ -5697,7 +6668,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.2
   },
   {
     "id": 24,
@@ -5709,7 +6682,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": 0
   },
   {
     "id": 24,
@@ -5721,7 +6696,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 24,
@@ -5733,7 +6710,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1
   },
   {
     "id": 24,
@@ -5745,7 +6724,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1
   },
   {
     "id": 24,
@@ -5757,7 +6738,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.5
   },
   {
     "id": 25,
@@ -5769,7 +6752,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.4
   },
   {
     "id": 25,
@@ -5781,7 +6766,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 25,
@@ -5793,7 +6780,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": -0.1
   },
   {
     "id": 25,
@@ -5805,7 +6794,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.8
   },
   {
     "id": 25,
@@ -5817,7 +6808,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 25,
@@ -5829,7 +6822,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.8
   },
   {
     "id": 25,
@@ -5841,7 +6836,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.6
   },
   {
     "id": 25,
@@ -5853,7 +6850,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.6
   },
   {
     "id": 25,
@@ -5865,7 +6864,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.4
   },
   {
     "id": 25,
@@ -5877,7 +6878,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.8
   },
   {
     "id": 25,
@@ -5889,7 +6892,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.3
   },
   {
     "id": 25,
@@ -5901,7 +6906,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.6
   },
   {
     "id": 25,
@@ -5913,7 +6920,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.1
   },
   {
     "id": 25,
@@ -5925,7 +6934,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": 0.9
   },
   {
     "id": 25,
@@ -5937,7 +6948,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 25,
@@ -5949,7 +6962,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.8
   },
   {
     "id": 25,
@@ -5961,7 +6976,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.4
   },
   {
     "id": 25,
@@ -5973,7 +6990,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 25,
@@ -5985,7 +7004,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.3
   },
   {
     "id": 25,
@@ -5997,7 +7018,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.8
   },
   {
     "id": 26,
@@ -6009,7 +7032,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 26,
@@ -6021,7 +7046,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 26,
@@ -6033,7 +7060,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 26,
@@ -6045,7 +7074,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": 1
   },
   {
     "id": 26,
@@ -6057,7 +7088,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 26,
@@ -6069,7 +7102,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 26,
@@ -6081,7 +7116,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 26,
@@ -6093,7 +7130,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 26,
@@ -6105,7 +7144,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1.3
   },
   {
     "id": 26,
@@ -6117,7 +7158,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1.4
   },
   {
     "id": 26,
@@ -6129,7 +7172,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.4
   },
   {
     "id": 26,
@@ -6141,7 +7186,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.2
   },
   {
     "id": 26,
@@ -6153,7 +7200,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 26,
@@ -6165,7 +7214,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -0.9
   },
   {
     "id": 26,
@@ -6177,7 +7228,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 26,
@@ -6189,7 +7242,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.8
   },
   {
     "id": 26,
@@ -6201,7 +7256,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 0.8
   },
   {
     "id": 26,
@@ -6213,7 +7270,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 26,
@@ -6225,7 +7284,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.3
   },
   {
     "id": 26,
@@ -6237,7 +7298,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 27,
@@ -6249,7 +7312,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.2
   },
   {
     "id": 27,
@@ -6261,7 +7326,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.1
   },
   {
     "id": 27,
@@ -6273,7 +7340,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.8
   },
   {
     "id": 27,
@@ -6285,7 +7354,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 27,
@@ -6297,7 +7368,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0
   },
   {
     "id": 27,
@@ -6309,7 +7382,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": 0.1
   },
   {
     "id": 27,
@@ -6321,7 +7396,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.6
   },
   {
     "id": 27,
@@ -6333,7 +7410,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.6
   },
   {
     "id": 27,
@@ -6345,7 +7424,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.8
   },
   {
     "id": 27,
@@ -6357,7 +7438,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.8
   },
   {
     "id": 27,
@@ -6369,7 +7452,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1
   },
   {
     "id": 27,
@@ -6381,7 +7466,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.7
   },
   {
     "id": 27,
@@ -6393,7 +7480,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.8
   },
   {
     "id": 27,
@@ -6405,7 +7494,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.4
   },
   {
     "id": 27,
@@ -6417,7 +7508,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0
   },
   {
     "id": 27,
@@ -6429,7 +7522,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": 0
   },
   {
     "id": 27,
@@ -6441,7 +7536,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 0.9
   },
   {
     "id": 27,
@@ -6453,7 +7550,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -0.8
   },
   {
     "id": 27,
@@ -6465,7 +7564,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.6
   },
   {
     "id": 27,
@@ -6477,7 +7578,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.6
   },
   {
     "id": 28,
@@ -6489,7 +7592,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 28,
@@ -6501,7 +7606,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 28,
@@ -6513,7 +7620,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1.6
   },
   {
     "id": 28,
@@ -6525,7 +7634,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.9
   },
   {
     "id": 28,
@@ -6537,7 +7648,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.1
   },
   {
     "id": 28,
@@ -6549,7 +7662,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -0.5
   },
   {
     "id": 28,
@@ -6561,7 +7676,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.1
   },
   {
     "id": 28,
@@ -6573,7 +7690,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": 0.5
   },
   {
     "id": 28,
@@ -6585,7 +7704,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.2
   },
   {
     "id": 28,
@@ -6597,7 +7718,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.7
   },
   {
     "id": 28,
@@ -6609,7 +7732,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 0.2
   },
   {
     "id": 28,
@@ -6621,7 +7746,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.6
   },
   {
     "id": 28,
@@ -6633,7 +7760,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 1.6
   },
   {
     "id": 28,
@@ -6645,7 +7774,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 28,
@@ -6657,7 +7788,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": -0.1
   },
   {
     "id": 28,
@@ -6669,7 +7802,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.1
   },
   {
     "id": 28,
@@ -6681,7 +7816,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 0.9
   },
   {
     "id": 28,
@@ -6693,7 +7830,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.4
   },
   {
     "id": 28,
@@ -6705,7 +7844,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.6
   },
   {
     "id": 28,
@@ -6717,7 +7858,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.8
   },
   {
     "id": 29,
@@ -6729,7 +7872,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 1.2
   },
   {
     "id": 29,
@@ -6741,7 +7886,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 29,
@@ -6753,7 +7900,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 1
   },
   {
     "id": 29,
@@ -6765,7 +7914,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -0.7
   },
   {
     "id": 29,
@@ -6777,7 +7928,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": -0.2
   },
   {
     "id": 29,
@@ -6789,7 +7942,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": 0.8
   },
   {
     "id": 29,
@@ -6801,7 +7956,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1
   },
   {
     "id": 29,
@@ -6813,7 +7970,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.2
   },
   {
     "id": 29,
@@ -6825,7 +7984,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 1
   },
   {
     "id": 29,
@@ -6837,7 +7998,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -1
   },
   {
     "id": 29,
@@ -6849,7 +8012,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1
   },
   {
     "id": 29,
@@ -6861,7 +8026,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -1.2
   },
   {
     "id": 29,
@@ -6873,7 +8040,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.6
   },
   {
     "id": 29,
@@ -6885,7 +8054,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 29,
@@ -6897,7 +8068,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.8
   },
   {
     "id": 29,
@@ -6909,7 +8082,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 29,
@@ -6921,7 +8096,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.1
   },
   {
     "id": 29,
@@ -6933,7 +8110,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 29,
@@ -6945,7 +8124,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1
   },
   {
     "id": 29,
@@ -6957,7 +8138,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -0.9
   },
   {
     "id": 30,
@@ -6969,7 +8152,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 30,
@@ -6981,7 +8166,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded evidence_single",
+    "roundedRating": -0.6
   },
   {
     "id": 30,
@@ -6993,7 +8180,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_single",
+    "roundedRating": 0.9
   },
   {
     "id": 30,
@@ -7005,7 +8194,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 30,
@@ -7017,7 +8208,9 @@ var towData = [
     "tournament": "single",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_single",
+    "roundedRating": 0.3
   },
   {
     "id": 30,
@@ -7029,7 +8222,9 @@ var towData = [
     "tournament": "single",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_single",
+    "roundedRating": -1
   },
   {
     "id": 30,
@@ -7041,7 +8236,9 @@ var towData = [
     "tournament": "single",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_single",
+    "roundedRating": 1.4
   },
   {
     "id": 30,
@@ -7053,7 +8250,9 @@ var towData = [
     "tournament": "single",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_single",
+    "roundedRating": -1.3
   },
   {
     "id": 30,
@@ -7065,7 +8264,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with partner_double",
+    "roundedRating": 0.9
   },
   {
     "id": 30,
@@ -7077,7 +8278,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with partner_double",
+    "roundedRating": -0.8
   },
   {
     "id": 30,
@@ -7089,7 +8292,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_confounded with opponent_double",
+    "roundedRating": 1.1
   },
   {
     "id": 30,
@@ -7101,7 +8306,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_confounded with opponent_double",
+    "roundedRating": -0.9
   },
   {
     "id": 30,
@@ -7113,7 +8320,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_strong indirect evidence_double",
+    "roundedRating": 0.9
   },
   {
     "id": 30,
@@ -7125,7 +8334,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_strong indirect evidence_double",
+    "roundedRating": -1.2
   },
   {
     "id": 30,
@@ -7137,7 +8348,9 @@ var towData = [
     "tournament": "double",
     "nWins": 1,
     "nUniqueWins": 1,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_weak indirect evidence_double",
+    "roundedRating": 0.7
   },
   {
     "id": 30,
@@ -7149,7 +8362,9 @@ var towData = [
     "tournament": "double",
     "nWins": -1,
     "nUniqueWins": -1,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_weak indirect evidence_double",
+    "roundedRating": -0.2
   },
   {
     "id": 30,
@@ -7161,7 +8376,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_diverse evidence_double",
+    "roundedRating": 1.3
   },
   {
     "id": 30,
@@ -7173,7 +8390,9 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_diverse evidence_double",
+    "roundedRating": -1.1
   },
   {
     "id": 30,
@@ -7185,7 +8404,9 @@ var towData = [
     "tournament": "double",
     "nWins": 3,
     "nUniqueWins": 3,
-    "binaryResponse": true
+    "binaryResponse": true,
+    "uniqueCondition": "win_round robin_double",
+    "roundedRating": 1.2
   },
   {
     "id": 30,
@@ -7197,6 +8418,8 @@ var towData = [
     "tournament": "double",
     "nWins": -3,
     "nUniqueWins": -3,
-    "binaryResponse": false
+    "binaryResponse": false,
+    "uniqueCondition": "loss_round robin_double",
+    "roundedRating": -1.1
   }
 ]
