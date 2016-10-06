@@ -7,22 +7,26 @@ custom_js:
 - assets/js/towConfigurations.js
 ---
 
+### Authors: Michael Henry Tessler; Noah Goodman
 
 <!--
 mht: some similar ideas (and examples) are presented in occams razor chapter. make sure the division of labor is good.
 -->
 
-In this book we are primarily concerned with probabilistic models of cognition: understanding inferences that people draw, as Bayesian conditioning given a person's model of the world (a generative model). 
-Bayesian conditioning given a generative model is basic building block of Bayesian statistics, as well. 
-Bayesian data analysis (in addition to Bayesian cognitive modeling) is equally useful to us as scientists, when we are trying to understand what our data means about psychological hypotheses. 
-This can become confusing: a particular modeling assumption can be something we hypothesize that people assume about the world, or can be something that we as scientists want to assume (but don't assume that people assume). 
-A pithy way of saying this is that we can make assumptions about "Bayes in the head" (Bayesian cognitive models) or about "Bayes in the notebook" (Bayesian data analysis). 
+
+Inference by conditioning a generative model is also a basic building block of Bayesian statistics.
+In cognitive science this tool can be used two ways.
+If the generative model is a hypothesis about a person's model of the world, then we have a Bayesian *cognitive model* -- the main topic of this book.
+If the generative model is instead the scientists model of how the data are generated, then we have *Bayesian data analysis*.
+Bayesian data analysis can be an extremely useful tool to us as scientists, when we are trying to understand what our data mean about psychological hypotheses.
+This can become confusing: a particular modeling assumption can be something we hypothesize that people assume about the world, or can be something that we as scientists want to assume (but don't assume that people assume).
+A pithy way of saying this is that we can make assumptions about "Bayes in the head" (Bayesian cognitive models) or about "Bayes in the notebook" (Bayesian data analysis).
 
 # Prologue: Of people and coins
 
 ## People's models of coins
 
-Consider a cognitive model of an observer who is trying to estimate the weight of a biased coin. 
+Consider a cognitive model of an observer who is trying to estimate the weight of a biased coin.
 She flips the coin 20 times, observes 15 heads, and updates her beliefs accordingly.
 
 ~~~~
@@ -39,7 +43,7 @@ print("Maximum a posteriori value = " + posteriorBeliefs.MAP().val)
 viz.density(posteriorBeliefs, {bounds: [0,1]})
 ~~~~
 
-This is a hypothesis about how person updates her prior beliefs about a coin weight (or, a continuous parameter between 0 and 1) after observing outcomes of flipping that (or, simple binary outcomes).
+This is a hypothesis about how person updates her prior beliefs about a coin weight (or, a continuous parameter between 0 and 1) after observing outcomes.
 We can imagine an experiment where we show a person 20 coin flips, 15 of which result in heads.
 This model would make predictions about the likely weights a person would infer.
 We can then have this model make further predictions about different kinds of questions we could then ask the person.
@@ -61,7 +65,7 @@ var posteriorBeliefs = Infer(opts, observerModel)
 viz.marginals(posteriorBeliefs)
 ~~~~
 
-There are other hypotheses we could make about this experiment. 
+There are other hypotheses we could make about this experiment.
 Rather than have uniform prior beliefs, maybe we think people tend to think coins are either fair or unfair.
 If the coin is fair, then the weight is just 0.5.
 If the coin is unfair, then the observer has uncertainty about the weight, and we'll assume uniform uncertainty as before.
@@ -92,7 +96,7 @@ Try commenting out the `observe` statement and looking at the predictions.
 
 ## Scientist's models of people
 
-The above models make different predictions about what people will do in such situations. 
+The above models make different predictions about what people will do in such situations.
 We can create these situations in a laboratory, and record our participants' responses.
 But, how are we to decide which model is better?
 Another way of putting this is: How are we supposed to update our beliefs about these models in light of the experimental data we've observed?
@@ -109,12 +113,11 @@ var scientistModel = function(){
 }
 ~~~~
 
-In the above, we specify prior beliefs about which is the better model.
-Here, we say that we don't have any bias in our prior beliefs: we think each model is equally likely to be better *a priori*. 
-We then seek to update our beliefs about which is the better model, by observing `experimentalData`, assuming that it came from `theBetterModel`. 
+We must specify prior beliefs about which is the better model; in this case we say that we don't have any bias in our prior beliefs: each model is equally likely to be better *a priori*.
+We then seek to update our beliefs about which is the better model, by observing `experimentalData`, assuming that it came from `theBetterModel`.
 (If it didn't come from the better model, then the model that wasn't the better model would be the better model, so it's safe to assume the data came from the better model.)
 
-Let's pretend we ran the "predict the next 10" experiment with 20 particiapnts, and observed the following responses:
+Let's pretend we ran the "predict the next 10" experiment with 20 participants, and observed the following responses:
 
 
 <!--
@@ -175,12 +178,14 @@ var modelPosterior = Infer({method: "enumerate"}, scientistModel)
 viz(modelPosterior)
 ~~~~
 
+<!--
 #### Introduce a parameter into FairUnfair?
+-->
 
 # Learning about a model
 
-Bayesian data analysis is a general purpose data analysis approach for making explicit hypotheses about where the data came from (e.g. the hypothesis that data from 2 experimental conditions came from two different distributions). 
-Inference is then performed to *invert* the model: go from data to inferences about hypotheses. 
+Bayesian data analysis is a general purpose data analysis approach for making explicit hypotheses about where the data came from (e.g. the hypothesis that data from 2 experimental conditions came from two different distributions).
+Inference is then performed to *invert* the model: go from data to beliefs.
 
 For further reading on Bayesian data analysis: see [Lee & Wagenmakers (2013)](https://bayesmodels.com/),
 [Kruschke (2014)](https://sites.google.com/site/doingbayesiandataanalysis/), and [Gelman et al. (2014)](http://www.stat.columbia.edu/~gelman/book/).
@@ -327,7 +332,7 @@ Bernoulli({p: p})
 ~~~~
 
 We now have another conceptual worry: Isn't the second model just a more general case of the first model?
-That is, if the second model has a uniform distribution over `p`, then `p: 0.5` is included in the second model. 
+That is, if the second model has a uniform distribution over `p`, then `p: 0.5` is included in the second model.
 This is what's called a *nested model*.
 
 Shouldn't the more general model always be better?
@@ -341,7 +346,7 @@ On the other hand, you put all your money on horse A (100 on A, 0 on B).
 If A wins, you will gain more money because you put more money down.
 
 This idea is called the principle of parsimony or Occam's razor, and will be discussed at length later in this book.
-For now, it's sufficient to know that more complex models will be penalized for being more complexed intuitively because they will be diluting their predictions. 
+For now, it's sufficient to know that more complex models will be penalized for being more complexed intuitively because they will be diluting their predictions.
 At the same time, more complex models are more flexible and can capture a wider variety of data.
 Bayesian model comparison lets us weigh these costs and benefits.
 
@@ -372,7 +377,7 @@ var k = 7, n = 20;
 var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
 
 var complexModel = Infer({method: "forward", samples: 10000}, function(){
-  var p = uniform(0, 1); 
+  var p = uniform(0, 1);
   return binomial(p, n)
 })
 var complexLikelihood = Math.exp(complexModel.score(k))
@@ -390,7 +395,7 @@ We consider a model that fixes one of its parameters to a pre-specified value of
 This is sometimes referred to as a *null hypothesis*.
 The other model says that the parameter is free to vary.
 In the classical hypothesis testing framework, we would write: $${H_1} : p \neq 0.5$$.
-With Bayesian hypothesis testing, we must be explicit about what $$p$$ is (not just what p is not), so we write $${H_1} : p \sim \text{Uniform}(0, 1) $$. 
+With Bayesian hypothesis testing, we must be explicit about what $$p$$ is (not just what p is not), so we write $${H_1} : p \sim \text{Uniform}(0, 1) $$.
 
 For this example, the Bayes factor can be obtained by integrating out the model parameter, like we did in the above code-box using `{method: "forward"}`.
 It turns out, the Bayes factor can also be obtained by only considering the more complex hypothesis $$\mathcal{H}_1$$, by dividing the density of the posterior over the parameter of interest (here, $$p$$) at the point of interest (here, $$p = 0.5$$) by the density of the prior of the parameter at the point of interest.
@@ -399,13 +404,13 @@ The method is called the *Savage-Dickey density ratio* and is widely used in exp
 
 Here is we would do this:
 
-**To do: This needs some discretization to work** 
+**To do: This needs some discretization to work**
 
 ~~~~
 var k = 7, n = 20;
 
 var complexModelPrior = Infer({method: "forward", samples: 10000}, function(){
-  var p = uniform(0, 1); 
+  var p = uniform(0, 1);
   return p
 })
 
@@ -435,7 +440,7 @@ They are useful in situations when you have data and some potentially vague hypo
 In psychology and many other behavioral sciences, experiments are often constructed with discrete/categorical manipulations (e.g., measuring processing time of words vs. pseudowords).
 The question of "is A greater than B?" (is the processing time of words faster than the processing time of pseudowords?) can be answered using a regression model.
 
-To explore a Bayesian linear regression model, we will use data from the Tug of War experiment by Gerstenberg et al. (2012). Let's start by just taking a look at the data set, found in the `towData` variable. 
+To explore a Bayesian linear regression model, we will use data from the Tug of War experiment by Gerstenberg et al. (2012). Let's start by just taking a look at the data set, found in the `towData` variable.
 
 ~~~~
 var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
@@ -476,7 +481,7 @@ As in cognitive models, we will put priors on the parameters: $$\beta_0, \beta_1
 We'll use the `editor.put()` function to save our results.
 
 ~~~~
-var singleRegression = function(){ 
+var singleRegression = function(){
   var b0 = uniform(-1, 1)
   var b1 = uniform(-1, 1)
   var sigma = uniform(0, 2)
@@ -507,7 +512,7 @@ viz.marginals(posterior)
 ~~~~
 
 The posteriors are somewhat noisy because we haven't taken that many samples.
-We see that the intercept $$\beta_0$$ is around 0, which we might expect given that our data is normalized. 
+We see that the intercept $$\beta_0$$ is around 0, which we might expect given that our data is normalized.
 The slope weight $$\beta_1$$ is around 0.35, with relatively low variance around that.
 The fact that it's very unlikely for $$\beta_1$$ to be 0 suggests that there is an effect of the number of times the actor has won in Tug of War on participants' judgments of the relative strength of that actor, as we might hope.
 
@@ -531,15 +536,15 @@ var patterns = {
   double: levels(_.where(towData, {tournament: "double"}), "pattern")
 };
 
-var singleRegression = function(){ 
+var singleRegression = function(){
   var b0 = uniformDrift({a: -1,b: 1, width: 0.2})
   var b1 = uniformDrift({a: -1,b: 1, width: 0.2})
   var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
-  
+
   var predictions = map(function(tournament){
     return map(function(outcome){
       return map(function(pattern){
-        
+
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
         var itemData = _.where(towData, itemInfo)
 
@@ -547,7 +552,7 @@ var singleRegression = function(){
         var predicted_y = b0 + itemData[0]["nWins"]*b1
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)}, itemData)
-        
+
         return _.object([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
@@ -578,7 +583,7 @@ editor.put('modelDataDF', modelDataDF)
 ~~~
 var modelDataDF = editor.get('modelDataDF')
 
-var summaryData = map(function(x){ 
+var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
@@ -594,7 +599,7 @@ $$y_{predicted} = \beta_0 + \beta_1 * n_{wins} + \beta_2 * wins_{unique}$$
 
 
 ~~~~
-///fold: 
+///fold:
 var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
 
 var outcomes = levels(towData, "outcome");
@@ -605,16 +610,16 @@ var patterns = {
 };
 ///
 
-var multipleRegression = function(){ 
+var multipleRegression = function(){
   var b0 = uniformDrift({a: -1,b: 1, width: 0.2})
   var b1 = uniformDrift({a: -1,b: 1, width: 0.2})
   var b2 = uniformDrift({a: -1,b: 1, width: 0.2})
   var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
-  
+
   var predictions = map(function(tournament){
     return map(function(outcome){
       return map(function(pattern){
-        
+
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
         var itemData = _.where(towData, itemInfo)
 
@@ -622,7 +627,7 @@ var multipleRegression = function(){
         var predicted_y = b0 + itemData[0]["nWins"]*b1 + itemData[0]["nUniqueWins"]*b2
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ) }, itemData)
-        
+
         return _.object([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
@@ -636,8 +641,8 @@ var multipleRegression = function(){
 }
 
 var nSamples = 250
-var opts = { method: "MCMC", kernel: {HMC: {steps: 5, stepSize: 0.01}}, 
-            callbacks: [editor.MCMCProgress()], 
+var opts = { method: "MCMC", kernel: {HMC: {steps: 5, stepSize: 0.01}},
+            callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: nSamples/2 }
 
 var posterior = Infer(opts, multipleRegression)
@@ -647,7 +652,7 @@ editor.put('multiRegression', posterior)
 Look at parameters.
 
 ~~~~
-///fold: 
+///fold:
 var marginalize = function(dist, key){
   return Infer({method: "enumerate"}, function(){
     return sample(dist)[key];
@@ -662,7 +667,7 @@ viz.marginals(parameterPosterior)
 Critique posterior predictive
 
 ~~~~
-///fold: 
+///fold:
 var marginalize = function(dist, key){
   return Infer({method: "enumerate"}, function(){
     return sample(dist)[key];
@@ -680,7 +685,7 @@ var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
 
 viz.scatter(modelDataDF)
 
-var summaryData = map(function(x){ 
+var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
@@ -708,16 +713,16 @@ var model = function() {
     return gaussian(0, 1)
   })
   var lazy = function(person){
-    return flip(lazinessPrior) 
+    return flip(lazinessPrior)
   }
   var pulling = function(person) {
-    return lazy(person) ? 
-            strength(person) * lazyPulling : 
-            strength(person) 
+    return lazy(person) ?
+            strength(person) * lazyPulling :
+            strength(person)
   }
   var totalPulling = function(team){return sum(map(pulling, team)) }
   var winner = function(team1, team2){
-    totalPulling(team1) > totalPulling(team2) ? team1 : team2 
+    totalPulling(team1) > totalPulling(team2) ? team1 : team2
   }
   var beat = function(team1,team2){winner(team1,team2) == team1}
 
@@ -737,13 +742,13 @@ viz(posterior)
 
 To learn more about the tug-of-war model, we're going to connect it the data from the experiment.
 You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazyPulling`).
-(Technical note: Because we are comparing relative heights, we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`. 
+(Technical note: Because we are comparing relative heights, we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`.
 We just use the standard normal distribution.)
-Before, we set these parameters to be `0.5` and `0.3`, respectively. 
+Before, we set these parameters to be `0.5` and `0.3`, respectively.
 (People are lazy about a third of the time, and when they are lazy, they pull with half their strength.)
 
 Those parameter values aren't central to our hypothesis.
-They are peripheral details to the larger hypothesis which is that people reason about team games like Tug of War by running a structured, generative model in their heads and doing posterior inference. 
+They are peripheral details to the larger hypothesis which is that people reason about team games like Tug of War by running a structured, generative model in their heads and doing posterior inference.
 Rather than guessing at what values we should put for these parameters, we can use the data to inform our beliefs about what those parameters are likely to be (assuming the general model is a good one).
 
 
@@ -786,16 +791,16 @@ var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
     })
 
     var lazy = function(person){
-      return flip(lazinessPrior) 
+      return flip(lazinessPrior)
     }
     var pulling = function(person) {
-      return lazy(person) ? 
-              strength(person) * lazyPulling : 
-              strength(person) 
+      return lazy(person) ?
+              strength(person) * lazyPulling :
+              strength(person)
     }
     var totalPulling = function(team){return sum(map(pulling, team)) }
     var winner = function(team1, team2){
-      totalPulling(team1) > totalPulling(team2) ? team1 : team2 
+      totalPulling(team1) > totalPulling(team2) ? team1 : team2
     }
     var beat = function(team1,team2){winner(team1,team2) == team1}
 
@@ -829,7 +834,7 @@ var dataAnalysisModel = function(){
         var smoothedPredictions = smoothToBins(modelPosterior, 0.05, bins)
 
         map(function(d){ observe(smoothedPredictions, d.roundedRating) }, itemData)
-        
+
         return _.object([[pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]])
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
@@ -843,8 +848,8 @@ var dataAnalysisModel = function(){
 }
 
 var nSamples = 10
-var opts = { method: "MCMC", //kernel: {HMC: {steps: 5, stepSize: 0.01}}, 
-            callbacks: [editor.MCMCProgress()], 
+var opts = { method: "MCMC", //kernel: {HMC: {steps: 5, stepSize: 0.01}},
+            callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: 0 }
 
 var posterior = Infer(opts, dataAnalysisModel)
@@ -854,7 +859,7 @@ editor.put("bda_bcm", posterior)
 Look at parameters.
 
 ~~~~
-///fold: 
+///fold:
 var marginalize = function(dist, key){
   return Infer({method: "enumerate"}, function(){
     return sample(dist)[key];
@@ -869,7 +874,7 @@ viz.marginals(parameterPosterior)
 Critique posterior predictive
 
 ~~~~
-///fold: 
+///fold:
 var marginalize = function(dist, key){
   return Infer({method: "enumerate"}, function(){
     return sample(dist)[key];
@@ -887,13 +892,10 @@ var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
 
 viz.scatter(modelDataDF)
 
-var summaryData = map(function(x){ 
+var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
 viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 ~~~~
-
-
-
