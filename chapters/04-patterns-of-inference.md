@@ -727,7 +727,7 @@ print(expectation(reflectancePosterior))
 viz(reflectancePosterior)
 ~~~~
 
-Now let's condition on the presence of the cylinder, by conditioning on the presence of it's "shadow" (i.e. gaining a noisy observation suggesting that illumination is lower than expected *a priori*):
+Now let's condition on the presence of the cylinder, by conditioning on the presence of its "shadow" (i.e. gaining a noisy observation suggesting that illumination is lower than expected *a priori*):
 
 ~~~~
 var observedLuminance = 3;
