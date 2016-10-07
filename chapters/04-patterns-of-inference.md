@@ -92,7 +92,6 @@ var BdoA = function(Aval) {
     var C = flip()
     var A = Aval //we directly set A to the target value
     var B = A ? flip(.1) : flip(.4)
-    condition(A == Aval)
     return {B: B}
   })
 }

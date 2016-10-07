@@ -441,9 +441,9 @@ print( savageDickeyRatio )
 
 # Example: Linear regression and tug of war
 
-One of the main virtues of Bayesian data analysis is it's ability to interface with Bayesian cognitive models in a natural way.
-Bayesian cognitive models should be thought of as formalizations of hypotheses, which we then can test with an experiment.
-We can contrast our rich Bayesian cognitive models with more standard models from data science, like linear regression.
+One of the virtues of Bayesian data analysis is it's ability to interface with Bayesian cognitive models in a natural way.
+Bayesian cognitive models are formalizations of hypotheses about cognition, which we then can test with an experiment.
+We can contrast our rich Bayesian cognitive models with more standard models from data science, like linear regression, and evaluate them al using Bayesian data analysis.
 
 Regression models are the workhorse of data science.
 They are useful in situations when you have data and some potentially vague hypotheses about how variables relate to each other (e.g., that demographics might predict political party affiliation [in some unspecified way]).
@@ -477,7 +477,7 @@ The most likely ratings are one standard deviation above or below the mean, thou
 
 
 Let's explore the hypothesis that subjects ratings of the strength of the target character ("Alice") depends upon the number of times she won.
-We'll formalize this in a Bayesian regression framework, where ratings of strength $$r$$ are a linear combination of a fixed slope $$\beta_0$$ and weighted component of number of wins $$\beta_1 *  n_{wins}$$.
+We'll formalize this in a Bayesian regression framework, where ratings of strength $$r$$ are a linear combination of a fixed intercept $$\beta_0$$ and weighted component of number of wins $$\beta_1 *  n_{wins}$$.
 
 $$y_{predicted} = \beta_0 + \beta_1 * n_{wins}$$
 
