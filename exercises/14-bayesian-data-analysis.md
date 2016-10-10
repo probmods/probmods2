@@ -171,23 +171,22 @@ var toProbs = function(predictions) {
   return _.object(map(function(i) {return "predictive: cond" + i + " P(true)";}, _.range(1, predictions.length + 1)),
                   map(function(model) {return Math.exp(model.score(true))}, predictions))
 }
+
+var dataSummary = function(data) {
+  return map(function(condData) {
+    return filter(function(d) {return d}, condData).length/11
+  }, data)
+};
+
+var predictiveSummary = function(model) {
+  var labels = map(function(i) {return "predictive: cond" + i + " P(true)"}, _.range(1, 6));
+  return map(function(label) {
+    return expectation(model, function(s) {
+      return s[label]
+    });
+  }, labels);
+};
 ///
-
-var detectingBlickets = mem(function(evidence, params) {
-  return Infer({method: 'enumerate'}, function() {
-    var blicket = mem(function(block) {return flip(params.blicketBaseRate)})
-    var power = function(block) {return blicket(block) ? params.blicketPower : params.nonBlicketPower}
-    var machine = function(blocks) {
-      return (blocks.length == 0 ?
-              flip(params.machineSpontaneouslyGoesOff) :
-              flip(power(first(blocks))) || machine(rest(blocks)))
-    }
-    // Condition on each of the pieces of evidence making the machine go off
-    map(function(blocks){condition(machine(blocks))}, evidence)
-    return blicket('A')
-
-  })
-})
 
 // 5 experiment conditions / stimuli
 var possibleEvidenceStream = [
@@ -198,7 +197,8 @@ var possibleEvidenceStream = [
   [[]]
 ];
 
-// note: always the query "is A a blicket?"
+// for each condition.
+// note: always the question "is A a blicket?"
 var data = [
   repeat(10, function(){return true}).concat(false),
   repeat(6 , function(){return true}).concat(repeat(5, function(){return false})),
@@ -207,6 +207,21 @@ var data = [
   repeat(2, function(){return true}).concat(repeat(9, function(){return false}))
 ];
 
+// Same model as above, but parameterized
+var detectingBlickets = mem(function(evidence, params) {
+  return Infer({method: 'enumerate'}, function() {
+    var blicket = mem(function(block) {return flip(params.blicketBaseRate)})
+    var power = function(block) {return blicket(block) ? params.blicketPower : params.nonBlicketPower}
+    var machine = function(blocks) {
+      return (blocks.length == 0 ?
+              flip(params.machineSpontaneouslyGoesOff) :
+              flip(power(first(blocks))) || machine(rest(blocks)))
+    }
+    map(function(blocks){condition(machine(blocks))}, evidence)
+    return blicket('A')
+  })
+})
+
 var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMCProgress()]}, function() {
   var params = {
     blicketBaseRate: uniformDrift({a: 0.1, b: 0.9}),
@@ -214,10 +229,12 @@ var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMC
     nonBlicketPower: uniformDrift({a: 0.1, b: 0.9}), 
     machineSpontaneouslyGoesOff: uniformDrift({a: 0.1, b: 0.9})
   }
+
   var cognitiveModelPredictions = map(function(evidence) {
     return detectingBlickets(evidence,params);
   }, possibleEvidenceStream);
-  
+
+  // observe each data point under the model's predictions
   map2(function(dataForStim, modelPosterior) {
     map(function(dataPoint) {
       observe(modelPosterior, dataPoint);
@@ -229,127 +246,92 @@ var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMC
 })
 
 viz.marginals(dataAnalysis);
+viz.scatter(dataSummary(data), predictiveSummary(dataAnalysis), 
+            {xLabel: 'data', yLabel: 'model'})
 ~~~~
 
 Before running this program, answer the following question:
 
-B. What does the data-analysis inference return? What does the query statement in detecting-blickets return? Why are there two queries in this program?
+B. What does the `Infer` statement in `dataAnalysis` return? What does the `Infer` statement in `detectingBlickets` return? Why are there two queries in this program?
 
 C. Now, run the program. [Note: This will take between 15-30 seconds to run.] Interpret each of the resulting plots.
 
 D. How do your interpretations relate to the parameter values that were set in the original program?
 
-E. Look carefully at the priors (in the code) and the posteriors (in the plots) over blicket-power and non-blicket-power. Did we impose any a priori assumptions about the relationship between these parameters? Think about the experimental setup. Do you think we would be justified in imposing any assumptions? Why or why not? What do the posteriors tell you? How was the data analysis model able to arrive at this conclusion?
+E. Look carefully at the priors (in the code) and the posteriors (in the plots) over blicketPower and nonBlicketPower. Did we impose any a priori assumptions about the relationship between these parameters? Think about the experimental setup. Do you think we would be justified in imposing any assumptions? Why or why not? What do the posteriors tell you? How was the data analysis model able to arrive at this conclusion?
 
-F. Do you notice anything about the scatter plot? How would you interpret this? Is there something we could add to the data analysis model to account for this?
+F. Do you notice anything about the scatter plot? How would you interpret this? Is there something we could add to the data analysis model to account for this? 
 
 G. Now, we're going to examine the predictions of the model if we had done a more traditional analysis of point-estimates of parameters (i.e. fitting parameters). Examine your histograms and determine the "maximum a posteriori" (MAP) value for each parameter. Plug those into the code below and run it.
 
 ~~~~
-;;;fold:
-(define (get-indices needle haystack)
-  (define (loop rest-of-haystack index)
-    (if (null? rest-of-haystack) '()
-        (let ((rest-of-indices (loop (rest rest-of-haystack) (+ index 1))))
-          (if (equal? (first rest-of-haystack) needle)
-              (pair index rest-of-indices)
-              rest-of-indices))))
-  (loop haystack 1))
+///fold:
+var toProbs = function(predictions) {
+  return _.object(map(function(i) {return "predictive: cond" + i + " P(true)";}, _.range(1, predictions.length + 1)),
+                  map(function(model) {return Math.exp(model.score(true))}, predictions))
+}
 
+var dataSummary = function(data) {
+  return map(function(condData) {
+    return filter(function(d) {return d}, condData).length/11
+  }, data)
+};
 
-(define get-probability
-  (lambda (dist selection)
-    (define index (list-index (first dist) selection))
-    (list-ref (second dist) index)))
+// 5 experiment conditions / stimuli
+var possibleEvidenceStream = [
+  [['A']],
+  [['A', 'B']],
+  [['A', 'B'], ['B']],
+  [['A', 'B'], ['A', 'B']],
+  [[]]
+];
 
+var data = [
+  repeat(10, function(){return true}).concat(false),
+  repeat(6 , function(){return true}).concat(repeat(5, function(){return false})),
+  repeat(4, function(){return true}).concat(repeat(7, function(){return false})),
+  repeat(8, function(){return true}).concat(repeat(3, function(){return false})),
+  repeat(2, function(){return true}).concat(repeat(9, function(){return false}))
+];
 
-(define summarize-data 
-  (lambda (dataset)
-    (list (first dataset)
-          (map 
-           (lambda (lst) (mean (map boolean->number lst)))
-           (second dataset)))))
+// for each condition.
+// note: always the question "is A a blicket?"
+var data = [
+  repeat(10, function(){return true}).concat(false),
+  repeat(6 , function(){return true}).concat(repeat(5, function(){return false})),
+  repeat(4, function(){return true}).concat(repeat(7, function(){return false})),
+  repeat(8, function(){return true}).concat(repeat(3, function(){return false})),
+  repeat(2, function(){return true}).concat(repeat(9, function(){return false}))
+];
 
+// Same model as above, but parameterized
+var detectingBlickets = mem(function(evidence, params) {
+  return Infer({method: 'enumerate'}, function() {
+    var blicket = mem(function(block) {return flip(params.blicketBaseRate)})
+    var power = function(block) {return blicket(block) ? params.blicketPower : params.nonBlicketPower}
+    var machine = function(blocks) {
+      return (blocks.length == 0 ?
+              flip(params.machineSpontaneouslyGoesOff) :
+              flip(power(first(blocks))) || machine(rest(blocks)))
+    }
+    map(function(blocks){condition(machine(blocks))}, evidence)
+    return blicket('A')
+  })
+})
+///
 
-(define summarize-model
-  (lambda (modelpreds)
-    (list 
-     possible-evidence-streams
-     (map 
-      (lambda (dist) 
-        (get-probability dist #t))
-      modelpreds))))
+var params = { 
+  blicketBaseRate : ...,
+  blicketPower: ...,
+  nonBlicketPower: ...,
+  machineSpontaneouslyGoesOff: ...
+};
 
-;;;
-(define detecting-blickets
-  (mem 
-   (lambda 
-     (evidence
-      blicket-base-rate 
-      blicket-power 
-      non-blicket-power 
-      machine-spontaneously-goes-off)
+var bestFitModelPredictions = map(function(evidence) {
+  return Math.exp(detectingBlickets(evidence, params).score(true));
+}, possibleEvidenceStream)
 
-     (enumeration-query
-
-      ; some objects are blickets
-      (define blicket (mem (lambda (block) (flip blicket-base-rate))))
-
-      ; some blocks have the power to make the box go off
-      (define block-power (lambda (block) (if (blicket block) blicket-power non-blicket-power)))
-
-      ; sometimes the machine goes off spontaneously
-      ; otherwise, goes off if one of the blocks has the ability to make it go off (sequentially evaluated)
-
-      (define machine-goes-off
-        (lambda (blocks)
-          (if (null? blocks)
-              (flip machine-spontaneously-goes-off)
-              (or (flip (block-power (first blocks)))
-                  (machine-goes-off (rest blocks))))))
-
-      (blicket 'A)
-
-      ; all checks to make sure all are true; i.e. all the of the lists of blickets made the machine-go-off
-      (all (map machine-goes-off evidence))))))
-
-
-; 5 experiment conditions / stimuli
-(define possible-evidence-streams
-  (list 
-   (list (list 'A))
-   (list (list 'A 'B))
-   (list (list 'A 'B) (list 'B))
-   (list (list 'A 'B) (list 'A 'B))
-   (list '())))
-
-(define data
-  (list 
-   (list #t #t #t #t #t #t #t #t #t #t #f) 
-   (list #t #t #t #t #t #t #f #f #f #f #f)
-   (list #t #t #t #t #f #f #f #f #f #f #f)
-   (list #t #t #t #t #t #t #t #t #f #f #f)
-   (list #t #t #f #f #f #f #f #f #f #f #f)))
-
-; fill in with your "maximum a posteriori" parameter values from Part C.
-(define blicket-base-rate ...)
-(define blicket-power ...)
-(define non-blicket-power ...)
-(define machine-spontaneously-goes-off ...)
-
-(define best-fit-model-predictions 
-  (map (lambda (evidence) 
-         (get-probability 
-          (detecting-blickets evidence blicket-base-rate blicket-power 
-                              non-blicket-power machine-spontaneously-goes-off) 
-          #t))
-       possible-evidence-streams))
-
-(define data-summary  (summarize-data (list possible-evidence-streams data)))
-(define model-data (zip best-fit-model-predictions (second data-summary)))
-(scatter model-data "data vs. cognitive model")
-(barplot (list possible-evidence-streams best-fit-model-predictions) "cognitive model: probability of blicket?")
-(barplot data-summary "data: proportion of 'A is a Blicket!' responses")
+viz.scatter(dataSummary(data), bestFitModelPredictions)
 ~~~~
 
 H. What can you conclude about the two ways of looking at parameters in this model's case? Do you think the model is relatively robust to different parameter settings?
