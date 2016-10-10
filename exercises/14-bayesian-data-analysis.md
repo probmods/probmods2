@@ -6,9 +6,15 @@ custom_js:
 - assets/js/towConfigurations.js
 ---
 
-## Exercise 1: Subjective randomness digest
+## Exercise 1: Warmup
 
-We saw in this chapter how to analyze our Bayesian models of cognition by using Bayesian statistical techniques. Pick either the enriched bias coin model or the generalized enriched bias coin model. What phenomena was it able to capture? What wasn’t it able to capture? How can you tell? Do you have an idea for a better model?
+We saw in this chapter how to analyze our models of cognition by using Bayesian statistical techniques.
+Compare and contrast the results of our cognitive model of tug-of-war with our regression models.
+Some questions to ponder:
++ What phenomena in the data was it better able to capture?
++ What, if anything, did it fail to capture?
++ Are there other aspects of the model you could 'lift' into the Bayesian Data Analysis (i.e. fixed parameters that you could put a prior on and include in your joint inference)?
++ How does WebPPL expose commonalities between these two models?
 
 ## Exercise 2: Experimenting with priors and predictives
 
@@ -46,128 +52,40 @@ var posterior = Infer(opts, model);
 viz.marginals(posterior)
 ~~~~
 
-a. Notice that we used a uniform distribution over the interval [0,1] as our prior, reflecting our assumption that a probability must lie between 0 and 1 but otherwise remaining agnostic to which values are most likely to be the case. While this is convenient, we may want to build in other *a priori* beliefs, such as the empirical fact that votes tend to be close to 50\%. The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) is a general way of expressing beliefs over the interval [0,1].
+a. Notice that we used a uniform distribution over the interval [0,1] as our prior, reflecting our assumption that a probability must lie between 0 and 1 but otherwise remaining agnostic to which values are most likely to be the case. While this is convenient, we may want to represent other assumptions. The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution), expressed in WebPPL as `Beta({a:..., b:...})`' is a more general way of expressing beliefs over the interval [0,1].
 
-Try different priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions.
+Try different beta priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to describe the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions. 
 
 b. Predictive distributions are not restricted to exactly the same experiment as the observed data, and can be used in the context of any experiment where the inferred model parameters make predictions. In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations. Change the model to implement an example of this.
 
-
-<--
-## Exercise 2: Bayes in the head vs. Bayes in the notebook.
-
-We’ve seen in this chapter how we can precisely separate assumptions about our computational-level theory of cognition from the assumptions that go into analyzing our data (and our theory). In this exercise, we will try to go between the two ways of looking at these things: by going from a theory and analysis in words, to a theory and analysis in Church (and back).
-
-Consider the [reflectance and luminance model](https://probmods.org/v2/chapters/04-patterns-of-inference.html#a-case-study-in-modularity-visual-perception-of-surface-color) from Chapter 4. This model captured the illusion of increased reflectance in terms of explaining away the observed luminance by the observed decrease in illumination (caused by the shadow). Here is the model again
-
-~~~~
-var observedLuminance = 3;
-
-var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
-  var reflectance = gaussian({mu: 1, sigma: 1})
-  var illumination = gaussian({mu: 3, sigma: 1})
-  var luminance = reflectance * illumination
-  // observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance) // observe luminance
-  // observe(Gaussian({mu: 0.5, sigma: 1}), illumination); // observe shadow
-  return reflectance
-});
-
-print(expectation(reflectancePosterior))
-viz(reflectancePosterior)
-~~~~
-
-A. Warmup: What does the prior for reflectance look like? How does the posterior shift when we observe luminance? What happens when you observe the shadow as well?
-
-B. How many parameters does this model of perception have? (Hint: Go through each `var` and `observe` statement: Are the constituent variables of the statements (a) modeling assumptions or (b) part of the experimental setup / manipulation) For all of the variables you’ve categorized as (a), which ones do you think refer to aspects of the perceptual system and which refer to aspects of the environment? What do you think these parameters represent in terms of the perceptual system or environment? (Feel free to use super general, even colloquial, terms to answer this.)
-
-C. Replace the hard-coded parameters of this model with variables, defined outside the query. Give them the most intuitive names you can fashion. Use this starter (pseudo) code.
-
-~~~~
-var parameter1 = ...
-var parameter2 = ...
-// ...
-
-var observedLuminance = 3;
-
-var reflectancePosterior = Infer({method: 'MCMC', samples: 10000}, function() {
-  var reflectance = gaussian({mu: 1, sigma: 1})
-  var illumination = gaussian({mu: 3, sigma: 1})
-  var luminance = reflectance * illumination
-  // observe luminance
-  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance) 
-  return reflectance
-});
-
-print(expectation(reflectancePosterior))
-viz(reflectancePosterior)
-~~~~
-
-D. Are all of these parameters independent? (If you had to specify values for them, would you have to consider values of other parameters when specifying them?) If two are not independent, can you think of a reparameterization that would be more independent? (Hint: If you have two non-independent parameters, you could keep only one of them and introduce a parameter specifying the relation between the two. E.g., two points that are linearly associated can be expressed as an one of them and the distance between them).
-
-E. Writing data analysis models requires specifying priors over parameters. Without much prior knowledge in a domain, we want to pick priors that make the fewest assumptions. A good place to start is to think about the possible values the parameter could take on. **For each parameter, write down what you know about the possible values it could take on.
-
-F. We’re now in a position to write a data analysis model. The most common distributional forms for priors are uniform, gaussian, beta, and exponential. Put priors on your parameters from part C. Use this starter (pseudo) code.
-
-~~~~
-(define perceptual-model
-  (lambda (parameter1 parameter2 ...))
-  (query
-
-   ; fill in, copying where appropriate from the original model specification
-   (define reflectance ...)
-   (define illumination ...)
-   (define luminance (* reflectance illumination))
-
-   reflectance
-
-   (= luminance ...))))
-
-
-
-(define data-analysis-model
-  (query
-   ; replace with parameters you specified in Part C
-   ; put priors over parameters
-   (define parameter1 ...)
-   (define parameter2 ...)
-   (define ...)
-   (define perceptual-model-predictions 
-     (perceptual-model parameter1 parameter2 ...))
-    
-   ;;; what are you going to query for?
-   ...  
-   
-   (condition (= experimental-data perceptual-model-predictions))))
-
-~~~~
-
-G. What are you going to query for? Add it to your pseudocode above. What do each of things that you are querying for in the data analysis model represent?
--->
-
 ## Exercise 3: Parameter fitting vs. Parameter integration
 
-One of the strongest motivations for using Bayesian techniques for model-data evaluation is in how “nuisance” parameters are treated. “Nuisance” parameters are parameters of no theoretical interest; their only purpose is to fill in a necessary slot in the model. Classically, the most prominant technique (from the frequentist tradition) for dealing with these parameters is to fit them to the data, i.e., to set their value equal to whatever value maximizes the model-data fit (or, equivalently, minimizes some cost function).
+One of the strongest motivations for using Bayesian techniques for model-data evaluation is in how ``nuisance'' parameters are treated. ``Nuisance'' parameters are parameters of no theoretical interest; their only purpose is to fill in a necessary slot in the model. Classically, the most prominant technique (from the frequentist tradition) for dealing with these parameters is to fit them to the data, i.e., to set their value equal to whatever value maximizes the model-data fit (or, equivalently, minimizes some cost function).
 
-The Bayesian approach is different. Since we have a priori uncertainty about the value of our parameter (e.g. as you specified in Part F of Exercise 2), we will also have a posteriori uncertainty about the value (though hopefully the uncertainty will be a little less). What the Bayesian does is integrate over her posterior distribution of parameter values to make predictions. Intuitively, rather than taking the value corresponding to the peak of the distribution, she’s considering all values with their respective probabilites.
+The Bayesian approach is different. Since we have a priori uncertainty about the value of our parameter (e.g. as you specified in Exercise 2), we will also have a posteriori uncertainty about the value (though hopefully the uncertainty will be a little less). What the Bayesian does is integrate over her posterior distribution of parameter values to make predictions. Intuitively, rather than taking the value corresponding to the peak of the distribution, she's considering all values with their respective probabilites.
 
-Why might this be important for model assessment? Imagine the following situation. You are piloting a task. You think that the task you’ve design is a little too difficult for subjects. (Let’s imagine that you’re a psychophysicist, and your task pertains to contrast discriminiation in the periphery.) You think the current task design is too difficult, but you’re uncertain. It may well be that it’s fine for subjects. We’re going to think about this in terms of subjects ability with respect to your task. Here is your prior.
-
-~~~~
-;; Prior on task diffuclty is uniform on 0..0.9, with a spike on 0.9
-
-(define (task-difficulty-prior)
-  (if (flip) .9 (/ (sample-integer 10) 10)))
-
-(barplot (enumeration-query (task-difficulty-prior) true) 
-         "Prior on task difficulty")
+Why might this be important for model assessment? Imagine the following situation. You are piloting a task. You think that the task you've design is a little too difficult for subjects. (Let's imagine that you're a psychophysicist, and your task pertains to contrast discriminiation in the periphery.) You think the current task design is too difficult, but you're uncertain. It may well be that it's fine for subjects. We're going to think about this in terms of subjects ability with respect to your task. Here is your prior.
 
 ~~~~
+// Prior on task difficulty is uniform on [0, ..., 0.9], with a spike on 0.9     
+var sampleTaskDifficulty = function() {                                          
+  return flip() ? .9 : randomInteger(10) / 10;                                   
+};                                                                               
+                                                                                 
+var model = function() {                                                         
+  return sampleTaskDifficulty();                                   
+};                                                                               
+                                                                                 
+viz.hist(Infer({method: 'enumerate'}, model), {numBins: 9})
+~~~~
 
-You have a model of how subjects perform on your task. You could have a structured, probabilistic model here. For simplicity, let’s assume you have the simplest model of task performance: it is a direct function of task-difficulty (define subject-perform-well? (not (flip task-difficulty))). Subjects perform well if the task isn’t too difficult. This is just a proxy for a more complicated model of inference we could have. For example, you could imagine having some notion of task-difficulty for the model used in Exercise 2.
+You have a model of how subjects perform on your task. You could have a structured, probabilistic model here. For simplicity, let's assume you have the simplest model of task performance: it is a direct function of task-difficulty: `var subjectPerformWell = !flip(taskDifficulty)`.
 
-Let’s say there’s a lot of training involved in your task, such that it’s very time consuming for you to collect data. You run one subject through your training regime and have them do the task. That subject performs well. The same day, your adviser (or funding agency) wants you to make a decision to collect more data or not (or switch up something about your paradigm). You thought beforehand that your task was too difficult. Do you still think your task is too hard?
+Subjects perform well if the task isn't too difficult. This is just a proxy for a more complicated model of inference we could have. 
 
-One way to address this is to look at the posterior over your task-difficulty parameter. How does your degree of belief in subject-ability change as a result of your one pilot subject performing well?
+Let's say there's a lot of training involved in your task, such that it's very time consuming for you to collect data. You run one subject through your training regime and have them do the task. That subject performs well. The same day, your adviser (or funding agency) wants you to make a decision to collect more data or not (or switch up something about your paradigm). You thought beforehand that your task was too difficult. Do you still think your task is too hard?
+
+One way to address this is to look at the posterior over your `taskDifficulty` parameter. How does your degree of belief in subject-ability change as a result of your one pilot subject performing well?
 
 ~~~~
 ;;;fold:
@@ -229,15 +147,15 @@ One way to address this is to look at the posterior over your task-difficulty pa
 
 A. Would you proceed with more data collection or would you change your paradigm? How did you come to this conclusion?
 
-B. In part A, you probably used either a value of task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm. We find ourselves with a similar decision when we have models of psychological phenomena and want to decide whether or not the model has fit the data (or, equivalently, whether our psychological theory is capturing the phenomenon). The traditional approach is the value (or “point-wise estimate”) approach: take the value that corresponds to the best fit (e.g. by using least-squares or maximum-likelihood estimation; here, you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9). Why might this not be a good idea? Provide two answers. One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
+B. In part A, you probably used either a value of task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm. We find ourselves with a similar decision when we have models of psychological phenomena and want to decide whether or not the model has fit the data (or, equivalently, whether our psychological theory is capturing the phenomenon). The traditional approach is the value (or ``point-wise estimate'') approach: take the value that corresponds to the best fit (e.g. by using least-squares or maximum-likelihood estimation; here, you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9). Why might this not be a good idea? Provide two answers. One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
 
 ## Exercise 4
 
-Let’s continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values. This posterior can give you an idea of whether or not your model is well-behaved. In other words, do the predictoins of your model depend heavily on the exact parameter value?
+Let's continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values. This posterior can give you an idea of whether or not your model is well-behaved. In other words, do the predictoins of your model depend heavily on the exact parameter value?
 
-To help us understand how to examine posteriors over parameter settings, we’re going to revisit the example of the blicket detector from Chapter 4.
+To help us understand how to examine posteriors over parameter settings, we're going to revisit the example of the blicket detector from Chapter 4.
 
-Here is the model, with slightly different names than the original example, and written in a parameter-friendly way. It is set up to display the “backwards blocking” phenomenon.
+Here is the model, with slightly different names than the original example, and written in a parameter-friendly way. It is set up to display the ``backwards blocking'' phenomenon.
 
 ~~~~
 (define blicket-base-rate 0.2)
@@ -282,7 +200,7 @@ Here is the model, with slightly different names than the original example, and 
 
 A. What are the parameters of this model? In the plainest English you can muster, interpret the current values of the parameters. What do they mean?
 
-Let’s analyze this model with respect to some data. First, we’ll put priors on these parameters, and then we’ll do inference, conditioning on some data we might have collected in an experiment on 4 year olds, a la Sobel, Tenenbaum, & Gopnik (2004). [The data used in this exercise is schematic data].
+Let's analyze this model with respect to some data. First, we'll put priors on these parameters, and then we'll do inference, conditioning on some data we might have collected in an experiment on 4 year olds, a la Sobel, Tenenbaum, & Gopnik (2004). [The data used in this exercise is schematic data].
 
 ~~~~
 (define (get-indices needle haystack)
@@ -508,7 +426,7 @@ E. Look carefully at the priors (in the code) and the posteriors (in the plots) 
 
 F. Do you notice anything about the scatter plot? How would you interpret this? Is there something we could add to the data analysis model to account for this?
 
-G. Now, we’re going to examine the predictions of the model if we had done a more traditional analysis of point-estimates of parameters (i.e. fitting parameters). Examine your histograms and determine the “maximum a posteriori” (MAP) value for each parameter. Plug those into the code below and run it.
+G. Now, we're going to examine the predictions of the model if we had done a more traditional analysis of point-estimates of parameters (i.e. fitting parameters). Examine your histograms and determine the ``maximum a posteriori'' (MAP) value for each parameter. Plug those into the code below and run it.
 
 ~~~~
 ;;;fold:
@@ -617,4 +535,4 @@ G. Now, we’re going to examine the predictions of the model if we had done a m
 (barplot data-summary "data: proportion of 'A is a Blicket!' responses")
 ~~~~
 
-H. What can you conclude about the two ways of looking at parameters in this model’s case? Do you think the model is relatively robust to different parameter settings?
+H. What can you conclude about the two ways of looking at parameters in this model's case? Do you think the model is relatively robust to different parameter settings?
