@@ -10,6 +10,49 @@ custom_js:
 
 We saw in this chapter how to analyze our Bayesian models of cognition by using Bayesian statistical techniques. Pick either the enriched bias coin model or the generalized enriched bias coin model. What phenomena was it able to capture? What wasn’t it able to capture? How can you tell? Do you have an idea for a better model?
 
+## Exercise 2: Experimenting with priors and predictives
+
+In [our simple binomial model]({{site.baseurl}}/chapters/14-bayesian-data-analysis.html#a-simple-illustration), we compared the parameter priors and posteriors to the corresponding **predictives** which tell us what data we should expect given our prior and posterior beliefs. For convenience, we've reproduced that model here:
+
+~~~~
+// observed data
+var k = 1 // number of successes
+var n = 20  // number of attempts
+
+var model = function() {
+
+   var p = uniform(0, 1);
+
+   // Observed k number of successes, assuming a binomial
+   observe(Binomial({p : p, n: n}), k);
+
+   // sample from binomial with updated p
+   var posteriorPredictive = binomial(p, n);
+
+   // sample fresh p
+   var prior_p = uniform(0, 1);
+   // sample from binomial with fresh p
+   var priorPredictive = binomial(prior_p, n);
+
+   return {
+       prior: prior_p, priorPredictive : priorPredictive,
+       posterior : p, posteriorPredictive : posteriorPredictive
+    };
+}
+
+var opts = {method: "rejection", samples: 2000};
+var posterior = Infer(opts, model);
+
+viz.marginals(posterior)
+~~~~
+
+a. Notice that we used a uniform distribution over the interval [0,1] as our prior, reflecting our assumption that a probability must lie between 0 and 1 but otherwise remaining agnostic to which values are most likely to be the case. While this is convenient, we may want to build in other *a priori* beliefs, such as the empirical fact that votes tend to be close to 50\%. The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) is a general way of expressing beliefs over the interval [0,1].
+
+Try different priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions.
+
+b. Predictive distributions are not restricted to exactly the same experiment as the observed data, and can be used in the context of any experiment where the inferred model parameters make predictions. In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations. Change the model to implement an example of this.
+
+
 <--
 ## Exercise 2: Bayes in the head vs. Bayes in the notebook.
 
@@ -188,7 +231,9 @@ A. Would you proceed with more data collection or would you change your paradigm
 
 B. In part A, you probably used either a value of task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm. We find ourselves with a similar decision when we have models of psychological phenomena and want to decide whether or not the model has fit the data (or, equivalently, whether our psychological theory is capturing the phenomenon). The traditional approach is the value (or “point-wise estimate”) approach: take the value that corresponds to the best fit (e.g. by using least-squares or maximum-likelihood estimation; here, you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9). Why might this not be a good idea? Provide two answers. One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
 
-4. Let’s continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values. This posterior can give you an idea of whether or not your model is well-behaved. In other words, do the predictoins of your model depend heavily on the exact parameter value?
+## Exercise 4
+
+Let’s continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values. This posterior can give you an idea of whether or not your model is well-behaved. In other words, do the predictoins of your model depend heavily on the exact parameter value?
 
 To help us understand how to examine posteriors over parameter settings, we’re going to revisit the example of the blicket detector from Chapter 4.
 
