@@ -8,11 +8,11 @@ custom_js:
 
 ## Exercise 1: Conditioning and prior manipulation
 
-In the earlier [Medical Diagnosis]({{site.baseurl}}/chapters/02-generative-models.html#example-causal-models-in-medical-diagnosis) section we suggested understanding the patterns of symptoms for a particular disease by changing the prior probability of the disease such that it is always true.
+In the earlier [Medical Diagnosis]({{site.baseurl}}/chapters/02-generative-models.html#example-causal-models-in-medical-diagnosis) section we suggested understanding the patterns of symptoms for a particular disease by changing the prior probability of the disease such that it is always true (also called the *do* operator).
 
-a) For this example, does this procedure give the same answers as using `Infer` to *condition* on the disease being true?
+a) For this example, does intervening on the program in this way have the same effect as *conditioning* on the disease being true? What about the casual dependency makes this case?
 
-b) Why would this procedure give different answers than conditioning for more general hypotheticals? Construct an example where these are different. Then translate this into a WebPPL model and show that manipulating the prior gives different answers than manipulating the observation. Hint: think about changing the prior versus observing a variable that has a causal parent.
+b) Why would intervening have a different effect than conditioning for more general hypotheticals? Construct an example where they differ. Then translate this into a WebPPL model and show that manipulating the prior gives different answers than manipulating the observation. (Hint: think about the effect of intervening vs. conditioning on a variable that has a **causal parent** on that parent.)
 
 ## Exercise 2: Computing marginals
 
@@ -49,7 +49,7 @@ b) Write a version of the model that captures these two intuitions: (1) people a
 
 ~~~~
 
-c) Given your extended model, how would you ask whether someone wants something from you, given that they are smiling and have rarely smiled before? In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
+c) Use this extended model to compute the posterior belief that someone wants something from you, given that they are smiling and have rarely smiled before? In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
 
 ~~~~
 
