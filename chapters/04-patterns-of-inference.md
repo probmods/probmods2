@@ -92,7 +92,6 @@ var BdoA = function(Aval) {
     var C = flip()
     var A = Aval //we directly set A to the target value
     var B = A ? flip(.1) : flip(.4)
-    condition(A == Aval)
     return {B: B}
   })
 }
@@ -728,7 +727,7 @@ print(expectation(reflectancePosterior))
 viz(reflectancePosterior)
 ~~~~
 
-Now let's condition on the presence of the cylinder, by conditioning on the presence of it's "shadow" (i.e. gaining a noisy observation suggesting that illumination is lower than expected *a priori*):
+Now let's condition on the presence of the cylinder, by conditioning on the presence of its "shadow" (i.e. gaining a noisy observation suggesting that illumination is lower than expected *a priori*):
 
 ~~~~
 var observedLuminance = 3;
