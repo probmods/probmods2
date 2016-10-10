@@ -11,10 +11,14 @@ custom_js:
 We saw in this chapter how to analyze our models of cognition by using Bayesian statistical techniques.
 Compare and contrast the results of our cognitive model of tug-of-war with our regression models.
 Some questions to ponder:
-+ What phenomena in the data was it better able to capture?
-+ What, if anything, did it fail to capture?
-+ Are there other aspects of the model you could 'lift' into the Bayesian Data Analysis (i.e. fixed parameters that you could put a prior on and include in your joint inference)?
-+ How does WebPPL expose commonalities between these two models?
+
+* What phenomena in the data was it better able to capture?
+
+* What, if anything, did it fail to capture?
+
+* Are there other aspects of the model you could 'lift' into the Bayesian Data Analysis (i.e. fixed parameters that you could put a prior on and include in your joint inference)?
+
+* How does WebPPL expose commonalities between these two models?
 
 ## Exercise 2: Experimenting with priors and predictives
 
