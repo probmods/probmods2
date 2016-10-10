@@ -166,220 +166,74 @@ A. What are the parameters of this model? In the plainest English you can muster
 Let's analyze this model with respect to some data. First, we'll put priors on these parameters, and then we'll do inference, conditioning on some data we might have collected in an experiment on 4 year olds, a la Sobel, Tenenbaum, & Gopnik (2004). [The data used in this exercise is schematic data].
 
 ~~~~
-(define (get-indices needle haystack)
-  (define (loop rest-of-haystack index)
-    (if (null? rest-of-haystack) '()
-        (let ((rest-of-indices (loop (rest rest-of-haystack) (+ index 1))))
-          (if (equal? (first rest-of-haystack) needle)
-              (pair index rest-of-indices)
-              rest-of-indices))))
-  (loop haystack 1))
+///fold:
+var toProbs = function(predictions) {
+  return _.object(map(function(i) {return "predictive: cond" + i + " P(true)";}, _.range(1, predictions.length + 1)),
+                  map(function(model) {return Math.exp(model.score(true))}, predictions))
+}
+///
 
-(define discretize-beta 
-  (lambda (gamma delta bins)
-    (define shape_alpha (* gamma delta))
-    (define shape_beta (* (- 1 gamma) delta))
-    (define beta-pdf (lambda (x) 
-                       (*
-                        (pow x (- shape_alpha 1))
-                        (pow (- 1 x) (- shape_beta 1)))))
-    (map beta-pdf bins)))
+var detectingBlickets = mem(function(evidence, params) {
+  return Infer({method: 'enumerate'}, function() {
+    var blicket = mem(function(block) {return flip(params.blicketBaseRate)})
+    var power = function(block) {return blicket(block) ? params.blicketPower : params.nonBlicketPower}
+    var machine = function(blocks) {
+      return (blocks.length == 0 ?
+              flip(params.machineSpontaneouslyGoesOff) :
+              flip(power(first(blocks))) || machine(rest(blocks)))
+    }
+    // Condition on each of the pieces of evidence making the machine go off
+    map(function(blocks){condition(machine(blocks))}, evidence)
+    return blicket('A')
 
-(define get-probability
-  (lambda (dist selection)
-    (define index (list-index (first dist) selection))
-    (list-ref (second dist) index)))
+  })
+})
 
-(define expval-from-enum-analysis-of-enum-model 
-  (lambda (results)
-    (map sum 
-         (transpose (map 
-                     (lambda (lst prob)
-                       (map (lambda (x)
-                              (* prob x))
-                            (second lst)))
-                     (first results)
-                     (second results))))))
+// 5 experiment conditions / stimuli
+var possibleEvidenceStream = [
+  [['A']],
+  [['A', 'B']],
+  [['A', 'B'], ['B']],
+  [['A', 'B'], ['A', 'B']],
+  [[]]
+];
 
+// note: always the query "is A a blicket?"
+var data = [
+  repeat(10, function(){return true}).concat(false),
+  repeat(6 , function(){return true}).concat(repeat(5, function(){return false})),
+  repeat(4, function(){return true}).concat(repeat(7, function(){return false})),
+  repeat(8, function(){return true}).concat(repeat(3, function(){return false})),
+  repeat(2, function(){return true}).concat(repeat(9, function(){return false}))
+];
 
-(define expval-from-mh-analysis-of-enum-model 
-  (lambda (results)
-    (map mean 
-         (transpose 
-          (map second results)))))
+var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMCProgress()]}, function() {
+  var params = {
+    blicketBaseRate: uniformDrift({a: 0.1, b: 0.9}),
+    blicketPower: uniformDrift({a: 0.1, b: 0.9}),
+    nonBlicketPower: uniformDrift({a: 0.1, b: 0.9}), 
+    machineSpontaneouslyGoesOff: uniformDrift({a: 0.1, b: 0.9})
+  }
+  var cognitiveModelPredictions = map(function(evidence) {
+    return detectingBlickets(evidence,params);
+  }, possibleEvidenceStream);
+  
+  map2(function(dataForStim, modelPosterior) {
+    map(function(dataPoint) {
+      observe(modelPosterior, dataPoint);
+    }, dataForStim)
+  }, data, cognitiveModelPredictions)
+  
+  var predictives = toProbs(cognitiveModelPredictions)
+  return _.extend(params, predictives)
+})
 
-(define make-bins
-  (lambda (lowerbound upperbound gap)
-    (define effective-ub (+ 1 (round (/ (- upperbound lowerbound) gap))))
-    (define effective-range (range (round (* 10 lowerbound)) effective-ub))
-    (define binned-range (map (lambda (x) (+ (* (position effective-range x)
-                                                gap)
-                                             lowerbound))
-                              effective-range))
-    (filter (lambda (x) (<= x 1)) binned-range)))
-
-; returns a sample from a discretized beta with mean gamma and stdev delta
-; (disc-beta 0.5 2 bins) = (uniform-draw bins)
-(define disc-beta 
-  (lambda (gamma delta bins)
-    (multinomial bins (discretize-beta gamma delta bins))))
-
-
-(define (marginalize output)
-  (let ([states (first output)])
-    (map (lambda (sub-output) 
-           (let* ([probs (second output)]
-                  [unique-states (unique sub-output)]
-                  [unique-state-indices 
-                   (map 
-                    (lambda (x) (list x (get-indices x sub-output))) 
-                    unique-states)])
-
-             (list (map first unique-state-indices)
-                   (map 
-                    (lambda (y) (sum (map 
-                                      (lambda (x) (list-elt probs x)) 
-                                      (second y)))) 
-                    unique-state-indices))))
-
-         (transpose states))))
-
-(define summarize-data 
-  (lambda (dataset)
-    (list (first dataset)
-          (map 
-           (lambda (lst) (mean (map boolean->number lst)))
-           (second dataset)))))
-
-
-(define summarize-model
-  (lambda (modelpreds)
-    (list 
-     possible-evidence-streams
-     (map 
-      (lambda (dist) 
-        (get-probability dist #t))
-      modelpreds))))
-
-;;;
-(define detecting-blickets
-  (mem 
-   (lambda 
-     (evidence
-      blicket-base-rate 
-      blicket-power 
-      non-blicket-power 
-      machine-spontaneously-goes-off)
-
-     (enumeration-query
-
-      ; some objects are blickets
-      (define blicket (mem (lambda (block) (flip blicket-base-rate))))
-
-      ; some blocks have the power to make the box go off
-      (define block-power (lambda (block) (if (blicket block) blicket-power non-blicket-power)))
-
-      ; sometimes the machine goes off spontaneously
-      ; otherwise, goes off if one of the blocks has the ability to make it go off (sequentially evaluated)
-
-      (define machine-goes-off
-        (lambda (blocks)
-          (if (null? blocks)
-              (flip machine-spontaneously-goes-off)
-              (or (flip (block-power (first blocks)))
-                  (machine-goes-off (rest blocks))))))
-
-      (blicket 'A)
-
-      ; all checks to make sure all are true; i.e. all the of the lists of blickets made the machine-go-off
-      (all (map machine-goes-off evidence))))))
-
-
-; 5 experiment conditions / stimuli
-(define possible-evidence-streams
-  (list 
-   (list (list 'A))
-   (list (list 'A 'B))
-   (list (list 'A 'B) (list 'B))
-   (list (list 'A 'B) (list 'A 'B))
-   (list '())))
-
-
-; note: always the query "is A a blicket?"
-(define data
-  (list 
-   (list #t #t #t #t #t #t #t #t #t #t #f) 
-   (list #t #t #t #t #t #t #f #f #f #f #f)
-   (list #t #t #t #t #f #f #f #f #f #f #f)
-   (list #t #t #t #t #t #t #t #t #f #f #f)
-   (list #t #t #f #f #f #f #f #f #f #f #f)))
-
-
-(define data-analysis
-  (mh-query 100 10
-
-            ; make-bins takes arguments: lower-bound, upper-bound, step
-            (define blicket-base-rate (uniform-draw (make-bins 0.1 0.9 0.1)))
-
-            (define blicket-power (uniform-draw (make-bins 0.1 0.9 0.1)))
-            (define non-blicket-power (uniform-draw (make-bins 0.1 0.9 0.1)))
-
-            (define machine-spontaneously-goes-off (uniform-draw (make-bins 0.1 0.9 0.1)))
-
-            (define cognitive-model-predictions
-              (map (lambda (evidence) 
-                     (detecting-blickets evidence blicket-base-rate blicket-power 
-                                         non-blicket-power machine-spontaneously-goes-off))
-                   possible-evidence-streams))
-
-
-            ; query statement
-            (list 
-             (summarize-model cognitive-model-predictions)
-             blicket-base-rate
-             blicket-power
-             non-blicket-power
-             machine-spontaneously-goes-off)
-
-            ; factor statement (in leiu of the condition statement)
-            (factor (sum (flatten (map 
-                                   (lambda (data-for-one-stimulus model)
-                                     ; map over data points in a given stimulus
-                                     (map (lambda (single-data-point)
-                                            (log (get-probability model single-data-point)))
-                                          data-for-one-stimulus))
-                                   data
-                                   cognitive-model-predictions))))))
-
-
-(define results (transpose data-analysis))
-
-;;;fold:
-(define posterior-predictive (list possible-evidence-streams 
-                                   (expval-from-mh-analysis-of-enum-model (first results))))
-
-(define posterior-blicket-br (second results))
-(define posterior-blicket-pow (third results))
-(define posterior-nonblicket-pow (fourth results))
-(define posterior-machine (fifth results))
-(define data-summary  (summarize-data (list possible-evidence-streams data)))
-(define model-data (zip (second posterior-predictive) (second data-summary)))
-;;;
-
-(hist posterior-blicket-br "posterior on blicket base rate")
-(hist posterior-blicket-pow "posterior on blicket power")
-(hist posterior-nonblicket-pow "posterior on nonblicket power")
-(hist posterior-machine "posterior on machine sponatenously going off")
-
-(scatter model-data "data vs. cognitive model")
-
-(barplot posterior-predictive "cognitive model: probability of blicket?")
-(barplot data-summary "data: proportion of 'A is a Blicket!' responses")
+viz.marginals(dataAnalysis);
 ~~~~
 
 Before running this program, answer the following question:
 
-B. What does the query statement in data-analysis return? What does the query statement in detecting-blickets return? Why are there two queries in this program?
+B. What does the data-analysis inference return? What does the query statement in detecting-blickets return? Why are there two queries in this program?
 
 C. Now, run the program. [Note: This will take between 15-30 seconds to run.] Interpret each of the resulting plots.
 
