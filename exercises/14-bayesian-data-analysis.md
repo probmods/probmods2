@@ -64,9 +64,9 @@ b. Predictive distributions are not restricted to exactly the same experiment as
 
 ## Exercise 3: Parameter fitting vs. Parameter integration
 
-One of the strongest motivations for using Bayesian techniques for model-data evaluation is in how ``nuisance'' parameters are treated. ``Nuisance'' parameters are parameters of no theoretical interest; their only purpose is to fill in a necessary slot in the model. Classically, the most prominant technique (from the frequentist tradition) for dealing with these parameters is to fit them to the data, i.e., to set their value equal to whatever value maximizes the model-data fit (or, equivalently, minimizes some cost function).
+One of the strongest motivations for using Bayesian techniques for model-data evaluation is in how "nuisance" parameters are treated. "Nuisance" parameters are parameters of no theoretical interest; their only purpose is to fill in a necessary slot in the model. Classically, the most prominant technique (from the frequentist tradition) for dealing with these parameters is to fit them to the data, i.e., to set their value equal to whatever value maximizes the model-data fit (or, equivalently, minimizes some cost function).
 
-The Bayesian approach is different. Since we have a priori uncertainty about the value of our parameter (e.g. as you specified in Exercise 2), we will also have a posteriori uncertainty about the value (though hopefully the uncertainty will be a little less). What the Bayesian does is integrate over her posterior distribution of parameter values to make predictions. Intuitively, rather than taking the value corresponding to the peak of the distribution, she's considering all values with their respective probabilites.
+The Bayesian approach is different. Since we have a priori uncertainty about the value of our parameter, we will also have a posteriori uncertainty about the value (though hopefully the uncertainty will be a little less). What the Bayesian does is integrate over her posterior distribution of parameter values to make predictions. Intuitively, rather than taking the value corresponding to the peak of the distribution, she's considering all values with their respective probabilites.
 
 Why might this be important for model assessment? Imagine the following situation. You are piloting a task. You think that the task you've design is a little too difficult for subjects. (Let's imagine that you're a psychophysicist, and your task pertains to contrast discriminiation in the periphery.) You think the current task design is too difficult, but you're uncertain. It may well be that it's fine for subjects. We're going to think about this in terms of subjects ability with respect to your task. Here is your prior.
 
@@ -83,75 +83,47 @@ var model = function() {
 viz.hist(Infer({method: 'enumerate'}, model), {numBins: 9})
 ~~~~
 
-You have a model of how subjects perform on your task. You could have a structured, probabilistic model here. For simplicity, let's assume you have the simplest model of task performance: it is a direct function of task-difficulty: `var subjectPerformWell = !flip(taskDifficulty)`.
+You have a model of how subjects perform on your task. You could have a structured, probabilistic model here. For simplicity, let's assume you have the simplest model of task performance. It is a direct function of task-difficulty: sxubjects perform well if the task isn't too difficult. 
 
-Subjects perform well if the task isn't too difficult. This is just a proxy for a more complicated model of inference we could have. 
+~~~~norun
+var subjectPerformWell = !flip(taskDifficulty)
+~~~~
 
 Let's say there's a lot of training involved in your task, such that it's very time consuming for you to collect data. You run one subject through your training regime and have them do the task. That subject performs well. The same day, your adviser (or funding agency) wants you to make a decision to collect more data or not (or switch up something about your paradigm). You thought beforehand that your task was too difficult. Do you still think your task is too hard?
 
 One way to address this is to look at the posterior over your `taskDifficulty` parameter. How does your degree of belief in subject-ability change as a result of your one pilot subject performing well?
 
 ~~~~
-;;;fold:
-(define (expectation ps vs)
-  (if (= (length ps) 0)
-      0      
-      (+ (* (first ps) (first vs))
-         (expectation (rest ps) (rest vs)))))
+// Prior on task difficulty is uniform on [0, ..., 0.9], with a spike on 0.9     
+var sampleTaskDifficulty = function() {                                          
+  return flip() ? .9 : randomInteger(10) / 10;                                   
+};   
 
-(define (%most-probable-value vs ps best-v best-p)
-  (if (= (length ps) 0)
-      best-v
-      (if (> (first ps) best-p)
-          (%most-probable-value (rest vs) (rest ps) (first vs) (first ps))
-          (%most-probable-value (rest vs) (rest ps) best-v best-p))))
+// Compute posterior after seeing one subject perform well on the task 
+var taskDifficultyPosterior = Infer({method: 'enumerate'}, function(){
+  var taskDifficulty = sampleTaskDifficulty();
 
-(define (most-probable-value vs ps)
-  (%most-probable-value vs ps 0 0))
+  // subject will perform well if the task is not too difficult
+  var subjectPerformsWell = !flip(taskDifficulty)
 
-;; Prior on task diffuclty is uniform on 0..0.9, with a spike on 0.9
+  // observe that they perform well (i.e. this value is true)
+  condition(subjectPerformsWell)
+  return taskDifficulty;
+})
 
-(define (task-difficulty-prior)
-  (if (flip) .9 (/ (sample-integer 10) 10)))
+// Most likely task-difficulty is still .9
+taskDifficultyPosterior.MAP().val
 
-(barplot (enumeration-query (task-difficulty-prior) true) 
-         "Prior on task difficulty")
+// But a lot of probability mass is on lower values
+viz.hist(taskDifficultyPosterior, {numBins: 9})
 
-
-;; Compute posterior after seeing one subject perform well on the task 
-
-(define task-difficulty-posterior-dist
-  (enumeration-query
-   (define task-difficulty (task-difficulty-prior))   
-   ; subject will perform well if the task is not too difficult
-   (define subject-performs-well? (not (flip task-difficulty)))
-
-   task-difficulty
-
-   (condition (equal? subject-performs-well? #t))))
-
-
-;; Most likely task-difficulty is still .9
-
-(display "Most probable task-difficult after seeing 'one subject pass':" 
-         (apply most-probable-value task-difficulty-posterior-dist))
-
-
-;; But a lot of probability mass is on higher values
-
-(barplot task-difficulty-posterior-dist
-         "Posterior task-difficulty after observing 'one subject perform well'")
-
-
-;; Indeed, the expected subject ability is around .5
-
-(display "Expected coin weight after seeing 'one subject perform well':" 
-         (apply expectation task-difficulty-posterior-dist))
+// Indeed, the expected subject ability is around .4
+expectation(taskDifficultyPosterior)
 ~~~~
 
 A. Would you proceed with more data collection or would you change your paradigm? How did you come to this conclusion?
 
-B. In part A, you probably used either a value of task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm. We find ourselves with a similar decision when we have models of psychological phenomena and want to decide whether or not the model has fit the data (or, equivalently, whether our psychological theory is capturing the phenomenon). The traditional approach is the value (or ``point-wise estimate'') approach: take the value that corresponds to the best fit (e.g. by using least-squares or maximum-likelihood estimation; here, you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9). Why might this not be a good idea? Provide two answers. One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
+B. In part A, you probably used either a value of task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm. We find ourselves with a similar decision when we have models of psychological phenomena and want to decide whether or not the model has fit the data (or, equivalently, whether our psychological theory is capturing the phenomenon). The traditional approach is the value (or "point-wise estimate") approach: take the value that corresponds to the best fit (e.g. by using least-squares or maximum-likelihood estimation; here, you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9). Why might this not be a good idea? Provide two answers. One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
 
 ## Exercise 4
 
@@ -159,47 +131,34 @@ Let's continue to explore the inferences you (as a scientist) can draw from the 
 
 To help us understand how to examine posteriors over parameter settings, we're going to revisit the example of the blicket detector from Chapter 4.
 
-Here is the model, with slightly different names than the original example, and written in a parameter-friendly way. It is set up to display the ``backwards blocking'' phenomenon.
+Here is the model, with slightly different names than the original example, and written in a parameter-friendly way. It is set up to display the "backwards blocking" phenomenon.
 
 ~~~~
-(define blicket-base-rate 0.2)
-(define blicket-power 0.9)
-(define non-blicket-power 0.05)
-(define machine-spontaneously-goes-off 0.05)
+var blicketBaseRate = 0.4
+var blicketPower = 0.9
+var nonBlicketPower = 0.05
+var machineSpontaneouslyGoesOff = 0.05
 
-(define detecting-blickets
-  (lambda 
-    (evidence)
+var blicketPosterior = function(evidence) {
+  return Infer({method: 'enumerate'}, function() {
+    var blicket = mem(function(block) {return flip(blicketBaseRate)})
+    var power = function(block) {return blicket(block) ? blicketPower : nonBlicketPower}
+    var machine = function(blocks) {
+      return (blocks.length == 0 ?
+              flip(machineSpontaneouslyGoesOff) :
+              flip(power(first(blocks))) || machine(rest(blocks)))
+    }
+    // Condition on each of the pieces of evidence making the machine go off
+    map(function(blocks){condition(machine(blocks))}, evidence)
+    return blicket('A')
+  });
+});
 
-    (enumeration-query
+// A&B make the blicket-detector go off
+viz(blicketPosterior([['A', 'B']]))
 
-     ; some objects are blickets
-     (define blicket (mem (lambda (block) (flip blicket-base-rate))))
-
-     ; some blocks have the power to make the box go off
-     (define block-power (lambda (block) (if (blicket block) blicket-power non-blicket-power)))
-
-     ; sometimes the machine goes off spontaneously
-     ; otherwise, goes off if one of the blocks has the ability to make it go off (sequentially evaluated)
-
-     (define machine-goes-off
-       (lambda (blocks)
-         (if (null? blocks)
-             (flip machine-spontaneously-goes-off)
-             (or (flip (block-power (first blocks)))
-                 (machine-goes-off (rest blocks))))))
-
-     (blicket 'A)
-
-     ; all checks to make sure all are true; i.e. all the of the lists of blickets made the machine-go-off
-     (all (map machine-goes-off evidence)))))
-
-; A&B make the blicket-detector go off
-(barplot (detecting-blickets (list (list 'A 'B))) 
-         "Is A a blicket, given A&B works?")
-; A&B make the blicket-detector go off, and then B makes the blicket detector go off
-(barplot (detecting-blickets (list (list 'A 'B) (list 'B))) 
-         "Is A a blicket, given A&B works, and B works?")
+// A&B make the blicket-detector go off, and then B makes the blicket detector go off
+viz(blicketPosterior([['A', 'B'], ['B']]))
 ~~~~
 
 A. What are the parameters of this model? In the plainest English you can muster, interpret the current values of the parameters. What do they mean?
@@ -430,7 +389,7 @@ E. Look carefully at the priors (in the code) and the posteriors (in the plots) 
 
 F. Do you notice anything about the scatter plot? How would you interpret this? Is there something we could add to the data analysis model to account for this?
 
-G. Now, we're going to examine the predictions of the model if we had done a more traditional analysis of point-estimates of parameters (i.e. fitting parameters). Examine your histograms and determine the ``maximum a posteriori'' (MAP) value for each parameter. Plug those into the code below and run it.
+G. Now, we're going to examine the predictions of the model if we had done a more traditional analysis of point-estimates of parameters (i.e. fitting parameters). Examine your histograms and determine the "maximum a posteriori" (MAP) value for each parameter. Plug those into the code below and run it.
 
 ~~~~
 ;;;fold:
