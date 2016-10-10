@@ -136,9 +136,15 @@ viz.hist(taskDifficultyPosterior, {numBins: 9})
 expectation(taskDifficultyPosterior)
 ~~~~
 
-A. Would you proceed with more data collection or would you change your paradigm? How did you come to this conclusion?
+A. Would you proceed with more data collection or would you change your paradigm?
+How did you come to this conclusion?
 
-B. In part A, you probably used either a value of task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm. We find ourselves with a similar decision when we have models of psychological phenomena and want to decide whether or not the model has fit the data (or, equivalently, whether our psychological theory is capturing the phenomenon). The traditional approach is the value (or "point-wise estimate") approach: take the value that corresponds to the best fit (e.g. by using least-squares or maximum-likelihood estimation; here, you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9). Why might this not be a good idea? Provide two answers. One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
+B. In part A, you probably used either a value of task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm.
+We find ourselves in a similar situation when we have models of psychological phenomena and want to decide whether or not the model has fit the data (or, equivalently, whether our psychological theory is capturing the phenomenon).
+The traditional approach is the value (or "point-wise estimate") approach: take the value that corresponds to the best fit (e.g., by using least-squares or maximum-likelihood estimation; here, you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9).
+Why might this not be a good idea?
+Provide two answers.
+One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
 
 ## Exercise 3: BDA of Bayesian Cognitive Models
 
