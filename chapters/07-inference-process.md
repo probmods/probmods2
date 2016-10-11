@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Algorithms for inference
-description: Exploring different methods of conditioning
+description: From competence to process, efficiency tradeoffs of different algorithms.
 custom_js:
 - assets/js/box2d.js
 - assets/js/phys.js
@@ -79,6 +79,18 @@ There are a number of other [inference methods available in WebPPL](http://docs.
 
 # Process-level cognitive modeling
 
+As we noted in an earlier chapter, there is an interesting parallel between the `Infer` abstraction, which separates model specification from inference method, and the idea of levels of analysis in cognitive science @Marr1982.
+For most of this book we are interested in the *computational* level of describing what people know about the world and what inferences that knowledge licenses.
+We can make a great deal of progress with this level of abstraction.
+
+The *algorithmic* level then describes the process by which people draw these inferences.
+While `Infer` specifies an ideal, different methods for inference will approximate this ideal better or worse in different cases; they will also do so with different time and space tradeoffs.
+It is possible to interpret the inference algroithms that we borrow from statistics as psychological hypotheses at the algorithmic level? *Which algorithm* does the brain use for inference? Could it be MCMC? Enumeration?
+
+If we take the algorithms for inference as psychological hypotheses, then the approximation and resource-usage characteristics of the algorithms will be the signature phenomena of interest.
+
+
+<!-- Something on resource-rational process models? -->
 
 
 <!--
