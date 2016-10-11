@@ -1,0 +1,915 @@
+---
+title: "Bayesian data analysis of Tug of War model"
+author: "M. H. Tessler"
+date: "October 10, 2016"
+output: html_document
+---
+```{r}
+library(knitr)
+knitr::opts_chunk$set(fig.crop = F,echo=T, 
+                      warning=F, cache=F, 
+                      message=F, sanitize = T)
+
+library(rwebppl)
+library(dplyr)
+library(coda)
+estimate_mode <- function(s) {
+  d <- density(s)
+  return(d$x[which.max(d$y)])
+}
+hdi_upper<- function(s){
+  m <- HPDinterval(mcmc(s))
+  return(m["var1","upper"])
+}
+hdi_lower<- function(s){
+  m <- HPDinterval(mcmc(s))
+  return(m["var1","lower"])
+}
+```
+
+## RWebPPL 
+
+This is an example of using RWebPPL (inside an R Markdown document) to run Bayesian data analysis on cognitive models using WebPPL.
+Those familiar with R might find the RWebPPL package useful.
+More information about RWebPPL can be found  [here](https://github.com/mhtess/rwebppl).
+
+
+## Basic usage of RWebPPL
+
+```{r}
+towModel <- '
+var options = {method: "MCMC", samples: 2500}
+
+var lazinessPrior = 0.3;
+var lazyPulling = 0.5;
+
+var model = function() {
+
+  var strength = mem(function(person){
+    return gaussian(0, 1)
+  })
+  var lazy = function(person){
+    return flip(lazinessPrior)
+  }
+  var pulling = function(person) {
+    return lazy(person) ?
+            strength(person) * lazyPulling :
+            strength(person)
+  }
+  var totalPulling = function(team){return sum(map(pulling, team)) }
+  var winner = function(team1, team2){
+    totalPulling(team1) > totalPulling(team2) ? team1 : team2
+  }
+  var beat = function(team1,team2){winner(team1,team2) == team1}
+
+  condition(beat(["bob", "mary"], ["tom", "sue"]))
+
+  return strength("bob")
+}
+
+var posterior = Infer(options, model)
+display("Bobs strength, given that he and Mary beat Tom and Sue")
+display("Expected value = " + expectation(posterior))
+posterior
+'
+posterior <- webppl(towModel)
+```
+
+The results of the WebPPL program are captured in the output, automatically converted into an R data frame.
+
+```{r}
+head(posterior)
+```
+
+RWebPPL ships with a helper function called `get_samples()`, which will allow you to easily convert the default output of WebPPL (which is as a histogram) into samples, which allows for easy interplay with R visualization programs (e.g., `ggplot()`).
+
+```{r}
+posterior.samples <- get_samples(posterior, 2500)
+head(posterior.samples)
+
+ggplot(posterior.samples, aes ( x = support ) )+
+  geom_histogram()
+```
+
+### Passing data to WebPPL
+
+Using RWebPPL, you can pass data from R to WebPPL.
+
+Let's modify the tug of war model to define `lazinessPrior` and `lazyPulling` with a variable that we'll pass in.
+
+```{r}
+towModelNoData <- '
+var options = {method: "MCMC", samples: 2500}
+
+var lazinessPrior = dataFromR[0].lazyPrior;
+var lazyPulling = dataFromR[0].lazyPulling;
+
+var model = function() {
+
+  var strength = mem(function(person){
+    return gaussian(0, 1)
+  })
+  var lazy = function(person){
+    return flip(lazinessPrior)
+  }
+  var pulling = function(person) {
+    return lazy(person) ?
+            strength(person) * lazyPulling :
+            strength(person)
+  }
+  var totalPulling = function(team){return sum(map(pulling, team)) }
+  var winner = function(team1, team2){
+    totalPulling(team1) > totalPulling(team2) ? team1 : team2
+  }
+  var beat = function(team1,team2){winner(team1,team2) == team1}
+
+  condition(beat(["bob", "mary"], ["tom", "sue"]))
+
+  return strength("bob")
+}
+
+var posterior = Infer(options, model)
+display("Bobs strength, given that he and Mary beat Tom and Sue")
+display("Expected value = " + expectation(posterior))
+posterior
+'
+```
+
+To see what your R data structure will look like in WebPPL, you can use the `jsonlite` package (loaded via `library(jsonlite)`) and pass your data structure (or, some subset) through the function `toJSON()`.
+
+```{r}
+library(jsonlite)
+dataToWebPPL <- data.frame(lazyPrior = 0.3, lazyPulling = 0.5)
+toJSON(dataToWebPPL, pretty = T)
+```
+
+Note that data.frames get converted into arrays of objects, and lists get converted into objects of lists.
+
+All we need to tell RWebPPL is the data we want to pass to WebPPL (`data = ...`) and what the data structure will be labeled inside WebPPL (`data_var = ...`).
+
+```{r, eval = F}
+webppl(towModelNoData, 
+       data = dataToWebPPL, 
+       data_var = "dataFromR") %>%
+  get_samples(., 2500) %>%
+  ggplot(., aes ( x = support ) )+
+      geom_density()
+```
+
+### Specifying `Infer` options in R
+
+When engaging in Bayesian data analysis of rich cognitive models, we are often running `Infer` in the outer loop (for the data analysis model) and `Infer` in the innter loop (for the cognitive model). The outer loop `Infer` will often be computationally challenging. Thus, it is often useful to be able to try a number of different inference strategies (via, `{method: ...}` in the inference options). To faciliate this, RWebPPL allows you to specify inference options in R. You just need to tell RWebPPL what model (spec., what thunk) to do inference over (`model_var = ...`), and the options (`inference_opts = ...`). 
+
+Here, we will demonstrate this on the Tug of War cognitive model. 
+```{r}
+towModelNoDataNoInfer <- '
+var lazinessPrior = dataFromR[0].lazyPrior;
+var lazyPulling = dataFromR[0].lazyPulling;
+
+var model = function() {
+  var strength = mem(function(person){
+    return gaussian(0, 1)
+  })
+  var lazy = function(person){
+    return flip(lazinessPrior)
+  }
+  var pulling = function(person) {
+    return lazy(person) ?
+            strength(person) * lazyPulling :
+            strength(person)
+  }
+  var totalPulling = function(team){return sum(map(pulling, team)) }
+  var winner = function(team1, team2){
+    totalPulling(team1) > totalPulling(team2) ? team1 : team2
+  }
+  var beat = function(team1,team2){winner(team1,team2) == team1}
+
+  condition(beat(["bob", "mary"], ["tom", "sue"]))
+
+  return strength("bob")
+}
+'
+```
+
+```{r}
+posterior <- webppl(towModelNoDataNoInfer, 
+       data = dataToWebPPL, 
+       data_var = "dataFromR",
+       inference_opts = list(
+         method = "MCMC",
+         samples = 2500),
+       model_var = "model")
+
+head(posterior)
+```
+
+Note the posterior variable in R is the result of calling `Infer()` on `model_var`.
+
+#### Specifying output format
+
+If you are specifying the inference options in R, you can also change the output format of the main Infer.
+Currently, the output formats supported are `samples` (each row of data frame is a sample), `ggmcmc` (for use with the [ggmcmc R package](http://xavier-fim.net/packages/ggmcmc/); Note: not all functionality for this is currently supported), and `webppl` (default, webppl histogram).
+
+
+```{r}
+posterior <- webppl(towModelNoDataNoInfer, 
+       data = dataToWebPPL, 
+       data_var = "dataFromR",
+       inference_opts = list(
+         method = "MCMC",
+         samples = 2500),
+       model_var = "model",
+       output_format = "samples")
+
+head(posterior)
+
+qplot(posterior)
+```
+
+# Bayesian Data Analysis of Tug of War model
+
+## Tug of War data
+
+First, we'll load the raw tug of war data generiously supplied by Tobias Gerstenberg, from Gerstenberg & Goodman (2012).
+
+```{r loadData, echo = T}
+df.tow <- read.csv("https://raw.githubusercontent.com/probmods/probmods2/master/assets/data/towData.csv")
+
+head(df.tow)
+summary(df.tow)
+
+# we add a rounded version of the rating data for easy of inference
+df.tow$roundedRating <- round(df.tow$ratingZ, 1)
+```
+
+What will the data look like in R?
+
+```{r echo=T}
+toJSON(head(df.tow), pretty = T)
+```
+
+Here, we see that the data frame will be converted into an array of objects. The data analysis model presented at the end of the [chapter](https://probmods.org/v2/chapters/14-bayesian-data-analysis.html) is expected a data structure like this, so we are in good shape.
+
+Because we are writing the WebPPL model as a string, we can write the program in chunks, and use R's `paste()` function to place it all back together again.
+
+#### Helper functions
+
+
+```{r matchConfigData, echo = F}
+matchConfigData <-' var matchConfigurations = [
+  {
+    "X": 1,
+    "outcome": "win",
+    "pattern": "confounded evidence",
+    "tournament": "single",
+    "winner1": ["A"],
+    "loser1": ["B"],
+    "winner2": ["A"],
+    "loser2": ["B"],
+    "winner3": ["A"],
+    "loser3": ["B"]
+  },
+  {
+    "X": 2,
+    "outcome": "loss",
+    "pattern": "confounded evidence",
+    "tournament": "single",
+    "winner1": ["B"],
+    "loser1": ["A"],
+    "winner2": ["B"],
+    "loser2": ["A"],
+    "winner3": ["B"],
+    "loser3": ["A"]
+  },
+  {
+    "X": 3,
+    "outcome": "win",
+    "pattern": "strong indirect evidence",
+    "tournament": "single",
+    "winner1": ["A"],
+    "loser1": ["B"],
+    "winner2": ["B"],
+    "loser2": ["C"],
+    "winner3": ["B"],
+    "loser3": ["D"]
+  },
+  {
+    "X": 4,
+    "outcome": "loss",
+    "pattern": "strong indirect evidence",
+    "tournament": "single",
+    "winner1": ["B"],
+    "loser1": ["A"],
+    "winner2": ["C"],
+    "loser2": ["B"],
+    "winner3": ["D"],
+    "loser3": ["B"]
+  },
+  {
+    "X": 5,
+    "outcome": "win",
+    "pattern": "weak indirect evidence",
+    "tournament": "single",
+    "winner1": ["A"],
+    "loser1": ["B"],
+    "winner2": ["C"],
+    "loser2": ["B"],
+    "winner3": ["D"],
+    "loser3": ["B"]
+  },
+  {
+    "X": 6,
+    "outcome": "loss",
+    "pattern": "weak indirect evidence",
+    "tournament": "single",
+    "winner1": ["B"],
+    "loser1": ["A"],
+    "winner2": ["B"],
+    "loser2": ["C"],
+    "winner3": ["B"],
+    "loser3": ["D"]
+  },
+  {
+    "X": 7,
+    "outcome": "win",
+    "pattern": "diverse evidence",
+    "tournament": "single",
+    "winner1": ["A"],
+    "loser1": ["B"],
+    "winner2": ["A"],
+    "loser2": ["C"],
+    "winner3": ["A"],
+    "loser3": ["D"]
+  },
+  {
+    "X": 8,
+    "outcome": "loss",
+    "pattern": "diverse evidence",
+    "tournament": "single",
+    "winner1": ["B"],
+    "loser1": ["A"],
+    "winner2": ["C"],
+    "loser2": ["A"],
+    "winner3": ["D"],
+    "loser3": ["A"]
+  },
+  {
+    "X": 9,
+    "outcome": "win",
+    "pattern": "confounded with partner",
+    "tournament": "double",
+    "winner1": ["A", "B"],
+    "loser1": ["C", "D"],
+    "winner2": ["A", "B"],
+    "loser2": ["E", "F"],
+    "winner3": ["A", "B"],
+    "loser3": ["G", "H"]
+  },
+  {
+    "X": 10,
+    "outcome": "loss",
+    "pattern": "confounded with partner",
+    "tournament": "double",
+    "winner1": ["C", "D"],
+    "loser1": ["A", "B"],
+    "winner2": ["E", "F"],
+    "loser2": ["A", "B"],
+    "winner3": ["G", "H"],
+    "loser3": ["A", "B"]
+  },
+  {
+    "X": 11,
+    "outcome": "win",
+    "pattern": "confounded with opponent",
+    "tournament": "double",
+    "winner1": ["A", "B"],
+    "loser1": ["E", "F"],
+    "winner2": ["A", "C"],
+    "loser2": ["E", "G"],
+    "winner3": ["A", "D"],
+    "loser3": ["E", "H"]
+  },
+  {
+    "X": 12,
+    "outcome": "loss",
+    "pattern": "confounded with opponent",
+    "tournament": "double",
+    "winner1": ["E", "F"],
+    "loser1": ["A", "B"],
+    "winner2": ["E", "G"],
+    "loser2": ["A", "C"],
+    "winner3": ["E", "H"],
+    "loser3": ["A", "D"]
+  },
+  {
+    "X": 13,
+    "outcome": "win",
+    "pattern": "strong indirect evidence",
+    "tournament": "double",
+    "winner1": ["A", "B"],
+    "loser1": ["E", "F"],
+    "winner2": ["E", "F"],
+    "loser2": ["B", "C"],
+    "winner3": ["E", "F"],
+    "loser3": ["B", "D"]
+  },
+  {
+    "X": 14,
+    "outcome": "loss",
+    "pattern": "strong indirect evidence",
+    "tournament": "double",
+    "winner1": ["E", "F"],
+    "loser1": ["A", "B"],
+    "winner2": ["B", "C"],
+    "loser2": ["E", "F"],
+    "winner3": ["B", "D"],
+    "loser3": ["E", "F"]
+  },
+  {
+    "X": 15,
+    "outcome": "win",
+    "pattern": "weak indirect evidence",
+    "tournament": "double",
+    "winner1": ["A", "B"],
+    "loser1": ["E", "F"],
+    "winner2": ["B", "C"],
+    "loser2": ["E", "F"],
+    "winner3": ["B", "D"],
+    "loser3": ["E", "F"]
+  },
+  {
+    "X": 16,
+    "outcome": "loss",
+    "pattern": "weak indirect evidence",
+    "tournament": "double",
+    "winner1": ["E", "F"],
+    "loser1": ["A", "B"],
+    "winner2": ["E", "F"],
+    "loser2": ["B", "C"],
+    "winner3": ["E", "F"],
+    "loser3": ["B", "D"]
+  },
+  {
+    "X": 17,
+    "outcome": "win",
+    "pattern": "diverse evidence",
+    "tournament": "double",
+    "winner1": ["A", "B"],
+    "loser1": ["E", "F"],
+    "winner2": ["A", "C"],
+    "loser2": ["G", "H"],
+    "winner3": ["A", "D"],
+    "loser3": ["I", "J"]
+  },
+  {
+    "X": 18,
+    "outcome": "loss",
+    "pattern": "diverse evidence",
+    "tournament": "double",
+    "winner1": ["E", "F"],
+    "loser1": ["A", "B"],
+    "winner2": ["G", "H"],
+    "loser2": ["A", "C"],
+    "winner3": ["I", "J"],
+    "loser3": ["A", "D"]
+  },
+  {
+    "X": 19,
+    "outcome": "win",
+    "pattern": "round robin",
+    "tournament": "double",
+    "winner1": ["A", "B"],
+    "loser1": ["C", "D"],
+    "winner2": ["A", "C"],
+    "loser2": ["B", "D"],
+    "winner3": ["A", "D"],
+    "loser3": ["B", "C"]
+  },
+  {
+    "X": 20,
+    "outcome": "loss",
+    "pattern": "round robin",
+    "tournament": "double",
+    "winner1": ["C", "D"],
+    "loser1": ["A", "B"],
+    "winner2": ["B", "D"],
+    "loser2": ["A", "C"],
+    "winner3": ["B", "C"],
+    "loser3": ["A", "D"]
+  }
+]
+'
+```
+
+```{r helpers2}
+helpers <- '
+var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+
+var outcomes = levels(towData, "outcome");
+var tournaments = levels(towData, "tournament");
+var patterns = {
+  single: levels(_.where(towData, {tournament: "single"}), "pattern"),
+  double: levels(_.where(towData, {tournament: "double"}), "pattern")
+};
+
+var round = function(x){
+  return Math.round(x*10)/10
+}
+
+var bins = map(round, _.range(-2.2, 2.2, 0.1))
+
+// add a tiny bit of noise, and make sure every bin has at least epsilon probability
+var smoothToBins = function(dist, sigma, bins){
+  Infer({method: "enumerate"}, function(){
+    var x = sample(dist);
+    var smoothedProbs = map(function(b){
+            return Number.EPSILON+
+          Math.exp(Gaussian({mu: x, sigma: sigma}).score(b)) 
+  }, bins)
+    return categorical(smoothedProbs, bins)
+  })
+}
+'
+```
+
+#### Tug of war Model (Bayes in the head)
+
+Because we are going to do Bayesian inference over the parameters `lazyPulling` and `lazinessPrior`, we turn them into arguments of the `tugOfWarModel` function.
+We also abstract the match information so it's also an argument. (Because the empirical data is collected from several different conditions, corresponding to different tournament setups.)
+
+```{r towCogModel}
+towModel <- '
+var tugOfWarOpts = {method: "rejection", samples: 500}
+
+var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
+  Infer(tugOfWarOpts, function(){
+
+    var strength = mem(function(person){
+      return gaussian(0, 1)
+    })
+
+    var lazy = function(person){
+      return flip(lazinessPrior)
+    }
+    var pulling = function(person) {
+      return lazy(person) ?
+              strength(person) * lazyPulling :
+              strength(person)
+    }
+    var totalPulling = function(team){return sum(map(pulling, team)) }
+  
+  
+
+    var winner = function(team1, team2){
+      totalPulling(team1) > totalPulling(team2) ? team1 : team2
+    }
+    var beat = function(team1,team2){winner(team1,team2) == team1}
+
+    condition(beat(matchInfo.winner1, matchInfo.loser1))
+    condition(beat(matchInfo.winner2, matchInfo.loser2))
+    condition(beat(matchInfo.winner3, matchInfo.loser3))
+
+    return round(strength("A"))
+
+  })
+}
+'
+
+```
+
+#### Bayesian data analysis model (Bayes in the notebook)
+
+```{r bdaOFtowEnumerate}
+bdaTow <- '
+var dataAnalysisModel = function(){
+
+   var lazinessPrior = uniformDraw(_.range(0.01,0.51, 0.05));
+   var lazyPulling = uniformDraw(_.range(0.01,1, 0.1));
+   var noise = uniformDraw(_.range(0.01,0.5, 0.1));
+  
+var predictions = map(function(tournament){
+    return map(function(outcome){
+      return map(function(pattern){
+
+        var itemInfo = {pattern: pattern,  
+                  tournament: tournament, 
+                  outcome: outcome}
+
+        // participants ratings
+        var itemData = _.where(towData, itemInfo)
+
+        // information about the winners and losers
+        var matchInformation = _.where(matchConfigurations, itemInfo)[0]
+
+        var modelPosterior = tugOfWarModel(lazyPulling, lazinessPrior, matchInformation)
+        var smoothedPredictions = smoothToBins(modelPosterior, noise, bins)
+
+        map(function(d){ observe(smoothedPredictions, d.roundedRating) }, itemData)
+
+        return _.object([[pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]])
+
+      }, patterns[tournament]) // singles tournaments dont have all patterns
+    }, outcomes)
+  }, tournaments)
+
+  return {
+    parameters: {lazinessPrior: lazinessPrior, 
+                lazyPulling: lazyPulling,
+                gaussianNoise: noise},
+    predictives: _.object(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+  }
+}
+'
+```
+
+Run the model
+```{r, eval = F}
+fullModel <- paste(matchConfigData, 
+                   helpers, towModel, bdaTow, sep = '\n')
+
+posterior <- webppl(fullModel,
+       data = df.tow,
+       data_var = "towData",
+       inference_opts = list(method = "enumerate"),
+       chains = 1,
+       cores = 1,
+       model_var = "dataAnalysisModel",
+       output_format = "webppl")
+
+save(posterior, 
+     file = "~/Documents/learning/probmods2/assets/data/enumerateToW1.RData")
+```
+
+Examine parameters.
+
+```{r}
+posterior <- read.csv("https://raw.githubusercontent.com/probmods/probmods2/master/assets/data/enumerateToW1.csv")
+
+params.tidy <- posterior %>%
+  select(starts_with("parameters"), prob) %>%
+  gather(key, val, -prob) %>%
+  mutate(key = gsub("parameters.", "", key)) %>%
+  spread(key, val)
+
+ggplot(params.tidy, aes(x = lazinessPrior, y = lazyPulling, fill = prob))+
+  geom_tile()+
+  facet_wrap(~gaussianNoise)+
+  ggtitle("Parameter space: Facets are gaussianNoise")
+```
+
+The fact that the parameter space is so peaky *might* be cause for conern. On the one hand, it may be that the Tug of War model is very sensitive to the exact parameter settings. On the other, perhaps there is something misspecified in either the cognitive or the data analysis model that is leading to this behavior. One hypothesis is that the `strength` variable inside of the cognitive model should take on a different functional form, perhaps one restricted to only positive values. (This hypothesis is credited to Zeynep Enkavi and Sebastian Schuster, who first brought it up in Psych 204, Fall 2016).
+
+### Examine posterior predictive
+
+```{r}
+predictive.tidy <- posterior %>%
+  select(starts_with("predictives"), prob) %>%
+  gather(key, val, -prob) %>%
+  mutate(key = gsub("predictives.", "", key)) %>%
+  separate(key, into=c("pattern", "tournament", "outcome"), sep = "_") %>%
+  mutate(pattern = gsub("[.]", " ", pattern))
+
+predictive.summary <- predictive.tidy %>%
+  group_by(pattern, tournament, outcome) %>%
+  summarize(expval = sum(prob*val))
+```
+
+Summarize TOW Data
+
+```{r}
+library(langcog) # github.com/langcog/langcog
+df.summary <- df.tow %>%
+  group_by(pattern, tournament, outcome) %>%
+  multi_boot_standard(column = "ratingZ")
+```
+
+Model-data comparison
+
+```{r}
+md.summary <- left_join(predictive.summary, df.summary)
+
+ggplot(md.summary, aes(x = expval,
+                       y = mean, ymin = ci_lower, ymax = ci_upper))+
+  geom_point()+
+  geom_abline(intercept = 0, slope = 1, linetype = 3)+
+  xlim(-1.5, 1.5)+
+  ylim(-1.5, 1.5)+
+  coord_fixed()+
+  ylab("Human data (means)")+
+  xlab("Model posterior predictive (expectation)")
+
+with(md.summary, cor(expval, mean))^2
+```
+
+Model explains `r round(100*with(md.summary, cor(expval, mean))^2)`% of the variance
+
+
+#### Tug of War model (version 2)
+
+This version will restrict strength to be positive values. 
+Since the human rating data is roughly between -2.2 and +2.2, we will add 2.2 to every rating to make them between 0 and 4.4.
+We will then have strength be gaussian-distributed as before, but this time with a mean of 2.2.
+Just to make sure no negative strengths are permitted, we will wrap the strength variable in an absolute value.
+
+Adjust data:
+```{r}
+df.tow$roundedRatingAdjusted <- df.tow$roundedRating+2.2
+```
+
+Adjust model:
+
+```{r towCogModel2}
+towModel <- '
+var tugOfWarOpts = {method: "rejection", samples: 1000}
+
+var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
+  Infer(tugOfWarOpts, function(){
+
+    var strength = mem(function(person){
+      return Math.abs(gaussian(2.2, 1))
+    })
+
+    var lazy = function(person){
+      return flip(lazinessPrior)
+    }
+    var pulling = function(person) {
+      return lazy(person) ?
+              strength(person) * lazyPulling :
+              strength(person)
+    }
+    var totalPulling = function(team){return sum(map(pulling, team)) }
+  
+  
+
+    var winner = function(team1, team2){
+      totalPulling(team1) > totalPulling(team2) ? team1 : team2
+    }
+    var beat = function(team1,team2){winner(team1,team2) == team1}
+
+    condition(beat(matchInfo.winner1, matchInfo.loser1))
+    condition(beat(matchInfo.winner2, matchInfo.loser2))
+    condition(beat(matchInfo.winner3, matchInfo.loser3))
+
+    return round(strength("A"))
+
+  })
+}
+'
+```
+
+Must adjust bins in helpers too
+
+```{r helpers}
+helpers <- '
+var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+
+var outcomes = levels(towData, "outcome");
+var tournaments = levels(towData, "tournament");
+var patterns = {
+  single: levels(_.where(towData, {tournament: "single"}), "pattern"),
+  double: levels(_.where(towData, {tournament: "double"}), "pattern")
+};
+
+var round = function(x){
+  return Math.round(x*10)/10
+}
+
+var bins = map(round, _.range(0, 4.4, 0.1))
+
+// add a tiny bit of noise, and make sure every bin has at least epsilon probability
+var smoothToBins = function(dist, sigma, bins){
+  Infer({method: "enumerate"}, function(){
+    var x = sample(dist);
+    var smoothedProbs = map(function(b){
+            return Number.EPSILON+
+          Math.exp(Gaussian({mu: x, sigma: sigma}).score(b)) 
+  }, bins)
+    return categorical(smoothedProbs, bins)
+  })
+}
+'
+```
+
+#### Bayesian data analysis model (Bayes in the notebook)
+
+```{r bdaOFtow}
+bdaTow <- '
+var dataAnalysisModel = function(){
+
+   var lazinessPrior = uniformDrift({a:0, b:0.5, width: 0.1})
+   var lazyPulling =  uniformDrift({a:0, b:1, width: 0.2})
+   var noise = uniformDrift({a:0, b:0.5, width: 0.1})
+
+  var predictions = map(function(tournament){
+    return map(function(outcome){
+      return map(function(pattern){
+
+        var itemInfo = {pattern: pattern,  
+                  tournament: tournament, 
+                  outcome: outcome}
+
+        // participants ratings
+        var itemData = _.where(towData, itemInfo)
+
+        // information about the winners and losers
+        var matchInformation = _.where(matchConfigurations, itemInfo)[0]
+
+        var modelPosterior = tugOfWarModel(lazyPulling, lazinessPrior, matchInformation)
+        var smoothedPredictions = smoothToBins(modelPosterior, noise, bins)
+
+        map(function(d){ observe(smoothedPredictions, d.roundedRatingAdjusted) }, itemData)
+
+        return _.object([[pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]])
+
+      }, patterns[tournament]) // singles tournaments dont have all patterns
+    }, outcomes)
+  }, tournaments)
+
+  return {
+    parameters: {lazinessPrior: lazinessPrior, 
+                lazyPulling: lazyPulling,
+                gaussianNoise: noise},
+    predictives: _.object(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+  }
+}
+'
+```
+
+Run the model
+```{r runModel2, eval =F}
+fullModel <- paste(matchConfigData, 
+                   helpers, towModel, bdaTow, sep = '\n')
+
+
+posterior <- webppl(fullModel,
+       data = df.tow,
+       data_var = "towData",
+       inference_opts = list(
+                               method = "MCMC",
+                               samples = 100,
+                               burn = 50, 
+                               verbose = T
+                            ),
+       chains = 2,
+       cores = 2,
+       model_var = "dataAnalysisModel",
+       output_format = "samples")
+```
+
+Examine parameters.
+
+```{r, echo=F}
+posterior <- read.csv("https://raw.githubusercontent.com/probmods/probmods2/master/assets/data/mcmc100_positiveStrength_ToW1.csv")
+
+params.tidy <- posterior %>%
+  select(starts_with("parameters")) %>%
+  gather(key, val) %>%
+  mutate(key = gsub("parameters.", "", key))
+  
+ggplot(params.tidy, aes ( x = val ))+
+  geom_density()+
+  facet_wrap(~key, scales = 'free')
+```
+
+Examine posterior predictive
+
+```{r, echo=F}
+predictive.tidy <- posterior %>%
+  select(starts_with("predictives")) %>%
+  gather(key, val) %>%
+  mutate(key = gsub("predictives.", "", key),
+         val = val - 2.2) %>% # subtract out that offset
+  separate(key, into=c("pattern", "tournament", "outcome"), sep = "_") %>%
+  mutate(pattern = gsub("[.]", " ", pattern))
+
+predictive.summary <- predictive.tidy %>%
+  group_by(pattern, tournament, outcome) %>%
+  summarize(MAP = estimate_mode(val),
+            cred_upper = hdi_upper(val),
+            cred_lower = hdi_lower(val))
+```
+
+
+### Model-data comparison
+
+```{r, echo=F}
+md.summary <- left_join(predictive.summary, df.summary)
+
+ggplot(md.summary, aes(x = MAP, xmin = cred_lower, xmax = cred_upper,
+                       y = mean, ymin = ci_lower, ymax = ci_upper))+
+  geom_point()+
+  geom_errorbar(alpha = 0.1)+
+  geom_errorbarh(alpha = 0.1)+
+  geom_abline(intercept = 0, slope = 1, linetype = 3)+
+  xlim(-1.5, 1.5)+
+  ylim(-1.5, 1.5)+
+  coord_fixed()+
+  ylab("Human data (means)")+
+  xlab("Model posterior predictive (expectation)")
+
+with(md.summary, cor(MAP, mean))^2
+```
+
+Model explains `r round(100*with(md.summary, cor(MAP, mean))^2)`% of the variance
+
+

@@ -187,7 +187,7 @@ var blicketPosterior = function(evidence) {
     map(function(blocks){condition(machine(blocks))}, evidence)
     return blicket('A')
   });
-});
+};
 
 // A&B make the blicket-detector go off
 viz(blicketPosterior([['A', 'B']]))
