@@ -32,7 +32,7 @@ Flipping, it turns out, cross-cuts certain dimesions, and the probability that a
 It turns out spinning a coin is quite different.
 The heterogeneity of individual coins can be seen in their behavior when spun: The probability that any given coin will land on heads after being *spun* is not 0.5.
 The probability that a given coin will spin to heads depends is complicated ways upon the idiosynracies of that coin.
-(N.B. This knowledge is attributed to Persi Diaconis, who M.H.T. heard describe his experiments on coins.)
+(N.B. This knowledge is attributed to Persi Diaconis, Dept. of Statistics, Stanford, who M.H.T. was fortunate enough to hear  describe his experiments on coins.)
 
 ## People's models of coins
 
@@ -220,10 +220,10 @@ viz(modelPosterior)
 #### Introduce a parameter into FairUnfair?
 -->
 
-# Learning about a model
+# Learning about a hypothesis
 
-Bayesian data analysis is a general purpose data analysis approach for making explicit hypotheses about where the data came from (e.g., the hypothesis that data from two experimental conditions came from two different distributions).
-Inference is then performed to *invert* the model: go from data to beliefs.
+Bayesian data analysis is a general purpose data analysis approach for making explicit hypotheses about the generative process behind the experimental data (i.e., how was the experimental data generated? e.g., the hypothesis that data from two experimental conditions came from two different distributions).
+After making explicit hypotheses, Bayesian inference can be used to *invert* the model: go from experimental data to updated beliefs about the hypotheses.
 
 For further reading on Bayesian data analysis: see [Lee & Wagenmakers (2013)](https://bayesmodels.com/),
 [Kruschke (2014)](https://sites.google.com/site/doingbayesiandataanalysis/), and [Gelman et al. (2014)](http://www.stat.columbia.edu/~gelman/book/).
@@ -231,14 +231,18 @@ For further reading on Bayesian data analysis: see [Lee & Wagenmakers (2013)](ht
 ## Parameters and predictives
 
 Models have parameters.
+Parameters can be of theoretical interest or not (so-called, nuisance parameters).
+Learning about a hypothesis involves inferences based on the values of parameters.
+For example, if you're trying to estimate the proportion of eligible people who signed up for health insurance after the signing of the Affordable Care Act (ObamaCare), and you find we that there is a 95% chance that between 81-86% of eligible people (people without health insurance before) signed up, then you might be tempted to draw a conclusion about the efficacy. (Disclaimer: I have no idea what the true numbers for that example are.)
+
 Parameters are in general unobservable.
-For instance, we may build a data analysis model where we're trying to estimate how many people in a population prefer Candidate A to Candidate B.
-It would be impractical to measure the whole distribution.
-Instead, we measure a sample (maybe we ask 1000 people), and use that to make inference about the "true population proportion" (an unobservable parameter).
+Trying to estimate how many (voting age, likely to vote) people prefer Candidate A vs. Candidate B would require asking over 100 million people (it's estimated that about 130 million people voted in the US Presidential Elections in 2008 and 2012). 
+It's impractical to measure the whole distribution.
+Instead, what is done is measuring a sample (maybe we ask 1000 people), and use that to make inference about the "true population proportion" (an unobservable parameter).
 
 Bayes’ rule provides a bridge between the unobserved parameters of models and the observed data.
 We can update our beliefs about parameters from data.
-The "Bayes bridge" can handle two-way traffic, however: we can use our updated beliefs about a parameter to make predictions about future data sets.
+Additionally, the "Bayes bridge" can fo from parameters to data: we can use our updated beliefs about a parameter to make predictions about future data sets.
 
 For a given Bayesian model (together with data), there are four conceptually distinct distributions of interest:
 
@@ -257,26 +261,28 @@ Loosely speaking, *predictive* distributions are in "data space" and *parameter*
 
 ## A simple illustration
 
-Here, we explore the result of an experiment with 20 trials and binary outcomes (e.g., flipping a coin with an uncertain weight, asking people if they'll vote for Candidate A or Candidate B, ...).
+Here, we explore the result of an experiment with 20 trials and binary outcomes (e.g., asking people if they'll vote for Candidate A or Candidate B, ...).
+Note that is the same model as the "observerModel" above.
 
 ~~~~
 // observed data
-var k = 1 // number of successes
-var n = 20  // number of attempts
+var k = 1 // number of people who support candidate A
+var n = 20  // number of people asked
 
 var model = function() {
 
+   // true population proportion who support candidate A
    var p = uniform(0, 1);
 
-   // Observed k number of successes, assuming a binomial
+   // Observed k people support "A"
+   // Assuming each person's response is independent of each other
    observe(Binomial({p : p, n: n}), k);
 
-   // sample from binomial with updated p
+   // predict what the next n will say
    var posteriorPredictive = binomial(p, n);
 
-   // sample fresh p
+   // recreate model structure, without observe
    var prior_p = uniform(0, 1);
-   // sample from binomial with fresh p
    var priorPredictive = binomial(prior_p, n);
 
    return {
@@ -291,8 +297,7 @@ var posterior = Infer(opts, model);
 viz.marginals(posterior)
 ~~~~
 
-
-Make sure you understand the prior, posterior, prior predictive, and posterior predictive distributions, and how they relate to each other.
+Try to interpret each plot, and how they relate to each other.
 Why are some plots densities and others bar graphs?
 Understanding these ideas is a key to understanding Bayesian analysis.
 Check your understanding by trying other data sets, varying both `k` and `n`.
@@ -304,14 +309,19 @@ Check your understanding by trying other data sets, varying both `k` and `n`.
 
 ## Posterior prediction and model checking
 
-One important use of posterior predictive distributions is to examine the descriptive adequacy of a model.
-The posterior predictive can be viewed as a set of predictions about the data by the model, based on the posterior distribution over parameters.
+The posterior predictive distribution describes what data you should expect to see, given the model you've assumed and the data you've collected so far.
+If the model is a good description of the data you've collected, then the model shouldn't be surprised if you got the same data by running the experiment again.
+That is, the most likely data for your model after observing your data should be the data you observed.
+
+It's natural then to use the posterior predictive distribution to examine the descriptive adequacy of a model.
 If these predictions do not match the data *already seen* (i.e., the data used to arrive at the posterior distribution over parameters), the model is descriptively inadequate.
 
-Imagine we're running a visual perception experiment.
-The task is fairly simple: say whether or not a dot on the screen appears above or below another dot on the screen.
-We ran one group of 10 participants in the morning, and then went to lunch, and then ran another group of 10 participants.
-Suppose we observed the following data from those groups of participants: `k1=0; k2=10`.
+
+
+Imagine you're a developmental psychologist, piloting a two-alternative forced choice task on young children. 
+(Just for fun, let's pretend it's a helping study, where the child either chooses to help or not help a confederate in need.)
+You have two research assistants that you send to two different preschools to collect data.
+You got your first batch of data back today: For one of your research assistants, 10 out of 10 children tested helped the confederate in need. For the other research assitant, 0 out of 10 children tested helped.
 
 ~~~~
 ///fold:
@@ -321,21 +331,24 @@ var marginalize = function(dist, key){
   })
 }
 ///
-// Successes in 2 experiments
+// "Kids who help" in 2 experiments
 var k1 = 0;
 var k2 = 10;
 
-// Number of trials in 2 experiments
+// Number of kids in 2 experiments
 var n1 = 10;
 var n2 = 10;
 
 var model = function() {
 
+  // "true effect in the population"
   var p = uniform(0, 1);
 
+  // observed data from 2 experiments
   observe(Binomial({p: p, n: n1}), k1);
   observe(Binomial({p: p, n: n2}), k2);
 
+  // posterior prediction
   var posteriorPredictive1 = binomial(p, n1)
   var posteriorPredictive2 = binomial(p, n2)
 
@@ -387,20 +400,20 @@ What can you conclude about the parametere `p`?
 Basics from [PPAML school](http://probmods.github.io/ppaml2016/chapters/5-data.html)
 -->
 
-# Comparing models
+# Comparing hypotheses
 
-In the above examples, we've had a single data-analysis model and used the experimental data to learn about the parameters of that model.
-Often as scientists, we have multiple, distinct models in hand, and want to decide if one or another is a better description of the data.
-Indeed, we saw an example above when we decided whether `"ObserverModel"` or  `"FairUnfairModel"` was a better explanation of some (made-up) data.
+In the above examples, we've had a single data-analysis model and used the experimental data to learn about the parameters of the models and the descriptive adequacy of the models.
+Often as scientists, we are in fortunate position of having multiple, distinct models in hand, and want to decide if one or another is a better description of the data.
+Indeed, we saw an example above when we decided whether `"observerModel"` or  `"skepticalModel"` was a better explanation of some (made-up) data.
+In that example, model comparison was shown a special case of learning about the parameters of a model.
+In that case, we defined an uber model (`scientistModel`), that had a binary decision parameter that we wanted to learn about (which one of the models was better).
+We did this by having the binary decision variable gate between which of our two models we let generate the data.
+We then go backwards (performing Bayesian inference) to decide which model was more likely to have generated the data we observed.
 
-This is actually a special case of learning about the parameters of a model.
-We can define an uber model, that has a binary decision parameter that we'd like to learn about.
-In this case, the binary decision variable will gate between which of our two (or more) models we let generate  the data.
-We then go backwards (performing Bayesian inference) to decide which model was more likely to have generate the data we observed.
+We take the same approach here, articulating the simplest data analysis model for model comparison.
+We observe some number of binary outcomes and want to decide if the pattern we see is random or not (or to see, in the parlance of scientists, whether something systematic is going on; this model mimics a simple cognitive model for subjective randomness, which we will explore in a later chapter).
 
-The simplest data analysis model for model comparison mimics a simple cognitive model for subjective randomness.
-We observe some number of binary outcomes and want to decide if the pattern we see is random or not.
-Formally, a "true random" pattern would be generated by a fair coin; a "non random" pattern would be generated by a trick coin.
+Formally, a "true random" pattern would be generated by a coin with probability of doing one or other binary outcome as 0.5 (a fair coin); a "non random" pattern would be generated by a trick coin.
 We run into our first complication: A fair coin is simple to define: `Bernoulli({p: 0.5})`, but how can we treat a trick coin?
 For purposes of scientific hypothesis testing, a trick coin is formalized as a coin with some *unknown* weight:
 
@@ -415,9 +428,13 @@ Using this to now compare models:
 var k = 7, n = 20;
 
 var compareModels = function() {
+  
+  // binary decision variable for which hypothesis is better
   var x = flip(0.5) ? "simple" : "complex";
   var p = (x == "simple") ? 0.5 : uniform(0, 1);
+
   observe(Binomial({p: p, n: n}), k);
+  
   return {model: x}
 }
 
@@ -875,8 +892,7 @@ print("Expected value = " + expectation(posterior))
 viz(posterior)
 ~~~~
 
-<!-- Here, I've explicitly defined the `lazinessPrior` and `lazyPulling` parameters outside of the model.
- -->
+
 ### Learning about the Tug-of-War model
 
 To learn more about (and test) the tug-of-war model, we're going to connect it the data from the experiment.
