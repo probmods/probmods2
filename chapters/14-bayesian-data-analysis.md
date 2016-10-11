@@ -22,19 +22,41 @@ Bayesian data analysis can be an extremely useful tool to us as scientists, when
 This can become confusing: a particular modeling assumption can be something we hypothesize that people assume about the world, or can be something that we as scientists want to assume (but don't assume that people assume).
 A pithy way of saying this is that we can make assumptions about "Bayes in the head" (Bayesian cognitive models) or about "Bayes in the notebook" (Bayesian data analysis).
 
-# Prologue: Of people and coins
+# Prologue: Spinning coins
+
+
+Coins, in their production, have a number of physical dimensions along which they vary.
+These idiosyncracies have no impact on the behavior of a coin when flipped. 
+Flipping, it turns out, cross-cuts certain dimesions, and the probability that any modern coin in production will land on heads when flipped is roughly 0.5.
+
+It turns out spinning a coin is quite different.
+The heterogeneity of individual coins can be seen in their behavior when spun: The probability that any given coin will land on heads after being *spun* is not 0.5.
+The probability that a given coin will spin to heads depends is complicated ways upon the idiosynracies of that coin.
+(N.B. This knowledge is attributed to Persi Diaconis, who M.H.T. heard describe his experiments on coins.)
 
 ## People's models of coins
 
-Consider a cognitive model of an observer who is trying to estimate the weight of a biased coin.
-She flips the coin 20 times, observes 15 heads, and updates her beliefs accordingly.
+
+Imagine I give you a coin, and want you to estimate the probability it will spin to heads.
+Given what you know, the most reasonable prior belief is to expect *any* probability of the coin spinning to heads.
+This can be captured in a uniform prior on $$p$$, the probability that a coin when spun will land on heads: `var p = uniform(0,1)`.
+
+You conduct an experiment.
+You spin the coin 20 times.
+15 of them, they spin to heads.
+
+What if I paid you $10 if you could predict the next coin flip?
+What would you predict (Heads or Tails)?
+How much would you bet to take this offer?
+
+How much would you bet the next spin will go to heads?
 
 ~~~~
 var observerModel = function(){
-  var weight = uniform(0, 1)
-  var coinFlipper = Binomial({n:20, p:weight})
-  observe(coinFlipper, 15)
-  return weight
+  var p = uniform(0, 1)
+  var coinSpinner = Binomial({n:20, p:p})
+  observe(coinSpinner, 15)
+  return p
 }
 
 var opts = {method: "rejection", samples: 5000}
@@ -43,20 +65,19 @@ print("Expected value = " + expectation(posteriorBeliefs))
 viz.density(posteriorBeliefs, {bounds: [0,1]})
 ~~~~
 
-This is a hypothesis about how person updates her prior beliefs about a coin weight (or, a continuous parameter between 0 and 1) after observing outcomes.
-We can imagine an experiment where we show a person 20 coin flips, 15 of which result in heads.
-This model would make predictions about the likely weights a person would infer.
-We can then have this model make further predictions about different kinds of questions we could then ask the person.
-For instance, we could ask them to predict the result of the next flip, or say that we are going to flip the coin 10 more times and have them predict the number of heads.
+The model above is a hypothesis about how person updates her prior beliefs about the probability of a coin being spun to heads, upon conducting 20 trials of a spinning experiment.
+We can use this model to make predictions about other kinds of questions we could then ask the observer.
+For instance, let's take up the bet of whether or not the *next spin* will go to heads.
+Also, consider if you were to make 10 more spins: How many of them would go to heads?
 
 ~~~~
 var observerModel = function(){
-  var weight = uniform(0, 1)
-  var coinFlipper = Binomial({n:20, p:weight})
-  observe(coinFlipper, 15)
+  var p = uniform(0, 1)
+  var coinSpinner = Binomial({n:20, p:p})
+  observe(coinSpinner, 15)
   return {
-    nextOutcome: flip(weight),
-    nextTenOutcomes: binomial(weight, 10)
+    nextOutcome: bernoulli(p),
+    nextTenOutcomes: binomial(p, 10)
   }
 }
 
@@ -65,61 +86,73 @@ var posteriorBeliefs = Infer(opts, observerModel)
 viz.marginals(posteriorBeliefs)
 ~~~~
 
+A model can be used to make predictions about different tasks.
+Models are useful in this way: They are tools for thinking through the implications of hypotheses.
+
+Above, we have one hypothesis about a person thinking about the spinning coins experiments.
 There are other hypotheses we could make about this experiment.
-Rather than have uniform prior beliefs, maybe we think people tend to think coins are either fair or unfair.
-If the coin is fair, then the weight is just 0.5.
-If the coin is unfair, then the observer has uncertainty about the weight, and we'll assume uniform uncertainty as before.
+Rather than have uniform prior beliefs, maybe people port their knowledge of flipping behavior, and believe with some probability that spinning coins will behave similarly: There is a reasonable chance that spinning coins is as random as flipping coins.
+But if that belief is not well supported, the observer can accomodate that by inferring that the behavior of spinning coins is quite different than that of flipping coins (as I explained above). If the observer beliefs the behavior of spinning coins is different than that of flipping coins, the model takes on the form of the model above: uniform beliefs about `p`.
+We'll call this model the "skepticalModel" because it is, in a way, skeptical of the story I told you above about spinning coins.
 
 ~~~~
-var FairUnfairModel = function(){
-  var isFair = flip(0.5)
-  var weight = isFair ? 0.5 : uniform(0, 1)
-  var coinFlipper = Binomial({n:20, p:weight})
-  observe(coinFlipper, 15)
+var skepticalModel = function(){
+  var sameAsFlipping = flip(0.5)
+  var p = sameAsFlipping ? 0.5 : uniform(0, 1)
+  var coinSpinner = Binomial({n:20, p:p})
+  observe(coinSpinner, 15)
   return {
-    nextOutcome: flip(weight),
-    nextTenOutcomes: binomial(weight, 10)
+    sameAsFlipping: sameAsFlipping,
+    p: p,
+    nextOutcome: flip(p),
+    nextTenOutcomes: binomial(p, 10)
   }
 }
 
 var opts = {method: "rejection", samples: 5000}
-var posteriorBeliefs = Infer(opts, FairUnfairModel)
+var posteriorBeliefs = Infer(opts, skepticalModel)
 viz.marginals(posteriorBeliefs)
 ~~~~
 
 The predictions are subtly different.
-`fairUnfairModel` pulls the predictions more towards 50/50.
+`skepticalModel` pulls the predictions more towards 50/50.
 Why is that?
 One way to understand this model is to example the prior.
 Try commenting out the `observe` statement and looking at the predictions.
-(You can also try to understand this by returning the `weight` variable as well.)
 
 ## Scientists' models of people
 
-The above models make different predictions about what people will do in such situations.
-We can create these situations in a laboratory, and record our participants' responses.
+The above models instantiate different hypotheses about the coin spinning experiemnts, and  make different predictions about what people will do in this situation.
+We could recruit volunteers, run experiments in a laboratory, and record our participants' responses.
 But, how are we to decide which model is better?
-Another way of putting this is: How are we supposed to update our beliefs about these models in light of the experimental data we've observed?
 
-You'll notice this question directly parallels those we've been dealing with in probabilistic models of cognition.
-Now instead of asking "what inference should be people draw?", we are asking "what inferences should *we* draw?".
-Instead of thinking about people's prior beliefs, we must consider our own.
+One way to begin to address this would be to ask ourselves: How much do we believe in each model?
+At this point, both models seem totally reasonable to me: I would say I believe in each of them equally.
+Okay, then how are we supposed to update these beliefs?
 
-Here, we consider the case of trying to decide which is the better model:
+Since each model makes predictions about what we should observe in an experiment, we already know how to update our beliefs in these models based on the experimental data we observed.
+We simply `observe` the data, assuming that it was generated by the better model. 
+(If the data did *not* come from the better model, then the model that wasn't the better model would be the better model. 
+That is, it's to assume the data came from the better model.)
 
 ~~~~ norun
 var scientistModel = function(){
-  var theBetterModel = flip(0.5) ? ObserverModel : FairUnfairModel
+
+  var theBetterModel = flip(0.5) ? observerModel : skepticalModel
+
   observe(theBetterModel, experimentalData)
+
   return theBetterModel
 }
 ~~~~
 
+We have now instantiated our scientific process as a probabilistic program, doing Bayesian inference.
+This is the foundation of Bayesian data analysis.
+
 We must specify prior beliefs about which is the better model; in this case we say that we don't have any bias in our prior beliefs: each model is equally likely to be better *a priori*.
 We then seek to update our beliefs about which is the better model, by observing `experimentalData`, assuming that it came from `theBetterModel`.
-(If it didn't come from the better model, then the model that wasn't the better model would be the better model, so it's safe to assume the data came from the better model.)
 
-Let's pretend we ran the "predict the next 10" experiment with 20 participants, and observed the following responses:
+Imagine we ran the "predict the next 10" experiment with 20 participants, and observed the following responses:
 
 
 <!--
@@ -137,7 +170,7 @@ repeat(20, function(){sample(posteriorBeliefs)})
 -->
 
 ~~~~ norun
-var experimentalData = [9,8,7,7,4,5,6,7,9,4,7,7,3,3,9,6,5,5,8,5]
+var experimentalData = [9,8,7,5,4,5,6,7,9,4,8,7,8,3,9,6,5,7,8,5]
 ~~~~
 
 Look again at the model predictions for `nextTenOutcomes` for the two models above.
@@ -148,31 +181,31 @@ We are now ready to put all the pieces together:
 ~~~~
 ///fold:
 var opts = {method: "rejection", samples: 5000}
-print("running observer model")
-var ObserverModel = Infer(opts, function(){
-  var weight = uniform(0, 1)
-  var coinFlipper = Binomial({n:20, p:weight})
-  observe(coinFlipper, 15)
-  return binomial(weight, 10)
+print("generating observer model predictions")
+var observerModel =  Infer(opts, function(){
+  var p = uniform(0, 1)
+  var coinSpinner = Binomial({n:20, p:p})
+  observe(coinSpinner, 15)
+  return binomial(p, 10)
 })
 
-print("running fair unfair model")
-var FairUnfairModel = Infer(opts, function(){
-  var isFair = flip(0.5)
-  var weight = isFair ? 0.5 : uniform(0, 1)
-  var coinFlipper = Binomial({n:20, p:weight})
-  observe(coinFlipper, 15)
-  return binomial(weight, 10)
+print("generating skeptical model predictions")
+var skepticalModel =  Infer(opts, function(){
+  var sameAsFlipping = flip(0.5)
+  var p = sameAsFlipping ? 0.5 : uniform(0, 1)
+  var coinSpinner = Binomial({n:20, p:p})
+  observe(coinSpinner, 15)
+  return binomial(p, 10)
 })
 ///
 
 var experimentalData = [9,8,7,7,4,5,6,7,9,4,7,7,3,3,9,6,5,5,8,5]
 
-// so we can use the name and the distribution
-var modelObject = {ObserverModel: ObserverModel, FairUnfairModel: FairUnfairModel};
+// package the models up in an Object (for ease of reference)
+var modelObject = {observerModel: observerModel, skepticalModel: skepticalModel};
 
 var scientistModel = function(){
-  var theBetterModel_name = flip(0.5) ? "ObserverModel" : "FairUnfairModel"
+  var theBetterModel_name = flip(0.5) ? "observerModel" : "skepticalModel"
   var theBetterModel = modelObject[theBetterModel_name]
   map(function(d){ observe(theBetterModel, d) }, experimentalData)
   return {betterModel: theBetterModel_name}
