@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Algorithms for inference
-description: Exploring different methods of conditioning
+description: From competence to process, efficiency tradeoffs of different algorithms.
 custom_js:
 - assets/js/box2d.js
 - assets/js/phys.js
@@ -10,80 +10,95 @@ custom_js:
 
 # The performance characteristics of different algorithms
 
-**Note: Waiting to decide which algorithms to discuss?**
+When we introduced [conditioning]({{site.baseurl}}/chapters/03-conditioning.html) we pointed out that the rejection sampling and enumeration (or mathematical) definitions are equivalent---we could take either one as the definition of how `Infer` should behave with `condition`.
+There are many different ways to compute the same distribution, it is thus useful to separately think about the distributions we are building (including conditional distributions) and how we will compute them.
+Indeed, in the last few chapters we have explored the dynamics of inference without worrying about the details of inference algorithms.
+The efficiency characteristics of different implementations of `Infer` can be very different, however, and this is important both practically and for motivating cognitive hypotheses at the level of algorithms (or psychological processes).
 
-When we introduced [conditioning](conditioning.html#hypothetical-reasoning-with-query) we pointed out that the rejection sampling and mathematical definitions are equivalent---we could take either one as the definition of `query`, showing that the other specifies the same distribution. There are many different ways to compute the same distribution, it is thus useful to separately think about the distributions we are building (including conditional distributions) and how we will compute them. Indeed, in the last few chapters we have explored the dynamics of inference without worrying about the details of inference algorithms. The efficiency characteristics of different implementations of `query` can be very different, however, and this is important both practically and for motivating cognitive hypotheses at the level of algorithms (or psychological processes).
-
-The "guess and check" method of rejection sampling, implemented in `rejection-query`, is conceptually useful but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very large number of samples to find computations that do so. To see this, try making the `baserate` probability of `A`, `B`, and `C` lower in this example:
-
-~~~~
-(define baserate 0.1)
-
-(define (take-sample)
-  (rejection-query
-
-   (define A (if (flip baserate) 1 0))
-   (define B (if (flip baserate) 1 0))
-   (define C (if (flip baserate) 1 0))
-   (define D (+ A B C))
-
-   A
-
-   (>= D 2)))
-   
-(hist (repeat 100 take-sample) "Value of A, given D >= 2, using rejection")
-~~~~
-
-Even for this simple program, lowering the baserate by just one order of magnitude, to 0.01, will make `rejection-query` impractical.
-
-Another option is to use the mathematical definition of conditional probability directly: to *enumerate* all of the execution histories for the query, and then to use the rules of probability to compute the conditional probability (which we can then use to sample if we wish):
-(NOTE: The `enumeration-query` implementation returns the exact distribution as a list of values and a list of probabilities, rather than a sample.)
+The "guess and check" method of rejection sampling (implemented in `method:"rejection"`) is conceptually useful but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very large number of samples to find computations that do so. To see this, try making the `baserate` probability of `A`, `B`, and `C` lower in this example:
 
 ~~~~
-(define baserate 0.1)
+var baserate = 0.1
 
-(enumeration-query
+var model = function(){
+  var A = flip(baserate)
+  var B = flip(baserate)
+  var C = flip(baserate)
+  condition(A+B+C >= 2)
+  return A
+}
 
- (define A (if (flip baserate) 1 0))
- (define B (if (flip baserate) 1 0))
- (define C (if (flip baserate) 1 0))
- (define D (+ A B C))
-
- A
-
- (>= D 2))
+viz(Infer({method: 'rejection', samples: 100}, model))
 ~~~~
 
-Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this try adding more random choices to the sum (following the pattern of `A`). The dependence on size of the execution space renders `enumeration-query` impractical for all but the simplest models.
+Even for this simple program, lowering the baserate by just one order of magnitude, to $$0.01$$, will make rejection sampling impractical.
 
-There are many other algorithms and techniques for dealing with conditional probabilistic inference, and several of these have been adapted into Church to give implementations of `query` that may be more efficient in various cases. One implementation that we have used already is based on the *Metropolis Hastings* algorithm, a form of *Markov chain Monte Carlo* inference. 
+Another option that we've seen before is to enumerate all of the possible executions of the model, using the rules of probability to calculate the conditional distribution:
+
 
 ~~~~
-(define baserate 0.1)
+var baserate = 0.1
 
-(define samples
-  (mh-query 100 100
+var model = function(){
+  var A = flip(baserate)
+  var B = flip(baserate)
+  var C = flip(baserate)
+  condition(A+B+C >= 2)
+  return A
+}
 
-   (define A (if (flip baserate) 1 0))
-   (define B (if (flip baserate) 1 0))
-   (define C (if (flip baserate) 1 0))
-   (define D (+ A B C))
-
-   A
-
-   (>= D 2)))
-   
-(hist samples "Value of A, given that D is greater than or equal to 2")
+viz(Infer({method: 'enumerate'}, model))
 ~~~~
 
-See what happens in the above query as you lower the baserate.  Inference should not slow down appreciably, but it will become less stable and less accurate.  
+Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this try adding more random choices to the sum (following the pattern of `A`). The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated).
 
-It becomes increasingly difficult for MH to draw independent conditional samples by taking small random steps, so for a fixed lag (100 in the code above), the 100 samples returned will tend to be less representative of the true conditional inference.  In this case, stable and accurate conditional inferences can still be achieved in reasonable time by increasing the number of samples to 500 (while holding the lag at 100).
+There are many other algorithms and techniques for probabilistic inference; many are implemented as methods for `Infer` in WebPPL. For instance, *Markov chain Monte Carlo* inference approximates the posterior distribution via a random walk. (By default the 'method:"MCMC"' yields the *Metropolis Hastings* version of MCMC).
 
+~~~~
+var baserate = 0.1
+
+var model = function(){
+  var A = flip(baserate)
+  var B = flip(baserate)
+  var C = flip(baserate)
+  condition(A+B+C >= 2)
+  return A
+}
+
+viz(Infer({method: 'MCMC', lag: 100}, model))
+~~~~
+
+See what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably (but results will become less stable). Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
+This is an example of the kind of tradeoffs that are common between different inference algorithms.
+
+There are a number of other [inference methods available in WebPPL](http://docs.webppl.org/en/master/inference/methods.html). These include *sequential Monte Carlo* and *variational inference*. As with rejection sampling, enumeration, and MCMC, their performance characteristics can vary depending on details of the model.
+
+# The landscape of inference algorithms
+
+**This section is waiting for a refresh. In the meantime, see [PPAML Summer School 2016: Approximate Inference Algorithms.](http://probmods.github.io/ppaml2016/chapters/4-algorithms.html)**
+
+# Process-level cognitive modeling
+
+As we noted in an earlier chapter, there is an interesting parallel between the `Infer` abstraction, which separates model specification from inference method, and the idea of levels of analysis in cognitive science @Marr1982.
+For most of this book we are interested in the *computational* level of describing what people know about the world and what inferences that knowledge licenses.
+That is, we treat the model argument to `infer` as the scientific hypothesis, and the options (including 'method') argument as a engineering detail needed to derive predictions.
+We can make a great deal of progress with this level of abstraction.
+
+The *algorithmic* level goes further, attempting to describe the process by which people draw these inferences, and taking the options to `Infer` as part of the hypotheses.
+While `Infer` specifies an ideal, different methods for inference will approximate this ideal better or worse in different cases; they will also do so with different time and space tradeoffs.
+Is it reasonable to interpret the inference algorithms that we borrow from statistics as psychological hypotheses at the algorithmic level? *Which algorithm* does the brain use for inference? Could it be MCMC? Enumeration?
+
+If we take the algorithms for inference as psychological hypotheses, then the approximation and resource-usage characteristics of the algorithms will be the signature phenomena of interest.
+<!--TODO: describe some of the research in this direction.-->
+
+<!-- TODO: Something on resource-rational process models? -->
+
+
+<!--
 
 # Markov chains as samplers
 
-We have already seen [Markov models](observing-sequences.html#markov-models) used to describe sequences of observations. 
+We have already seen [Markov models](observing-sequences.html#markov-models) used to describe sequences of observations.
 A Markov model (or Markov *chain*, as it is often called in the context of inference algorithms) is a discrete dynamical system that unfolds over iterations of the `transition` function.
 Here is a Markov chain:
 
@@ -95,7 +110,7 @@ Here is a Markov chain:
     (('c) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))
     (('d) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))))
 
-       
+
 (define (chain state n)
   (if (= n 0)
       state
@@ -127,9 +142,10 @@ Of course we could have sampled from the uniform distribution using other Markov
 ~~~~
 
 Notice that this chain converges much more quickly to the uniform distribution---after only one step.
-The number of steps it takes for the distribution on states to reach the stable distribution (and hence lose traces of the starting state) is called the *burn-in time*. 
+The number of steps it takes for the distribution on states to reach the stable distribution (and hence lose traces of the starting state) is called the *burn-in time*.
 We can use a Markov chain as a way to (approximately) sample from its stable distribution, but the efficiency depends on burn-in time.
 While many Markov chains have the same stable distribution they can have very different burn-in times, and hence different efficiency.
+-->
 
 <!--
 ## Markov chains with lag
@@ -144,7 +160,7 @@ We get the same distribution from samples from a single run, if we wait long eno
     (('c) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))
     (('d) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))))
 
-       
+
 (define (chain state n)
   (if (= n 0)
       (list state)
@@ -162,6 +178,7 @@ We get the same distribution from samples from a single run, if we wait long eno
 
 -->
 
+<!--
 # Markov chains with infinite state space
 
 Markov chains can also be constructed over infinite state spaces. Here's a chain over the integers:
@@ -175,7 +192,7 @@ Markov chains can also be constructed over infinite state spaces. Here's a chain
                    (list (- 1 (* 0.5 theta)) (* 0.5 theta)))
       (multinomial (list (- state 1) state (+ state 1))
                    (list 0.5 (- 0.5 (* 0.5 theta)) (* 0.5 theta)))))
-  
+
 (define (chain state n)
   (if (= n 0)
       state
@@ -223,7 +240,7 @@ To construct a Markov chain that converges to a stationary distribution of inter
 
 How can we come up with a `transition` function, $\pi$, that satisfies detailed balance? One way is the *Metropolis-Hastings* recipe.
 
-We start with a *proposal distribution*, $q(x\rightarrow x')$, which does not need to have the target distribution as its stationary distribution, but should be easy to sample from. We correct this into a transition function with the right stationary distribution by either accepting or rejecting each proposed transition. We accept with probability: $\min\left(1, \frac{p(x')q(x'\rightarrow x)}{p(x)q(x\rightarrow x')}\right).$ 
+We start with a *proposal distribution*, $q(x\rightarrow x')$, which does not need to have the target distribution as its stationary distribution, but should be easy to sample from. We correct this into a transition function with the right stationary distribution by either accepting or rejecting each proposed transition. We accept with probability: $\min\left(1, \frac{p(x')q(x'\rightarrow x)}{p(x)q(x\rightarrow x')}\right).$
 That is, we flip a coin with that probability: if it comes up heads our next state is $x'$, otherwise our next state is still $x$.
 
 As an exercise, try to show that this rule gives an actual transition probability (i.e. $\pi(x\rightarrow x')$) that satisfies detailed balance. (Hint: the probability of transitioning depends on first proposing a given new state, then accepting it; if you don't accept the proposal you "transition" to the original state.)
@@ -235,8 +252,8 @@ In Church the MH recipe looks like:
 (define (proposal-fn x) ...)
 (define (proposal-distr x1 x2) ...)
 
-(define (accept? x1 x2) 
-  (flip (min 1 (/ (* (target-distr x2) (proposal-distr x2 x1)) 
+(define (accept? x1 x2)
+  (flip (min 1 (/ (* (target-distr x2) (proposal-distr x2 x1))
                   (* (target-distr x1) (proposal-distr x1 x2))))))
 
 (define (transition x)
@@ -257,19 +274,19 @@ We can use this recipe to construct a Markov chain for the conditioned geometric
 (define theta 0.7)
 
 ;;the target distribution (not normalized):
-(define (target-distr x) 
+(define (target-distr x)
   (if (< x 3) ;;the condition
       0.0     ;;prob is 0 if condition is violated
       (* (expt (- 1 theta) (- x 1)) theta))) ;;otherwise prob is (proportional to) geometric distrib.
 
 ;;the proposal function and distribution,
 ;;here we're equally likely to propose x+1 or x-1.
-(define (proposal-fn x) (if (flip) (- x 1) (+ x 1))) 
+(define (proposal-fn x) (if (flip) (- x 1) (+ x 1)))
 (define (proposal-distr x1 x2) 0.5)
 
 ;;the MH recipe:
-(define (accept? x1 x2) 
-  (flip (min 1.0 (/ (* (target-distr x2) (proposal-distr x2 x1)) 
+(define (accept? x1 x2)
+  (flip (min 1.0 (/ (* (target-distr x2) (proposal-distr x2 x1))
                     (* (target-distr x1) (proposal-distr x1 x2))))))
 
 (define (transition x)
@@ -287,14 +304,15 @@ We can use this recipe to construct a Markov chain for the conditioned geometric
 ~~~~
 
 The transition function that is automatically derived using the MH recipe is equivalent to the one we wrote by hand above.
-
+-->
 
 <!--
 For background on MH and MCMC, see the excellent introductions by David MacKay ([Chapter 29](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/356.384.pdf) and [30](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/387.412.pdf) of Information Theory, Inference, and Learning Algorithms) or [Radford Neal](http://www.cs.utoronto.ca/~radford/review.abstract.html).
 -->
 
+<!--
 
-## States with structure 
+## States with structure
 
 Above the states were single entities (letters or numbers), but of course we may have probabilistic models where the state is more complex. In this case, element-wise proposals (that change a single part of the state at a time) can be very convenient.
 
@@ -340,7 +358,7 @@ To get this all to work we need a way to identify random choices across differen
 
 ## Biases of MCMC
 
-An MCMC sampler is guaranteed to take unbiased samples from its stationary distribution "in the limit" of arbitrary time between samples. In practice MCMC will have characteristic biases in the form of long burn-in and slow mixing. 
+An MCMC sampler is guaranteed to take unbiased samples from its stationary distribution "in the limit" of arbitrary time between samples. In practice MCMC will have characteristic biases in the form of long burn-in and slow mixing.
 
 We already saw an example of slow mixing above: the first Markov chain we used to sample from the uniform distribution would take (on average) several iterations to switch from `a` or `b` to `c` or `d`. In order to get approximately independent samples, we needed to wait longer than this time between taking iterations. In contrast, the more efficient Markov chain (with uniform transition function) let us take sample with little lag. In this case poor mixing was the result of a poorly chosen transition function. Poor mixing is often associated with multimodal distributions.
 
@@ -358,13 +376,13 @@ To explore alternative algorithms for nested-query, let's start with a simple ex
     (define y (flip))
     y
     (flip (if x 1.0 (if y 0.9 0.1)))))
-    
+
 (define (outer)
   (rejection-query
     (define x (flip))
     x
     (not (inner x))))
-    
+
 (hist (repeat 10000 outer))
 ~~~~
 
@@ -389,7 +407,7 @@ We could compute the same answer using enumeration, recall that enumeration retu
 However, notice that this combination will recompute the inner and outer distributions every time they are encountered. Because these distributions are deterministically fixed (since they are the explicit marginal distributions, not samples), we could *cache* their values using `mem`. This technique, an example of *dynamic programming*, avoids work and so speeds up the computation:
 
 ~~~~
-(define inner 
+(define inner
   (mem (lambda (x)
          (enumeration-query
           (define y (flip))
@@ -397,7 +415,7 @@ However, notice that this combination will recompute the inner and outer distrib
           (flip (if x 1.0 (if y 0.9 0.1)))))))
 
 (define outer
-  (mem (lambda () 
+  (mem (lambda ()
          (enumeration-query
           (define x (flip))
           x
@@ -406,10 +424,10 @@ However, notice that this combination will recompute the inner and outer distrib
 (barplot (outer))
 ~~~~
 
-This enumeration-with-caching technique is extremely useful for exploring small nested-query models, but it becomes impractical when the state space of any one of the queries grows too large. As before, an alternative is MCMC. 
+This enumeration-with-caching technique is extremely useful for exploring small nested-query models, but it becomes impractical when the state space of any one of the queries grows too large. As before, an alternative is MCMC.
 
 ~~~~
-(define inner 
+(define inner
   (mem (lambda (x)
          (mh-query 1000 1
           (define y (flip))
@@ -417,7 +435,7 @@ This enumeration-with-caching technique is extremely useful for exploring small 
           (flip (if x 1.0 (if y 0.9 0.1)))))))
 
 (define outer
-  (mem (lambda () 
+  (mem (lambda ()
          (mh-query 1000 1
           (define x (flip))
           x
@@ -430,6 +448,7 @@ Here we are caching a set of samples from each query, and drawing one at random 
 
 We can also mix these methods---using enumeration for levels of query with few states, rejection for queries with likely conditions, and MCMC for queries where these methods take too long.
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/07-inference-process.html) 
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/07-inference-process.html)
+-->
 
 Next chapter: [Learning as conditional inference]({{site.baseurl}}/chapters/08-learning-as-conditional-inference.html)
