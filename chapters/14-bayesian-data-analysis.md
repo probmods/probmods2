@@ -316,12 +316,12 @@ That is, the most likely data for your model after observing your data should be
 It's natural then to use the posterior predictive distribution to examine the descriptive adequacy of a model.
 If these predictions do not match the data *already seen* (i.e., the data used to arrive at the posterior distribution over parameters), the model is descriptively inadequate.
 
-
-
 Imagine you're a developmental psychologist, piloting a two-alternative forced choice task on young children. 
 (Just for fun, let's pretend it's a helping study, where the child either chooses to help or not help a confederate in need.)
 You have two research assistants that you send to two different preschools to collect data.
 You got your first batch of data back today: For one of your research assistants, 10 out of 10 children tested helped the confederate in need. For the other research assitant, 0 out of 10 children tested helped.
+
+We'll use the `editor.put()` function to save our results so we can look at the them in different code boxes.
 
 ~~~~
 ///fold:
@@ -368,23 +368,41 @@ var opts = {
 
 var posterior = Infer(opts, model);
 
+var posteriorPredictive = marginalize(posterior, "predictive")
+// save results for future code boxes
+editor.put("posteriorPredictive", posteriorPredictive)
+
 var parameterPosterior = marginalize(posterior, "parameter")
 viz.density(parameterPosterior, {bounds: [0, 1]})
+~~~~
 
-var posteriorPredictive = marginalize(posterior, "predictive")
+Looks like a reasonable posterior distribution.
+
+How does the posterior predictive look? 
+
+~~~~
+var posteriorPredictive = editor.get("posteriorPredictive")
 viz(posteriorPredictive)
+~~~~
+How well does it recreate the observed data?
+Where in this 2-d grid would our observed data land?
 
+Another way of visualizing the model-data fit is to examine a scatterplot.
+
+~~~~
+var k1 = 0, k2 = 10;
+var posteriorPredictive = editor.get("posteriorPredictive")
 var posteriorPredictiveMAP = posteriorPredictive.MAP().val
 viz.scatter(
-  [{model: posteriorPredictiveMAP.predictive1, data: k1},
-   {model: posteriorPredictiveMAP.predictive2, data: k2}]
+  [
+   {model: posteriorPredictiveMAP.predictive1, data: k1},
+   {model: posteriorPredictiveMAP.predictive2, data: k2}
+  ]
 )
 ~~~~
 
-Examine the heat map displaying the posterior predictive.
-What sort of data is this model expecting to see?
-Where in this 2-d grid does our observed data land?
-What can you conclude about the parametere `p`?
+Think about the posterior predictive fit.
+What can you conclude about the parameter `p`?
 
 <!-- **TODO: This doesn't yet quite make the point about what a model check is. Show example of typical posterior predictive scatter plot?**
  -->
@@ -596,7 +614,6 @@ $$d \sim \mathcal{N}(y_{predicted}, \sigma)$$
 
 This is a model of our data.
 As in cognitive models, we will put priors on the parameters: $$\beta_0, \beta_1, \sigma$$, and infer their likely values by conditioning on the observed data.
-We'll use the `editor.put()` function to save our results.
 
 ~~~~
 // alternative proposal distribution for metropolis-hastings algorithm
