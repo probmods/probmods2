@@ -895,7 +895,7 @@ Instantiating a hypothesis in a cognitive model can answer more than just catego
 Recall the Tug-of-war model from the chapter on [conditioning]({{site.baseurl}}/chapters/03-conditioning.html).
 
 ~~~~
-var options = {method: 'MCMC', samples: 2500}
+var options = {method: 'rejection', samples: 1000}
 
 var lazinessPrior = 0.3;
 var lazyPulling = 0.5;
@@ -980,7 +980,7 @@ var smoothToBins = function(dist, sigma, bins){
   })
 }
 
-var tugOfWarOpts = {method: "rejection", samples: 50}
+var tugOfWarOpts = {method: "rejection", samples: 500}
 
 var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
   Infer(tugOfWarOpts, function(){
@@ -1045,7 +1045,7 @@ var dataAnalysisModel = function(){
   }
 }
 
-var nSamples = 100
+var nSamples = 20
 var opts = { method: "MCMC",
             callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: 0 }
@@ -1108,5 +1108,7 @@ print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 viz.scatter(modelDataDF)
 viz.table(summaryData)
 ~~~~
+
+An extended analysis of the Tug of War model (using [RWebPPL](https://github.com/mhtess/rwebppl)) can be found [here](http://rpubs.com/mhtess/bda-tow).
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.html)
