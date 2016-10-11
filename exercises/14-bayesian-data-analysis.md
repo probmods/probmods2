@@ -202,6 +202,12 @@ Let's analyze this model with respect to some data. First, we'll put priors on t
 
 ~~~~
 ///fold:
+
+// alternative proposal distribution for metropolis-hastings algorithm
+var uniformKernel = function(prevVal) {
+  return Uniform({a: prevVal - 0.2, b: prevVal + 0.2});
+};
+
 var toProbs = function(predictions) {
   return _.object(map(function(i) {return "predictive: cond" + i + " P(true)";}, _.range(1, predictions.length + 1)),
                   map(function(model) {return Math.exp(model.score(true))}, predictions))
@@ -259,10 +265,10 @@ var detectingBlickets = mem(function(evidence, params) {
 
 var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMCProgress()]}, function() {
   var params = {
-    blicketBaseRate: uniformDrift({a: 0.1, b: 0.9}),
-    blicketPower: uniformDrift({a: 0.1, b: 0.9}),
-    nonBlicketPower: uniformDrift({a: 0.1, b: 0.9}), 
-    machineSpontaneouslyGoesOff: uniformDrift({a: 0.1, b: 0.9})
+    blicketBaseRate: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel}),
+    blicketPower: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel}),
+    nonBlicketPower: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel}),
+    machineSpontaneouslyGoesOff: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel})
   }
 
   var cognitiveModelPredictions = map(function(evidence) {
