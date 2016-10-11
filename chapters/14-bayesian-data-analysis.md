@@ -27,7 +27,7 @@ A pithy way of saying this is that we can make assumptions about "Bayes in the h
 
 Coins, in their production, have a number of physical dimensions along which they vary.
 These idiosyncracies have no impact on the behavior of a coin when flipped. 
-Flipping, it turns out, cross-cuts certain dimesions, and the probability that any modern coin in production will land on heads when flipped is roughly 0.5.
+Flipping, it turns out, cross-cuts certain dimensions, and the probability that any modern coin in production will land on heads when flipped is roughly 0.5.
 
 It turns out spinning a coin is quite different.
 The heterogeneity of individual coins can be seen in their behavior when spun: The probability that any given coin will land on heads after being *spun* is not 0.5.
@@ -45,11 +45,11 @@ You conduct an experiment.
 You spin the coin 20 times.
 15 of them, they spin to heads.
 
-What if I paid you $10 if you could predict the next coin flip?
+What if I paid you $1 if you could predict the next coin flip?
 What would you predict (Heads or Tails)?
-How much would you bet to take this offer?
-
-How much would you bet the next spin will go to heads?
+How much would you pay to take this bet? 
+(Rule is: You have to offer at least $1. 
+If you offered $1 for this bet, this would express agnosticism between "heads" and "tails".)
 
 ~~~~
 var observerModel = function(){
@@ -65,7 +65,7 @@ print("Expected value = " + expectation(posteriorBeliefs))
 viz.density(posteriorBeliefs, {bounds: [0,1]})
 ~~~~
 
-The model above is a hypothesis about how person updates her prior beliefs about the probability of a coin being spun to heads, upon conducting 20 trials of a spinning experiment.
+The model above is a hypothesis about how a person updates her prior beliefs about the probability of a coin being spun to heads, upon conducting 20 trials of a spinning experiment.
 We can use this model to make predictions about other kinds of questions we could then ask the observer.
 For instance, let's take up the bet of whether or not the *next spin* will go to heads.
 Also, consider if you were to make 10 more spins: How many of them would go to heads?
@@ -199,7 +199,7 @@ var skepticalModel =  Infer(opts, function(){
 })
 ///
 
-var experimentalData = [9,8,7,7,4,5,6,7,9,4,7,7,3,3,9,6,5,5,8,5]
+var experimentalData = [9,8,7,5,4,5,6,7,9,4,8,7,8,3,9,6,5,7,8,5]
 
 // package the models up in an Object (for ease of reference)
 var modelObject = {observerModel: observerModel, skepticalModel: skepticalModel};
@@ -996,8 +996,8 @@ var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
 }
 
 var dataAnalysisModel = function(){
-  var lazinessPrior = sample(Uniform({a: -1, b: 1}), {driftKernel: lazinessPriorKernel})
-  var lazyPulling = sample(Uniform({a: -1, b: 1}), {driftKernel: lazyPullingKernel})
+  var lazinessPrior = sample(Uniform({a: 0, b: 0.5}), {driftKernel: lazinessPriorKernel})
+  var lazyPulling = sample(Uniform({a: 0, b: 1}), {driftKernel: lazyPullingKernel})
 
   var predictions = map(function(tournament){
     return map(function(outcome){
