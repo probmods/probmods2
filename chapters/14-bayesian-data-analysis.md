@@ -539,7 +539,7 @@ print( savageDickeyRatio )
 
 # Example: Linear regression and tug of war
 
-One of the virtues of Bayesian data analysis is it's ability to interface with Bayesian cognitive models in a natural way.
+One of the virtues of Bayesian data analysis is it's ability to interface with Bayesian models of cognition in a natural way.
 Bayesian cognitive models are formalizations of hypotheses about cognition, which we then can test with an experiment.
 We can contrast our rich Bayesian cognitive models with more standard models from data science, like linear regression, and evaluate them all using Bayesian data analysis.
 
@@ -589,8 +589,8 @@ We'll formalize this in a Bayesian regression framework, where ratings of streng
 
 $$y_{predicted} = \beta_0 + \beta_1 * n_{wins}$$
 
-Because we're in the realm of generative models, we will have to be explicit about how $$y_{predicted}$$ relates to the actual rating data we observed.
-We make the standard assumption that the actual ratings are normally distributed around $$y_{predicted}$$, with some noise $$\sigma$$.
+Because we're in the business of building generative models, we will have to be explicit about how $$y_{predicted}$$ relates to the actual rating data we observed.
+We make the standard assumption that the actual ratings are normally distributed around $$y_{predicted}$$, with some noise $$\sigma$$. [This is analagous to having "randomly distributed errors".]
 
 $$d \sim \mathcal{N}(y_{predicted}, \sigma)$$
 
@@ -599,14 +599,22 @@ As in cognitive models, we will put priors on the parameters: $$\beta_0, \beta_1
 We'll use the `editor.put()` function to save our results.
 
 ~~~~
+// alternative proposal distribution for metropolis-hastings algorithm
+var uniformKernel = function(prevVal) {
+  return Uniform({a: prevVal - 0.2, b: prevVal + 0.2});
+};
+
 var singleRegression = function(){
-  var b0 = uniformDrift({a: -1, b: 1, width: 0.2})
-  var b1 = uniformDrift({a: -1, b: 1, width: 0.2})
-  var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
+  // parameters of a simple linear regression
+  var b0 = sample(Uniform({a: -1, b: 1}), {driftKernel: uniformKernel})
+  var b1 = sample(Uniform({a: -1, b: 1}), {driftKernel: uniformKernel})
+  var sigma = sample(Uniform({a: 0, b: 2}), {driftKernel: uniformKernel})
 
   map(function(d){
 
+    // linear regression formula
     var predicted_y = b0 + d.nWins*b1
+
     observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)
 
   }, towData)
@@ -657,10 +665,15 @@ var patterns = {
   double: levels(_.where(towData, {tournament: "double"}), "pattern")
 };
 
+// alternative proposal distribution for metropolis-hastings algorithm
+var uniformKernel = function(prevVal) {
+  return Uniform({a: prevVal - 0.2, b: prevVal + 0.2});
+};
+
 var singleRegression = function(){
-  var b0 = uniformDrift({a: -1,b: 1, width: 0.2})
-  var b1 = uniformDrift({a: -1,b: 1, width: 0.2})
-  var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
+  var b0 = sample(Uniform({a: -1, b: 1}), {driftKernel: uniformKernel})
+  var b1 = sample(Uniform({a: -1, b: 1}), {driftKernel: uniformKernel})
+  var sigma = sample(Uniform({a: 0, b: 2}), {driftKernel: uniformKernel})
 
   var predictions = map(function(tournament){
     return map(function(outcome){
@@ -669,7 +682,7 @@ var singleRegression = function(){
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
         var itemData = _.where(towData, itemInfo)
 
-        // linear equation
+        // linear regression formula
         var predicted_y = b0 + itemData[0]["nWins"]*b1
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)}, itemData)
@@ -719,11 +732,12 @@ var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
-viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 
 var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
 print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
+
+viz.table(summaryData)
 ~~~
 
 The simple linear regression does surprisingly well on this data set (at least at predicting the mean responses).
@@ -749,13 +763,19 @@ var patterns = {
   single: levels(_.where(towData, {tournament: "single"}), "pattern"),
   double: levels(_.where(towData, {tournament: "double"}), "pattern")
 };
+
+// alternative proposal distribution for metropolis-hastings algorithm
+var uniformKernel = function(prevVal) {
+  return Uniform({a: prevVal - 0.2, b: prevVal + 0.2});
+};
 ///
 
 var multipleRegression = function(){
-  var b0 = uniformDrift({a: -1,b: 1, width: 0.2})
-  var b1 = uniformDrift({a: -1,b: 1, width: 0.2})
-  var b2 = uniformDrift({a: -1,b: 1, width: 0.2})
-  var sigma = uniformDrift({a: 0, b: 2, width: 0.2})
+  var b0 = sample(Uniform({a: -1, b: 1}), {driftKernel: uniformKernel})
+  var b1 = sample(Uniform({a: -1, b: 1}), {driftKernel: uniformKernel})
+  var b2 = sample(Uniform({a: -1, b: 1}), {driftKernel: uniformKernel})
+  var sigma = sample(Uniform({a: 0, b: 2}), {driftKernel: uniformKernel})
+
 
   var predictions = map(function(tournament){
     return map(function(outcome){
@@ -833,16 +853,18 @@ var posteriorPredictive = marginalize(posterior, "predictives")
 
 var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
 
-viz.scatter(modelDataDF)
 
 var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
-viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
 print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
+
+viz.scatter(modelDataDF)
+
+viz.table(summaryData)
 ~~~~
 
 The multiple linear regression model fit is improved a little bit, but still fails to predict meaningful difference between certain conditions.
@@ -897,10 +919,10 @@ viz(posterior)
 
 To learn more about (and test) the tug-of-war model, we're going to connect it the data from the experiment.
 You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazyPulling`).
-(Technical note: Because we are comparing relative strengths, we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`.
-We just use the standard normal distribution.)
 Above, we set these parameters to be `0.5` and `0.3`, respectively.
-(People are lazy about a third of the time, and when they are lazy, they pull with half their strength.)
+People are lazy about a third of the time, and when they are lazy, they pull with half their strength.
+(Technical note: Because we are comparing relative strengths and we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`.
+We just use the standard normal distribution.)
 
 Those parameter values aren't central to our hypothesis.
 They are peripheral details to the larger hypothesis which is that people reason about team games like Tug of War by running a structured, generative model in their heads and doing posterior inference.
@@ -922,6 +944,14 @@ var round = function(x){
 }
 
 var bins = map(round, _.range(-2.2, 2.2, 0.1))
+
+// alternative proposal distribution for metropolis-hastings algorithm
+var lazinessPriorKernel = function(prevVal) {
+  return Uniform({a: prevVal - 0.1, b: prevVal + 0.1});
+};
+var lazyPullingKernel = function(prevVal) {
+  return Uniform({a: prevVal - 0.2, b: prevVal + 0.2});
+};
 ///
 
 // add a tiny bit of noise, and make sure every bin has at least epsilon probability
@@ -939,7 +969,7 @@ var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
   Infer(tugOfWarOpts, function(){
 
     var strength = mem(function(person){
-      return gaussianDrift({mu: 0, sigma: 1, width: 0.3})
+      return gaussian(0, 1)
     })
 
     var lazy = function(person){
@@ -965,10 +995,9 @@ var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
   })
 }
 
-
 var dataAnalysisModel = function(){
-  var lazinessPrior = uniformDrift({a:0, b:0.5, width: 0.1})
-  var lazyPulling =  uniformDrift({a:0, b:1, width: 0.2})
+  var lazinessPrior = sample(Uniform({a: -1, b: 1}), {driftKernel: lazinessPriorKernel})
+  var lazyPulling = sample(Uniform({a: -1, b: 1}), {driftKernel: lazyPullingKernel})
 
   var predictions = map(function(tournament){
     return map(function(outcome){
@@ -999,8 +1028,8 @@ var dataAnalysisModel = function(){
   }
 }
 
-var nSamples = 10
-var opts = { method: "MCMC", //kernel: {HMC: {steps: 5, stepSize: 0.01}},
+var nSamples = 100
+var opts = { method: "MCMC",
             callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: 0 }
 
@@ -1050,16 +1079,17 @@ var posteriorPredictive = marginalize(posterior, "predictives")
 
 var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
 
-viz.scatter(modelDataDF)
 
 var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
-viz.table(summaryData)
 print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
 var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
 print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
+
+viz.scatter(modelDataDF)
+viz.table(summaryData)
 ~~~~
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.html)
