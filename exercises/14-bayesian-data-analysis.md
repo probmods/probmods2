@@ -36,7 +36,7 @@ var model = function() {
     };
 }
 
-var opts = {method: "rejection", samples: 2000};
+var opts = {method: "MCMC", samples: 5000};
 var posterior = Infer(opts, model);
 
 viz.marginals(posterior)
