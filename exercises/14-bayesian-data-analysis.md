@@ -14,10 +14,10 @@ In [our simple binomial model]({{site.baseurl}}/chapters/14-bayesian-data-analys
 // observed data
 var k = 1 // number of successes
 var n = 20  // number of attempts
+var priorDist = Uniform({a: 0, b: 1});
 
 var model = function() {
-
-   var p = uniform(0, 1);
+   var p = sample(priorDist);
 
    // Observed k number of successes, assuming a binomial
    observe(Binomial({p : p, n: n}), k);
@@ -25,9 +25,9 @@ var model = function() {
    // sample from binomial with updated p
    var posteriorPredictive = binomial(p, n);
 
-   // sample fresh p
-   var prior_p = uniform(0, 1);
-   // sample from binomial with fresh p
+   // sample fresh p (for visualization)
+   var prior_p = sample(priorDist);
+   // sample from binomial with fresh p (for visualization)
    var priorPredictive = binomial(prior_p, n);
 
    return {
@@ -36,7 +36,7 @@ var model = function() {
     };
 }
 
-var opts = {method: "MCMC", samples: 5000};
+var opts = {method: "MCMC", samples: 2500, lag: 50};
 var posterior = Infer(opts, model);
 
 viz.marginals(posterior)
@@ -46,7 +46,7 @@ a. Notice that we used a uniform distribution over the interval [0,1] as our pri
 While this is convenient, we may want to represent other assumptions.
 The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution), expressed in WebPPL as `Beta({a:..., b:...})`' is a more general way of expressing beliefs over the interval [0,1].
 
-Try different beta priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`.
+Try different beta priors on `p`, by changing `priorDist = Uniform(...)` to `p = Beta({a: 10,b: 10})`, `Beta({a: 1, b: 5})` and `Beta({a: 0.1, b: 0.1})`.
 (Note that `beta(1,1)` is mathematically the same as `uniform(0,1)`.)
 Use the figures produced to describe the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions. 
 
