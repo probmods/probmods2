@@ -242,7 +242,7 @@ Instead, what is done is measuring a sample (maybe we ask 1000 people), and use 
 
 Bayes’ rule provides a bridge between the unobserved parameters of models and the observed data.
 We can update our beliefs about parameters from data.
-Additionally, the "Bayes bridge" can fo from parameters to data: we can use our updated beliefs about a parameter to make predictions about future data sets.
+Additionally, the "Bayes bridge" can go from parameters to data: we can use our updated beliefs about a parameter to make predictions about future data sets.
 
 For a given Bayesian model (together with data), there are four conceptually distinct distributions of interest:
 
@@ -935,7 +935,7 @@ viz(posterior)
 ### Learning about the Tug-of-War model
 
 To learn more about (and test) the tug-of-war model, we're going to connect it the data from the experiment.
-You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazyPulling`).
+You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazinessPrior`).
 Above, we set these parameters to be `0.5` and `0.3`, respectively.
 People are lazy about a third of the time, and when they are lazy, they pull with half their strength.
 (Technical note: Because we are comparing relative strengths and we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`.
