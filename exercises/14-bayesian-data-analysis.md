@@ -68,7 +68,7 @@ Intuitively, rather than taking the value corresponding to the peak of the distr
 Why might this be important for model assessment?
 Imagine the following situation.
 You are piloting a task and want to use Bayesian Data Analysis because you hear it is useful when you have few data points.
-You think that the task you've design is a little too difficult for subjects.
+You think that the task you've designed is a little too difficult for subjects.
 (Let's imagine that you're a psychophysicist, and your task pertains to contrast discriminiation in the peripheral visual field.)
 You think the current task design is too difficult, but you're not sure.
 It may well be that it's fine for subjects.
