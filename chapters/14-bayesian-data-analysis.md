@@ -934,7 +934,7 @@ viz(posterior)
 
 ### Learning about the Tug-of-War model
 
-To learn more about (and test) the tug-of-war model, we're going to connect it the data from the experiment.
+To learn more about (and test) the tug-of-war model, we're going to connect it to the data from the experiment.
 You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazinessPrior`).
 Above, we set these parameters to be `0.5` and `0.3`, respectively.
 People are lazy about a third of the time, and when they are lazy, they pull with half their strength.

@@ -101,7 +101,7 @@ var subjectPerformWell = !flip(taskDifficulty)
 There's a lot of training involved in your task and that it's very time consuming for you to collect data.
 You run one subject through your training regime and have them do the task.
 The subject performs well!
-Soon after, your adviser drops by and wants you to make a decision to collect more data or tweak your experiemntal paradigm.
+Soon after, your adviser drops by and wants you to make a decision to collect more data or tweak your experimental paradigm.
 You thought beforehand that your task was too difficult.
 Do you still think your task is too hard?
 
