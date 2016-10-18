@@ -265,10 +265,10 @@ var detectingBlickets = mem(function(evidence, params) {
 
 var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMCProgress()]}, function() {
   var params = {
-    blicketBaseRate: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel}),
-    blicketPower: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel}),
-    nonBlicketPower: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel}),
-    machineSpontaneouslyGoesOff: sample(Uniform({a: 0.1, b: 0.9}), {driftKernel: uniformKernel})
+    blicketBaseRate: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel}),
+    blicketPower: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel}),
+    nonBlicketPower: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel}),
+    machineSpontaneouslyGoesOff: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel})
   }
 
   var cognitiveModelPredictions = map(function(evidence) {
@@ -287,8 +287,8 @@ var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMC
 })
 
 viz.marginals(dataAnalysis);
-viz.scatter(dataSummary(data), predictiveSummary(dataAnalysis), 
-            {xLabel: 'data', yLabel: 'model'})
+viz.scatter(predictiveSummary(dataAnalysis), dataSummary(data),
+            {xLabel: 'model', yLabel: 'data'})
 ~~~~
 
 Before running this program, answer the following question:
@@ -372,7 +372,7 @@ var bestFitModelPredictions = map(function(evidence) {
   return Math.exp(detectingBlickets(evidence, params).score(true));
 }, possibleEvidenceStream)
 
-viz.scatter(dataSummary(data), bestFitModelPredictions)
+viz.scatter(bestFitModelPredictions, dataSummary(data))
 ~~~~
 
 H. What can you conclude about the two ways of looking at parameters in this model's case? Do you think the model is relatively robust to different parameter settings?
