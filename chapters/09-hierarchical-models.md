@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Hierarchical models
-description: The power of abstraction
+description: The power of abstraction.
 ---
 
 <!-- NEED TO BREAK THIS DOWN INTO TWO KINDS OF POINTS:
@@ -98,7 +98,7 @@ var colors = ['black', 'blue', 'green', 'orange', 'red'];
 var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
   // we make a global prototype which is a dirichlet sample scaled to total 5.
   var prototype = T.mul(dirichlet(ones([5, 1])), 5)
-  
+
   var makeBag = mem(function(bag){
     var colorProbs = getProbs(dirichlet(prototype));
     return Categorical({vs: colors, ps: colorProbs});
@@ -160,7 +160,7 @@ var bagPosterior = function(observedDraws) {
     }, _.keys(observedDraws))
 
     factor(sum(bagScores))
-    
+
     return {bag1: Math.exp(makeBag('bag1').score('red')),
             global: getProbs(phi)[0]}
   })
@@ -172,15 +172,15 @@ var initialPosterior = bagPosterior({'bag1': []})
 var initialSpec = meanDev(initialPosterior, 'bag1', .66);
 var initialGlob = meanDev(initialPosterior, 'global', .66);
 
-var obs = {'bag1': ['red'], 'bag2': ['red'], 'bag3': ['blue'], 'bag4': ['red'], 'bag5': ['red'], 
-           'bag6': ['blue'], 'bag7': ['red'], 'bag8': ['red'], 'bag9': ['blue'], 'bag10': ['red'], 
+var obs = {'bag1': ['red'], 'bag2': ['red'], 'bag3': ['blue'], 'bag4': ['red'], 'bag5': ['red'],
+           'bag6': ['blue'], 'bag7': ['red'], 'bag8': ['red'], 'bag9': ['blue'], 'bag10': ['red'],
            'bag11': ['red'], 'bag12': ['blue']};
 var numObs = [1,3,6,9, 12]
 
 var allSamples = map(function(maxBagNumber) {
   var dataSubset = _.pick(obs, map(function(num){return 'bag' + num}, _.range(1,maxBagNumber + 1)))
   var bagPost = bagPosterior(dataSubset)
-  
+
   return {mseSpec: meanDev(bagPost, 'bag1', .66) / initialSpec,
           mseGlob: meanDev(bagPost, 'global', .66) / initialGlob};
 }, numObs);
@@ -339,11 +339,11 @@ var colors = ['black', 'blue', 'green', 'orange', 'red'];
 var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   // the global prototype mixture:
   var phi = dirichlet(ones([5, 1]))
-  // regularity parameters: how strongly we expect the global prototype to project 
+  // regularity parameters: how strongly we expect the global prototype to project
   // (ie. determine the local prototypes):
   var alpha = gamma(2,2)
   var prototype = T.mul(phi, alpha)
-  
+
   var makeBag = mem(function(bag){
     var colorProbs = getProbs(dirichlet(prototype));
     return Categorical({vs: colors, ps: colorProbs});
@@ -425,24 +425,24 @@ var categoryPosterior = Infer({method: 'MCMC', samples: 10000}, function(){
   var prototype = _.object(attributes, map(function(att) {
     return makePrototype(params, att);
   }, attributes));
-  
+
   var makeObject = mem(function(object){
     return _.object(attributes, map(function(att) {
       var probs = getProbs(dirichlet(Vector(prototype[att])));
       return Categorical({vs: values[att], ps: probs});
     }, attributes))
   });
-    
+
   factor(observeObject(makeObject('cat1'), [{shape: 1, color: 1, texture: 1, size: 1},
                                             {shape: 1, color: 2, texture: 2, size: 2}]) +
          observeObject(makeObject('cat2'), [{shape: 2, color: 3, texture: 3, size: 1},
                                             {shape: 2, color: 4, texture: 4, size: 2}]) +
          observeObject(makeObject('cat3'), [{shape: 3, color: 5, texture: 5, size: 1},
-                                            {shape: 3, color: 6, texture: 6, size: 2}]) + 
+                                            {shape: 3, color: 6, texture: 6, size: 2}]) +
          observeObject(makeObject('cat4'), [{shape: 4, color: 7, texture: 7, size: 1},
                                             {shape: 4, color: 8, texture: 8, size: 2}]) +
          observeObject(makeObject('cat5'), [{shape: 5, color: 9, texture: 9, size: 1}]))
-  
+
   return sample(makeObject('cat5')['shape'])
 })
 
@@ -489,18 +489,18 @@ var results = Infer({method: "MCMC", samples: 100000}, function() {
   var overallVariance = gamma(1,1);
   var overallShape = gamma(2,2);
   var overallScale = gamma(2,2);
- 
+
   var makeGroup = mem(function(groupName) {
     var groupVariance = gamma(overallShape, overallScale);
     var groupMean = gaussian(1, overallVariance);
     return Gaussian({mu: groupMean, sigma: groupVariance});
   })
-  
+
   factor(observeGroup(makeGroup('one'), [1.001, 1.001, 1.001]) +
         observeGroup(makeGroup('two'), [1.05, 1.05, 1.05]) +
         observeGroup(makeGroup('three'), [1.1, 1.1, 1.1]) +
         observeGroup(makeGroup('four'), [1.003]))
-  
+
   return makeGroup('new').params.sigma
 });
 
@@ -566,7 +566,7 @@ var makePhraseDist = function(headToPhraseDirs) {
   return Infer({method: 'enumerate'}, function(){
     var head = uniformDraw(categories);
     if(headToComp(head) == 'none') {
-      return [head] 
+      return [head]
     } else {
       // On which side will the head go?
       return flip(headToPhraseDirs[head]) ? [headToComp(head), head] : [head, headToComp(head)];
@@ -581,10 +581,10 @@ var results = Infer({method: 'MCMC', samples: 20000}, function() {
   var headToPhraseDirs = _.object(categories, map(function() {
     return T.get(dirichlet(Vector([languageDir, 1 - languageDir])), 1)
   }, categories))
-  
+
   var phraseDist = makePhraseDist(headToPhraseDirs);
   factor(observePhrase(phraseDist, data))
-  
+
   return flip(headToPhraseDirs['N']) ? 'N second' : 'N first';
 })
 

@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Learning as conditional inference
-description: Induction and prediction
+description: How inferences change as data accumulate.
 ---
 
 <!--
@@ -350,9 +350,9 @@ viz.table(Enumerate(function() {
   var s = prettify(e);
   var f = runify(e);
   condition(f(1) == 3);
-  
+
   return {s: s, "f(2)": f(2)};
-  
+
   return {s: s, fx: fx}
 }, {maxExecutions: 100}));
 ~~~~
@@ -391,7 +391,7 @@ var tau = 0.3;
 var noiseParam = Math.exp(-1.5)
 
 // a generative process for disjunctive normal form propositional equations:
-var traitPrior = Categorical({vs: ['trait1', 'trait2', 'trait3', 'trait4'], 
+var traitPrior = Categorical({vs: ['trait1', 'trait2', 'trait3', 'trait4'],
                               ps: [.25, .25, .25, .25]});
 var samplePred = function() {
   var trait = sample(traitPrior);
@@ -419,7 +419,7 @@ var getFormula = function() {
   }
 }
 
-var noisyEqual = function(a, b) { 
+var noisyEqual = function(a, b) {
   return flip(a == b ?  0.999999999 : noiseParam)
 }
 

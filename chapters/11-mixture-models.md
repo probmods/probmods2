@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Mixture models
-description: Something clever
+description: Models for inferring the kinds of things.
 ---
 
 In the chapter on [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html), we saw the power of probabilistic inference in learning about the latent structure underlying different kinds of observations: the mixture of colors in different bags of marbles, or the prototypical features of categWebPPLories of animals. In that discussion we always assumed that we knew what kind each observation belonged to---the bag that each marble came from, or the subordinate, basic, and superordinate category of each object. Knowing this allowed us to pool the information from each observation for the appropriate latent variables. What if we don't know *a priori* how to divide up our observations? In this chapter we explore the problem of simultaneously discovering kinds and their properties -- this can be done using *mixture models*.
@@ -28,16 +28,16 @@ var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   var phi = dirichlet(ones([3, 1]))
   var alpha = 0.1
   var prototype = T.mul(phi, alpha)
-  
+
   var makeBag = mem(function(bag){
     return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
   })
-  
+
   // each observation (which is named for convenience) comes from one of three bags:
   var obsToBag = mem(function(obsName) {
     return uniformDraw(['bag1', 'bag2', 'bag3'])
   });
-  
+
   factor(observeBag(makeBag(obsToBag('obs1')), ['red']) +
          observeBag(makeBag(obsToBag('obs2')), ['red']) +
          observeBag(makeBag(obsToBag('obs3')), ['blue']) +
@@ -72,17 +72,17 @@ var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   var phi = dirichlet(ones([3, 1]))
   var alpha = 0.1
   var prototype = T.mul(phi, alpha)
-  
+
   var makeBag = mem(function(bag){
     return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
   })
-  
+
   // the probability that an observation will come from each bag:
   var bagMixture = dirichlet(ones([3, 1]))
   var obsToBag = mem(function(obsName) {
     return categorical({vs: ['bag1', 'bag2', 'bag3'], ps: getProbs(bagMixture)});
   });
-  
+
   factor(observeBag(makeBag(obsToBag('obs1')), ['red']) +
          observeBag(makeBag(obsToBag('obs2')), ['red']) +
          observeBag(makeBag(obsToBag('obs3')), ['blue']) +
@@ -113,17 +113,17 @@ var observePoint = function(cat, obs) {
 };                                         
 ///
 
-var predictives = Infer({method: 'MCMC', samples: 200, lag: 100}, function(){ 
+var predictives = Infer({method: 'MCMC', samples: 200, lag: 100}, function(){
   // the probability that an observation will come from each bag:
   var catMixture = dirichlet(ones([2, 1]))
-  
+
   var obsToCat = mem(function(obsName) {
     return categorical({vs: ['cat1', 'cat2'], ps: getProbs(catMixture)});
   });
   var catToMean = mem(function(cat) {
     return {xMean: gaussian(0,1), yMean: gaussian(0,1)};
   })
-  
+
   // one cluster of points in the top right quadrant
   factor(observePoint(catToMean(obsToCat('a1')), {x: 0.50, y: 0.50}) +
          observePoint(catToMean(obsToCat('a2')), {x: 0.60, y: 0.50}) +
@@ -328,18 +328,18 @@ var computePairDistance = function(stim1, stim2) {
   return expectation(Infer({method: 'MCMC', samples: 10000}, function() {
     var vowel1 = Gaussian({mu: prototype1, sigma: .5});
     var vowel2 = Gaussian({mu: prototype2, sigma: .5});
-    
+
     var noiseProcess = function(target) {return Gaussian({mu: target, sigma: .2})};
-    
+
     var target1 = flip() ? sample(vowel1) : sample(vowel2);
     var target2 = flip() ? sample(vowel1) : sample(vowel2);
-    
+
     var obs1 = noiseProcess(target1);
     var obs2 = noiseProcess(target2);
 
     // Condition on the targets being equal to the stimuli through a gaussian noise process
     factor(obs1.score(stim1) + obs2.score(stim2));
-    
+
     return Math.abs(target1 - target2);
   }))
 }
@@ -415,13 +415,13 @@ var results = Infer({method: 'SMC', particles: 10000}, function() {
   var makeBag = mem(function(bag){
     return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
   })
-  
+
   // unknown number of categories (created with placeholder names):
   var numBags = (1 + poisson(1));
   var bags = map(function(i) {return 'bag' + i;}, _.range(numBags))
-  
+
   factor(sum(map(function(v) {return makeBag(uniformDraw(bags)).score(v)}, observedMarbles)))
-  
+
   return numBags;
 })
 
@@ -429,7 +429,7 @@ viz.auto(results)
 ~~~~
 Vary the amount of evidence and see how the inferred number of bags changes.
 
-For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipedia.org/wiki/Poisson_distribution) which is a distribution on  non-negative integers. It is convenient, though implies strong prior knowledge (perhaps too strong for this example). 
+For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipedia.org/wiki/Poisson_distribution) which is a distribution on  non-negative integers. It is convenient, though implies strong prior knowledge (perhaps too strong for this example).
 
 **Note: I took out the `gensym` stuff**
 
