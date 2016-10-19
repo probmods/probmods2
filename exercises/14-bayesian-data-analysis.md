@@ -68,7 +68,7 @@ Intuitively, rather than taking the value corresponding to the peak of the distr
 Why might this be important for model assessment?
 Imagine the following situation.
 You are piloting a task and want to use Bayesian Data Analysis because you hear it is useful when you have few data points.
-You think that the task you've design is a little too difficult for subjects.
+You think that the task you've designed is a little too difficult for subjects.
 (Let's imagine that you're a psychophysicist, and your task pertains to contrast discriminiation in the peripheral visual field.)
 You think the current task design is too difficult, but you're not sure.
 It may well be that it's fine for subjects.
@@ -101,7 +101,7 @@ var subjectPerformWell = !flip(taskDifficulty)
 There's a lot of training involved in your task and that it's very time consuming for you to collect data.
 You run one subject through your training regime and have them do the task.
 The subject performs well!
-Soon after, your adviser drops by and wants you to make a decision to collect more data or tweak your experiemntal paradigm.
+Soon after, your adviser drops by and wants you to make a decision to collect more data or tweak your experimental paradigm.
 You thought beforehand that your task was too difficult.
 Do you still think your task is too hard?
 
