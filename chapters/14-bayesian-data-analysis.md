@@ -27,7 +27,7 @@ A pithy way of saying this is that we can make assumptions about "Bayes in the h
 
 Coins, in their production, have a number of physical dimensions along which they vary.
 These idiosyncracies have no impact on the behavior of a coin when flipped. 
-Flipping, it turns out, cross-cuts certain dimesions, and the probability that any modern coin in production will land on heads when flipped is roughly 0.5.
+Flipping, it turns out, cross-cuts certain dimensions, and the probability that any modern coin in production will land on heads when flipped is roughly 0.5.
 
 It turns out spinning a coin is quite different.
 The heterogeneity of individual coins can be seen in their behavior when spun: The probability that any given coin will land on heads after being *spun* is not 0.5.
@@ -45,11 +45,11 @@ You conduct an experiment.
 You spin the coin 20 times.
 15 of them, they spin to heads.
 
-What if I paid you $10 if you could predict the next coin flip?
+What if I paid you $1 if you could predict the next coin flip?
 What would you predict (Heads or Tails)?
-How much would you bet to take this offer?
-
-How much would you bet the next spin will go to heads?
+How much would you pay to take this bet? 
+(Rule is: You have to offer at least $1. 
+If you offered $1 for this bet, this would express agnosticism between "heads" and "tails".)
 
 ~~~~
 var observerModel = function(){
@@ -65,7 +65,7 @@ print("Expected value = " + expectation(posteriorBeliefs))
 viz.density(posteriorBeliefs, {bounds: [0,1]})
 ~~~~
 
-The model above is a hypothesis about how person updates her prior beliefs about the probability of a coin being spun to heads, upon conducting 20 trials of a spinning experiment.
+The model above is a hypothesis about how a person updates her prior beliefs about the probability of a coin being spun to heads, upon conducting 20 trials of a spinning experiment.
 We can use this model to make predictions about other kinds of questions we could then ask the observer.
 For instance, let's take up the bet of whether or not the *next spin* will go to heads.
 Also, consider if you were to make 10 more spins: How many of them would go to heads?
@@ -199,7 +199,7 @@ var skepticalModel =  Infer(opts, function(){
 })
 ///
 
-var experimentalData = [9,8,7,7,4,5,6,7,9,4,7,7,3,3,9,6,5,5,8,5]
+var experimentalData = [9,8,7,5,4,5,6,7,9,4,8,7,8,3,9,6,5,7,8,5]
 
 // package the models up in an Object (for ease of reference)
 var modelObject = {observerModel: observerModel, skepticalModel: skepticalModel};
@@ -242,7 +242,7 @@ Instead, what is done is measuring a sample (maybe we ask 1000 people), and use 
 
 Bayes’ rule provides a bridge between the unobserved parameters of models and the observed data.
 We can update our beliefs about parameters from data.
-Additionally, the "Bayes bridge" can fo from parameters to data: we can use our updated beliefs about a parameter to make predictions about future data sets.
+Additionally, the "Bayes bridge" can go from parameters to data: we can use our updated beliefs about a parameter to make predictions about future data sets.
 
 For a given Bayesian model (together with data), there are four conceptually distinct distributions of interest:
 
@@ -316,12 +316,12 @@ That is, the most likely data for your model after observing your data should be
 It's natural then to use the posterior predictive distribution to examine the descriptive adequacy of a model.
 If these predictions do not match the data *already seen* (i.e., the data used to arrive at the posterior distribution over parameters), the model is descriptively inadequate.
 
-
-
 Imagine you're a developmental psychologist, piloting a two-alternative forced choice task on young children. 
 (Just for fun, let's pretend it's a helping study, where the child either chooses to help or not help a confederate in need.)
 You have two research assistants that you send to two different preschools to collect data.
 You got your first batch of data back today: For one of your research assistants, 10 out of 10 children tested helped the confederate in need. For the other research assitant, 0 out of 10 children tested helped.
+
+We'll use the `editor.put()` function to save our results so we can look at the them in different code boxes.
 
 ~~~~
 ///fold:
@@ -368,23 +368,41 @@ var opts = {
 
 var posterior = Infer(opts, model);
 
+var posteriorPredictive = marginalize(posterior, "predictive")
+// save results for future code boxes
+editor.put("posteriorPredictive", posteriorPredictive)
+
 var parameterPosterior = marginalize(posterior, "parameter")
 viz.density(parameterPosterior, {bounds: [0, 1]})
+~~~~
 
-var posteriorPredictive = marginalize(posterior, "predictive")
+Looks like a reasonable posterior distribution.
+
+How does the posterior predictive look? 
+
+~~~~
+var posteriorPredictive = editor.get("posteriorPredictive")
 viz(posteriorPredictive)
+~~~~
+How well does it recreate the observed data?
+Where in this 2-d grid would our observed data land?
 
+Another way of visualizing the model-data fit is to examine a scatterplot.
+
+~~~~
+var k1 = 0, k2 = 10;
+var posteriorPredictive = editor.get("posteriorPredictive")
 var posteriorPredictiveMAP = posteriorPredictive.MAP().val
 viz.scatter(
-  [{model: posteriorPredictiveMAP.predictive1, data: k1},
-   {model: posteriorPredictiveMAP.predictive2, data: k2}]
+  [
+   {model: posteriorPredictiveMAP.predictive1, data: k1},
+   {model: posteriorPredictiveMAP.predictive2, data: k2}
+  ]
 )
 ~~~~
 
-Examine the heat map displaying the posterior predictive.
-What sort of data is this model expecting to see?
-Where in this 2-d grid does our observed data land?
-What can you conclude about the parametere `p`?
+Think about the posterior predictive fit.
+What can you conclude about the parameter `p`?
 
 <!-- **TODO: This doesn't yet quite make the point about what a model check is. Show example of typical posterior predictive scatter plot?**
  -->
@@ -596,7 +614,6 @@ $$d \sim \mathcal{N}(y_{predicted}, \sigma)$$
 
 This is a model of our data.
 As in cognitive models, we will put priors on the parameters: $$\beta_0, \beta_1, \sigma$$, and infer their likely values by conditioning on the observed data.
-We'll use the `editor.put()` function to save our results.
 
 ~~~~
 // alternative proposal distribution for metropolis-hastings algorithm
@@ -878,7 +895,7 @@ Instantiating a hypothesis in a cognitive model can answer more than just catego
 Recall the Tug-of-war model from the chapter on [conditioning]({{site.baseurl}}/chapters/03-conditioning.html).
 
 ~~~~
-var options = {method: 'MCMC', samples: 2500}
+var options = {method: 'rejection', samples: 1000}
 
 var lazinessPrior = 0.3;
 var lazyPulling = 0.5;
@@ -917,8 +934,8 @@ viz(posterior)
 
 ### Learning about the Tug-of-War model
 
-To learn more about (and test) the tug-of-war model, we're going to connect it the data from the experiment.
-You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazyPulling`).
+To learn more about (and test) the tug-of-war model, we're going to connect it to the data from the experiment.
+You'll notice that we have two parameters in this model: the proportion of a person's strength they pull with when they are being lazy (`lazyPulling`) and the prior probability of a person being lazy (`lazinessPrior`).
 Above, we set these parameters to be `0.5` and `0.3`, respectively.
 People are lazy about a third of the time, and when they are lazy, they pull with half their strength.
 (Technical note: Because we are comparing relative strengths and we have normalized the human ratings, we don't have to infer the parameters of the gaussian in `strength`.
@@ -963,7 +980,7 @@ var smoothToBins = function(dist, sigma, bins){
   })
 }
 
-var tugOfWarOpts = {method: "rejection", samples: 50}
+var tugOfWarOpts = {method: "rejection", samples: 500}
 
 var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
   Infer(tugOfWarOpts, function(){
@@ -996,8 +1013,8 @@ var tugOfWarModel = function(lazyPulling, lazinessPrior, matchInfo){
 }
 
 var dataAnalysisModel = function(){
-  var lazinessPrior = sample(Uniform({a: -1, b: 1}), {driftKernel: lazinessPriorKernel})
-  var lazyPulling = sample(Uniform({a: -1, b: 1}), {driftKernel: lazyPullingKernel})
+  var lazinessPrior = sample(Uniform({a: 0, b: 0.5}), {driftKernel: lazinessPriorKernel})
+  var lazyPulling = sample(Uniform({a: 0, b: 1}), {driftKernel: lazyPullingKernel})
 
   var predictions = map(function(tournament){
     return map(function(outcome){
@@ -1028,7 +1045,7 @@ var dataAnalysisModel = function(){
   }
 }
 
-var nSamples = 100
+var nSamples = 20
 var opts = { method: "MCMC",
             callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: 0 }
@@ -1091,5 +1108,7 @@ print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 viz.scatter(modelDataDF)
 viz.table(summaryData)
 ~~~~
+
+An extended analysis of the Tug of War model (using [RWebPPL](https://github.com/mhtess/rwebppl)) can be found [here](http://rpubs.com/mhtess/bda-tow).
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.html)

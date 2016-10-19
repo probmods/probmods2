@@ -14,10 +14,10 @@ In [our simple binomial model]({{site.baseurl}}/chapters/14-bayesian-data-analys
 // observed data
 var k = 1 // number of successes
 var n = 20  // number of attempts
+var priorDist = Uniform({a: 0, b: 1});
 
 var model = function() {
-
-   var p = uniform(0, 1);
+   var p = sample(priorDist);
 
    // Observed k number of successes, assuming a binomial
    observe(Binomial({p : p, n: n}), k);
@@ -25,9 +25,9 @@ var model = function() {
    // sample from binomial with updated p
    var posteriorPredictive = binomial(p, n);
 
-   // sample fresh p
-   var prior_p = uniform(0, 1);
-   // sample from binomial with fresh p
+   // sample fresh p (for visualization)
+   var prior_p = sample(priorDist);
+   // sample from binomial with fresh p (for visualization)
    var priorPredictive = binomial(prior_p, n);
 
    return {
@@ -36,7 +36,7 @@ var model = function() {
     };
 }
 
-var opts = {method: "rejection", samples: 2000};
+var opts = {method: "MCMC", samples: 2500, lag: 50};
 var posterior = Infer(opts, model);
 
 viz.marginals(posterior)
@@ -46,7 +46,7 @@ a. Notice that we used a uniform distribution over the interval [0,1] as our pri
 While this is convenient, we may want to represent other assumptions.
 The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution), expressed in WebPPL as `Beta({a:..., b:...})`' is a more general way of expressing beliefs over the interval [0,1].
 
-Try different beta priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`.
+Try different beta priors on `p`, by changing `priorDist = Uniform(...)` to `p = Beta({a: 10,b: 10})`, `Beta({a: 1, b: 5})` and `Beta({a: 0.1, b: 0.1})`.
 (Note that `beta(1,1)` is mathematically the same as `uniform(0,1)`.)
 Use the figures produced to describe the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions. 
 
@@ -68,7 +68,7 @@ Intuitively, rather than taking the value corresponding to the peak of the distr
 Why might this be important for model assessment?
 Imagine the following situation.
 You are piloting a task and want to use Bayesian Data Analysis because you hear it is useful when you have few data points.
-You think that the task you've design is a little too difficult for subjects.
+You think that the task you've designed is a little too difficult for subjects.
 (Let's imagine that you're a psychophysicist, and your task pertains to contrast discriminiation in the peripheral visual field.)
 You think the current task design is too difficult, but you're not sure.
 It may well be that it's fine for subjects.
@@ -101,7 +101,7 @@ var subjectPerformWell = !flip(taskDifficulty)
 There's a lot of training involved in your task and that it's very time consuming for you to collect data.
 You run one subject through your training regime and have them do the task.
 The subject performs well!
-Soon after, your adviser drops by and wants you to make a decision to collect more data or tweak your experiemntal paradigm.
+Soon after, your adviser drops by and wants you to make a decision to collect more data or tweak your experimental paradigm.
 You thought beforehand that your task was too difficult.
 Do you still think your task is too hard?
 
@@ -187,7 +187,7 @@ var blicketPosterior = function(evidence) {
     map(function(blocks){condition(machine(blocks))}, evidence)
     return blicket('A')
   });
-});
+};
 
 // A&B make the blicket-detector go off
 viz(blicketPosterior([['A', 'B']]))
@@ -202,6 +202,12 @@ Let's analyze this model with respect to some data. First, we'll put priors on t
 
 ~~~~
 ///fold:
+
+// alternative proposal distribution for metropolis-hastings algorithm
+var uniformKernel = function(prevVal) {
+  return Uniform({a: prevVal - 0.2, b: prevVal + 0.2});
+};
+
 var toProbs = function(predictions) {
   return _.object(map(function(i) {return "predictive: cond" + i + " P(true)";}, _.range(1, predictions.length + 1)),
                   map(function(model) {return Math.exp(model.score(true))}, predictions))
@@ -259,10 +265,10 @@ var detectingBlickets = mem(function(evidence, params) {
 
 var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMCProgress()]}, function() {
   var params = {
-    blicketBaseRate: uniformDrift({a: 0.1, b: 0.9}),
-    blicketPower: uniformDrift({a: 0.1, b: 0.9}),
-    nonBlicketPower: uniformDrift({a: 0.1, b: 0.9}), 
-    machineSpontaneouslyGoesOff: uniformDrift({a: 0.1, b: 0.9})
+    blicketBaseRate: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel}),
+    blicketPower: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel}),
+    nonBlicketPower: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel}),
+    machineSpontaneouslyGoesOff: sample(Uniform({a: 0, b: 1}), {driftKernel: uniformKernel})
   }
 
   var cognitiveModelPredictions = map(function(evidence) {
@@ -281,8 +287,8 @@ var dataAnalysis = Infer({method: 'MCMC', samples: 5000, callbacks: [editor.MCMC
 })
 
 viz.marginals(dataAnalysis);
-viz.scatter(dataSummary(data), predictiveSummary(dataAnalysis), 
-            {xLabel: 'data', yLabel: 'model'})
+viz.scatter(predictiveSummary(dataAnalysis), dataSummary(data),
+            {xLabel: 'model', yLabel: 'data'})
 ~~~~
 
 Before running this program, answer the following question:
@@ -366,7 +372,7 @@ var bestFitModelPredictions = map(function(evidence) {
   return Math.exp(detectingBlickets(evidence, params).score(true));
 }, possibleEvidenceStream)
 
-viz.scatter(dataSummary(data), bestFitModelPredictions)
+viz.scatter(bestFitModelPredictions, dataSummary(data))
 ~~~~
 
 H. What can you conclude about the two ways of looking at parameters in this model's case? Do you think the model is relatively robust to different parameter settings?
