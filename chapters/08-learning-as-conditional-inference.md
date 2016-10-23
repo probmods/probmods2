@@ -475,7 +475,7 @@ viz.scatter(predictives, humanData)
 ~~~~
 <!--note: this also works fine with enumerate.. switch?-->
 
-Goodman, et al, have used to this model to capture a variety of classic categorization effects [@Goodman:2008b]. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
+Goodman, et al, have used to this model to capture a variety of classic categorization effects [@Goodman2008b]. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
 
 This style of compositional concept induction model, can be naturally extended to more complex hypothesis spaces. For examples, see:
 
