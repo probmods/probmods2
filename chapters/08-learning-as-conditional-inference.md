@@ -20,23 +20,25 @@ description: How inferences change as data accumulate.
 The line between "reasoning" and "learning" is unclear in cognition.
 Just as reasoning can be seen as a form of conditional inference, so can learning: discovering persistent facts about the world (for example, causal processes or causal properties of objects).
 By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time.
-Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)---those that fit the pattern of [Bayes rule](03-conditioning.html#bayes-rule):
+Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)---roughly those that fit the pattern of [Bayes rule](03-conditioning.html#bayes-rule):
+
+<!--note that this pattern is exactly the mapData pattern....-->
 
 ~~~~ norun
 Infer({...}, function() {
   var hypothesis = sample(prior)
-  var predictions = repeat(N, function(){
-    return observe(hypothesis);
-  });
-  condition(_.isEqual(observedData, predictions));
+  var obsFn = function(datum){...uses hypothesis...}
+  mapData({data: observedData}, obsFn)
   return hypothesis
 });
 ~~~~
 
 The `prior` samples a hypothesis from the *hypothesis space*.
 This distribution expresses our prior knowledge about how the process we observe is likely to work, before we have observed any data.
-The `observe` function describes how a data point is generated given the hypothesis.
-What can be inferred about the hypothesis given a certain subset of the observed data? How much more can we learn as the size of the observed data set increases---what is the *learning curve*?
+The function `obsFn` captures the relation between the `hypothesis` and a single `datum`, and will usually contain an `observe` statement.
+Here we have used the special operator [`mapData`](http://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapData) whose meaning is the same as `map`. We use `mapData` both to remind ourselves that we are expressing the special pattern of observing a sequence of observations, and because some inference algorithms can use this hint to do better learning.
+
+What can be inferred about the hypothesis given a certain subset of the observed data? How much more can we learn as the size of the observed data set increases---what is the *learning curve*? These are the main questions we wish to answer when thinking about learning as inference.
 
 # Example: Learning About Coins
 
@@ -61,39 +63,72 @@ Here's how to describe it using a probabilistic program<ref>following on Griffit
 For simplicity let's consider only two hypotheses, two possible definitions of `coin`, representing a fair coin and a trick coin that produces heads 95% of the time. A priori, how likely is any coin offered up by a friend to be a trick coin?  Of course there is no objective or universal answer to that question, but for the sake of illustration let's assume that the *prior probability* of seeing a trick coin is 1 in a 1000, versus 999 in 1000 for a fair coin.  These probabilities determine the weight passed to `makeCoin`.  Now to inference:
 
 ~~~~
-var observedData = ['h', 'h', 'h', 'h', 'h'];
-var numFlips = observedData.length;
-var fairPrior = Bernoulli({p : 0.999});
+var observedData = ['h', 'h', 'h', 'h', 'h']
+var fairPrior = 0.999
 var makeCoin = function(weight) {
   return function() {
-    return flip(weight) ? 'h' : 't';
+    return flip(weight) ? 'h' : 't'
   }
-};
+}
 
 var fairnessPosterior = Infer({method: 'enumerate'}, function() {
-  var fair = sample(fairPrior);
-  var coin = makeCoin(fair ? .5 : .95);
-  condition(_.isEqual(observedData, repeat(numFlips, coin)));
-  return fair;
-});
+  var fair = flip(fairPrior)
+  var coin = makeCoin(fair ? 0.5 : 0.95)
+  var obsFn = function(datum){condition(datum == coin())}
+  mapData({data: observedData}, obsFn)
+  return {fair: fair}
+})
 
-viz.auto(fairnessPosterior);
+viz(fairnessPosterior)
 ~~~~
 
 Try varying the number of flips and the number of heads observed.  You should be able to reproduce the intuitive learning curve described above.  Observing 5 heads in a row is not enough to suggest a trick coin, although it does raise the hint of this possibility: its chances are now a few percent, approximately 30 times the baseline chance of 1 in a 1000.  After observing 10 heads in a row, the odds of trick coin and fair coin are now roughly comparable, although fair coin is still a little more likely.  After seeing 15 or more heads in a row without any tails, the odds are now strongly in favor of the trick coin.
 
-Study how this learning curve depends on the choice of `fairPrior`.   There is certainly a dependence.  If we set `fairPrior` to be 0.5, equal for the two alternative hypotheses, just 5 heads in a row are sufficient to favor the trick coin by a large margin.  If `fairPrior` is 99 in 100, 10 heads in a row are sufficient.  We have to increase `fairPrior` quite a lot, however, before 15 heads in a row is no longer sufficient evidence for a trick coin: even at `fairPrior` = 0.9999, 15 heads without a single tail still weighs in favor of the trick coin.  This is because the evidence in favor of a trick coin accumulates exponentially as the data set increases in size; each successive `H` flip increases the evidence by nearly a factor of 2.
+Study how this learning curve depends on the choice of `fairPrior`.   There is certainly a dependence.  If we set `fairPrior` to be 0.5, equal for the two alternative hypotheses, just 5 heads in a row are sufficient to favor the trick coin by a large margin.  If `fairPrior` is 99 in 100, 10 heads in a row are sufficient.  We have to increase `fairPrior` quite a lot, however, before 15 heads in a row is no longer sufficient evidence for a trick coin: even at `fairPrior` = 0.9999, 15 heads without a single tail still weighs in favor of the trick coin.  This is because the evidence in favor of a trick coin accumulates exponentially as the data set increases in size; each successive `h` flip increases the evidence by nearly a factor of 2.
 
 Learning is always about the shift from one state of knowledge to another.  The speed of that shift provides a way to diagnose the strength of a learner's initial beliefs.   Here, the fact that somewhere between 10 and 15 heads in a row is sufficient to convince most people that the coin is a trick coin suggests that for most people, the a priori probability of encountering a trick coin in this situation is somewhere between 1 in a 100 and 1 in 10,000---a reasonable range.  Of course, if you begin with the suspicion that any friend who offers you a coin to flip is liable to have a trick coin in his pocket, then just seeing five heads in a row should already make you very suspicious---as we can see by setting `fairPrior` to a value such as 0.9.
 
+## Learning trajectories
+
+When studying learning as conditional inference, that is when considering an *ideal learner model*, we are particularly interested in the dynamics of how inferred hypotheses change as a function of amount of data (often thought of as time the learner spends acquiring data). We can map out the *trajectory* of learning by plotting a summary of the posterior distribution over hypotheses as a function of the amount of observed data. Here we plot the expectation that the coin is fair in the above example:
+
+~~~~
+///fold:
+var makeCoin = function(weight) {
+  return function() {
+    return flip(weight) ? 'h' : 't'
+  }
+};
+///
+
+var fairnessPosterior = function(observedData) {
+  return Infer({method: 'enumerate'}, function() {
+    var fair = flip(0.999)
+    var coin = makeCoin(fair ? 0.5 : 0.95)
+    var obsFn = function(datum){condition(datum == coin())}
+    mapData({data: observedData}, obsFn)
+    return {fair: fair}
+  })
+}
+
+
+var trueWeight = .9;
+var trueCoin = makeCoin(trueWeight);
+var fullDataSet = repeat(100, trueCoin);
+var observedDataSizes = [1,3,6,10,20,30,50,70,100];
+var estimates = map(function(N) {
+  return expectation(fairnessPosterior(fullDataSet.slice(0,N)), function(x){return x.fair})
+}, observedDataSizes);
+viz.line(observedDataSizes, estimates);
+~~~~
+
+Notice that different runs of this program can give quite different trajectories, but always end up in the same place in the long run. This is because the data set used for learning is different on each run. This is a feature, not a bug: real learners have idiosyncratic experience, even if they are al drawn from the same distribution. Of course, we are often interested in the average behavior of an ideal learner: we could average this plot over many randomly chosen data sets, simulating many different learners.  
+
 # Learning a Continuous Parameter
 
-The previous example represents perhaps the simplest imaginable case of learning.  Typical learning problems in human cognition or AI are more complex in many ways.  For one, learners are almost always confronted with more than two hypotheses about the causal structure that might underlie their observations.  Indeed, hypothesis spaces for learning are often infinite.  Countably infinite hypothesis spaces are encountered in models of learning for domains traditionally considered to depend on "discrete" or "symbolic" knowledge; hypothesis spaces of grammars in language acquisition are a canonical example.  Hypothesis spaces for learning in domains traditionally considered more "continuous", such as perception or motor control, are typically uncountable and parametrized by one or more continuous dimensions.  In causal learning, both discrete and continuous hypothesis spaces typically arise.  In statistics and machine learning, making conditional inferences over continuous hypothesis spaces given data is usually called *parameter estimation*.
+The previous example represents perhaps the simplest imaginable case of learning.  Typical learning problems in human cognition or AI are more complex in many ways.  For one, learners are almost always confronted with more than two hypotheses about the causal structure that might underlie their observations.  Indeed, hypothesis spaces for learning are often infinite.  Countably infinite hypothesis spaces are encountered in models of learning for domains traditionally considered to depend on "discrete" or "symbolic" knowledge; hypothesis spaces of grammars in language acquisition are a canonical example.  Hypothesis spaces for learning in domains traditionally considered more "continuous", such as perception or motor control, are typically uncountable and parametrized by one or more continuous dimensions.  In causal learning, both discrete and continuous hypothesis spaces typically arise.  (In statistics, making conditional inferences over continuous hypothesis spaces given data is often called *parameter estimation*.)
 
 We can explore a basic case of learning with continuous hypothesis spaces by slightly enriching our coin flipping example.  Suppose that our hypothesis generator `makeCoin`, instead of simply flipping a coin to determine which of two coin weights to use, can choose *any* coin weight between 0 and 1.
-<!--
-For this we need to introduce a new kind of XRP that outputs a real number in the interval $[0,1]$, corresponding to the coin weight, in addition to `flip` which outputs a Boolean truth value.  The simplest such XRP in WebPPL is called `uniform`, which outputs a random real number chosen uniformly between a given upper and lower bound.
--->
 The following program computes conditional inferences about the weight of a coin drawn from a *prior distribution* described by the `Uniform` function, conditioned on a set of observed flips.
 
 ~~~~
@@ -104,29 +139,26 @@ var makeCoin = function(weight) {
   }
 };
 ///
-var observedData = ['h', 'h', 'h', 'h', 'h'];
-var numFlips = observedData.length;
-var weightPrior = Uniform({a: 0, b: 1})
+var observedData = ['h', 'h', 'h', 'h', 'h']
 
-var fairnessPosterior = Infer({method: 'rejection', samples: 1000}, function() {
-  var coinWeight = sample(weightPrior);
-  var coin = makeCoin(coinWeight);
-  condition(_.isEqual(observedData, repeat(numFlips, coin)));
-  return coinWeight;
-});
+var weightPosterior = Infer({method: 'rejection', samples: 1000}, function() {
+  var coinWeight = sample(Uniform({a: 0, b: 1}))
+  var coin = makeCoin(coinWeight)
+  var obsFn = function(datum){condition(datum == coin())}
+  mapData({data: observedData}, obsFn)
+  return coinWeight
+})
 
-viz.auto(fairnessPosterior);
-viz.auto(repeat(10000, function(){return uniform(0,1)}))
+viz(weightPosterior)
 ~~~~
 
-
-Because the output of inference is a set of conditional samples, and each sample is drawn from the uncountable interval $$[0,1]$$, we cannot expect that any of these samples will correspond exactly to the true coin weight or the single most likely value.
 <!--
+Because the output of inference is a set of conditional samples, and each sample is drawn from the uncountable interval $$[0,1]$$, we cannot expect that any of these samples will correspond exactly to the true coin weight or the single most likely value.
 By binning the samples, however, we can get a meaningful estimate of how likely the coin weight is to fall in any subinterval of $[0,1]$.  We call the distribution of samples produced by conditional inference on data the *conditional distribution*, or sometimes the *posterior distribution*, to contrast with the prior distribution expressing our a priori beliefs.   The code above illustrates both prior and conditional distributions, each with a histogram of 1000 samples.
 -->
 Experiment with different data sets, varying both the number of flips and the relative proportion of heads and tails.  How does the shape of the conditional distribution change?  The location of its peak reflects a reasonable "best guess" about the underlying coin weight.  It will be roughly equal to the proportion of heads observed, reflecting the fact that our prior knowledge is basically uninformative; a priori, any value of `coinWeight` is equally likely.  The spread of the conditional distribution reflects a notion of confidence in our beliefs about the coin weight.  The distribution becomes more sharply peaked as we observe more data, because each flip, as an independent sample of the process we are learning about, provides additional evidence the process's unknown parameters.
 
-When studying learning as conditional inference, that is when considering an *ideal learner model*, we are particularly interested in the dynamics of how inferred hypotheses change as a function of amount of data (often thought of as time the learner spends acquiring data). We can map out the *trajectory* of learning by plotting a summary of the posterior distribution over hypotheses as a function of the amount of observed data. Here we plot the mean of the samples of the coin weight (the *expected* weight) in the above example:
+ We can again look at the learning trajectory in this example:
 
 ~~~~
 ///fold:
@@ -137,31 +169,28 @@ var makeCoin = function(weight) {
 };
 ///
 
-var weightPosterior = function(data) {
+var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', samples: 1000}, function() {
-    var coinWeight = uniform(0,1);
-    var coin = makeCoin(coinWeight);
-    factor(sum(map(function(obs) {
-      var bernoulliOutcome = obs == 'h' ? true : false;
-      return Bernoulli({p: coinWeight}).score(bernoulliOutcome);
-    }, data)));
-    return coinWeight;
-  });
-};
+    var coinWeight = sample(Uniform({a: 0, b: 1}))
+    var coinDist = Bernoulli({p: coinWeight})
+    var obsFn = function(datum){observe(coinDist, datum=='h')}
+    mapData({data: observedData}, obsFn)
+    return coinWeight
+  })
+}
 
 var trueWeight = .9;
 var trueCoin = makeCoin(trueWeight);
 var fullDataSet = repeat(100, trueCoin);
-var observedDataSizes = [1,3,6,10,20,30,50,70,100];
+var observedDataSizes = [0,1,3,6,10,20,30,50,70,100];
 var estimates = map(function(N) {
   return expectation(weightPosterior(fullDataSet.slice(0,N)))
 }, observedDataSizes);
 viz.line(observedDataSizes, estimates);
 ~~~~
 
-Try plotting different kinds of statistics, e.g., the absolute difference between the true mean and the estimated mean (using the function `abs`), or a confidence measure like the standard error of the mean.
-
-Notice that different runs of this program can give quite different trajectories, but always end up in the same place in the long run. This is because the data set used for learning is different on each run. Of course, we are often interested in the average behavior of an ideal learner: we would average this plot over many randomly chosen data sets, simulating many different learners (however, this is too time consuming for a quick simulation).
+(Note that we have made two changes for algorithmic efficiency: we have re-written `obsFn` to use `observe` instead of `condition`, and we have switched to method `MCMC`. Think about why this helps!)
+You can explore what is learned by plotting different kinds of statistics by passing a function to the `expectation`. For example, the absolute difference between the true mean and the estimated mean, or a confidence measure like the standard error of the mean.
 
 What if we would like to learn about the weight of a coin, or any parameters of a causal model, for which we have some informative prior knowledge?  It is easy to see that the previous WebPPL program doesn't really capture our prior knowledge about coins, or at least not in the most familiar everyday scenarios.  Imagine that you have just received a quarter in change from a store -- or even better, taken it from a nicely wrapped-up roll of quarters that you have just picked up from a bank.  Your prior expectation at this point is that the coin is almost surely fair.  If you flip it 10 times and get 7 heads out of 10, you'll think nothing of it; that could easily happen with a fair coin and there is no reason to suspect the weight of this particular coin is anything other than 0.5.  But running the above query with uniform prior beliefs on the coin weight, you'll guess the weight in this case is around 0.7. Our hypothesis generating function needs to be able to draw `coinWeight` not from a uniform distribution, but from some other function that can encode various expectations about how likely the coin is to be fair, skewed towards heads or tails, and so on. We use the beta distribution:
 
@@ -174,23 +203,26 @@ var makeCoin = function(weight) {
 };
 ///
 
-var observedData = ['h', 'h', 'h', 't', 'h', 't', 'h', 'h', 't', 'h'];
-var numFlips = observedData.length;
 var pseudoCounts = {a: 10, b: 10};
-var weightPrior = Beta({a: pseudoCounts.a, b: pseudoCounts.b});
 
-var weightPosterior = Infer({method: 'MCMC', samples: 5000}, function() {
-  var coinWeight = sample(weightPrior);
-  var coin = makeCoin(coinWeight);
-  factor(sum(map(function(obs) {
-    var bernoulliOutcome = obs == 'h' ? true : false;
-    return Bernoulli({p: coinWeight}).score(bernoulliOutcome);
-  }, observedData)))
-  return coinWeight;
-});
+var weightPosterior = function(observedData){
+  return Infer({method: 'MCMC', samples: 1000}, function() {
+    var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
+    var coinDist = Bernoulli({p: coinWeight})
+    var obsFn = function(datum){observe(coinDist, datum=='h')}
+    mapData({data: observedData}, obsFn)
+    return coinWeight
+  })
+}
 
-viz.auto(weightPosterior);
-viz.auto(repeat(1000, function(){return sample(weightPrior)}));
+var trueWeight = .9;
+var trueCoin = makeCoin(trueWeight);
+var fullDataSet = repeat(100, trueCoin);
+var observedDataSizes = [0,1,3,6,10,20,30,50,70,100];
+var estimates = map(function(N) {
+  return expectation(weightPosterior(fullDataSet.slice(0,N)))
+}, observedDataSizes);
+viz.line(observedDataSizes, estimates);
 ~~~~
 
 Is the family of Beta distributions sufficient to represent all of people's intuitive prior knowledge about the weights of typical coins?  It would be mathematically appealing if so, but unfortunately people's intuitions are too rich to be summed up with a single Beta distribution.  To see why, imagine that you flip this quarter fresh from the bank and flip it 25 times, getting heads every single time!  Using a Beta prior with pseudo-counts of 100, 100 or 1000, 1000 seems reasonable to explain why seeing 7 out of 10 heads does not move our conditional estimate of the weight very much at all from its prior value of 0.5, but this doesn't fit at all what we think if we see 25 heads in a row.  Try running the program above with a coin weight drawn from $$\text{Beta}(100,100)$$ and an observed data set of 25 heads and no tails.  The most likely coin weight in the conditional inference now shifts slightly towards a heads-bias, but it is far from what you would actually think given these (rather surprising!) data.  No matter how strong your initial belief that the bank roll was filled with fair coins, you'd think: "25 heads in a row without a single tail?  Not a chance this is a fair coin.  Something fishy is going on... This coin is almost surely going to come up heads forever!"  As unlikely as it is that someone at the bank has accidentally or deliberately put a trick coin in your fresh roll of quarters, that is not nearly as unlikely as flipping a fair coin 25 times and getting no tails.
