@@ -192,7 +192,7 @@ viz.line(observedDataSizes, estimates);
 (Note that we have made two changes for algorithmic efficiency: we have re-written `obsFn` to use `observe` instead of `condition`, and we have switched to method `MCMC`. Think about why this helps!)
 You can explore what is learned by plotting different kinds of statistics by passing a function to the `expectation`. For example, the absolute difference between the true mean and the estimated mean, or a confidence measure like the standard error of the mean.
 
-What if we would like to learn about the weight of a coin, or any parameters of a causal model, for which we have some informative prior knowledge?  It is easy to see that the previous WebPPL program doesn't really capture our prior knowledge about coins, or at least not in the most familiar everyday scenarios.  Imagine that you have just received a quarter in change from a store -- or even better, taken it from a nicely wrapped-up roll of quarters that you have just picked up from a bank.  Your prior expectation at this point is that the coin is almost surely fair.  If you flip it 10 times and get 7 heads out of 10, you'll think nothing of it; that could easily happen with a fair coin and there is no reason to suspect the weight of this particular coin is anything other than 0.5.  But running the above query with uniform prior beliefs on the coin weight, you'll guess the weight in this case is around 0.7. Our hypothesis generating function needs to be able to draw `coinWeight` not from a uniform distribution, but from some other function that can encode various expectations about how likely the coin is to be fair, skewed towards heads or tails, and so on. We use the beta distribution:
+What if we would like to learn about the weight of a coin, or any parameters of a causal model, for which we have some informative prior knowledge?  It is easy to see that the previous WebPPL program doesn't really capture our prior knowledge about coins, or at least not in the most familiar everyday scenarios.  Imagine that you have just received a quarter in change from a store -- or even better, taken it from a nicely wrapped-up roll of quarters that you have just picked up from a bank.  Your prior expectation at this point is that the coin is almost surely fair.  If you flip it 10 times and get 7 heads out of 10, you'll think nothing of it; that could easily happen with a fair coin and there is no reason to suspect the weight of this particular coin is anything other than 0.5.  But running the above query with uniform prior beliefs on the coin weight, you'll guess the weight in this case is around 0.7. Our hypothesis generating function needs to be able to draw `coinWeight` not from a uniform distribution, but from some other function that can encode various expectations about how likely the coin is to be fair, skewed towards heads or tails, and so on. We use the Beta distribution:
 
 ~~~~
 ///fold:
@@ -225,16 +225,17 @@ var estimates = map(function(N) {
 viz.line(observedDataSizes, estimates);
 ~~~~
 
-Is the family of Beta distributions sufficient to represent all of people's intuitive prior knowledge about the weights of typical coins?  It would be mathematically appealing if so, but unfortunately people's intuitions are too rich to be summed up with a single Beta distribution.  To see why, imagine that you flip this quarter fresh from the bank and flip it 25 times, getting heads every single time!  Using a Beta prior with pseudo-counts of 100, 100 or 1000, 1000 seems reasonable to explain why seeing 7 out of 10 heads does not move our conditional estimate of the weight very much at all from its prior value of 0.5, but this doesn't fit at all what we think if we see 25 heads in a row.  Try running the program above with a coin weight drawn from $$\text{Beta}(100,100)$$ and an observed data set of 25 heads and no tails.  The most likely coin weight in the conditional inference now shifts slightly towards a heads-bias, but it is far from what you would actually think given these (rather surprising!) data.  No matter how strong your initial belief that the bank roll was filled with fair coins, you'd think: "25 heads in a row without a single tail?  Not a chance this is a fair coin.  Something fishy is going on... This coin is almost surely going to come up heads forever!"  As unlikely as it is that someone at the bank has accidentally or deliberately put a trick coin in your fresh roll of quarters, that is not nearly as unlikely as flipping a fair coin 25 times and getting no tails.
+Is the family of Beta distributions sufficient to represent all of people's intuitive prior knowledge about the weights of typical coins?  It would be mathematically appealing if so, but unfortunately people's intuitions are too rich to be summed up with a single Beta distribution.  To see why, imagine that you flip this quarter fresh from the bank and flip it 25 times, getting heads every single time!  Using a Beta prior with pseudo-counts of 100, 100 or 1000, 1000 seems reasonable to explain why seeing 7 out of 10 heads does not move our conditional estimate of the weight very much at all from its prior value of 0.5, but this doesn't fit at all what we think if we see 25 heads in a row.  Try running the program above with a coin weight drawn from `Beta({a:100, b:100})` and an observed data set of 25 heads and no tails.  The most likely coin weight in the conditional inference now shifts slightly towards a heads-bias, but it is far from what you would actually think given these (rather surprising!) data.  No matter how strong your initial belief that the bank roll was filled with fair coins, you'd think: "25 heads in a row without a single tail?  Not a chance this is a fair coin.  Something fishy is going on... This coin is almost surely going to come up heads forever!"  As unlikely as it is that someone at the bank has accidentally or deliberately put a trick coin in your fresh roll of quarters, that is not nearly as unlikely as flipping a fair coin 25 times and getting no tails.
 
+<!--what follows is very rambly... need to tighten up. defer some to hierarchical models chapter.-->
 Imagine the learning curve as you flip this coin from the bank and get 5 heads in a row... then 10 heads in a row... then 15 heads... and so on.  Your beliefs seem to shift from "fair coin" to "trick coin" hypotheses discretely, rather than going through a graded sequence of hypotheses about a continuous coin weight moving smoothly between 0.5 and 1.
 It is clear that this "trick coin" hypothesis, however, is not merely the hypothesis of a coin that always (or almost always) comes up heads, as in the first simple example in this section where we compared two coins with weight 0.5 and 0.95.
 Suppose that you flipped a quarter fresh from the bank 100 times and got 85 heads and 15 tails.
 As strong as your prior belief starts out in favor of a fair coin, this coin also won't seem fair.
-Using a strong beta prior (e.g., $$\text{Beta}(100,100)$$ or $$\text{Beta}(1000,1000)$$) suggests counterintuitively that the weight is still near 0.5 (respectively, 0.52 or 0.62).
+Using a strong beta prior suggests counterintuitively that the weight is still near 0.5 (respectively, 0.52 or 0.62).
 Given the choice between a coin of weight 0.5 and 0.95, weight 0.95 is somewhat more likely.
 But neither of those choices matches intuition at this point, which is probably close to the empirically observed frequency: "This coin obviously isn't fair, and given that it came up heads 85/100 times, my best guess is it that it will come heads around 85% of the time in the future."
-Confronted with these anomalous sequences, 25/25 heads or 85/100 heads from a freshly unwrapped quarter, it seems that the evidence shifts us from an initially strong belief in a fair coin (something like a $$\text{Beta}(1000,1000)$$ prior) to a strong belief in a discretely different alternative hypothesis, a biased coin of some unknown weight (more like a uniform or $$\text{Beta}(1,1)$$ distribution).
+Confronted with these anomalous sequences, 25/25 heads or 85/100 heads from a freshly unwrapped quarter, it seems that the evidence shifts us from an initially strong belief in a fair coin to a strong belief in a discretely different alternative hypothesis, a biased coin of some unknown weight (more like a Uniform distribution).
 Once we make the transition to the biased coin hypothesis we can estimate the coin's weight on mostly empirical grounds, effectively as if we are inferring that we should "switch" our prior on the coin's weight from a strongly symmetric beta to a much more uniform distribution.
 
 <!--
@@ -249,45 +250,48 @@ This seems intuitively reasonable: unless we have strong reason to suspect a tri
 -->
 
 We will see later on how to explain this kind of belief trajectory -- and we will see a number of learning, perception and reasoning phenomena that have this character.  The key will be to describe people's prior beliefs using more expressive programs than we can capture with a single primitive distribution familiar from statistics.
-Most real world problems of parameter estimation, or learning continuous parameters of causal models, are significantly more complex than this simple example.  They typically involve joint inference over more than one parameter at a time, with a more complex structure of functional dependencies.  They also often draw on stronger and more interestingly structured prior knowledge about the parameters, rather than just assuming uniform or beta initial beliefs.  Our intuitive theories of the world have a more abstract structure, embodying a hierarchy of more or less complex mental models. Yet the same basic logic of how to approach learning as conditional inference applies.
+Most real world problems of parameter estimation, or learning continuous parameters of causal models, are significantly more complex than this simple example.  They typically involve joint inference over more than one parameter at a time, with a more complex structure of functional dependencies.  They also often draw on stronger and more interestingly structured prior knowledge about the parameters, rather than just assuming Uniform or Beta initial beliefs.  Our intuitive theories of the world have a more abstract structure, embodying a hierarchy of more or less complex mental models. Yet the same basic logic of how to approach learning as conditional inference applies.
 
 ## Example: Estimating Causal Power
 
-A common problem for cognition is *causal learning*: from observed evidence about the co-occurance of events, attempt to infer the causal structure relating them. An especially simple case that has been studied by psychologists is *elemental causal induction*: causal learning when there are only two events, a potential cause C and a potential effect E. Cheng and colleagues [@Cheng] have suggested assuming that C and background effects can both cause C, with a noisy-or interaction. Causal learning then because an example of parameter learning,  where the parameter is the "causal power" of C to cause E:
+A common problem for cognition is *causal learning*: from observed evidence about the co-occurance of events, attempt to infer the causal structure relating them. An especially simple case that has been studied by psychologists is *elemental causal induction*: causal learning when there are only two events, a potential cause C and a potential effect E. Cheng and colleagues [@Cheng] have suggested assuming that C and background effects can both cause C, with a noisy-or interaction. Causal learning then becomes an example of parameter learning,  where the parameter is the "causal power" of C to cause E:
 
 ~~~~
+var observedData = [{C:true, E:true}, {C:true, E:true}, {C:false, E:false}, {C:true, E:true}]
+
 var causalPowerPost = Infer({method: 'MCMC', samples: 10000}, function() {
   // Causal power of C to cause E
-  var cp = uniform(0, 1);
+  var cp = uniform(0, 1)
 
   // Background probability of E
-  var b = uniform(0, 1);
+  var b = uniform(0, 1)
 
-  // The noisy causal relation to get E given C
-  var EifC = function(C) {return (C && flip(cp)) || flip(b)};
+  var obsFn = function(datum) {
+    // The noisy causal relation to get E given C
+    var E = (datum.C && flip(cp)) || flip(b)
+    condition( E == datum.E)
+  }
 
-  // condition on some contingency evidence
-  condition(EifC(true) && EifC(true) && !EifC(false) && EifC(true));
+  mapData({data: observedData}, obsFn)
 
-  return cp;
+  return {causal_power: cp}
 });
 
-viz.auto(causalPowerPost);
+viz(causalPowerPost);
 ~~~~
 
-Experiment with this model: when does it conclude that a causal relation is likely (high `cp`)? Does this match your intuitions? What role does the background rate `b` play? What happens if you change the functional relationship in `EifC`?
+Experiment with this model: when does it conclude that a causal relation is likely (high `cp`)? Does this match your intuitions? What role does the background rate `b` play? What happens if you change the functional relationship in `obsFn`?
 
 
 
 # Grammar-based Concept Induction
 
-An important worry about Bayesian models of learning is that the Hypothesis space must either be too simple, as in the models above, specified in a rather ad-hoc way, or both. There is a tension here: human representations of the world are enormously complex and so the space of possible representations must be correspondingly big, and yet we would like to understand the representational resources in simple and uniform terms. How can we construct very large (possibly infinite) hypothesis spaces, and priors over them, with limited tools? One possibility is to use a grammar to specify a *hypothesis language*: a small grammar can generate an infinite array of potential hypotheses. Because grammars are themselves generative processes, a prior is provided as well.
+An important worry about Bayesian models of learning is that the Hypothesis space must either be too simple (as in the models above), specified in a rather ad-hoc way, or both. There is a tension here: human representations of the world are enormously complex and so the space of possible representations must be correspondingly big, and yet we would like to understand the representational resources in simple and uniform terms. How can we construct very large (possibly infinite) hypothesis spaces, and priors over them? One possibility is to use a grammar to specify a *hypothesis language*: a small grammar can generate an infinite array of potential hypotheses. Because grammars are themselves generative processes, a prior is provided for free from this formulation.
 
 ## Example: Inferring an Arithmetic Expression
 
-Consider the following WebPPL program, which induces an arithmetic function from examples. We generate an expression as a list, and then turn it into a value (in this case a procedure) by using `apply`---a function that invokes evaluation.
-
-**TODO: Issues with webpplEval. Might want to cut example, since there's an eval-less version below that does the same thing?**
+<!--
+We generate an expression as a list, and then turn it into a value (in this case a procedure) by using `apply`---a function that invokes evaluation.
 
 ~~~~
 var randomArithmeticExpression = function() {
@@ -311,8 +315,9 @@ var expressionPosterior = Infer({method: 'enumerate', maxExecutions: 100}, funct
 
 viz.table(expressionPosterior);
 ~~~~
+-->
 
-The query asks for an arithmetic expression on variable `x` such that it evaluates to `3` when `x` is `1`. In this example there are many extensionally equivalent ways to satisfy the condition, for instance the expressions `3`, `1 + 2`, and `x + 2`, but because the more complex expressions require more choices to generate, they are chosen less often. What happens if we observe more data? For instance, try changing the condition in the above query to `f(1) == 3 && f(2) == 4`. Using `eval` can be rather slow, so here's another formulation that directly builds the arithmetic function by random combination of subfunctions:
+Consider the following WebPPL program, which induces an arithmetic function from examples. (The helper functions `prettify` and `runify`, above the fold, make the expression pretty to look at and a runnable function, respectively.)
 
 ~~~~
 ///fold:
@@ -320,13 +325,13 @@ The query asks for an arithmetic expression on variable `x` such that it evaluat
 var prettify = function(e) {
   if (e == 'x' || _.isNumber(e)) {
     return e
-  } else if (_.isArray(e)) {
-    var op = e[0];
-    var arg1 = prettify(e[1]),
-        arg2 = prettify(e[2]);
-    return (!_.isArray(e[1]) ? arg1 : '(' + arg1 + ')') +
-      ' ' + op + ' ' +
-      (!_.isArray(e[2]) ? arg2 : '(' + arg2 + ')');
+  } else {
+    var op = e[0]
+    var arg1 = prettify(e[1])
+    var prettyarg1 = (!_.isArray(e[1]) ? arg1 : '(' + arg1 + ')')
+    var arg2 = prettify(e[2])
+    var prettyarg2 = (!_.isArray(e[2]) ? arg2 : '(' + arg2 + ')')
+    return prettyarg1 + ' ' + op + ' ' + prettyarg2
   }
 }
 
@@ -344,12 +349,12 @@ var runify = function(e) {
     return function(z) { return z }
   } else if (_.isNumber(e)) {
     return function(z) { return e }
-  } else if (_.isArray(e)) {
-    var op = (e[0] == '+') ? plus : minus;
-    var args = map(runify, e.slice(1));
+  } else {
+    var op = (e[0] == '+') ? plus : minus
+    var arg1Fn = runify(e[1])
+    var arg2Fn = runify(e[2])
     return function(z) {
-      var argsEvaled = map(function(g) { return g(z) }, args)
-      return apply(op, argsEvaled)
+      return op(arg1Fn(z),arg2Fn(z))
     }
   }
 }
@@ -364,7 +369,7 @@ var randomCombination = function(f,g) {
   return [op, f, g];
 }
 
-// sample an arithmetic expression structured as an s-expression
+// sample an arithmetic expression
 var randomArithmeticExpression = function() {
   if (flip(0.3)) {
     return randomCombination(randomArithmeticExpression(), randomArithmeticExpression())
@@ -377,19 +382,17 @@ var randomArithmeticExpression = function() {
   }
 }
 
-viz.table(Enumerate(function() {
+viz.table(Infer({method: 'enumerate', maxExecutions: 100}, function() {
   var e = randomArithmeticExpression();
   var s = prettify(e);
   var f = runify(e);
   condition(f(1) == 3);
 
   return {s: s, "f(2)": f(2)};
-
-  return {s: s, fx: fx}
-}, {maxExecutions: 100}));
+}))
 ~~~~
 
-This model learns from an infinite hypothesis space---all expressions made from 'x', '+', '-', and constant integers---but specifies both the hypothesis space and its prior using the simple generative process `randomArithmeticExpression`.
+The query asks for an arithmetic expression on variable `x` such that it evaluates to `3` when `x` is `1`. In this example there are many extensionally equivalent ways to satisfy the condition, for instance the expressions `3`, `1 + 2`, and `x + 2`, but because the more complex expressions require more choices to generate, they are chosen less often. What happens if we observe more data? For instance, try changing the condition in the above query to `f(1) == 3 && f(2) == 4`. This model learns from an infinite hypothesis space---all expressions made from 'x', '+', '-', and constant integers---but specifies both the hypothesis space and its prior using the simple generative process `randomArithmeticExpression`.
 
 
 ## Example: Rational Rules
@@ -408,14 +411,14 @@ Is it possible to get graded effects from rule-based concepts? Perhaps these eff
 // first set up the training (cat A/B) and test objects:
 var numFeatures = 4;
 
-var makeObj = function(l) {return _.object(['trait1', 'trait2', 'trait3', 'trait4'], l)};
-var AObjects = map(makeObj, [[0,0,0,1], [0,1,0,1], [0,1,0,0], [0,0,1,0], [1,0,0,0]]);
-var BObjects = map(makeObj, [[0,0,1,1], [1,0,0,1], [1,1,1,0], [1,1,1,1]]);
+var makeObj = function(l) {return _.object(['trait1', 'trait2', 'trait3', 'trait4'], l)}
+var AObjects = map(makeObj, [[0,0,0,1], [0,1,0,1], [0,1,0,0], [0,0,1,0], [1,0,0,0]])
+var BObjects = map(makeObj, [[0,0,1,1], [1,0,0,1], [1,1,1,0], [1,1,1,1]])
 var TObjects = map(makeObj, [[0,1,1,0], [0,1,1,1], [0,0,0,0], [1,1,0,1], [1,0,1,0], [1,1,0,0], [1,0,1,1]])
 
 //here are the human results from Nosofsky et al, for comparison:
-var humanA = [.77, .78, .83, .64, .61];
-var humanB = [.39, .41, .21, .15];
+var humanA = [.77, .78, .83, .64, .61]
+var humanB = [.39, .41, .21, .15]
 var humanT = [.56, .41, .82, .40, .32, .53, .20]
 
 // two parameters: stopping probability of the grammar, and noise probability:
@@ -451,37 +454,36 @@ var getFormula = function() {
   }
 }
 
-var noisyEqual = function(a, b) {
-  return flip(a == b ?  0.999999999 : noiseParam)
-}
-
-var rulePosterior = Infer({method: 'MCMC', samples: 20000, justSample: true}, function() {
+var rulePosterior = Infer({method: 'MCMC', samples: 20000}, function() {
   // sample a classification formula
   var rule = getFormula();
   // condition on correctly (up to noise) accounting for A & B categories
-  condition(all(function(x) { return x;}, map(function(obj){return noisyEqual(true, rule(obj))}, AObjects)) &&
-            all(function(x) { return x;}, map(function(obj){return noisyEqual(false, rule(obj))}, BObjects)));
+  var obsFnA = function(datum){observe(Bernoulli({p: rule(datum) ? 0.999999999 : noiseParam}), true)}
+  mapData({data:AObjects}, obsFnA)
+  var obsFnB = function(datum){observe(Bernoulli({p: !rule(datum) ? 0.999999999 : noiseParam}), true)}
+  mapData({data:BObjects}, obsFnB)
   // return posterior predictive
   var allObjs = TObjects.concat(AObjects).concat(BObjects);
-  return _.object(_.range(allObjs.length), map(rule, TObjects.concat(AObjects).concat(BObjects)));
+  return _.object(_.range(allObjs.length), map(rule, allObjs));
 })
 
-// Do some data munging to pull out avg predictions for each item
-var samples = _.pluck(rulePosterior.samples, "value");
-var predictives = map(function(item) {
-  return listMean(_.pluck(samples, item));
-}, _.range(15))
+//build predictive distribution for each item
+var predictives = map(function(item){return expectation(rulePosterior,function(x){x[item]})}, _.range(15))
+
 var humanData = humanT.concat(humanA).concat(humanB)
 viz.scatter(predictives, humanData)
 ~~~~
+<!--note: this also works fine with enumerate.. switch?-->
 
-Goodman, et al, have used to this model to capture a variety of classic categorization effects [@Goodman:2008p865]. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
+Goodman, et al, have used to this model to capture a variety of classic categorization effects [@Goodman:2008b]. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
 
 This style of compositional concept induction model, can be naturally extended to more complex hypothesis spaces. For examples, see:
 
 * Compositionality in rational analysis: Grammar-based induction for concept learning. N. D. Goodman, J. B. Tenenbaum, T. L. Griffiths, and J. Feldman (2008). In M. Oaksford and N. Chater (Eds.). The probabilistic mind: Prospects for Bayesian cognitive science.
 
 * A Bayesian Model of the Acquisition of Compositional Semantics. S. T. Piantadosi, N. D. Goodman, B. A. Ellis, and J. B. Tenenbaum (2008). Proceedings of the Thirtieth Annual Conference of the Cognitive Science Society.
+
+* Piantadosi, S. T., & Jacobs, R. A. (2016). Four Problems Solved by the Probabilistic Language of Thought. Current Directions in Psychological Science, 25(1).
 
 It has been used to model theory acquisition, learning natural numbers concepts, etc. Further, there is no reason that the concepts need to be deterministic; in WebPPL stochastic functions can be constructed compositionally and learned by induction:
 
