@@ -333,6 +333,7 @@ viz.line([0].concat(numObs), [1].concat(_.pluck(learningCurves, 'mseGlob')))
 ~~~~
 
 We now see that learning for this bag is quick, while global learning (and transfer) is slow.
+
 <!--
 <img src='{{site.baseurl}}/assets/img/boa-learningcurves-manybags.png' width='300' />
 <img src='{{site.baseurl}}/assets/img/boa-learningcurves-1bag.png' width='300' />
@@ -526,65 +527,49 @@ Intuitively, the observations for bags one, two and three should now suggest a v
 
 One well studied overhypothesis in cognitive development is the 'shape bias': the inductive bias which develops by 24 months and which is the preference to generalize a novel label for some object to other objects of the same shape, rather than say the same color or texture. Studies by Smith and colleagues [-@Smith2002] have shown that this bias can be learned with very little data. They trained 17 month old children, over eight weeks, on four pairs of novel objects where the objects in each pair had the same shape but differed in color and texture and were consistently given the same novel name. First order generalization was tested by showing children an object from one of the four trained categories and asking them to choose another such object from three choice objects that matched the shown object in exactly one feature. Children preferred the shape match. Second order generalization was also tested by showing children an object from a novel category and again children preferred the choice object which matched in shape. Smith and colleagues further found an increase in real-world vocabulary as a result of this training such that children who had been trained began to use more object names. Children had thus presumably learned something like 'shape is homogeneous within object categories' and were able to apply this inductive bias to word learning outside the lab.
 
-We now consider a model of learning the shape bias which uses the compound Dirichlet-multinomial model that we have been discussing in the context of bags of marbles. This model for the shape bias is from [@Kemp2007]. Rather than bags of marbles we now have object categories and rather than observing marbles we now observe the features of an object (e.g. its shape, color, and texture) drawn from one of the object categories. Suppose that a feature from each dimension of an object is generated independently of the other dimensions and there are separate values of alpha and phi for each dimension. Importantly, one needs to allow for more values along each dimension than appear in the training data so as to be able to generalize to novel shapes, colors, etc. To test the model we can feed it training data to allow it to learn the values for the alphas and phis corresponding to each dimension. We can then give it a single instance of some new category and then ask what the probability is that the various choice objects also come from the same new category. The WebPPL code below shows a model for the shape bias, conditioned on the same training data used in the Smith et al experiment. We can then ask both for draws from some category which we've seen before, and from some new category which we've seen a single instance of. One small difference from the previous models we've seen for the example case is that the alpha hyperparameter is now drawn from an exponential distribution with inverse mean 1, rather than a Gamma distribution. This is simply for consistency with the model given in the Kemp et al (2007) paper.
+We now consider a model of learning the shape bias which uses the compound Dirichlet-Discrete model that we have been discussing in the context of bags of marbles. This model for the shape bias is from [@Kemp2007]. Rather than bags of marbles we now have object categories and rather than observing marbles we now observe the features of an object (e.g. its shape, color, and texture) drawn from one of the object categories. Suppose that a feature from each dimension of an object is generated independently of the other dimensions and there are separate values of alpha and phi for each dimension. Importantly, one needs to allow for more values along each dimension than appear in the training data so as to be able to generalize to novel shapes, colors, etc. To test the model we can feed it training data to allow it to learn the values for the alphas and phis corresponding to each dimension. We can then give it a single instance of some new category and then ask what the probability is that the various choice objects also come from the same new category. The WebPPL code below shows a model for the shape bias, conditioned on the same training data used in the Smith et al experiment. We can then ask both for draws from some category which we've seen before, and from some new category which we've seen a single instance of. One small difference from the previous models we've seen for the example case is that the alpha hyperparameter is now drawn from an exponential distribution with inverse mean 1, rather than a Gamma distribution. This is simply for consistency with the model given in the Kemp et al (2007) paper.
 
 ~~~~
-///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
-var observeObject = function(category, objs) {
-  return sum(map(function(obj) {
-    return sum(map(function(dim) {
-      return category[dim].score(obj[dim])
-    }, _.keys(obj)))
-  }, objs));
-}
-///
-
 var attributes = ['shape', 'color', 'texture', 'size'];
 var values = {shape: _.range(11), color: _.range(11), texture: _.range(11), size: _.range(11)};
 
-var samplePhi = function(att) {
-  return getProbs(dirichlet(ones([values[att].length, 1])))
-}
-
-var makePrototype = function(params, att) {
-  return map(function(x){return x * params[att].alpha;}, params[att].phi);
-};
+var observedData = [{cat: 'cat1', shape: 1, color: 1, texture: 1, size: 1},
+                    {cat: 'cat1', shape: 1, color: 2, texture: 2, size: 2},
+                    {cat: 'cat2', shape: 2, color: 3, texture: 3, size: 1},
+                    {cat: 'cat2', shape: 2, color: 4, texture: 4, size: 2},
+                    {cat: 'cat3', shape: 3, color: 5, texture: 5, size: 1},
+                    {cat: 'cat3', shape: 3, color: 6, texture: 6, size: 2},
+                    {cat: 'cat4', shape: 4, color: 7, texture: 7, size: 1},
+                    {cat: 'cat4', shape: 4, color: 8, texture: 8, size: 2},
+                    {cat: 'cat5', shape: 5, color: 9, texture: 9, size: 1}]
 
 var categoryPosterior = Infer({method: 'MCMC', samples: 10000}, function(){
-  // sample a phi and alpha for each attribute
-  var params =  _.object(attributes, map(function(att) {
-    return {phi: samplePhi(att), alpha: exponential(1)};
-  }, attributes))
 
-  // put them together into the global parameters:
-  var prototype = _.object(attributes, map(function(att) {
-    return makePrototype(params, att);
-  }, attributes));
+  var prototype = mem(function(attr){
+    var phi = dirichlet(ones([values[attr].length, 1]))
+    var alpha = exponential(1)
+    return T.mul(phi,alpha)
+  })
 
-  var makeObject = mem(function(object){
-    return _.object(attributes, map(function(att) {
-      var probs = getProbs(dirichlet(Vector(prototype[att])));
-      return Categorical({vs: values[att], ps: probs});
-    }, attributes))
-  });
+  var makeAttrDist = mem(function(cat, attr){
+    var probs = T.toScalars(dirichlet(prototype(attr)))
+    return Categorical({vs: values[attr], ps: probs})
+  })
 
-  factor(observeObject(makeObject('cat1'), [{shape: 1, color: 1, texture: 1, size: 1},
-                                            {shape: 1, color: 2, texture: 2, size: 2}]) +
-         observeObject(makeObject('cat2'), [{shape: 2, color: 3, texture: 3, size: 1},
-                                            {shape: 2, color: 4, texture: 4, size: 2}]) +
-         observeObject(makeObject('cat3'), [{shape: 3, color: 5, texture: 5, size: 1},
-                                            {shape: 3, color: 6, texture: 6, size: 2}]) +
-         observeObject(makeObject('cat4'), [{shape: 4, color: 7, texture: 7, size: 1},
-                                            {shape: 4, color: 8, texture: 8, size: 2}]) +
-         observeObject(makeObject('cat5'), [{shape: 5, color: 9, texture: 9, size: 1}]))
+  var obsFn = function(datum){
+    map(function(attr){observe(makeAttrDist(datum.cat,attr), datum[attr])},
+        attributes)
+  }
 
-  return sample(makeObject('cat5')['shape'])
+  mapData({data: observedData}, obsFn)
+
+  return {cat5shape: sample(makeAttrDist('cat5','shape')),
+          cat5color: sample(makeAttrDist('cat5','color')),
+          catNshape: sample(makeAttrDist('catN','shape')),
+          catNcolor: sample(makeAttrDist('catN','color'))}
 })
 
-viz.auto(categoryPosterior)
+viz.marginals(categoryPosterior)
 ~~~~
 
 The program above gives us draws from some novel category for which we've seen a single instance. In the experiments with children, they had to choose one of three choice objects which varied according to the dimension they matched the example object from the category. We show below model predictions (from Kemp et al (2007)) for performance on the shape bias task which show the probabilities (normalized) that the choice object belongs to the same category as the test exemplar. The model predictions reproduce the general pattern of the experimental results of Smith et al in that shape matches are preferred in both the first and second order generalization case, and more strong in the first order generalization case. The model also helps to explain the childrens' vocabulary growth in that it shows how the shape bias can be generally learned, as seen by the differing values learned for the various alpha parameters, and so used outside the lab.
