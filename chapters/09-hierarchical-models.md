@@ -613,41 +613,6 @@ Results for two questions of the experiment are shown below. The results accord 
 
 Again, we can use the compound Dirichlet-multinomial model we have been working with throughout to model this task, following Kemp et al (2007). In the context of the question about members of the Barratos tribe, replace bags of marbles with tribes and the color of marbles with skin color, or the property of being obese. Observing data such that skin color is consistent within tribes but varies between tribes will cause a low value of the alpha corresponding to skin color to be learned, and so seeing a single example from some new tribe will result in a sharply peaked predictive posterior distribution for the new tribe. Conversely, given data that obesity varies within a tribe the model will learn a higher value of the alpha corresponding to obesity and so will not generalize nearly as much from a single instance from a new tribe. Note that again it's essential to have learning at the level of hyperparameters in order to capture this phenomenon. It is only by being able to learn appropriate values of the hyperparameters from observing a number of previous tribes that the model behaves reasonably when given a single observation from a new tribe.
 
-So far, we've been using the compound Dirichlet-multinomial to do one shot learning, by learning low values for the alpha hyperparameter. This causes the Dirichlet distribution at the second level to have parameters less than 1, and so to be 'spiky'. While such a Dirichlet distribution can lead to one shot learning, we're not explicitly learning about the variance of
-the categories in the model. We might imagine a similar model in which we handle continuous quantities and directly represent hyperparameters for the mean and variance of various related groups.
-
-**TODO: This model takes too long to converge (but the old probmods was all over the place, too)**
-
-~~~~
-var observeGroup = function(group, values) {
-  return sum(map(function(v) {return group.score(v)}, values));
-}
-
-var results = Infer({method: "MCMC", samples: 100000}, function() {
-  var overallVariance = gamma(1,1);
-  var overallShape = gamma(2,2);
-  var overallScale = gamma(2,2);
-
-  var makeGroup = mem(function(groupName) {
-    var groupVariance = gamma(overallShape, overallScale);
-    var groupMean = gaussian(1, overallVariance);
-    return Gaussian({mu: groupMean, sigma: groupVariance});
-  })
-
-  factor(observeGroup(makeGroup('one'), [1.001, 1.001, 1.001]) +
-        observeGroup(makeGroup('two'), [1.05, 1.05, 1.05]) +
-        observeGroup(makeGroup('three'), [1.1, 1.1, 1.1]) +
-        observeGroup(makeGroup('four'), [1.003]))
-
-  return makeGroup('new').params.sigma
-});
-
-print(expectation(results))
-viz.auto(results)
-~~~~
-
-In the next section, we will discuss a more complicated example of 'learning to learn' which also uses continuous distributions at the lowest level and learns something explicitly about the mean and covariance of both basic and superordinate categories is a model which learns what object features are necessary for retrieval and recognition.
-
 # Example: One-shot learning of visual categories
 
 Humans are able to categorize objects (in a space with a huge number of dimensions) after seeing just one example of a new category. For example, after seeing a single wildebeest people are able to identify other wildebeest, perhaps by drawing on their knowledge of other animals. The model in Salakhutdinov et al [-@Salakhutdinov2010] uses abstract knowledge learned from other categories as a prior on the mean and covariance matrix of new categories.
@@ -664,18 +629,55 @@ The model in the Salakhutdinov et al (2010) paper is not actually given the assi
 
 Results are shown for this model when run on the MSR Cambridge dataset which contains images in 24 different basic level categories. Specifically, the model is given a single instance of a cow and asked to retrieve other cow images. Shown are ROC curves for classifying test images belonging to a novel category versus the rest based on observing a single instance of the novel category. The red curve shows model results using a Euclidean metric, the blue curve results from the model described above, and the black curve from an Oracle model which uses the best possible metric. Also shown is a typical partition the model discovers of basic categories into superordinate categories.
 
+<!--
+So far, we've been using the compound Dirichlet-multinomial to do one shot learning, by learning low values for the alpha hyperparameter. This causes the Dirichlet distribution at the second level to have parameters less than 1, and so to be 'spiky'. While such a Dirichlet distribution can lead to one shot learning, we're not explicitly learning about the variance of
+the categories in the model. We might imagine a similar model in which we handle continuous quantities and directly represent hyperparameters for the mean and variance of various related groups.
+
+**TODO: Inference isn't stable for this example without more iterations (or a different method)**
+
+~~~~
+var observedData = [{group: 'one', val: 1.001}, {group: 'one', val: 1.001}, {group: 'one', val: 1.001},
+                    {group: 'two', val: 1.05}, {group: 'two', val: 1.05}, {group: 'two', val: 1.05},
+                    {group: 'three', val: 1.1}, {group: 'three', val: 1.1}, {group: 'three', val: 1.1},
+                    {group: 'four', val: 1.003}]
+
+var results = Infer({method: "MCMC", samples: 100000}, function() {
+  var overallVariance = gamma(1,1);
+  var overallShape = gamma(2,2);
+  var overallScale = gamma(2,2);
+
+  var makeGroup = mem(function(groupName) {
+    var groupVariance = gamma(overallShape, overallScale);
+    var groupMean = gaussian(1, overallVariance);
+    return Gaussian({mu: groupMean, sigma: groupVariance});
+  })
+
+  var obsFn = function(datum){
+    observe(makeGroup(datum.group), datum.val)
+  }
+
+  mapData({data: observedData}, obsFn)
+
+  return sample(makeGroup('four'))
+});
+
+print(expectation(results))
+viz(results)
+~~~~
+-->
+
 # Example: X-Bar Theory
 
 (This example comes from an unpublished manuscript by O'Donnell, Goodman, and Katzir)
 
 One of the central problems in generative linguistics has been to account for the ease and rapidity with which children are able to acquire their language from noisy, incomplete, and sparse data. One suggestion for how this can happen is that the space of possible natural languages varies *parametrically*. The idea is that there are a number of higher-order constraints on structure that massively reduce the complexity of the learning problem.  Each constraint is the result of a parameter taking on one of a small set of values.  (This is known as "principles and parameters" theory.)  The child needs only see enough data to set these parameters and the details of construction-specific structure will then generalize across the rest of the constructions of their language.
 
-One example, is the theory of headedness and X-bar phrase structure [see @Chomsky1970; @Jackendoff1981]. X-bar theory provides a hierarchical model for phrase structure. All phrases follow the same basic *template*:
+One example, is the theory of headedness and X-bar phrase structure [@Chomsky1970] [@Jackendoff1981]. X-bar theory provides a hierarchical model for phrase structure. All phrases follow the same basic *template*:
 
 $$ XP \longrightarrow Spec \ X^\prime$$
 $$ X^\prime   \longrightarrow  X \ Comp$$
 
-Where $X$ is a lexical (or functional) category such as $N$ (noun), $V$ (verb), etc. X-bar theory proposes that all phrase types have the same basic "internal geometry"; They have a *head*&mdash;a word of category $X$. They also have a specifier ($Spec$) and a complement ($Comp$), the complement is more closely associated with the head than the specifier.  The set of categories that can appear as complements and specifiers for a particular category of head is usually thought to be specified by universal grammar (but may also vary parametrically).
+Where $$X$$ is a lexical (or functional) category such as $$N$$ (noun), $$V$$ (verb), etc. X-bar theory proposes that all phrase types have the same basic "internal geometry"; They have a *head* -- a word of category $$X$$. They also have a specifier ($$Spec$$) and a complement ($Comp$), the complement is more closely associated with the head than the specifier.  The set of categories that can appear as complements and specifiers for a particular category of head is usually thought to be specified by universal grammar (but may also vary parametrically).
 
 An important way in which languages vary is the order in which heads appear with respect to their complements (and specifiers). Within a language there tends to be a dominant order, often with exceptions for some category types. For instance, English is primarily a head-initial language. In verb phrases, for example, the direct object (complement noun phrase) of a verb appears to the right of the head. However, there are exceptional cases such as the order of (simple) adjective and nouns: adjectives appear before the noun rather than after it (although more complex complement types such as relative clauses appear after the noun).
 

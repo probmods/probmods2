@@ -103,7 +103,7 @@ var urnSeq = function(urn, samples) {
     return []
   } else {
     var ball = uniformDraw(urn)
-    return [ball].concat(urnSeq(urn.concat([ball, ball]), samples-1))
+    return [ball].concat(urnSeq(urn.concat([ball]), samples-1))
   }
 }
 
@@ -122,7 +122,7 @@ Next, consider the de Finetti representation of this model:
 var urn_deFinetti = function(urn, samples) {
   var numWhite = sum(map(function(b){return b=='w'},urn))
   var numBlack = urn.length - numWhite
-  var latentPrior = Beta({a: numWhite/2, b: numBlack/2})
+  var latentPrior = Beta({a: numWhite, b: numBlack})
   var latent = sample(latentPrior)
   return repeat(samples, function() {return flip(latent) ? 'b' : 'w'})
 }
