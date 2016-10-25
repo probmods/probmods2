@@ -226,7 +226,7 @@ var sampleWords = function(lastWord) {
 sampleWords('start')
 ~~~~
 
-This is very much like the way we created an exchangeable model above, except instead of one unknown probability list, we have one for each previous word. Models like this are often called ''hierarchical'' n-gram models. We consider [hierarchical models](hierarchical-models.html) in more detail in a later chapter.
+This is very much like the way we created an exchangeable model above, except instead of one unknown probability list, we have one for each previous word. Models like this are often called ''hierarchical'' n-gram models. We consider [hierarchical models](09-hierarchical-models.html) in more detail in a later chapter.
 
 
 # Example: Subjective Randomness
