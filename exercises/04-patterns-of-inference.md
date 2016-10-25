@@ -54,7 +54,7 @@ var doesHomeworkPrior = Bernoulli({p: .8})
 var examFair = mem(function(exam) {return sample(examFairPrior)})
 var doesHomework = mem(function(student) {return sample(doesHomeworkPrior)});
 
-var pass = function(student exam) {
+var pass = function(student, exam) {
   return flip(examFair(exam) ?
               (doesHomework(student) ? .9 : .5) :
               (doesHomework(student) ? .2 : .1));

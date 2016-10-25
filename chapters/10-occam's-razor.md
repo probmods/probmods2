@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Occam's Razor
-description: Setting up types of conditional dependence
+description: Penalizing extra model flexibility.
 custom_js:
 - assets/js/draw.js
 ---
@@ -50,7 +50,7 @@ The following Church program demonstrates the size principle with a very simple 
 
 ~~~~
 var hypothesisToDist = function(hyp) {
-  return (hyp == 'Big' ? 
+  return (hyp == 'Big' ?
           Categorical({vs: ['a', 'b', 'c', 'd', 'e', 'f'], ps: [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]}) :
           Categorical({vs: ['a', 'b', 'c'], ps: [1/3, 1/3, 1/3]}));
 }
@@ -71,7 +71,7 @@ With a single observed `a`, we already favor hypothesis `Small`. What happens wh
 ~~~~
 ///fold:
 var hypothesisToDist = function(hyp) {
-  return (hyp == 'Big' ? 
+  return (hyp == 'Big' ?
           Categorical({vs: ['a', 'b', 'c', 'd', 'e', 'f'], ps: [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]}) :
           Categorical({vs: ['a', 'b', 'c'], ps: [1/3, 1/3, 1/3]}));
 }
@@ -149,7 +149,7 @@ Explore how the concept learned varies as a function of the number and distribut
 var observedData = [{x: 0.20, y: 0.60}, {x: 0.20, y: 0.80}, {x: 0.40, y: 0.80}, {x: 0.40, y: 0.60}, {x: 0.30, y: 0.70}]
 var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}, {x: 0.45, y: 0.50}, {x: 0.43, y: 0.70}, {x: 0.47, y: 0.60}]
 var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}]
-var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}, {x: 0.46, y: 0.63}, 
+var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}, {x: 0.46, y: 0.63},
                     {x: 0.43, y: 0.51}, {x: 0.42, y: 0.45}, {x: 0.48, y: 0.66}]
 ~~~~
 
@@ -204,7 +204,7 @@ In our example above we have illustrated Bayes Occam's razor with examples based
 
 ~~~~
 var hypothesisToDist = function(hypothesis) {
-  return (hypothesis == 'A' ? 
+  return (hypothesis == 'A' ?
           Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.375, 0.375, 0.125, 0.125]}) :
           Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.25, 0.25, 0.25, 0.25]}))
 }
@@ -230,7 +230,7 @@ Similar effects emerge if hypothesis B is not uniform, but favors different exam
 
 ~~~~
 var hypothesisToDist = function(hypothesis) {
-  return (hypothesis == 'A' ? 
+  return (hypothesis == 'A' ?
           Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.375, 0.375, 0.125, 0.125]}) :
           Categorical({vs: ['a', 'b', 'c', 'd'], ps: [0.25, 0.25, 0.25, 0.25]}))
 }
@@ -320,11 +320,11 @@ var results = function(data) {
   return Infer({method: 'MCMC', samples: 10000, burn: 1000}, function(){
     var fair = flip(fairPrior);
     var coinWeight = fair ? .5 : beta(pseudoCounts.a, pseudoCounts.b);
-	
+
     factor(sum(map(function(datum) {
       return datum == 'h' ? Bernoulli({p: coinWeight}).score(true) : Bernoulli({p: coinWeight}).score(false);
     }, data)));
-	
+
     return {fair : fair,
            weight: coinWeight};
   });
@@ -480,12 +480,12 @@ We can model this inference by building a generative model of scenes. To do so w
 var objectAppearance = function(object) {
   return map(function(yPixel) {
     return map(function(xPixel) {
-      var isBackgroundPixel = (xPixel < object.xLoc || xPixel >= object.xLoc + object.hSize || 
+      var isBackgroundPixel = (xPixel < object.xLoc || xPixel >= object.xLoc + object.hSize ||
                                yPixel < object.yLoc || yPixel >= object.yLoc + object.vSize);
       return isBackgroundPixel ? 0 : object.color;
     }, [0,1,2,3])
   }, [0,1])
-}; 
+};
 
 // layer the image of an object onto a "background" image. Note that the object occludes the background.
 var layer = function(object, image) {
@@ -507,14 +507,14 @@ var observedImage = [[0,1,0,0], [0,1,0,0]];
 var results = Infer({method: 'enumerate'}, function() {
   // sample how many objects
   var numObjects = flip() ? 1 : 2;
-  
+
   // sample the objects
   var obj1 = objectAppearance(sampleProperties());
   var obj2 = objectAppearance(sampleProperties());
 
   // only render the second object if there are two
   var image1 = numObjects > 1 ? layer(obj1, obj2) : obj1;
-  
+
   condition(_.isEqual(image1, observedImage));
   return numObjects;
 })
@@ -531,12 +531,12 @@ Now let's see what happens if we see the two "halves" moving together. We use a 
 var objectAppearance = function(object) {
   return map(function(yPixel) {
     return map(function(xPixel) {
-      var isBackgroundPixel = (xPixel < object.xLoc || xPixel >= object.xLoc + object.hSize || 
+      var isBackgroundPixel = (xPixel < object.xLoc || xPixel >= object.xLoc + object.hSize ||
                                yPixel < object.yLoc || yPixel >= object.yLoc + object.vSize);
       return isBackgroundPixel ? 0 : object.color;
     }, [0,1,2,3])
   }, [0,1])
-}; 
+};
 
 var layer = function(object, image) {
   return map2(function(objectRow, imageRow) {
@@ -549,7 +549,7 @@ var layer = function(object, image) {
 var sampleProperties = function() {
   var props = {xLoc: randomInteger(4), yLoc: randomInteger(2),
                hSize: 1, vSize: randomInteger(2) + 1, color: randomInteger(2) + 1};
-  return {props: props, 
+  return {props: props,
           appearance: objectAppearance(props)};
 }
 ///
@@ -572,9 +572,9 @@ var results = Infer({method: 'enumerate'}, function() {
   var numObjects = flip() ? 1 : 2;
   var obj1 = sampleProperties();
   var obj2 = sampleProperties();
-  var image1 = (numObjects > 1 ? layer(obj1.appearance, obj2.appearance) : 
+  var image1 = (numObjects > 1 ? layer(obj1.appearance, obj2.appearance) :
                 obj1.appearance);
-  var image2 = (numObjects > 1 ? layer(move(obj1).appearance, move(obj2).appearance) : 
+  var image2 = (numObjects > 1 ? layer(move(obj1).appearance, move(obj2).appearance) :
                 move(obj1).appearance);
   condition(_.isEqual(image1, observedImage1) && _.isEqual(image2, observedImage2));
   return numObjects;
