@@ -31,9 +31,9 @@ var drawMarbles = function(bag, numDraws){
   return repeat(numDraws, function(){return categorical({vs: colors, ps: probs})});
 }
 
-viz(drawMarbles('bag', 1000))
-viz(drawMarbles('bag', 1000))
-viz(drawMarbles('bag', 1000))
+viz(drawMarbles('bag', 100))
+viz(drawMarbles('bag', 100))
+viz(drawMarbles('bag', 100))
 viz(drawMarbles('other_bag', 100))
 ~~~~
 
