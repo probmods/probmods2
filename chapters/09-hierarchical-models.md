@@ -724,9 +724,7 @@ What we see in this example is a simple probabilistic model capturing a version 
 
 We have just seen several examples of *hierarchical Bayesian models*: generative models in which there are several levels of latent random choices that affect the observed data. In particular a hierarchical model is usually one in which there is a branching structure in the dependence diagram, such that the "deepest" choices affect all the data, but they only do so through a set of more shallow choices which each affect some of the data, and so on.
 
-Many examples of hierarchical models are even simpler than the categorization examples above. The [fair vs. unfair model selection example](occam\'s-razor.html#example-fair-or-unfair-coin) was already a simple hierarchical model; this example exhibits an abrupt (non-linear) transition from believing in a coin weight near 0.5 to one near 0.9. Such relatively abrupt transitions, and more generally complex non-linear learning curves, are characteristic of hierarchical models.
-
-Hierarchical model structures will generally give rise to a number of important learning phenomena: transfer learning (or learning-to-learn), the blessing of abstraction, and fairly abrupt transitions.
+Hierarchical model structures give rise to a number of important learning phenomena: transfer learning (or learning-to-learn), the blessing of abstraction, and learning curves with fairly abrupt transitions. This makes them important for understanding human learning, as well as useful for creating artificial intelligence that makes the best use of available data.
 
 ## Hierarchical Abstraction versus Lambda Abstraction
 
