@@ -4,52 +4,48 @@ title: Mixture models
 description: Models for inferring the kinds of things.
 ---
 
-In the chapter on [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html), we saw the power of probabilistic inference in learning about the latent structure underlying different kinds of observations: the mixture of colors in different bags of marbles, or the prototypical features of categWebPPLories of animals. In that discussion we always assumed that we knew what kind each observation belonged to---the bag that each marble came from, or the subordinate, basic, and superordinate category of each object. Knowing this allowed us to pool the information from each observation for the appropriate latent variables. What if we don't know *a priori* how to divide up our observations? In this chapter we explore the problem of simultaneously discovering kinds and their properties -- this can be done using *mixture models*.
+In the chapter on [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html), we saw the power of probabilistic inference in learning about the latent structure underlying different kinds of observations: the mixture of colors in different bags of marbles, or the prototypical features of categories of animals. In that discussion we always assumed that we knew what kind each observation belonged to---the bag that each marble came from, or the subordinate, basic, and superordinate category of each object. Knowing this allowed us to pool the information from each observation for the appropriate latent variables. What if we don't know *a priori* how to divide up our observations? In this chapter we explore the problem of simultaneously discovering kinds and their properties -- this can be done using *mixture models*.
 
 # Learning Categories
-Imagine a child who enters the world and begins to see objects. She can't begin by learning the typical features of cats or mice, because she doesn't yet know that there are such kinds of objects as cats and mice. Yet she may quickly notice that some of the objects all tend to purr and have claws, while other objects are small and run fast---she can
+Imagine a child who enters the world and begins to see objects. She can't begin to learn the typical features of cats or mice directly, because she doesn't yet know that there are such kinds of objects as cats and mice. Yet she may quickly notice that some of the objects all tend to purr and have claws, while other objects are small and run fast---she can
  *cluster* the objects together on the basis of common features and thus form categories (such as cats and mice), whose typical features she can then learn.
 
 To formalize this learning problem, we begin by adapting the bags-of-marbles examples from the [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html) chapter. However, we now assume that the bag that each marble is drawn from is *unobserved* and must be inferred.
 
 ~~~~
-///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
+var colors = ['blue', 'green', 'red']
 
-var observeBag = function(bag, values) {
-  return sum(map(function(v) {return bag.score(v)}, values));
-}
-///
-var colors = ['blue', 'green', 'red'];
+var observedData = [{name: 'obs1', draw: 'red'},
+                    {name: 'obs2', draw: 'red'},
+                    {name: 'obs3', draw: 'blue'},
+                    {name: 'obs4', draw: 'blue'},
+                    {name: 'obs5', draw: 'red'},
+                    {name: 'obs6', draw: 'blue'}]
 
 var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
+
   var phi = dirichlet(ones([3, 1]))
   var alpha = 0.1
   var prototype = T.mul(phi, alpha)
 
   var makeBag = mem(function(bag){
-    return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
+    var colorProbs = T.toScalars(dirichlet(prototype))
+    return Categorical({vs: colors, ps: colorProbs})
   })
 
   // each observation (which is named for convenience) comes from one of three bags:
-  var obsToBag = mem(function(obsName) {
-    return uniformDraw(['bag1', 'bag2', 'bag3'])
-  });
+  var obsToBag = mem(function(obsName) {return uniformDraw(['bag1', 'bag2', 'bag3'])})
 
-  factor(observeBag(makeBag(obsToBag('obs1')), ['red']) +
-         observeBag(makeBag(obsToBag('obs2')), ['red']) +
-         observeBag(makeBag(obsToBag('obs3')), ['blue']) +
-         observeBag(makeBag(obsToBag('obs4')), ['blue']) +
-         observeBag(makeBag(obsToBag('obs5')), ['red']) +
-         observeBag(makeBag(obsToBag('obs6')), ['blue']))
+  var obsFn = function(datum){
+    observe(makeBag(obsToBag(datum.name)), datum.draw)
+  }
+  mapData({data: observedData}, obsFn)
 
-  return {sameBag12: obsToBag('obs1') == obsToBag('obs2'),
-          sameBag13: obsToBag('obs1') == obsToBag('obs3')}
-});
+  return {sameBag1and2: obsToBag(observedData[0].name) === obsToBag(observedData[1].name),
+          sameBag1and3: obsToBag(observedData[0].name) === obsToBag(observedData[2].name)}
+})
 
-viz.marginals(predictives);
+viz.marginals(predictives)
 ~~~~
 
 We see that it is likely that `obs1` and `obs2` came from the same bag, but quite unlikely that `obs3` did. Why? Notice that we have set `alpha` small, indicating a belief that the marbles in a bag will tend to all be the same color. How do the results change if you make `alpha` larger? Why?  Note that we have queried on whether observed marbles came out of the same bag, instead of directly querying on the bag number that an observation came from. This is because the bag number by itself is meaningless---it is only useful in its role of determining which objects have similar properties. Formally, the model we have defined above is symmetric in the bag labels (if you permute all the labels you get a new state with the same probability).
@@ -57,44 +53,42 @@ We see that it is likely that `obs1` and `obs2` came from the same bag, but quit
 Instead of assuming that a marble is equally likely to come from each bag, we could instead learn a distribution over bags where each bag has a different probability. This is called a *mixture distribution* over the bags:
 
 ~~~~
-///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
+var colors = ['blue', 'green', 'red']
 
-var observeBag = function(bag, values) {
-  return sum(map(function(v) {return bag.score(v)}, values));
-}
-///
-var colors = ['blue', 'green', 'red'];
+var observedData = [{name: 'obs1', draw: 'red'},
+                    {name: 'obs2', draw: 'red'},
+                    {name: 'obs3', draw: 'blue'},
+                    {name: 'obs4', draw: 'blue'},
+                    {name: 'obs5', draw: 'red'},
+                    {name: 'obs6', draw: 'blue'}]
 
 var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
+
   var phi = dirichlet(ones([3, 1]))
   var alpha = 0.1
   var prototype = T.mul(phi, alpha)
 
   var makeBag = mem(function(bag){
-    return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
+    var colorProbs = T.toScalars(dirichlet(prototype))
+    return Categorical({vs: colors, ps: colorProbs})
   })
 
   // the probability that an observation will come from each bag:
   var bagMixture = dirichlet(ones([3, 1]))
   var obsToBag = mem(function(obsName) {
-    return categorical({vs: ['bag1', 'bag2', 'bag3'], ps: getProbs(bagMixture)});
-  });
+    return categorical({vs: ['bag1', 'bag2', 'bag3'], ps: T.toScalars(bagMixture)});
+  })
 
-  factor(observeBag(makeBag(obsToBag('obs1')), ['red']) +
-         observeBag(makeBag(obsToBag('obs2')), ['red']) +
-         observeBag(makeBag(obsToBag('obs3')), ['blue']) +
-         observeBag(makeBag(obsToBag('obs4')), ['blue']) +
-         observeBag(makeBag(obsToBag('obs5')), ['red']) +
-         observeBag(makeBag(obsToBag('obs6')), ['blue']))
+  var obsFn = function(datum){
+    observe(makeBag(obsToBag(datum.name)), datum.draw)
+  }
+  mapData({data: observedData}, obsFn)
 
-  return {sameBag12: obsToBag('obs1') == obsToBag('obs2'),
-          sameBag13: obsToBag('obs1') == obsToBag('obs3')}
-});
+  return {sameBag1and2: obsToBag(observedData[0].name) === obsToBag(observedData[1].name),
+          sameBag1and3: obsToBag(observedData[0].name) === obsToBag(observedData[2].name)}
+})
 
-viz.marginals(predictives);
+viz.marginals(predictives)
 ~~~~
 
 Models of this kind are called **mixture models** because the observations are a "mixture" of several categories. Mixture models are widely used in modern probabilistic modeling because they describe how to learn the unobservable categories which underlie observable properties in the world.
@@ -102,51 +96,30 @@ Models of this kind are called **mixture models** because the observations are a
 The observation distribution associated with each mixture *component* (i.e., kind or category) can be any distribution we like. For example, here is a mixture model with *Gaussian* components:
 
 ~~~~
-///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
-
-var observePoint = function(cat, obs) {
-  return (Gaussian({mu: cat.xMean, sigma: 0.01}).score(obs.x) +
-          Gaussian({mu: cat.yMean, sigma: 0.01}).score(obs.y));
-};                                         
-///
+var observedData = [{"name":"a0","x":1.5343898902525506,"y":2.3460878867298494},{"name":"a1","x":1.1810142951204246,"y":1.4471493362364427},{"name":"a2","x":1.3359476185854833,"y":0.5979097803077312},{"name":"a3","x":1.7461500236610696,"y":0.07441351219375836},{"name":"a4","x":1.1644280209698559,"y":0.5504283671279169},{"name":"a5","x":0.5383179421667954,"y":0.36076578484371535},{"name":"a6","x":1.5884794217838352,"y":1.2379018386693668},{"name":"a7","x":0.633910148716343,"y":1.21804947961078},{"name":"a8","x":1.3591395983859944,"y":1.2056207607743645},{"name":"a9","x":1.5497995798191613,"y":1.555239222467223},
+                    {"name":"b0","x":-1.7103539324754713,"y":-1.178368516925668},{"name":"b1","x":-0.49690324128135566,"y":-1.4482931166889297},{"name":"b2","x":-1.0191455290951414,"y":-0.4103273022785636},{"name":"b3","x":-1.6127046244033036,"y":-1.198330563419632},{"name":"b4","x":-0.8146486481025548,"y":-0.33650743701348906},{"name":"b5","x":-1.2570582864922166,"y":-0.7744102418371701},{"name":"b6","x":-1.2635542813354101,"y":-0.9202555846522052},{"name":"b7","x":-1.3169953429184593,"y":-0.40784942495184096},{"name":"b8","x":-0.7409787028330914,"y":-0.6105091049436135},{"name":"b9","x":-0.7683709878962971,"y":-1.0457286452094976}]
 
 var predictives = Infer({method: 'MCMC', samples: 200, lag: 100}, function(){
-  // the probability that an observation will come from each bag:
   var catMixture = dirichlet(ones([2, 1]))
-
   var obsToCat = mem(function(obsName) {
-    return categorical({vs: ['cat1', 'cat2'], ps: getProbs(catMixture)});
-  });
+    return categorical({vs: ['cat1', 'cat2'], ps: T.toScalars(catMixture)});
+  })
   var catToMean = mem(function(cat) {
-    return {xMean: gaussian(0,1), yMean: gaussian(0,1)};
+    return {xMean: gaussian(0,1), yMean: gaussian(0,1)}
   })
 
-  // one cluster of points in the top right quadrant
-  factor(observePoint(catToMean(obsToCat('a1')), {x: 0.50, y: 0.50}) +
-         observePoint(catToMean(obsToCat('a2')), {x: 0.60, y: 0.50}) +
-         observePoint(catToMean(obsToCat('a3')), {x: 0.50, y: 0.40}) +
-         observePoint(catToMean(obsToCat('a4')), {x: 0.55, y: 0.55}) +
-         observePoint(catToMean(obsToCat('a5')), {x: 0.45, y: 0.45}) +
-         observePoint(catToMean(obsToCat('a6')), {x: 0.50, y: 0.50}) +
-         observePoint(catToMean(obsToCat('a7')), {x: 0.70, y: 0.60}))
-
-  // another cluster of points in the lower left quadrant
-  factor(observePoint(catToMean(obsToCat('b1')), {x: -0.50, y: -0.50}) +
-         observePoint(catToMean(obsToCat('b2')), {x: -0.70, y: -0.40}) +
-         observePoint(catToMean(obsToCat('b3')), {x: -0.50, y: -0.60}) +
-         observePoint(catToMean(obsToCat('b4')), {x: -0.55, y: -0.55}) +
-         observePoint(catToMean(obsToCat('b5')), {x: -0.50, y: -0.45}) +
-         observePoint(catToMean(obsToCat('b6')), {x: -0.60, y: -0.50}) +
-         observePoint(catToMean(obsToCat('b7')), {x: -0.60, y: -0.40}))
+  var obsFn = function(datum){
+    var mus = catToMean(obsToCat(datum.name))
+    observe(Gaussian({mu: mus.xMean, sigma: 0.01}), datum.x)
+    observe(Gaussian({mu: mus.yMean, sigma: 0.01}), datum.y)
+  }
+  mapData({data: observedData}, obsFn)
 
   return {cat1: catToMean('cat1'),
           cat2: catToMean('cat2')}
-});
+})
 
-viz.marginals(predictives);
+viz.marginals(predictives)
 ~~~~
 
 ## Example: Topic Models
