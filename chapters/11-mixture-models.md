@@ -309,7 +309,7 @@ var results = Infer({method: 'rejection', samples: 100}, function(){
   return {numCoins: coins.length}
 })
 
-viz.marginals(results)
+viz(results)
 ~~~~
 How does the inferred number of coins change as the amount of data grows? Why?
 
@@ -334,10 +334,10 @@ var results = Infer({method: 'rejection', samples: 100}, function() {
   mapData({data: observedMarbles},
           function(d){observe(makeBag(uniformDraw(bags)), d)})
 
-  return numBags
+  return {numBags: numBags}
 })
 
-viz.auto(results)
+viz(results)
 ~~~~
 Vary the amount of evidence and see how the inferred number of bags changes.
 
