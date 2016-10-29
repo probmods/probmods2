@@ -143,73 +143,45 @@ drawn from a Dirichlet prior. For each of the $$N$$ topics
 drawn for the document, a word is sampled from the corresponding
 multinomial distribution. This is shown in the WebPPL code below.
 
-**TODO: I adapted this from the webppl examples folder; might want to re-factor (e.g. with mem) to look more like previous examples**
-
 ~~~~
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
-
 var vocabulary = ['DNA', 'evolution', 'parsing', 'phonology'];
-var topics = {
-  'topic1': null,
-  'topic2': null
-};
+var eta = ones([vocabulary.length, 1])
 
-var docs = {
-  'doc1': 'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
-  'doc2': 'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
-  'doc3': 'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
-  'doc4': 'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
-  'doc5': 'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
-  'doc6': 'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' ')
-};
+var numTopics = 2
+var alpha = ones([numTopics, 1])
 
-var makeWordDist = function() {
-  return dirichlet(ones([vocabulary.length, 1]));
-};
-
-var makeTopicDist = function() {
-  return dirichlet(ones([_.size(topics), 1]));
-};
-
-var discreteFactor = function(vs, ps, v) {
-  var i = vs.indexOf(v);
-  factor(Math.log(T.get(ps, i)));
-}
+var corpus = [
+  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
+  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
+  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
+  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
+  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
+  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' ')
+]
 
 var model = function() {
 
-  var wordDistForTopic = mapObject(makeWordDist, topics);
-  var topicDistForDoc = mapObject(makeTopicDist, docs);
-  var makeTopicForWord = function(docName, word) {
-    var i = discrete(topicDistForDoc[docName]);
-    return _.keys(topics)[i];
-  };
-  var makeWordTopics = function(docName, words) {
-    return map(function(word) {return makeTopicForWord(docName, word);},
-               words);
-  };
-  var topicsForDoc = mapObject(makeWordTopics, docs);
+  var topics = repeat(numTopics, function() {
+    return T.toScalars(dirichlet({alpha: eta}))
+  })
 
-  mapObject(
-      function(docName, words) {
-        map2(
-            function(topic, word) {
-              discreteFactor(vocabulary, wordDistForTopic[topic], word);
-            },
-            topicsForDoc[docName],
-            words);
-      },
-      docs);
+  mapData({data: corpus}, function(doc) {
+    var topicDist = dirichlet({alpha: alpha})
+    mapData({data: doc}, function(word) {
+      var z = sample(Discrete({ps: topicDist}))
+      var topic = topics[z]
+      observe(Categorical({ps: topic, vs: vocabulary}), word)
+    })
+  })
 
-  return {topic1: _.object(vocabulary, getProbs(wordDistForTopic.topic1)),
-          topic2: _.object(vocabulary, getProbs(wordDistForTopic.topic2))}
-};
+  return topics
+}
 
-var results = Infer({method: 'MCMC', samples: 20000}, model);
-viz.bar(vocabulary, map(function(word) {return expectation(results, function(v) {return v['topic1'][word]})}, vocabulary))
-viz.bar(vocabulary, map(function(word) {return expectation(results, function(v) {return v['topic2'][word]})}, vocabulary))
+var results = Infer({method: 'MCMC', samples: 20000}, model)
+
+//plot expected probability of each word, for each topic:
+viz.bar(vocabulary, map(function(i) {return expectation(results, function(v) {return v[0][i]})}, _.range(vocabulary.length)))
+viz.bar(vocabulary, map(function(i) {return expectation(results, function(v) {return v[1][i]})}, _.range(vocabulary.length)))
 ~~~~
 
 In this simple example, there are two topics `topic1` and
@@ -220,7 +192,7 @@ about: One can be thought of as 'biology' (i.e., `DNA` and
 (i.e., `parsing` and `syntax`).
 
 The documents consist of lists of individual words from one or the
-other topic. Based on the coocurrence of words within individual
+other topic. Based on the co-occurrence of words within individual
 documents, the model is able to learn that one of the topics should
 put high probability on the biological words and the other topic
 should put high probability on the linguistic words. It is able to
@@ -291,53 +263,28 @@ This example is adapted from @Feldman2009.
 
 Human perception is often skewed by our expectations. A common example of this is called *categorical perception* -- when we perceive objects as being more similar to the category prototype than they really are. In phonology this is been particularly important and is called the perceptual magnet effect: Hearers regularize a speech sound into the category that they think it corresponds to. Of course this category isn't known a priori, so a hearer must be doing a simultaneous inference of what category the speech sound corresponded to, and what the sound must have been. In the below code we model this as a mixture model over the latent categories of sounds, combined with a noisy observation process.
 
-**This outputs the same thing at the Church, but I feel like the exposition could be better? The labels could be clearer.**
-
 ~~~~
-var prototype1 = 8;
-var prototype2 = 10;
+var prototype1 = 0
+var prototype2 = 5
+var stimuli = _.range(prototype1, prototype2, 0.2)
 
-var computePairDistance = function(stim1, stim2) {
-  return expectation(Infer({method: 'MCMC', samples: 10000}, function() {
-    var vowel1 = Gaussian({mu: prototype1, sigma: .5});
-    var vowel2 = Gaussian({mu: prototype2, sigma: .5});
+var perceivedValue = function(stim){
+  return expectation(Infer({method: 'MCMC', samples: 10000}, function(){
+    var vowel1 = Gaussian({mu: prototype1, sigma: 1})
+    var vowel2 = Gaussian({mu: prototype2, sigma: 1})
 
-    var noiseProcess = function(target) {return Gaussian({mu: target, sigma: .2})};
+    var category = flip()
+    var value = category ? sample(vowel1) : sample(vowel2)
 
-    var target1 = flip() ? sample(vowel1) : sample(vowel2);
-    var target2 = flip() ? sample(vowel1) : sample(vowel2);
+    observe(Gaussian({mu: value, sigma: 1}),stim)
 
-    var obs1 = noiseProcess(target1);
-    var obs2 = noiseProcess(target2);
-
-    // Condition on the targets being equal to the stimuli through a gaussian noise process
-    factor(obs1.score(stim1) + obs2.score(stim2));
-
-    return Math.abs(target1 - target2);
+    return value
   }))
-}
+}  
 
-var computePerceptualPairs = function(l) {
-  if (l.length < 2) {
-    return [];
-  } else {
-    return [computePairDistance(first(l), second(l))].concat(computePerceptualPairs(rest(l)));
-  }
-};
+var stimulusVsPerceivedValues = map(function(s){return {x:s, y:perceivedValue(s)}}, stimuli)
 
-var computeStimulusPairs = function(l) {
-  if(l.length < 2) {
-    return [];
-  } else {
-    return [Math.abs(first(l) - second(l))].concat(computeStimulusPairs(rest(l)))
-  }
-}
-var stimuli = _.range(prototype1, prototype2, 0.1);
-var stimulusDistances = computeStimulusPairs(stimuli);
-var perceptualDistances = computePerceptualPairs(stimuli);
-
-viz.scatter(_.range(stimulusDistances.length), stimulusDistances)
-viz.scatter(_.range(perceptualDistances.length), perceptualDistances)
+viz.scatter(stimulusVsPerceivedValues)
 ~~~~
 
 Notice that the perceived distances between input sounds are skewed relative to the actual acoustic distances – that is they are attracted towards the category centers.
@@ -350,52 +297,44 @@ The models above describe how a learner can simultaneously learn which category 
 
 The simplest way to address this problem, which we call *unbounded* models, is to simply place uncertainty on the number of categories in the form of a hierarchical prior. Let's warm up with a simple example of this: inferring whether one or two coins were responsible for a set of outcomes (i.e. imagine a friend is shouting each outcome from the next room--"heads, heads, tails..."--is she using a fair coin, or two biased coins?).
 
-**TODO: this returns a different posterior from old prob mods, but I think this is the right one... Seems to result from using `MCMC` over `condition` statements instead of using `factor` or `SMC`**
-
 ~~~~
-var actualObs = [true, true, true, true, false, false, false, false];
+var observedData = [true, true, true, true, false, false, false, false]
+// var observedData = [true, true, true, true, true, true, true, true]
 
-var results = Infer({method: 'SMC', particles: 10000}, function(){
+var results = Infer({method: 'rejection', samples: 100}, function(){
   var coins = flip() ? ['c1'] : ['c1', 'c2'];
-  var coinToWeight = mem(function(c) {return uniform(0,1)});
-  //   map(function(v) {condition(v == flip(coinToWeight(uniformDraw(coins))))}, actualObs)
-  factor(sum(map(function(v) {
-    var weight = coinToWeight(uniformDraw(coins));
-    return Bernoulli({p: weight}).score(v)
-  }, actualObs)));
-  return {numCoins: coins.length, weight1: coinToWeight('c1'), weight2: coinToWeight('c2')};
+  var coinToWeight = mem(function(c) {return uniform(0,1)})
+  mapData({data: observedData},
+          function(d){observe(Bernoulli({p: coinToWeight(uniformDraw(coins))}),d)})
+  return {numCoins: coins.length}
 })
 
-viz.marginals(results);
+viz.marginals(results)
 ~~~~
 How does the inferred number of coins change as the amount of data grows? Why?
 
 We could extend this model by allowing it to infer that there are more than two coins. However, no evidence requires us to posit three or more coins (we can always explain the data as "a heads coin and a tails coin"). Instead, let us apply the same idea to the marbles examples above:
 
 ~~~~
-///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
-///
 var colors = ['blue', 'green', 'red']
 var observedMarbles = ['red', 'red', 'blue', 'blue', 'red', 'blue']
-var results = Infer({method: 'SMC', particles: 10000}, function() {
+var results = Infer({method: 'rejection', samples: 100}, function() {
   var phi = dirichlet(ones([3,1]));
   var alpha = 0.1;
   var prototype = T.mul(phi, alpha);
 
   var makeBag = mem(function(bag){
-    return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
+    return Categorical({vs: colors, ps: T.toScalars(dirichlet(prototype))});
   })
 
   // unknown number of categories (created with placeholder names):
   var numBags = (1 + poisson(1));
   var bags = map(function(i) {return 'bag' + i;}, _.range(numBags))
 
-  factor(sum(map(function(v) {return makeBag(uniformDraw(bags)).score(v)}, observedMarbles)))
+  mapData({data: observedMarbles},
+          function(d){observe(makeBag(uniformDraw(bags)), d)})
 
-  return numBags;
+  return numBags
 })
 
 viz.auto(results)
@@ -403,8 +342,6 @@ viz.auto(results)
 Vary the amount of evidence and see how the inferred number of bags changes.
 
 For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipedia.org/wiki/Poisson_distribution) which is a distribution on  non-negative integers. It is convenient, though implies strong prior knowledge (perhaps too strong for this example).
-
-**Note: I took out the `gensym` stuff**
 
 Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. In the next section we describe another method for allowing an unknown number of things: In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an 'infinite model' we construct distributions assuming a truly infinite numbers of objects.
 
