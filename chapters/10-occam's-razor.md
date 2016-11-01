@@ -399,6 +399,14 @@ viz.marginals(post)
 Try the above code using a different data set generated from the same function:
 
 ~~~~
+///fold:
+// a0 + a1*x + a2*x^2 + ...
+var makePoly = function(as) {
+  return function(x) {
+    return sum(mapIndexed(function(i,a) { return a * Math.pow(x, i) }, as))
+  }
+}
+///
 var coeffs = repeat(4, function() {return gaussian(0,2)})
     var order = 2
     var f = makePoly(coeffs.slice(0,order+1))
