@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Non-parametric models
-description: Something else clever
+description: What to do when you don't know how many kinds there are.
 ---
 
 ### Authors: Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
@@ -19,7 +19,7 @@ var residuals = function(probs) {
   } else {
     return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
   }
-}; 
+};
 
 residuals([0.2, 0.3, 0.1, 0.4])
 ~~~~
@@ -33,7 +33,7 @@ var residuals = function(probs) {
   } else {
     return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
   }
-}; 
+};
 
 var mySampleDiscrete = function(resid) {
   if(resid.length == 0) {
@@ -68,7 +68,7 @@ To formalize this as a WebPPL program, we define a procedure, `pickStick`, that 
 ~~~~
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var sticks = mem(function(index) {
   return beta(1, alpha)
@@ -84,14 +84,14 @@ We can put these ideas together in a procedure called `makeSticks` which takes t
 ~~~~
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 var mySticks = makeSticks(1);
 
 viz(repeat(1000, mySticks))
@@ -111,20 +111,20 @@ The above construction of the Dirichlet process defines a distribution over the 
 
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 var DPthunk = function(alpha, baseDist) {
   var augmentedProc = mem(function(stickIndex) {return sample(baseDist)});
   var DP = makeSticks(alpha);
   return function() {return augmentedProc(DP())}
 }
-    
+
 var memoizedGaussian = DPthunk(1, Gaussian({mu: 0, sigma: 1}));
 viz(repeat(10000, function() {return gaussian(0, 1)}));
 viz(repeat(10000, memoizedGaussian));
@@ -135,15 +135,15 @@ We can do a similar transformation to *any* WebPPL procedure: we associate to ev
 ~~~~
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
-        
+}
+
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
   var DP = mem(function(args) {return makeSticks(alpha)});
@@ -171,7 +171,7 @@ Here we have defined the procedure `DPmem`. `DPmem` takes two arguments, the fir
 `DPmem` then constructs a Dirichlet process and associates it with the combination of arguments. It returns a procedure that when called first samples a stick index from the DP associated with the arguments and then calls the augmented procedure with the arguments and that stick index. `DPmem` can be thought of in the following way. If we had infinite time and resources we could enumerate all possible argument combinations that `proc` accepts and all the natural numbers. For all combinations of arguments plus a natural number we would draw a value from `proc` and permanently associate that value with that combination. In practice, of course, we do this lazily, only associating the new values with new combinations of arguments and stick indices as we need them.  If that combination of arguments and stick has been sampled before the previously computed value will simply be returned. Otherwise, a new value will be sampled from the underlying procedure and associated with the argument-stick combination.
 -->
 
-**TODO: The order of these sections doesn't make sense. The reader (or at least me) has already spent quite some time puzzling over the output of the above code boxes, and it'd be helpful to fold this exposition in above. Especially since it's literally the same output...** 
+**TODO: The order of these sections doesn't make sense. The reader (or at least me) has already spent quite some time puzzling over the output of the above code boxes, and it'd be helpful to fold this exposition in above. Especially since it's literally the same output...**
 
 ## Properties of DP Memoized Procedures
 
@@ -213,14 +213,14 @@ var observeBag = function(bag, values) {
 
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -246,17 +246,17 @@ var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   var phi = dirichlet(ones([3, 1]))
   var alpha = 0.1
   var prototype = T.mul(phi, alpha)
-  
+
   var makeBag = mem(function(bag){
     return Categorical({vs: colors, ps: getProbs(dirichlet(prototype))});
   })
-  
+
   // the prior distribution on bags is simply a DPmem of a gensym function:
   var getBag = DPmem(1, uuid);
 
   // each observation comes from one of the bags:
   var obsToBag = mem(function(obsName) {return getBag()});
-  
+
   factor(observeBag(makeBag(obsToBag('obs1')), ['red']) +
          observeBag(makeBag(obsToBag('obs2')), ['red']) +
          observeBag(makeBag(obsToBag('obs3')), ['blue']) +
@@ -276,14 +276,14 @@ A model like this is called an *infinite mixture model*; in this case an infinit
 ///fold:
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -316,14 +316,14 @@ We can use this basic template to create infinite mixture models with any type o
 ///fold:
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -433,14 +433,14 @@ var getProbs = function(vector) {
 
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -452,7 +452,7 @@ var DPmem = function(alpha, baseDist) {
 }
 ///
 
-var phoneVals = ['a', 'e', 'i', 'o', 'u', 
+var phoneVals = ['a', 'e', 'i', 'o', 'u',
                  'k', 't', 'p', 'g', 'd', 'b', 's', 'th', 'f'];
 var phoneProbs = getProbs(dirichlet(ones([phoneVals.length, 1])));
 var phones = Categorical({vs: phoneVals, ps: phoneProbs});
@@ -470,7 +470,7 @@ sampleUtterance
 ~~~~
 
 
-# Example: Infinite Hidden Markov Models 
+# Example: Infinite Hidden Markov Models
 
 Just as when we considered a mixture model over an unknown number of latent categories, we may wish to have a hidden Markov model over an unknown number of latent symbols. We can do this by again using a reusable source of state symbols:
 
@@ -482,14 +482,14 @@ var getProbs = function(vector) {
 
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -516,7 +516,7 @@ var stateToTransitionModel = mem(function(state) {return DPmem(1, getState())});
 var transition = function(state) {return stateToTransitionModel(state)()};
 
 var stateToObservationModel = mem(function(state) {return dirichlet(ones([vocabulary.length, 1]))});
-var observation = function(state) {return categorical({vs: vocabulary, 
+var observation = function(state) {return categorical({vs: vocabulary,
                                                        ps: getProbs(stateToObservationModel(state))})};
 var sampleWords = function(lastState) {
   return flip(.2) ? [] : [observation(lastState)].concat(sampleWords(transition(lastState)));
@@ -551,14 +551,14 @@ Given some relational data, the IRM learns to cluster objects into classes such 
 ///fold:
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -588,20 +588,20 @@ var results = Infer({method: "MCMC", samples: 10000}, function() {
     var params = classesToParams(objectToClass(person1), objectToClass(person2));
     return Bernoulli({p: params.p}).score(val);
   }
-  
-  factor(talkScore('tom', 'fred', true) + 
-         talkScore('tom', 'jim', true) + 
+
+  factor(talkScore('tom', 'fred', true) +
+         talkScore('tom', 'jim', true) +
          talkScore('jim', 'fred', true) +
-         talkScore('mary', 'fred', false) + 
-         talkScore('mary', 'jim', false) + 
+         talkScore('mary', 'fred', false) +
+         talkScore('mary', 'jim', false) +
          talkScore('sue', 'fred', false) +
-         talkScore('sue', 'tom', false) + 
-         talkScore('ann', 'jim', false) + 
+         talkScore('sue', 'tom', false) +
+         talkScore('ann', 'jim', false) +
          talkScore('ann', 'tom', false) +
-         talkScore('mary', 'sue', true) + 
-         talkScore('mary', 'ann', true) + 
-         talkScore('ann', 'sue', true))	
-  
+         talkScore('mary', 'sue', true) +
+         talkScore('mary', 'ann', true) +
+         talkScore('ann', 'sue', true))
+
   return {tomVsFred: objectToClass('tom') == objectToClass('fred'),
           tomVsMary: objectToClass('tom') == objectToClass('mary')};
 })
@@ -636,14 +636,14 @@ These features depend on different systems of categories that foods fall into, f
 ///fold:
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -720,7 +720,7 @@ It is easy to confirm that in the special case of $$a = 0$$ and $$b >0$$, this r
 
 The Indian Buffet Process is an infinite distribution on *sets* of draws from a base measure (rather than a single draw as in the CRP).
 
-# Hierarchical Combinations of Non-parametric Processes 
+# Hierarchical Combinations of Non-parametric Processes
 
 In the [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html) chapter, we explored how additional levels of abstraction can lead to important effects in learning dynamics, such as transfer learning and the blessing of abstraction. In this section, we talk about two ways in which hierarchical non-parametric models can be built.
 
@@ -738,14 +738,14 @@ The idea behind the nCRP is that tables in a CRP, which typically represent cate
 ///fold:
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -797,14 +797,14 @@ var getProbs = function(vector) {
 
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -849,7 +849,7 @@ var sampleCategory = function() {return subordinateCategory(topLevelCategory())}
 var sampleObservation = function() {
   var cat = sampleCategory()
   var probs = subordinateCategoryToParams(cat)
-  return categorical({vs: possibleObservations, 
+  return categorical({vs: possibleObservations,
                       ps: probs})
 }
 
@@ -868,14 +868,14 @@ In the last section, we saw an example where subordinate-level categories drew t
 ///fold:
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -925,14 +925,14 @@ A natural move is to combine the nCRP and HDP: the nCRP can be used to sample an
 ///fold:
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-}; 
+};
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});
   return function() {
     return pickStick(sticks,1)
   };
-} 
+}
 
 var DPmem = function(alpha, baseDist) {
   var augmentedProc = mem(function(args, stickIndex) {return apply(baseDist, args)});
@@ -988,18 +988,18 @@ HDP shares observations between multiple DPs.
 
 ## Example: Prototypes and Exemplars
 
-An important debate in psychology and philosophy has concerned the nature of *concepts*. 
+An important debate in psychology and philosophy has concerned the nature of *concepts*.
 The classical theory of concepts holds that they can defined in terms of  necessary and sufficient conditions.
-For example, the concept **dog** might consist of a list of features--- such as **furry**, **barks**, etc. 
+For example, the concept **dog** might consist of a list of features--- such as **furry**, **barks**, etc.
 If an object in the world matches the right  features, then it is a dog.
 
-However, it appears that, at least for some concepts, the classical theory faces some difficulties. 
-For example, some concepts appear to be *family resemblance categories* (FRC). 
+However, it appears that, at least for some concepts, the classical theory faces some difficulties.
+For example, some concepts appear to be *family resemblance categories* (FRC).
 Members of a FRC share many features in commone, but the overlap is not total, and there is the possibility that two members of the category can share *no* feature in common, instead, each sharing features with *other* members of the category.
 
-The philosopher Wittgenstein---who introduced the concept of Family Resemblance Categories---famously discussed the example of *games*. 
-There are many different kinds of games: ball games, drinking games, children's playground games, card games, video games, role-playing games, etc. 
-It is not clear that there is a single list of features which they all share and which can uniquely identify them all as **game**. 
+The philosopher Wittgenstein---who introduced the concept of Family Resemblance Categories---famously discussed the example of *games*.
+There are many different kinds of games: ball games, drinking games, children's playground games, card games, video games, role-playing games, etc.
+It is not clear that there is a single list of features which they all share and which can uniquely identify them all as **game**.
 See @Murphy2004 for an in-depth discussion of many issues surrounding concepts.
 
 Two theories have emerged to explain FRCs (and other related phenomena): *prototype* theories and *exemplar* theories.
@@ -1024,7 +1024,7 @@ There are clearly many intermediate points where each category can be viewed as 
 
 @Griffiths2007 show how a large number of different models of categorization can be unified by viewing them all as special cases of a HDP which learns how many clusters each category should be represented by.
 
-In particular, @Griffiths2007 examine the data from @Smith1998, which shows how learners undergo a transition from ptototype to exemplar representations during the course of learning. 
+In particular, @Griffiths2007 examine the data from @Smith1998, which shows how learners undergo a transition from ptototype to exemplar representations during the course of learning.
 
 The results are shown below.
 
