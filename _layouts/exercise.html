@@ -1,19 +1,5 @@
 ---
-layout: default
-custom_js:
-- bower_components/KaTeX/dist/katex.min.js
-- bower_components/bigfoot/dist/bigfoot.min.js
-- bower_components/paper/dist/paper-full.js
-- assets/js/parse-bibtex.js
-- assets/js/chapter.js
-
-custom_css:
-- bower_components/KaTeX/dist/katex.min.css
-- bower_components/bigfoot/dist/bigfoot-default.css
-
-external_css:
-- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-viz-41e5d24.css
-- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-editor-70882ed.css
+layout: chapter
 ---
 
 <div class="page-header">
@@ -21,8 +7,3 @@ external_css:
 </div>
 
 {{ content }}
-
-<!-- put big scripts at end so we don't block page load -->
-<script src="//s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-v0.9.6.js"></script>
-<script src="//s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-editor-70882ed.js"></script>
-<script src="//s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-viz-41e5d24.js"></script>
