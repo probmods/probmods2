@@ -122,7 +122,7 @@ To illustrate the power of the size principle in inferring the most parsimonious
 var observedData = [{x: 0.40, y: 0.70}, {x: 0.50, y: 0.40}, {x: 0.46, y: 0.63}, {x: 0.43, y: 0.51}]
 
 var post = Infer(
-  {method: 'MCMC', samples: 150, lag: 100, burn: 100, justSample: true},
+  {method: 'MCMC', samples: 150, lag: 100, burn: 100},
   function () {
     var x1 = uniform(0, 1), x2 = uniform(0, 1)
     var y1 = uniform(0, 1), y2 = uniform(0, 1)
@@ -165,7 +165,7 @@ var observedData = [{x: 0.40, y: 0.70, polarity: '+'},{x: 0.50, y: 0.40, polarit
                     {x: 0.46, y: 0.63, polarity: '+'},{x: 0.43, y: 0.51, polarity: '+'}]
 
 var post = Infer(
-  {method: 'MCMC', samples: 150, lag: 100, burn: 100, justSample: true},
+  {method: 'MCMC', samples: 150, lag: 100, burn: 100},
   function () {
     var x1 = uniform(0, 1), x2 = uniform(0, 1)
     var y1 = uniform(0, 1), y2 = uniform(0, 1)
