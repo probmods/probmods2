@@ -326,7 +326,7 @@ The `flip` function is the simplest way to interface with a distribution in WebP
 
 ## Constructing marginal distributions: `Infer`
 
-Above we described how complex sampling processes can be built as complex functions, and how these sampling processes implicitly specify a distribution on return values (which we examined by sampling many times and building a histogram). This distribution on return values is caled the **marginal distribution**, and the WebPPL `Infer` operator gives us a way to make this implicit distribution into an explicit distribution object:
+Above we described how complex sampling processes can be built as complex functions, and how these sampling processes implicitly specify a distribution on return values (which we examined by sampling many times and building a histogram). This distribution on return values is called the **marginal distribution**, and the WebPPL `Infer` operator gives us a way to make this implicit distribution into an explicit distribution object:
 
 ~~~
 //a complex function, that specifies a complex sampling process:
