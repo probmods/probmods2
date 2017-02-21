@@ -20,7 +20,7 @@ We examine how a broad range of empirical phenomena, including intuitive physics
 <div id='left'>
 
 <h3>Citation</h3>
-N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</i> (2nd ed.). Retrieved <span class="date">YYYY-MM-DD</span> from <code>http://probmods.org/v2</code><br /><a id="toggle-bibtex" href="#">[bibtex]</a>
+N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</i> (2nd ed.). Retrieved <span class="date">YYYY-MM-DD</span> from <code>https://probmods.org/</code><br /><a id="toggle-bibtex" href="#">[bibtex]</a>
 
 <pre id="bibtex">
 @misc{probmods2,
