@@ -43,6 +43,10 @@ N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</
     <em>A probabilistic programming language for the web</em></li>
 </ul>
 
+<h3>Previous edition</h3>
+
+The first edition of this book used the probabilistic programming language Church and can be found <a href="https://probmods.org/v1/">here</a>.
+
 <h3>Acknowledgments</h3>
 
 <p>We are grateful to the following people, who contributed content or technical expertise: Timothy J. O’Donnell, Andreas Stuhlmuller, Tomer Ullman, John McCoy, Long Ouyang, Julius Cheng, and Robert Hawkins.</p>
