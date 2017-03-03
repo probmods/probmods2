@@ -548,7 +548,7 @@ We assume for simplicity that the meaning of sentences are truth-functional: tha
 
 As above, the speaker chooses what to say in order to lead the listener to infer the correct state:
 
-~~~~
+~~~~ norun
 var speaker = function(state) {
   return Infer(..., function() {
     var words = sample(sentencePrior);
