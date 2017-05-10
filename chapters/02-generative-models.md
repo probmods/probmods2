@@ -460,7 +460,7 @@ var eyeColor = mem(function (person) {
 This type of modeling is called *random world* style [@Mcallester2008].
 Note that we don't have to specify ahead of time the people whose eye color we will ask about: the distribution on eye colors is implicitly defined over the infinite set of possible people, but only constructed "lazily" when needed.
 Memoizing stochastic functions thus provides a powerful toolkit to represent and reason about an unbounded set of properties of an unbounded set of objects.
-For instance, here we define a function `flipAlot` that maps from an integer (or any other value) to a coin flip. We could use it to implicitly represent the $$n$$th flip of a particular coin, without having to actually flip the coin $n$ times.
+For instance, here we define a function `flipAlot` that maps from an integer (or any other value) to a coin flip. We could use it to implicitly represent the $$n$$th flip of a particular coin, without having to actually flip the coin $$n$$ times.
 
 ~~~~
 var flipAlot = mem(function (n) {
