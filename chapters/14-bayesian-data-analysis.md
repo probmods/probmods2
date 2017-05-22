@@ -26,12 +26,12 @@ A pithy way of saying this is that we can make assumptions about "Bayes in the h
 
 
 Coins, in their production, have a number of physical dimensions along which they vary.
-These idiosyncracies have no impact on the behavior of a coin when flipped. 
+These idiosyncracies have no impact on the behavior of a coin when flipped.
 Flipping, it turns out, cross-cuts certain dimensions, and the probability that any modern coin in production will land on heads when flipped is roughly 0.5.
 
 It turns out spinning a coin is quite different.
 The heterogeneity of individual coins can be seen in their behavior when spun: The probability that any given coin will land on heads after being *spun* is not 0.5.
-The probability that a given coin will spin to heads depends is complicated ways upon the idiosynracies of that coin.
+The probability that a given coin will spin to heads depends in complicated ways upon the idiosyncracies of that coin.
 (N.B. This knowledge is attributed to Persi Diaconis, Dept. of Statistics, Stanford, who M.H.T. was fortunate enough to hear  describe his experiments on coins.)
 
 ## People's models of coins
@@ -43,13 +43,20 @@ This can be captured in a uniform prior on $$p$$, the probability that a coin wh
 
 You conduct an experiment.
 You spin the coin 20 times.
-15 of them, they spin to heads.
+Fifteen out of these 20 times, the coin spins to heads.
 
-What if I paid you $1 if you could predict the next coin flip?
+Let's say you can $100 if you can predict the next coin flip (heads or tail).
 What would you predict (Heads or Tails)?
-How much would you pay to take this bet? 
-(Rule is: You have to offer at least $1. 
-If you offered $1 for this bet, this would express agnosticism between "heads" and "tails".)
+
+Let's consider a slightly more challenging question.
+I'll give you this bet for a price. (This is conceptually the same as you losing money if you're wrong.)
+Up to how much would you pay for this bet?
+
+Imagine you pay $50 for the bet.
+If you guess correctly, you end up winning $50.
+If you guess incorrectly, you end up losing $50.
+$50 would be a good price to pay if you didn't have any preference for choosing Heads or Tails.
+If you think you have better than even odds at winning money, you should be willing to pay even more for this bet.
 
 ~~~~
 var observerModel = function(){
@@ -87,13 +94,17 @@ viz.marginals(posteriorBeliefs)
 ~~~~
 
 A model can be used to make predictions about different tasks.
-Models are useful in this way: They are tools for thinking through the implications of hypotheses.
+Models are useful in this way: *They are tools for thinking through the implications of hypotheses*.
+In this model, we formalized the hypothesis that people reason about the weight of a coin by assuming the outcomes they observe (i.e., the 15 out of 20 heads) are independent results of spinning the coin, which has some unknown proclivity to be spun to heads.
+This reasoning supports responses to other types of questions such as "How likely is the next spin to land on heads?".
+We use the same model to see what our hypothesis predicts given this new question.
+Each question could be thought of as a different experiment you could run to test the same hypothesis/model.
 
 Above, we have one hypothesis about a person thinking about the spinning coins experiments.
 There are other hypotheses we could make about this experiment.
 Rather than have uniform prior beliefs, maybe people port their knowledge of flipping behavior, and believe with some probability that spinning coins will behave similarly: There is a reasonable chance that spinning coins is as random as flipping coins.
-But if that belief is not well supported, the observer can accomodate that by inferring that the behavior of spinning coins is quite different than that of flipping coins (as I explained above). If the observer beliefs the behavior of spinning coins is different than that of flipping coins, the model takes on the form of the model above: uniform beliefs about `p`.
-We'll call this model the "skepticalModel" because it is, in a way, skeptical of the story I told you above about spinning coins.
+But if that belief is not well supported, the observer can accommodate that by inferring that the behavior of spinning coins is quite different than that of flipping coins (as I explained above). If the observer believes the behavior of spinning coins is *different* than that of flipping coins, the model takes on the form of the model above: uniform beliefs about `p`.
+We'll call the new model that assumes people's expectations about spinning behavior are influenced by their knowledge of flipping behavior (namely, the observer believes the behavior of spinning coins could be the *same* as that of flipping coins) the `skepticalModel` because it is, in a way, skeptical of the story I told you above about spinning coins.
 
 ~~~~
 var skepticalModel = function(){
@@ -117,8 +128,15 @@ viz.marginals(posteriorBeliefs)
 The predictions are subtly different.
 `skepticalModel` pulls the predictions more towards 50/50.
 Why is that?
-One way to understand this model is to example the prior.
+
+One way to understand this model is to examine the prior.
 Try commenting out the `observe` statement and looking at the predictions.
+Examine the plots for `p` and `nextTenOutcomes`.
+The prior favors `p` around 0.5 and `nextTenOutcomes` to be about 5.
+This is because we assume there is a `0.5` probability that the behavior is the same as flipping (`sameAsFlipping = flip(0.5)`).
+If indeed it is the same as flipping, `p = 0.5` and the resulting `nextTenOutcomes` would be biased towards expecting around 5 heads.
+If it's not the same as flipping, then the predictions are the same as the `observerModel`.
+The prior is a mixture of these two possibilities.
 
 ## Scientists' models of people
 
@@ -131,9 +149,8 @@ At this point, both models seem totally reasonable to me: I would say I believe 
 Okay, then how are we supposed to update these beliefs?
 
 Since each model makes predictions about what we should observe in an experiment, we already know how to update our beliefs in these models based on the experimental data we observed.
-We simply `observe` the data, assuming that it was generated by the better model. 
-(If the data did *not* come from the better model, then the model that wasn't the better model would be the better model. 
-That is, it's to assume the data came from the better model.)
+We simply `observe` the data, assuming that it was generated by the better model.
+
 
 ~~~~ norun
 var scientistModel = function(){
@@ -145,6 +162,8 @@ var scientistModel = function(){
   return theBetterModel
 }
 ~~~~
+
+Note that we are assuming "the better model" generated the data because that is how we are defining what "better" is (i.e., it is a better explanation of how the data were generated).
 
 We have now instantiated our scientific process as a probabilistic program, doing Bayesian inference.
 This is the foundation of Bayesian data analysis.
@@ -188,6 +207,7 @@ var observerModel =  Infer(opts, function(){
   observe(coinSpinner, 15)
   return binomial(p, 10)
 })
+viz(observerModel)
 
 print("generating skeptical model predictions")
 var skepticalModel =  Infer(opts, function(){
@@ -198,6 +218,7 @@ var skepticalModel =  Infer(opts, function(){
   return binomial(p, 10)
 })
 ///
+viz(skepticalModel)
 
 var experimentalData = [9,8,7,5,4,5,6,7,9,4,8,7,8,3,9,6,5,7,8,5]
 
@@ -216,11 +237,25 @@ var modelPosterior = Infer({method: "enumerate"}, scientistModel)
 viz(modelPosterior)
 ~~~~
 
+What is the result of the model comparison model (which model is preferred)?
+
+Examine the predictions of each individual model and look at the `experimentalData`.
+The differences in model predictions are subtle.
+What parts of the experimental data are leading to the `scientistModel` preferring one model over another?
+
+
+### Closing remarks to Prologue
+
+We've just walked through a complete example of formalizing a cognitive model (i.e., a hypothesis) in a probabilistic program and building a probabilistic program to decide among competing hypotheses.
+The rest of this chapter will be focused on examining each part in more detail.
+
 <!--
 #### Introduce a parameter into FairUnfair?
 -->
 
 # Learning about a hypothesis
+
+
 
 Bayesian data analysis is a general purpose data analysis approach for making explicit hypotheses about the generative process behind the experimental data (i.e., how was the experimental data generated? e.g., the hypothesis that data from two experimental conditions came from two different distributions).
 After making explicit hypotheses, Bayesian inference can be used to *invert* the model: go from experimental data to updated beliefs about the hypotheses.
@@ -233,10 +268,11 @@ For further reading on Bayesian data analysis: see [Lee & Wagenmakers (2013)](ht
 Models have parameters.
 Parameters can be of theoretical interest or not (so-called, nuisance parameters).
 Learning about a hypothesis involves inferences based on the values of parameters.
-For example, if you're trying to estimate the proportion of eligible people who signed up for health insurance after the signing of the Affordable Care Act (ObamaCare), and you find we that there is a 95% chance that between 81-86% of eligible people (people without health insurance before) signed up, then you might be tempted to draw a conclusion about the efficacy. (Disclaimer: I have no idea what the true numbers for that example are.)
+For example, you want to find out how likely it is that Candidate A will win an election.
+To do this, you try to estimate the proportion of eligible voters in the United States who will vote for Candidate A in the election.
 
-Parameters are in general unobservable.
-Trying to estimate how many (voting age, likely to vote) people prefer Candidate A vs. Candidate B would require asking over 100 million people (it's estimated that about 130 million people voted in the US Presidential Elections in 2008 and 2012). 
+Parameters are in general unobservable (or, "latent").
+Trying to estimate how many (voting age, likely to vote) people prefer Candidate A vs. Candidate B would require asking over 100 million people (it's estimated that about 130 million people voted in the US Presidential Elections in 2008 and 2012).
 It's impractical to measure the whole distribution.
 Instead, what is done is measuring a sample (maybe we ask 1000 people), and use that to make inference about the "true population proportion" (an unobservable parameter).
 
@@ -248,8 +284,8 @@ For a given Bayesian model (together with data), there are four conceptually dis
 
 For parameters, we have priors and posteriors:
 
-+ The *prior distribution over parameters* captures our initial state of knowledge (or, our beliefs) about the latent variables those parameters represent.
-+ The *posterior distribution over parameters* captures what we know about the latent variables having updated our beliefs with the evidence provided by data.
++ The *prior distribution over parameters* captures our initial state of knowledge (or, our beliefs) about the values that the latent parameters could have.
++ The *posterior distribution over parameters* captures what we know about the latent parameters having updated our beliefs with the evidence provided by data.
 
 We can run either the prior or the posterior model forward, and have it make predictions about data sets:
 
@@ -257,7 +293,7 @@ We can run either the prior or the posterior model forward, and have it make pre
 The prior predictive is a distribution over data, and gives the relative probability of different *observable* outcomes before we have seen any data.
 + The *posterior predictive distribution* tells us what data to expect, given the same model we started with, but with beliefs that have been updated by the observed data. The posterior predictive is a distribution over data, and gives the relative probability of different observable outcomes, after some data has been seen.
 
-Loosely speaking, *predictive* distributions are in "data space" and *parameter* distributions are in "latent space".
+Loosely speaking, *predictive* distributions are in "data space" and *parameter* distributions are in "latent parameter space".
 
 ## A simple illustration
 
@@ -316,7 +352,7 @@ That is, the most likely data for your model after observing your data should be
 It's natural then to use the posterior predictive distribution to examine the descriptive adequacy of a model.
 If these predictions do not match the data *already seen* (i.e., the data used to arrive at the posterior distribution over parameters), the model is descriptively inadequate.
 
-Imagine you're a developmental psychologist, piloting a two-alternative forced choice task on young children. 
+Imagine you're a developmental psychologist, piloting a two-alternative forced choice task on young children.
 (Just for fun, let's pretend it's a helping study, where the child either chooses to help or not help a confederate in need.)
 You have two research assistants that you send to two different preschools to collect data.
 You got your first batch of data back today: For one of your research assistants, 10 out of 10 children tested helped the confederate in need. For the other research assitant, 0 out of 10 children tested helped.
@@ -378,16 +414,22 @@ viz.density(parameterPosterior, {bounds: [0, 1]})
 
 Looks like a reasonable posterior distribution.
 
-How does the posterior predictive look? 
+How does the posterior predictive look?
 
 ~~~~
 var posteriorPredictive = editor.get("posteriorPredictive")
 viz(posteriorPredictive)
 ~~~~
+
+This plot will be a heat map because our posterior predictive distributions is over two dimensions (i.e., future data points collected by experimenter 1 and experimenter 2).
+The intensity of the color represents the probability.
+
 How well does it recreate the observed data?
 Where in this 2-d grid would our observed data land?
 
 Another way of visualizing the model-data fit is to examine a scatterplot.
+Here, we will plot the "Maximum A-Posteriori" value as a point-estimate of the posterior predictive distribution.
+If the data is well predicted by the posterior predictive (i.e., the model is able to accommodate the data well), it would fall along the y = x line.
 
 ~~~~
 var k1 = 0, k2 = 10;
@@ -401,7 +443,7 @@ viz.scatter(
 )
 ~~~~
 
-Think about the posterior predictive fit.
+How well does the posterior predictive match the data?
 What can you conclude about the parameter `p`?
 
 <!-- **TODO: This doesn't yet quite make the point about what a model check is. Show example of typical posterior predictive scatter plot?**
@@ -422,14 +464,16 @@ Basics from [PPAML school](http://probmods.github.io/ppaml2016/chapters/5-data.h
 
 In the above examples, we've had a single data-analysis model and used the experimental data to learn about the parameters of the models and the descriptive adequacy of the models.
 Often as scientists, we are in fortunate position of having multiple, distinct models in hand, and want to decide if one or another is a better description of the data.
-Indeed, we saw an example above when we decided whether `"observerModel"` or  `"skepticalModel"` was a better explanation of some (made-up) data.
+Indeed, we saw an example with the spinning coins when we decided whether `"observerModel"` or  `"skepticalModel"` was a better explanation of some data.
+
 In that example, model comparison was shown a special case of learning about the parameters of a model.
 In that case, we defined an uber model (`scientistModel`), that had a binary decision parameter that we wanted to learn about (which one of the models was better).
-We did this by having the binary decision variable gate between which of our two models we let generate the data.
+We did this by having a binary decision variable gate between which of our two models we let generate the data.
 We then go backwards (performing Bayesian inference) to decide which model was more likely to have generated the data we observed.
 
-We take the same approach here, articulating the simplest data analysis model for model comparison.
-We observe some number of binary outcomes and want to decide if the pattern we see is random or not (or to see, in the parlance of scientists, whether something systematic is going on; this model mimics a simple cognitive model for subjective randomness, which we will explore in a later chapter).
+We take the same approach here, articulating a simple data analysis model for model comparison.
+We observe some number of binary outcomes and want to decide if the pattern we see is random or not (e.g., to see if the helping behavior "is systematic" [assuming we've figured out the weird stuff going on with the experimenters before]).
+This model mimics a simple cognitive model for subjective randomness, which we will explore in another chapter of this book on Subjective Randomness.
 
 Formally, a "true random" pattern would be generated by a coin with probability of doing one or other binary outcome as 0.5 (a fair coin); a "non random" pattern would be generated by a trick coin.
 We run into our first complication: A fair coin is simple to define: `Bernoulli({p: 0.5})`, but how can we treat a trick coin?
@@ -446,13 +490,13 @@ Using this to now compare models:
 var k = 7, n = 20;
 
 var compareModels = function() {
-  
+
   // binary decision variable for which hypothesis is better
   var x = flip(0.5) ? "simple" : "complex";
   var p = (x == "simple") ? 0.5 : uniform(0, 1);
 
   observe(Binomial({p: p, n: n}), k);
-  
+
   return {model: x}
 }
 
@@ -478,14 +522,15 @@ If we're at a track, and you bet on horse A, and I bet on horse A and B, aren't 
 The answer is no, and the reason has to do with our metric for winning.
 Intuitively, we don't care whether your horse won or not, but how much money you win.
 How much money you win depends on how much money you bet, and the rule is, when we go to track, we have the same amount of money.
-(Intuitively, our money is probability, and we each have a distribution to bet; a distribution has probabilities that must must sum to 1.)
+
+In probabilistic models, our money is probabilities. Each model must allocate its probability so that it sums to 1.
 So my act of betting on horse A and horse B actually requires me to split my money (say, betting 50 / 50 on each).
 On the other hand, you put all your money on horse A (100 on A, 0 on B).
 If A wins, you will gain more money because you put more money down.
 
 This idea is called the principle of parsimony or Occam's razor, and will be discussed at length later in this book.
-For now, it's sufficient to know that more complex models will be penalized for being more complex intuitively because they will be diluting their predictions.
-At the same time, more complex models are more flexible and can capture a wider variety of data.
+For now, it's sufficient to know that more complex models will be penalized for being more complex, intuitively because they will be diluting their predictions.
+At the same time, more complex models are more flexible and can capture a wider variety of data (they are able to bet on more horses, which increases the chance that they will win some money).
 Bayesian model comparison lets us weigh these costs and benefits.
 
 
