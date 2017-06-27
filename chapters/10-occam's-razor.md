@@ -46,7 +46,7 @@ If beliefs are causal histories of how the observed data were generated, and deg
 
 # The Size Principle
 
-A simple case of Bayes Occam's razor comes from the *size principle* [@Tenenbaum2001]: Of hypotheses which generate data uniformly, the with smallest extension that is still consistent with the data is the most probable.
+A simple case of Bayes Occam's razor comes from the *size principle* [@Tenenbaum2001]: Of hypotheses which generate data uniformly, the one with smallest extension that is still consistent with the data is the most probable.
 
 The following program demonstrates the size principle with a very simple model. Here we have two hypothesized sets: `Big` has 6 elements and `Small` has 3 elements. The generative model chooses one of the hypotheses at random and samples some number of symbols from it uniformly. We then wish to infer the hypothesis given observed elements.
 

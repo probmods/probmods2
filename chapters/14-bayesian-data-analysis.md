@@ -602,7 +602,7 @@ print( savageDickeyRatio )
 
 # Example: Linear regression and tug of war
 
-One of the virtues of Bayesian data analysis is it's ability to interface with Bayesian models of cognition in a natural way.
+One of the virtues of Bayesian data analysis is its ability to interface with Bayesian models of cognition in a natural way.
 Bayesian cognitive models are formalizations of hypotheses about cognition, which we then can test with an experiment.
 We can contrast our rich Bayesian cognitive models with more standard models from data science, like linear regression, and evaluate them all using Bayesian data analysis.
 
