@@ -95,7 +95,7 @@ var sequence = repeat(2,thunk)
 
 ## Polya's urn
 
-A classic example is the Polya urn model. Here, an urn contains some number of white and black balls. On each step we draw a random ball from the urn, note it's color, and return it to the urn along with *another* ball of that color. Here is this model in WebPPL:
+A classic example is the Polya urn model. Here, an urn contains some number of white and black balls. On each step we draw a random ball from the urn, note its color, and return it to the urn along with *another* ball of that color. Here is this model in WebPPL:
 
 ~~~~
 var urnSeq = function(urn, samples) {
