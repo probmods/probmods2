@@ -475,7 +475,7 @@ var medicalDist = Infer({method: 'enumerate'}, function() {
 viz.marginals(medicalDist)
 ~~~~
 
-Both cold and lung disease are now far more likely that their baseline probability: the probability of having a cold increases from 2% to around 50%; the probability of having lung disease also increases from 1 in a 1000 to around 50%.
+Both cold and lung disease are now far more likely that their baseline probability: the probability of having a cold increases from 2% to around 50%; the probability of having lung disease also increases from 2.1% to around 50%.
 
 Now suppose we *also* learn that the patient does *not* have a cold.
 
@@ -499,8 +499,7 @@ viz.marginals(medicalDist)
 ~~~~
 
 The probability of having lung disease increases dramatically.
-If instead we had observed that the patient does have a cold, the probability of lung cancer returns to its very low base rate of 1 in a 1000.
-
+If instead we had observed that the patient does have a cold, the probability of lung cancer returns to its base rate of 2.1%
 ~~~~
 var medicalDist = Infer({method: 'enumerate'}, function() {
   var smokes = flip(.2);
