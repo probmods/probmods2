@@ -1,0 +1,43 @@
+{
+  "name": "bigfoot",
+  "main": "src/coffee/bigfoot.coffee",
+  "version": "2.1.4",
+  "homepage": "http://www.bigfootjs.com",
+  "authors": [
+    "Chris Sauve <chris@pxldot.com>"
+  ],
+  "description": "A jQuery plugin for creating exceptional HTML footnotes.",
+  "keywords": [
+    "jquery",
+    "plugin",
+    "footnotes",
+    "footnote",
+    "bigfoot",
+    "popover"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "links",
+    "utils",
+    "Gruntfile.js",
+    "readme-dev.md",
+    "package.json"
+  ],
+  "dependencies": {
+    "jquery": ">= 1.8.0"
+  },
+  "_release": "2.1.4",
+  "_resolution": {
+    "type": "version",
+    "tag": "2.1.4",
+    "commit": "61d4b4b53a7e7ad77ffaa6d2bc1018f616a66ad1"
+  },
+  "_source": "https://github.com/pxldot/bigfoot.git",
+  "_target": "^2.1.4",
+  "_originalSource": "bigfoot"
+}
