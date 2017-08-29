@@ -4,7 +4,7 @@ title: Algorithms for inference
 description: From competence to process, efficiency tradeoffs of different algorithms.
 custom_js:
 - assets/js/box2d.js
-- assets/js/phys.js
+- assets/js/physics.js
 ---
 
 

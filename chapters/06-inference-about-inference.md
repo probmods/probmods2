@@ -4,7 +4,7 @@ title: Inference about inference
 description: Models on models on models
 custom_js:
 - assets/js/box2d.js
-- assets/js/phys.js
+- assets/js/physics.js
 ---
 
 The `Infer` operator is an ordinary WebPPL function, in the sense that it can occur anywhere that any other function can occur. In particular, we can construct an inference containing another inference inside of it: this represents hypothetical inference *about* a hypothetical inference. Nested queries are particularly useful in modeling social cognition: reasoning about another agent, who is herself reasoning.

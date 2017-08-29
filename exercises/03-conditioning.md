@@ -3,7 +3,7 @@ layout: exercise
 title: Conditioning - exercises
 custom_js:
 - assets/js/box2d.js
-- assets/js/phys.js
+- assets/js/physics.js
 ---
 
 ## Exercise 1: Conditioning and prior manipulation
