@@ -45,7 +45,7 @@ N. D. Goodman and J. B. Tenenbaum (2016). <i>Probabilistic Models of Cognition</
 
 <h3>Previous edition</h3>
 
-The first edition of this book used the probabilistic programming language Church and can be found <a href="https://probmods.org/v1/">here</a>.
+The first edition of this book used the probabilistic programming language Church and can be found <a href="http://v1.probmods.org">here</a>.
 
 <h3>Acknowledgments</h3>
 
