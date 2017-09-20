@@ -9,7 +9,9 @@ custom_js:
 
 ## Exercise 1
 
-Here are three WebPPL programs:
+### a) 
+
+Show that the marginal distribution on return values for these three programs is the same by directly computing the probability using the rules of probability (hint: write down each possible history of random choices for each program).
 
 ~~~~
 flip() ? flip(.7) : flip(.1)
@@ -23,11 +25,29 @@ flip(flip() ? .7 : .1)
 flip(.4)
 ~~~~
 
-a) Show that the marginal distribution on return values for these three programs is the same by directly computing the probability using the rules of probability (hint: write down each possible history of random choices for each program). Check your answers by sampling from the programs.
+### b)
 
-b)  Explain why these different-looking programs can give the same results.
+Check your answers by sampling from the programs, 1000 times each, and plotting the results.
+
+~~~~
+~~~~
+
+~~~~
+~~~~
+
+~~~~
+~~~~
+
+### c)
+
+Write another new program with the same marginal distribution on return values that looks different from all of the above programs.
+
+~~~~
+~~~~
 
 ## Exercise 2
+
+### a)
 
 Explain why (in terms of the evaluation process) these two programs give different answers (i.e. have different distributions on return values):
 
@@ -41,11 +61,24 @@ var foo = function() {return flip()};
 display([foo(), foo(), foo()]);
 ~~~~
 
-How could you use `mem` to make the second program have the same distribution as the first?
+### b)
+
+How could you use mem to make the second program have the same distribution as the first?
+
+~~~~
+~~~~
+
+### c)
+
+Change the program in 2b so that the first two elements in the list are always the same as each other but the third element can be different. Try to do this by adding only these 4 characters: `x`, `0`, `0`, and `1`.
+
+~~~~
+~~~~
 
 ## Exercise 3
 
-In the simple medical diagnosis example we imagined a generative process for the diseases and symptoms of a single patient. If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a *function* from a person to whether they have that disease, like this:
+
+In the simple medical diagnosis example we imagined a generative process for the diseases and symptoms of a single patient. If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a function from a person to whether they have that disease, like this:
 
 ~~~~
 var lungCancer = function(person) {return flip(.01)};
@@ -56,7 +89,10 @@ var cough = function(person) {return cold(person) || lungCancer(person)}
 display([cough('bob'), cough('alice')])
 ~~~~
 
-Why doesn't this capture our intuitions correctly if we try to do the same thing for the more complex medical diagnosis example? How could we fix it?
+Add `fever` as a symptom of a cold, but not a symptom of lung cancer. For each person (Bob and Alice), print whether they have each sickness and each symptom. *Note:* You will need to modify some of the existing functions slightly in order to capture our intuitions correctly.
+
+~~~~
+~~~~
 
 ## Exercise 4
 
