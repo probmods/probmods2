@@ -70,12 +70,40 @@ How could you use mem to make the second program have the same distribution as t
 
 ### c)
 
-Change the program in 2b so that the first two elements in the list are always the same as each other but the third element can be different. Try to do this by adding only these 4 characters: `x`, `0`, `0`, and `1`.
+Change the program in Part B so that the first two elements in the list are always the same as each other but the third element can be different. Try to do this by adding only these 4 characters: `x`, `0`, `0`, and `1`.
 
 ~~~~
 ~~~~
 
 ## Exercise 3
+
+### a)
+
+Which of these programs would be more likely to generate the following proportions for 100 values of C? Justify your response.
+
+<center><img src="../assets/img/flip0.7.svg" ></center>
+
+~~~~
+// Program "A"
+var A = flip();
+var B = flip(0.9);
+var C = flip() ? A && B : A || B;
+display([A, B, C])
+~~~~
+
+~~~~
+// Program "B"
+var A = flip(0.9);
+var B = A && flip(0.9)
+var C = B && flip(0.9)
+display([A, B, C])
+~~~~
+
+### b)
+
+Could the program you did *not* choose in Part A have *also* generated those return values? Explain.
+
+## Exercise 4
 
 
 In the simple medical diagnosis example we imagined a generative process for the diseases and symptoms of a single patient. If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a function from a person to whether they have that disease, like this:
@@ -94,7 +122,7 @@ Add `fever` as a symptom of a cold, but not a symptom of lung cancer. For each p
 ~~~~
 ~~~~
 
-## Exercise 4
+## Exercise 5
 
 Work through the evaluation process for the `bend` higher-order function in this example:
 
@@ -160,7 +188,7 @@ c) Why are the probabilities different for the last two? Explain both in terms o
 
 -->
 
-## Exercise 5
+## Exercise 6
 
 Use the rules of probability to compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5. Check your answer by using `Infer`.
 
@@ -170,7 +198,7 @@ var geometric = function(p) {
 };
 ~~~~
 
-## Exercise 6
+## Exercise 7
 
 Convert the following probability table to a compact WebPPL program:
 
@@ -191,7 +219,7 @@ var b = ...
 
 Run your WebPPL program and use `Infer` to check that you get the correct distribution.
 
-## Exercise 7
+## Exercise 8
 
 In **Example: Intuitive physics** we modeled stability of a tower as the probability that the tower falls when perturbed, and we modeled "falling" as getting shorter. It would be reasonable to instead measure *how much shorter* the tower gets.
 
