@@ -144,6 +144,9 @@ var bentCoin = bend(fairCoin)
 
 Directly compute the probability distribution of the bent coin in the example. Check your answer by using `Infer`.
 
+~~~~
+~~~~
+
 <!-- ToW was moved to next chapter....
 ## Exercise 5
 
@@ -190,7 +193,9 @@ c) Why are the probabilities different for the last two? Explain both in terms o
 
 ## Exercise 6
 
-Use the rules of probability to compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5. Check your answer by using `Infer`.
+### a)
+
+Use the rules of probability to compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5. *Hint:* What is the default parameter for `flip()`?
 
 ~~~~
 var geometric = function(p) {
@@ -198,7 +203,16 @@ var geometric = function(p) {
 };
 ~~~~
 
+### b)
+
+Check your answer by using `Infer`.
+
+~~~~
+~~~~
+
 ## Exercise 7
+
+### a)
 
 Convert the following probability table to a compact WebPPL program:
 
@@ -209,21 +223,30 @@ Convert the following probability table to a compact WebPPL program:
 |T|      F|     0.4|
 |T|      T|     0.4|
 
-Hint: fix the probability of A and then define the probability of B to *depend* on whether A is true or not.
+*Hint:* fix the probability of A and then define the probability of B to *depend* on whether A is true or not.
 
 ~~~~
 var a = ...
 var b = ...
-[a, b]
+display([a, b])
 ~~~~
+
+### b)
 
 Run your WebPPL program and use `Infer` to check that you get the correct distribution.
 
+~~~~
+~~~~
+
 ## Exercise 8
 
-In **Example: Intuitive physics** we modeled stability of a tower as the probability that the tower falls when perturbed, and we modeled "falling" as getting shorter. It would be reasonable to instead measure *how much shorter* the tower gets.
+In **Example: Intuitive physics** we modeled instability of a tower as the probability that the tower falls when perturbed, and we modeled "falling" as getting shorter. It would be reasonable to instead measure *how much shorter* the tower gets.
 
-a) Below, modify the stability model by writing a continuous measure, `towerFallDegree`. Make sure that your continuous measure is in some way numerically comparable to the discrete measure, `doesTowerFall` (defined here as either 0 or 1). Mathematically, what is your continuous measure?
+### a)
+
+Below, modify the stability/instability model by writing a continuous measure, `towerFallDegree`. Let this measure take different values between 0 and 1.
+That way, your continuous measure will be numerically comparable to the discrete measure, `doesTowerFall` (defined here as either 0 or 1).
+Explain what your continuous measure represents and why it might be a good continuous measure of instability.
 
 ~~~~
 ///fold:
@@ -265,7 +288,7 @@ var getTowerHeight = function(world) {
 
 var doesTowerFall = function (initialW, finalW) {
   var approxEqual = function (a, b) { Math.abs(a - b) < 1.0 }
-  return !approxEqual(highestY(initialW), highestY(finalW))
+  return 1 - approxEqual(highestY(initialW), highestY(finalW));
 }
 
 var towerFallDegree = function(initialW, finalW) {
@@ -273,21 +296,23 @@ var towerFallDegree = function(initialW, finalW) {
   return -999;
 };
 
-var visualizeStabilityMeasure = function(measureFunction) {
-  var initialWorld = noisify(almostUnstableWorld)
-  var finalWorld = physics.run(1000, initialWorld)
+var visualizeInstabilityMeasure = function(measureFunction) {
+  var initialWorld = noisify(almostUnstableWorld);
+  var finalWorld = physics.run(1000, initialWorld);
   var measureValue = measureFunction(initialWorld, finalWorld);
-  print("Stability measure: " + measureValue)
-  print("Initial height: " + getTowerHeight(initialWorld))
-  print("Final height: " + getTowerHeight(finalWorld))
-  physics.animate(1000, initialWorld)
+  print("Instability measure: " + measureValue);
+  print("Initial height: " + getTowerHeight(initialWorld));
+  print("Final height: " + getTowerHeight(finalWorld));
+  physics.animate(1000, initialWorld);
 };
 
 // Test binary doesTowerFall measure
-// visualizeStabilityMeasure(doesTowerFall);
+// visualizeInstabilityMeasure(doesTowerFall);
 
 // Test custom towerFallDegree measure
-visualizeStabilityMeasure(towerFallDegree);
+visualizeInstabilityMeasure(towerFallDegree);
 ~~~~
 
-b) Are there worlds where your new model makes very different predictions about stability from the original model? Which best captures the meaning of "stable"? (it might be useful to actually code up your worlds and test them).
+### b)
+
+Are there worlds where your new model makes very different predictions about instability from the original model? Which best captures the meaning of "unstable"? (it might be useful to actually code up your worlds and test them).
