@@ -142,7 +142,13 @@ var fairCoin = makeCoin(.5)
 var bentCoin = bend(fairCoin)
 ~~~~
 
-Directly compute the probability distribution of the bent coin in the example. Check your answer by using `Infer`.
+### a)
+
+Directly compute the probability distribution of the bent coin in the example. 
+
+### b)
+
+Check your answer by using `Infer`.
 
 ~~~~
 ~~~~
