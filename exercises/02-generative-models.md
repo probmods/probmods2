@@ -105,22 +105,53 @@ Could the program you did *not* choose in Part A have *also* generated those ret
 
 ## Exercise 4
 
+In the simple medical diagnosis example, we imagined a generative process for diseases and symptoms of a single patient.
+In this exercise, we'll write a version of that model that represents the diseases and symptoms of many patients.
 
-In the simple medical diagnosis example we imagined a generative process for the diseases and symptoms of a single patient. If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a function from a person to whether they have that disease, like this:
+### a)
+
+Let's look at just two common conditions (a cold and allergies) and just two symptoms (sneeze and fever), and let's assume that symptoms are deterministic.
 
 ~~~~
-var lungCancer = function(person) {return flip(.01)};
+var allergies = flip(0.3);
+var cold = flip(0.2);
+
+var sneeze = cold || allergies;
+var fever = cold;
+
+display([sneeze, fever])
+~~~~
+
+Under this model, what is the probability that the patient is sneezing? What is the probability that the patient is sneezing *and* has a fever?
+
+### b)
+
+Inspect the joint probability distributions of `sneeze` and `fever` using `Infer`.
+
+~~~~
+Infer({method: "forward", samples: 1000}, function() {
+  ...
+  return [ ... ];
+})
+~~~~
+
+### c)
+
+If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a function from a person to whether they have that disease, like this:
+
+~~~~
+var allergies = function(person) {return flip(.3)};
 var cold = function(person) {return flip(.2)}
 
-var cough = function(person) {return cold(person) || lungCancer(person)}
+var sneeze = function(person) {return cold(person) || allergies(person)}
 
-display([cough('bob'), cough('alice')])
+display([sneeze('bob'), sneeze('alice')])
 ~~~~
 
-Add `fever` as a symptom of a cold, but not a symptom of lung cancer. For each person (Bob and Alice), print whether they have each sickness and each symptom. *Note:* You will need to modify some of the existing functions slightly in order to capture our intuitions correctly.
+Add `fever` to the program above, and use `Infer` to inspect the probability distribution over Bob's symptoms.
 
-~~~~
-~~~~
+Is this the same probability distribution that you computed for the single patient in Part A? 
+If not, what can you do to fix this program to capture our intuitions correctly?
 
 ## Exercise 5
 
