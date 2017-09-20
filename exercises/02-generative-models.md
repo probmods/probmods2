@@ -260,7 +260,7 @@ Convert the following probability table to a compact WebPPL program:
 |T|      F|     0.4|
 |T|      T|     0.4|
 
-*Hint:* fix the probability of A and then define the probability of B to *depend* on whether A is true or not.
+**Requirement:** fix the probability of A first and then define the probability of B to *depend* on whether A is true or not.
 
 ~~~~
 var a = ...
