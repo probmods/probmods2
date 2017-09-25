@@ -38,18 +38,26 @@ Infer({method: "enumerate"}, function() {
 
 ## Exercise 3: Extending the smiles model
 
-a) Describe (using ordinary English) what the second WebPPL program above means.
+### a)
+
+Describe (using ordinary English) what the second WebPPL program above means.
 
 ~~~~
 ~~~~
 
-b) Write a version of the model that captures these two intuitions: (1) people are more likely to smile if they want something and (2) *nice* people are less likely to want something.
+### b)
+
+Write a version of the model that captures these two intuitions: (1) people are more likely to smile if they want something and (2) *nice* people are less likely to want something.
 
 ~~~~
 
 ~~~~
 
-c) Use this extended model to compute the posterior belief that someone wants something from you, given that they are smiling and have rarely smiled before? In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
+### c)
+
+Suppose you've seen Bob five times this week and each time, he was not smiling. But today, you see Bob and he is smiling. Use this extended model to compute the posterior belief that Bob wants something from you today.
+
+In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
 
 ~~~~
 
