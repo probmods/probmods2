@@ -283,6 +283,42 @@ Run your WebPPL program and use `Infer` to check that you get the correct distri
 
 ## Exercise 8
 
+Box2D is a two dimensional simulation engine for simulating rigid bodies (those with constant shape). It allows for the construction of arbitray worlds and models important physical concepts including collisions, friction, gravity, momentum, and more.
+
+We have provided a wrapper around Box2D that allows for the easy construction of worlds. A world consists of list of shapes.
+Shapes are created by JavaScript objects with the following properties:
+
+|`shape`    |"circle" or "rect"                               |
+|`dims`     |[width, height] for rect or [radius] for circle  |
+|`x`        |x_position_as_number (distance from left)        |
+|`y`        |y_position_as_number (distance from top)         |
+|`static`   |boolean (does the object move or stay still?)    |
+|`velocity` |[x_velocity, y_velocity]                         |
+
+The variables `worldWidth` and `worldHeight` are constants representing the visible size of the simulation window.
+
+Here's an example with a ground and a single rectangle. Add another object to `bowlingWorld` and give it an initial velocity so that it knocks the original rectangle down.
+
+~~~~
+var ground = {shape: 'rect',
+  static: true,
+  dims: [worldWidth, 10],
+  x: worldWidth/2,
+  y: worldHeight}
+
+var rect = {shape: 'rect',
+  static: false,
+  dims: [10, 100],
+  x: worldWidth/2,
+  y: 390}
+
+var bowlingWorld = [ground, rect]
+physics.animate(1000, bowlingWorld);
+~~~~
+
+
+## Exercise 9
+
 In **Example: Intuitive physics** we modeled instability of a tower as the probability that the tower falls when perturbed, and we modeled "falling" as getting shorter. It would be reasonable to instead measure *how much shorter* the tower gets.
 
 ### a)
