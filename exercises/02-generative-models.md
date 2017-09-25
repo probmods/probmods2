@@ -286,18 +286,6 @@ Run your WebPPL program and use `Infer` to check that you get the correct distri
 Below we've defined a higher-order function `flipSequence` that takes a coin flipping function (e.g. `trickCoin`, below) and flips that coin until it gets a *sequence* of two heads in a row (in which case it returns heads `'h'`) or two tails in a row (in which case it returns tails `'t'`.
 Try out different weights for the `trickCoin`.
 
-### a)
-
-How does `flipSequence` change the distribution over return values? Explain.
-
-### b)
-
-What would happen if a fair coin (with weight 0.5) were input to `flipSequence`? Explain.
-
-<!-- ### c)
-
-What weight would you need to give the trick coin in order for `flipSequence(trickCoin)` to return heads `'h`' X% of the time? -->
-
 ~~~~
 var makeCoin = function(weight) {
   return function() {
@@ -322,6 +310,18 @@ var n_samples = 10000;
 viz(Infer({method: "forward", samples: n_samples}, trickCoin))
 viz(Infer({method: "forward", samples: n_samples}, flipSequence(trickCoin)))
 ~~~~
+
+### a)
+
+How does `flipSequence` change the distribution over return values (qualitatively)? Explain why requiring two flips in a row to be the same has this effect.
+
+### b)
+
+What would happen if a fair coin (with weight 0.5) were input to `flipSequence`? Explain.
+
+<!-- ### c)
+
+What weight would you need to give the trick coin in order for `flipSequence(trickCoin)` to return heads `'h`' X% of the time? -->
 
 ## Exercise 9
 
