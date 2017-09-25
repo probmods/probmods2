@@ -283,6 +283,48 @@ Run your WebPPL program and use `Infer` to check that you get the correct distri
 
 ## Exercise 8
 
+Below we've defined a higher-order function `flipSequence` that takes a coin flipping function (e.g. `trickCoin`, below) and flips that coin until it gets a *sequence* of two heads in a row (in which case it returns heads `'h'`) or two tails in a row (in which case it returns tails `'t'`.
+Try out different weights for the `trickCoin`.
+
+### a)
+
+How does `flipSequence` change the distribution over return values? Explain.
+
+### b)
+
+What would happen if a fair coin (with weight 0.5) were input to `flipSequence`? Explain.
+
+<!-- ### c)
+
+What weight would you need to give the trick coin in order for `flipSequence(trickCoin)` to return heads `'h`' X% of the time? -->
+
+~~~~
+var makeCoin = function(weight) {
+  return function() {
+    return flip(weight) ? 'h' : 't'
+  }
+}
+var flipSequence = function(coin) {
+  return function() {
+    var flip1 = coin();
+    var flip2 = coin();
+    if (flip1 == flip2) {
+      return flip1;
+    } else {
+      return flipSequence(coin)();
+    }
+  }
+}
+
+var trickCoin = makeCoin(.6)
+
+var n_samples = 10000;
+viz(Infer({method: "forward", samples: n_samples}, trickCoin))
+viz(Infer({method: "forward", samples: n_samples}, flipSequence(trickCoin)))
+~~~~
+
+## Exercise 9
+
 Box2D is a two dimensional simulation engine for simulating rigid bodies (those with constant shape). It allows for the construction of arbitray worlds and models important physical concepts including collisions, friction, gravity, momentum, and more.
 
 We have provided a wrapper around Box2D that allows for the easy construction of worlds. A world consists of list of shapes.
@@ -317,7 +359,7 @@ physics.animate(1000, bowlingWorld);
 ~~~~
 
 
-## Exercise 9
+## Exercise 10
 
 In **Example: Intuitive physics** we modeled instability of a tower as the probability that the tower falls when perturbed, and we modeled "falling" as getting shorter. It would be reasonable to instead measure *how much shorter* the tower gets.
 
