@@ -7,11 +7,17 @@ custom_js:
 - assets/js/physics.js
 ---
 
+Please complete the exercises on this page and submit them in PDF form.
+You can (and should!!) write your code here and click "Run" to test out your answers.
+However, you will need to transfer your code to your own document in order to turn in your answers and get feedback.
+THESE CODE BOXES WILL NOT SAVE YOUR WORK.
+So copy your answers over to your own document frequently.
+
 ## Exercise 1
 
 ### a) 
 
-Show that the marginal distribution on return values for these three programs is the same by directly computing the probability using the rules of probability (hint: write down each possible history of random choices for each program).
+Show that the marginal distribution on return values for these three programs is the same by directly computing the probability using the rules of probability *Hint:* write down each possible history of random choices for each program.
 
 ~~~~
 flip() ? flip(.7) : flip(.1)
@@ -49,7 +55,7 @@ Write another new program with the same marginal distribution on return values t
 
 ### a)
 
-Explain why (in terms of the evaluation process) these two programs give different answers (i.e. have different distributions on return values):
+Explain why (in terms of the evaluation process) these two programs give different answers (i.e. have different distributions on return values).
 
 ~~~~
 var foo = flip();
@@ -63,14 +69,14 @@ display([foo(), foo(), foo()]);
 
 ### b)
 
-How could you use mem to make the second program have the same distribution as the first?
+How could you use `mem` to make the second program have the same distribution as the first?
 
 ~~~~
 ~~~~
 
 ### c)
 
-Change the program in Part B so that the first two elements in the list are always the same as each other but the third element can be different. Try to do this by adding only these 4 characters: `x`, `0`, `0`, and `1`.
+Change the program in Part B so that the first two elements in the list are always the same as each other but the third element can be different. *Optional challenge:* try to do this by adding only these 4 characters: `x`, `0`, `0`, and `1`.
 
 ~~~~
 ~~~~
