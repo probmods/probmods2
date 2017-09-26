@@ -10,13 +10,19 @@ custom_js:
 
 In the earlier [Medical Diagnosis]({{site.baseurl}}/chapters/02-generative-models.html#example-causal-models-in-medical-diagnosis) section we suggested understanding the patterns of symptoms for a particular disease by changing the prior probability of the disease such that it is always true (also called the *do* operator).
 
-a) For this example, does intervening on the program in this way have the same effect as *conditioning* on the disease being true? What about the casual dependency makes this case?
+### a)
 
-b) Why would intervening have a different effect than conditioning for more general hypotheticals? Construct an example where they differ. Then translate this into a WebPPL model and show that manipulating the prior gives different answers than manipulating the observation. (Hint: think about the effect of intervening vs. conditioning on a variable that has a **causal parent** on that parent.)
+For this example, does intervening on the program in this way have the same effect as *conditioning* on the disease being true? What about the casual dependency makes this case?
+
+### b) 
+
+Why would intervening have a different effect than conditioning for more general hypotheticals? Construct an example where they differ. Then translate this into a WebPPL model and show that manipulating the prior gives different answers than manipulating the observation. (Hint: think about the effect of intervening vs. conditioning on a variable that has a **causal parent** on that parent.)
 
 ## Exercise 2: Computing marginals
 
 Use the rules for computing probabilities to compute the marginal distribution on return values from these WebPPL programs by hand (use `viz()` to check your answers):
+
+### a)
 
 ~~~~
 Infer({method: "enumerate"}, function() {
@@ -27,42 +33,94 @@ Infer({method: "enumerate"}, function() {
 })
 ~~~~
 
+### b)
+
 ~~~~
-Infer({method: "enumerate"}, function() {
+var smilesModel = function() {
   var nice = mem(function(person) {return flip(.7)});
   var smiles = function(person) {return nice(person) ? flip(.8) : flip(.5);}
   condition(smiles('alice') && smiles('bob') && smiles('alice'));
   return nice('alice');
-})
+}
+
+Infer({method: "enumerate"}, smilesModel)
 ~~~~
 
 ## Exercise 3: Extending the smiles model
 
-a) Describe (using ordinary English) what the second WebPPL program above means.
+### a)
+
+Describe (using ordinary English) what the second WebPPL program, `smilesModel` above means.
+
+### b)
+
+Extend `smilesModel` to create a version of the model that captures these two intuitions:
+
+1. people are more likely to smile if they want something and
+1. *nice* people are less likely to want something.
+
+*Hint:* Which variables change at different times for the same person?
+Which values *depend* on other values?
 
 ~~~~
+var extendedSmilesModel = function() {
+  var nice = mem(function(person) {return flip(.7)});
+
+  ...
+
+  var smiles = function(person, ...) {
+    return nice(person) ? flip(.8) : flip(.5);
+  }
+
+  return smiles('alice')
+}
+
+Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
 
-b) Write a version of the model that captures these two intuitions: (1) people are more likely to smile if they want something and (2) *nice* people are less likely to want something.
+### c)
+
+Suppose you've seen Bob five times this week and each time, he was not smiling. But today, you see Bob and he *is* smiling.
+Use this `extendedSmilesModel` model to compute the posterior belief that Bob wants something from you today.
+
+*Hint:* How will you represent the same person (Bob) smiling *multiple times*?
+What features of Bob will stay the same each time he smiles (or doesn't) and what features will change?
+
+In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
 
 ~~~~
+var extendedSmilesModel = function() {
+  // copy your code frome above
 
+  // make the appropriate observations
+
+  // return the appropriate query
+  return ...;
+}
+
+
+Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
 
-c) Use this extended model to compute the posterior belief that someone wants something from you, given that they are smiling and have rarely smiled before? In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
 
-~~~~
+## Exercise 3: Casino game
 
-~~~~
+Consider the following game. A machine randomly gives Bob a letter of the alphabet; it gives a, e, i, o, u, y (the vowels) with probability 0.01 each and the remaining letters (i.e., the consonants) with probability 0.047 each.
+The probability that Bob wins depends on which letter he got.
+Letting $$h$$ denote the letter and letting $$Q(h)$$ denote the numeric position of that letter (e.g., $$Q(\text{a}) = 1, Q(\text{b}) = 2$$, and so on), the probability of winning is *proportional to* $$1/Q(h)^2$$.
 
+Suppose that we observe Bob winning but we don't know what letter he got.
+How can we use the observation that he won to update our beliefs about which letter he got?
+Let's express this formally.
+Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{a, b, c, d, ..., y, z\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
 
-## Exercise 4: Casino game
+### a)
 
-Consider the following game. A machine randomly gives Bob a letter of the alphabet; it gives a, e, i, o, u, y (the vowels) with probability 0.01 each and the remaining letters (i.e., the consonants) with probability 0.047 each. The probability that Bob wins depends on which letter he got. Letting $$h$$ denote the letter and letting $$Q(h)$$ denote the numeric position of that letter (e.g., $$Q(\text{a}) = 1, Q(\text{b}) = 2$$, and so on), the probability of winning is $$1/Q(h)^2$$. Suppose that we observe Bob winning but we don't know what letter he got. How can we use the observation that he won to update our beliefs about which letter he got? Let's express this formally. Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{a, b, c, d, ..., y, z\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
+In English, what does the posterior probability $$p(h \mid \text{win})$$ represent?
 
-a) In English, what does the posterior probability $$p(h \mid \text{win})$$ represent?
+### b)
 
-b) Manually compute $$p(h \mid \text{win})$$ for each hypothesis (Excel or something like it is helpful here). Remember to normalize - make sure that summing all your $$p(h \mid \text{win})$$ values gives you 1.
+Manually compute $$p(h \mid \text{win})$$ for each hypothesis (Excel or something like it is helpful here). Remember to normalize - make sure that summing all your $$p(h \mid \text{win})$$ values gives you 1.
 
 Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
 
@@ -85,7 +143,10 @@ var distribution = Infer({method: 'enumerate'}, function() {
 viz.auto(distribution);
 ~~~~
 
-c) What does the `Categorical` function do (hint: check the [docs](http://webppl.readthedocs.io/en/master/distributions.html))? Use `Categorical` to express this distribution:
+### c)
+
+What does the `Categorical` function do (hint: check the [docs](http://webppl.readthedocs.io/en/master/distributions.html))?
+Use `Categorical` to express this distribution:
 
 |x    | P(x)|
 |---- | -----|
@@ -98,8 +159,21 @@ c) What does the `Categorical` function do (hint: check the [docs](http://webppl
 var distribution = Categorical(...)
 ~~~~
 
-d) Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$. Include a screenshot of the resulting graph. What letter has the highest posterior probability? In English, what does it mean that this letter has the highest posterior? Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
+### d)
 
-e) Which is higher, $$p(\text{vowel} \mid \text{win})$$ or $$p(\text{consonant} \mid \text{win})$$? Answer this using the WebPPL code you wrote (hint: use the `checkVowel` function)
+Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$.
+Include a screenshot of the resulting graph.
+What letter has the highest posterior probability?
+In English, what does it mean that this letter has the highest posterior?
+Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
-f) What difference do you see between your code and the mathematical notation? What are the advantages and disadvantages of each? Which do you prefer?
+### e)
+
+Which is higher, $$p(\text{vowel} \mid \text{win})$$ or $$p(\text{consonant} \mid \text{win})$$?
+Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` function.
+
+### f)
+
+What difference do you see between your code and the mathematical notation?
+What are the advantages and disadvantages of each?
+Which do you prefer?
