@@ -25,19 +25,26 @@ As a simplification of this situation consider the following generative process.
 
 ~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
-var bagToPrototype = mem(function(bag){return T.toScalars(dirichlet(ones([colors.length, 1])))})
-var drawMarbles = function(bag, numDraws){
-  var probs = bagToPrototype(bag);
-  return repeat(numDraws, function(){return categorical({vs: colors, ps: probs})});
+
+var makeBag = mem(function(bagName){
+  return Categorical({
+    ps: T.toScalars(dirichlet(ones([colors.length, 1]))),
+    vs: colors
+  })
+})
+
+var drawMarbles = function(bagName, numDraws){
+  var prototype = makeBag(bagName);
+  return repeat(numDraws, function(){return sample(prototype)});
 }
 
-viz(drawMarbles('bag', 100))
-viz(drawMarbles('bag', 100))
-viz(drawMarbles('bag', 100))
-viz(drawMarbles('other_bag', 100))
+viz(drawMarbles('bagA', 100))
+viz(drawMarbles('bagA', 100))
+viz(drawMarbles('bagA', 100))
+viz(drawMarbles('bagB', 100))
 ~~~~
 
-As this examples shows, `mem` is particularly useful when writing hierarchical models because it allows us to associate arbitrary random draws with categories across entire runs of the program. In this case it allows us to associate a particular mixture of marble colors with each bag. The mixture is drawn once, and then remains the same thereafter for that bag. Intuitively, you can see how each sample is sufficient to learn a lot about what that bag is like; there is typically a fair amount of similarity between the empirical color distributions in each of the four samples from `bag`.  In contrast, you should see a different distribution of samples from `other_bag`.
+As this examples shows, `mem` is particularly useful when writing hierarchical models because it allows us to associate arbitrary random draws with categories across entire runs of the program. In this case it allows us to associate a particular mixture of marble colors with each bag. The mixture is drawn once, and then remains the same thereafter for that bag. Intuitively, you can see how each sample is sufficient to learn a lot about what that bag is like; there is typically a fair amount of similarity between the empirical color distributions in each of the four samples from `bagA`.  In contrast, you should see a different distribution of samples from `bagB`.
 
 Now let's add a few twists: we will generate three different bags, and try to learn about their respective color prototypes by conditioning on observations. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
 
