@@ -43,7 +43,7 @@ Given that all three flips landed on heads, what is the probability that the coi
 
 Given that the first two flips were different, what is the probability that the third flip will be heads?
 
-## Exercise 1: Conditioning and Intervention
+## Exercise 2: Conditioning and Intervention
 
 In the earlier [Medical Diagnosis]({{site.baseurl}}/chapters/02-generative-models.html#example-causal-models-in-medical-diagnosis) section we suggested understanding the patterns of symptoms for a particular disease by changing the prior probability of the disease such that it is always true (also called the *do* operator).
 
@@ -69,9 +69,9 @@ Why would intervening have a different effect than conditioning for more general
 
 ~~~~
 
-## Exercise 2: Computing marginals
+## Exercise 3: Computing marginals
 
-Use the rules for computing probabilities to compute the marginal distribution on return values from these WebPPL programs by hand (use `viz()` to check your answers):
+Use the rules for computing probabilities to compute the marginal distribution on return values from these programs by hand (use `viz()` to check your answers):
 
 ### a)
 
@@ -97,7 +97,7 @@ var smilesModel = function() {
 Infer({method: "enumerate"}, smilesModel)
 ~~~~
 
-## Exercise 3: Extending the smiles model
+## Exercise 4: Extending the smiles model
 
 ### a)
 
@@ -154,17 +154,56 @@ Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
 
 
+Question 5: Sprinklers, Rain and mem
 
-<!-- ## Exercise 3: Casino game
+### a)
 
-Consider the following game. A machine randomly gives Bob a letter of the alphabet; it gives a, e, i, o, u, y (the vowels) with probability 0.01 each and the remaining letters (i.e., the consonants) with probability 0.047 each.
+I have a particularly bad model of the sprinkler in my garden.
+It is supposed to water my grass every morning, but is turns on only half the time (at random, as far as I can tell).
+Fortunately, I live in a city where it also rains 30% of days.
+
+One day I check my lawn and see that it is wet, meaning that either it rained that morning or my sprinkler turned on (or both).
+
+Answer the following questions, either using the Rules of Probability or by writing your own sprinkler model in webppl.
+
+* What is the probability that it rained?
+* What is the probability that my sprinkler turned on?
+
+~~~~
+
+~~~~
+
+### c)
+
+My neighbour Kelsey, who has the same kind of sprinkler, tells me that her lawn was also wet that same morning.
+What is the new posterior probability that it rained?
+
+~~~~
+
+~~~~
+
+### d)
+
+To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning.
+Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too.
+Using `mem`, write a model to reason about arbitrary numbers of people, and then use it to find the new probability that it rained.
+
+~~~~
+
+~~~~
+
+
+## Exercise 5: Casino game
+
+Consider the following game.
+A machine randomly gives Bob a letter of the word "game"; it gives a, e (the vowels) with probability 0.45 each and the remaining letters (the consonants g, m) with probability 0.05 each.
 The probability that Bob wins depends on which letter he got.
-Letting $$h$$ denote the letter and letting $$Q(h)$$ denote the numeric position of that letter (e.g., $$Q(\text{a}) = 1, Q(\text{b}) = 2$$, and so on), the probability of winning is *proportional to* $$1/Q(h)^2$$.
+Letting $$h$$ denote the letter and letting $$Q(h)$$ denote the numeric position of that letter in the word "game" (e.g., $$Q(\text{g}) = 1, Q(\text{a}) = 2$$, and so on), the probability of winning is $$1/Q(h)^2$$.
 
 Suppose that we observe Bob winning but we don't know what letter he got.
 How can we use the observation that he won to update our beliefs about which letter he got?
 Let's express this formally.
-Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{a, b, c, d, ..., y, z\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
+Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{g, a, m, e\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
 
 ### a)
 
@@ -172,30 +211,17 @@ In English, what does the posterior probability $$p(h \mid \text{win})$$ represe
 
 ### b)
 
-Manually compute $$p(h \mid \text{win})$$ for each hypothesis (Excel or something like it is helpful here). Remember to normalize - make sure that summing all your $$p(h \mid \text{win})$$ values gives you 1.
+Manually compute $$p(h \mid \text{win})$$ for each hypothesis.
+Remember to normalize --- make sure that summing all your $$p(h \mid \text{win})$$ values gives you 1.
 
-Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
+| $$h$$ | $$p(h)$$ | $$$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
+| ----- | -------- | ------------------------ |------------------------- |
+| g     | 0.05     |                          |                          |
+| a     | 0.45     |                          |                          |
+| m     | 0.05     |                          |                          |
+| e     | 0.45     |                          |                          |
 
-~~~~
-// define some variables and utility functions
-var checkVowel = function(letter) {return _.contains(['a', 'e', 'i', 'o', 'u'], letter);}
-var letterVals = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
-var letterProbs = map(function(letter) {return checkVowel(letter) ? 0.01 : 0.047;}, letterVals);
-var letters = Categorical({vs: letterVals, ps: letterProbs})
-
-// Compute p(h | win)
-var distribution = Infer({method: 'enumerate'}, function() {
-  var letter = sample(letters);
-  var position = letterVals.indexOf(letter) + 1; 
-  var winProb = 1 / Math.pow(position, 2);
-  condition(...)
-  return ...
-});
-viz.auto(distribution);
-~~~~
-
-### c)
+<!-- ### c)
 
 What does the `Categorical` function do (hint: check the [docs](http://webppl.readthedocs.io/en/master/distributions.html))?
 Use `Categorical` to express this distribution:
@@ -209,14 +235,37 @@ Use `Categorical` to express this distribution:
 
 ~~~~ 
 var distribution = Categorical(...)
-~~~~
+~~~~ -->
 
 ### d)
+
+
+Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
+
+~~~~
+// define some variables and utility functions
+var checkVowel = function(letter) {return _.contains(['a', 'e', 'i', 'o', 'u'], letter);}
+var letterVals = ['g', 'a', 'm', 'e'];
+var letterProbs = map(function(letter) {return checkVowel(letter) ? 0.45 : 0.05;}, letterVals);
+var letters = Categorical({vs: letterVals, ps: letterProbs})
+
+// Compute p(h | win)
+var distribution = Infer({method: 'enumerate'}, function() {
+  var letter = sample(letters);
+  var position = letterVals.indexOf(letter) + 1; 
+  var winProb = 1 / Math.pow(position, 2);
+  condition(...)
+  return ...
+});
+viz.auto(distribution);
+~~~~
 
 Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$.
 Include a screenshot of the resulting graph.
 What letter has the highest posterior probability?
 In English, what does it mean that this letter has the highest posterior?
+It might be interesting to comment out the `condition` statement so you can compare visually the prior (no `condition` statement) to the posterior (with `condition`).
+
 Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
 ### e)
@@ -224,11 +273,29 @@ Make sure that your WebPPL answers and hand-computed answers agree -- note that 
 Which is higher, $$p(\text{vowel} \mid \text{win})$$ or $$p(\text{consonant} \mid \text{win})$$?
 Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` function.
 
+~~~~
+// define some variables and utility functions
+var checkVowel = function(letter) {return _.contains(['a', 'e', 'i', 'o', 'u'], letter);}
+var letterVals = ['g', 'a', 'm', 'e'];
+var letterProbs = map(function(letter) {return checkVowel(letter) ? 0.45 : 0.05;}, letterVals);
+var letters = Categorical({vs: letterVals, ps: letterProbs})
+
+// Compute p(h | win)
+var distribution = Infer({method: 'enumerate'}, function() {
+  var letter = sample(letters);
+  var position = letterVals.indexOf(letter) + 1; 
+  var winProb = 1 / Math.pow(position, 2);
+  condition(...)
+  return ...
+});
+viz.auto(distribution);
+~~~~
+
 ### f)
 
 What difference do you see between your code and the mathematical notation?
 What are the advantages and disadvantages of each?
-Which do you prefer? -->
+Which do you prefer?
 
 <!-- ## Question 1: Preliminaries
 
@@ -340,7 +407,7 @@ Find the probability that the next coin will come up ‘heads’, after observin
 // Your code here
 ~~~~ -->
 
-## Exercise 4: A Bayes Net for Exam Results
+<!-- ## Exercise 4: A Bayes Net for Exam Results
 
 The year is 2022 A.D. You, now a young professor at Stanford, are the instructor for "Computational Cognitive and Molecular Neuroscience".
 The class contains many industrious students, but it also has some students who you suspect are, in fact, not studying.
@@ -424,7 +491,7 @@ Record your subject’s answers for each of parts (b)-(e).
 Compare these answers to the performance of your Bayesian network model, both qualitatively (do the judgments shift in the right direction?) and quantitatively (how close are the numerical judgments to the correct probabilities?).
 If there are there any differences, can you identify any general trends or patterns? 
 Why do you think you see those differences?
-Do your own gut instincts look similar to your subjects judgments?
+Do your own gut instincts look similar to your subjects judgments? -->
 
 <!-- ### g) Redo parts (b)-(e) using a different value for the prior probability of an exam being easy and the prior probability of a student being a studier, and submit the results. (Find a prior that does have at least some effect.)
 
@@ -471,22 +538,7 @@ Test your new model by querying it with a few representative questions (e.g. did
 
 Does your intuition match the model predictions? Why do you think your new model does or does not capture your own judgments? -->
 
-
-Question 2: Sprinklers, Rain and mem
-
-### a)
-
-I have a particularly bad model of sprinkler in my garden. It is supposed to water my grass every morning, but is turns on only half the time (at random). Fortunately, I live in a city where it also rains 30% of days.
-
-One day I check my lawn and see that it is wet, meaning that either it rained that morning or my sprinkler turned on (or both). What is the probability that it rained?
-
-(b) What is the probability that my sprinkler turned on?
-
-(c) My neighbour Kelsey, whose has the same kind of sprinkler, tells me that her lawn was also wet that same morning. What is the new posterior probability that it rained?
-
-(d) To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning. Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too. Using mem, write a model to reason about arbitrary numbers of people, and then use it to find the new probability that it rained. mem is described in more detail in the probmods textbook.
-
-Question 3: Arm wrestles and reusable models
+<!-- Question 3: Arm wrestles and reusable models
 
 Rather than rewrite the model every time we want to make a new query, we can define a reusable function to build each new model query for us (given a set of conditions or outputs). For example, the code below defines a generic model for reasoning about people’s strength in arm wrestling tournaments. For simplicity, each person is assumed to be either strong or weak.
 
@@ -709,4 +761,4 @@ where each is the true setting of the latent state used to produced the sequence
 Using the sampler’s maximum a posterior (MAP) estimate. Rather than using the posterior marginals, the mean error will be computed using the sampled configuration of the latent states that received the single best score under the posterior. , the mean error of the MAP, is:
 Similarly, the error of the human subjects can simply be the mean error using the aver- age subject ratings, appropriately transformed. Show plots comparing the performance of the model with humans, using one or both of these measures.
 
-
+ -->
