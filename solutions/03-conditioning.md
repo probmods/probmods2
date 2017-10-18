@@ -264,93 +264,164 @@ Most people are nice. Nice people smile a lot, other people smile less. Alice sm
 
 ### b)
 
-Extend `smilesModel` to create a version of the model that captures these two intuitions:
+> Extend `smilesModel` to create a version of the model that captures these two intuitions:
 
-1. people are more likely to smile if they want something and
-1. *nice* people are less likely to want something.
+> 1. people are more likely to smile if they want something and
+> 2. *nice* people are less likely to want something.
 
-*Hint:* Which variables change at different times for the same person?
-Which values *depend* on other values?
+> *Hint:* Which variables change at different times for the same person? Which values *depend* on other values?
 
 ~~~~
 var extendedSmilesModel = function() {
   var nice = mem(function(person) {return flip(.7)});
 
-  ...
-
-  var smiles = function(person, ...) {
-    return nice(person) ? flip(.8) : flip(.5);
+  var wantsSomething = function(person) {
+    return nice(person) ? flip(.2) : flip(.5)
   }
 
-  return smiles('alice')
+  var smiles = function(person, wants) {
+    return (wants ? flip(.8) : flip(.5))
+            || (nice(person) ? flip(.8) : flip(.5))
+  }  
+
+  var aliceWants = wantsSomething('alice');
+  return smiles('alice', aliceWants)
 }
 
 Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
+
+Note that smiles now has two possible causes (draw the diagram!) Being nice makes you more likely to smile and, separately, wanting something makes you more likely to smile. Using the OR operator here captures the intuition that either one is sufficient to make someone more likely to smile (recall the 'explaining away' phenomenon in Chapter 4 which had a similar flavor). Critically, being nice is a persistant property of a person and is therefore held constant within an execution using `mem` while wanting something is circumstantial: the same person may want something on one occasion and not another. Finally, by making smiles a function of a person and *whether they want something* at a given time (as opposed to calling `wantsSomething` inside smiles), we can query a particular instance of wanting something without flipping separate coins outside and inside.
 
 ### c)
 
-Suppose you've seen Bob five times this week and each time, he was not smiling. But today, you see Bob and he *is* smiling.
-Use this `extendedSmilesModel` model to compute the posterior belief that Bob wants something from you today.
+> Suppose you've seen Bob five times this week and each time, he was not smiling. But today, you see Bob and he *is* smiling. Use this `extendedSmilesModel` model to compute the posterior belief that Bob wants something from you today.
 
-*Hint:* How will you represent the same person (Bob) smiling *multiple times*?
-What features of Bob will stay the same each time he smiles (or doesn't) and what features will change?
+> *Hint:* How will you represent the same person (Bob) smiling *multiple times*? What features of Bob will stay the same each time he smiles (or doesn't) and what features will change?
 
-In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
+> In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
 
 ~~~~
 var extendedSmilesModel = function() {
-  // copy your code frome above
+  var nice = mem(function(person) {return flip(.7)});
 
-  // make the appropriate observations
+  var wantsSomething = function(person) {
+    return nice(person) ? flip(.2) : flip(.5)
+  }
 
-  // return the appropriate query
-  return ...;
+  var smiles = function(person, wants) {
+    return (wants ? flip(.8) : flip(.5))
+            || (nice(person) ? flip(.8) : flip(.5))
+  }  
+
+  var wantToday = wantsSomething('bob');
+  condition(smiles('bob', wantToday)                  // smiles today!
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 1
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 2
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 3
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 4
+            && !smiles('bob', wantsSomething('bob'))) // no smile on day 5
+  return wantToday
 }
-
 
 Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
 
+We condition on all the data that we have; bob failed to smile 5 times before, but then smiled today. Again, critically, because wantsSomething is not memoized, each of these observations is independent. We have uncertainty over whether bob wanted something on *every* day, but we're only interested in whether he wanted something on the day that he smiled, thus why we store that value and return it at the end.
 
 ## Question 5.5: Sprinklers, Rain and `mem`
 
 ### a)
 
-I have a particularly bad model of the sprinkler in my garden.
-It is supposed to water my grass every morning, but is turns on only half the time (at random, as far as I can tell).
-Fortunately, I live in a city where it also rains 30% of days.
+> I have a particularly bad model of the sprinkler in my garden.
+> It is supposed to water my grass every morning, but is turns on only half the time (at random, as far as I can tell).
+> Fortunately, I live in a city where it also rains 30% of days.
+> 
+> One day I check my lawn and see that it is wet, meaning that either it rained that morning or my sprinkler turned on (or both).
+> 
+> Answer the following questions, either using the Rules of Probability or by writing your own sprinkler model in webppl.
+> 
+> * What is the probability that it rained?
 
-One day I check my lawn and see that it is wet, meaning that either it rained that morning or my sprinkler turned on (or both).
+$$P(rain) = 0.46153846153846156$$
 
-Answer the following questions, either using the Rules of Probability or by writing your own sprinkler model in webppl.
+> * What is the probability that my sprinkler turned on?
 
-* What is the probability that it rained?
-* What is the probability that my sprinkler turned on?
+$$P(sprinkler) = 0.7692307692307692$$
+
 
 ~~~~
+display("rain")
+viz.table(Infer({method: "enumerate"}, function() {
+  var sprinkler = flip();
+  var rain = flip(0.3);
+  var wet_lawn = sprinkler || rain;
+  condition(wet_lawn);
+  return rain;
+}))
 
+display("sprinkler")
+viz.table(Infer({method: "enumerate"}, function() {
+  var sprinkler = flip();
+  var rain = flip(0.3);
+  var wet_lawn = sprinkler || rain;
+  condition(wet_lawn);
+  return sprinkler;
+}))
 ~~~~
 
 ### c)
 
-My neighbour Kelsey, who has the same kind of sprinkler, tells me that her lawn was also wet that same morning.
-What is the new posterior probability that it rained?
+> My neighbour Kelsey, who has the same kind of sprinkler, tells me that her lawn was also wet that same morning.
+> What is the new posterior probability that it rained?
+
+$$P(rain) = 0.631578947368421$$
 
 ~~~~
-
+viz.table(Infer({method: "enumerate"}, function() {
+  var rain = flip(0.3);
+  var my_sprinkler = flip();
+  var her_sprinkler = flip();
+  var my_lawn_is_wet = my_sprinkler || rain;
+  var her_lawn_is_wet = her_sprinkler || rain;
+  condition(my_lawn_is_wet && her_lawn_is_wet);
+  return rain;
+}))
 ~~~~
 
 ### d)
 
-To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning.
-Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too.
-Using `mem`, write a model to reason about arbitrary numbers of people, and then use it to find the new probability that it rained.
+> To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning.
+> Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too.
+> Using `mem`, write a model to reason about arbitrary numbers of people, and then use it to find the new probability that it rained.
+
+$$P(rain) = 0.9320388349514566$$
 
 ~~~~
+viz.table(Infer({method: "enumerate"}, function() {
+  var rain = flip(0.3);
 
+  var sprinkler = mem(function(person) {return flip();})
+  var wet_lawn = mem(function(person) {return rain || sprinkler(person);})
+
+  condition(wet_lawn("me"), wet_lawn("Kelsey"), wet_lawn("Kevin"), wet_lawn("Manu"), wet_lawn("Josh"));
+  return rain;
+}))
 ~~~~
 
+*Note:* We don't actually *have* to use `mem` here, because we're asking about rain. But if we instead wanted to reason about whether *my* sprinker went off, we can do that a lot more easily with the model that uses `mem`. E.g.
+
+~~~~
+viz.table(Infer({method: "enumerate"}, function() {
+  var rain = flip(0.3);
+
+  var sprinkler = mem(function(person) {return flip();})
+  var wet_lawn = mem(function(person) {return rain || sprinkler(person);})
+
+  condition(wet_lawn("me"), wet_lawn("Kelsey"), wet_lawn("Kevin"), wet_lawn("Manu"), wet_lawn("Josh"));
+  return wet_lawn("me");
+}))
+~~~~
 
 ## Exercise 5: Casino game
 
