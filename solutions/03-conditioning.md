@@ -264,56 +264,72 @@ Most people are nice. Nice people smile a lot, other people smile less. Alice sm
 
 ### b)
 
-Extend `smilesModel` to create a version of the model that captures these two intuitions:
+> Extend `smilesModel` to create a version of the model that captures these two intuitions:
 
-1. people are more likely to smile if they want something and
-1. *nice* people are less likely to want something.
+> 1. people are more likely to smile if they want something and
+> 2. *nice* people are less likely to want something.
 
-*Hint:* Which variables change at different times for the same person?
-Which values *depend* on other values?
+> *Hint:* Which variables change at different times for the same person? Which values *depend* on other values?
 
 ~~~~
 var extendedSmilesModel = function() {
   var nice = mem(function(person) {return flip(.7)});
 
-  ...
-
-  var smiles = function(person, ...) {
-    return nice(person) ? flip(.8) : flip(.5);
+  var wantsSomething = function(person) {
+    return nice(person) ? flip(.2) : flip(.5)
   }
 
-  return smiles('alice')
+  var smiles = function(person, wants) {
+    return (wants ? flip(.8) : flip(.5))
+            || (nice(person) ? flip(.8) : flip(.5))
+  }  
+
+  var aliceWants = wantsSomething('alice');
+  return smiles('alice', aliceWants)
 }
 
 Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
+
+Note that smiles now has two possible causes (draw the diagram!) Being nice makes you more likely to smile and, separately, wanting something makes you more likely to smile. Using the OR operator here captures the intuition that either one is sufficient to make someone more likely to smile (recall the 'explaining away' phenomenon in Chapter 4 which had a similar flavor). Critically, being nice is a persistant property of a person and is therefore held constant within an execution using `mem` while wanting something is circumstantial: the same person may want something on one occasion and not another. Finally, by making smiles a function of a person and *whether they want something* at a given time (as opposed to calling `wantsSomething` inside smiles), we can query a particular instance of wanting something without flipping separate coins outside and inside.
 
 ### c)
 
-Suppose you've seen Bob five times this week and each time, he was not smiling. But today, you see Bob and he *is* smiling.
-Use this `extendedSmilesModel` model to compute the posterior belief that Bob wants something from you today.
+> Suppose you've seen Bob five times this week and each time, he was not smiling. But today, you see Bob and he *is* smiling. Use this `extendedSmilesModel` model to compute the posterior belief that Bob wants something from you today.
 
-*Hint:* How will you represent the same person (Bob) smiling *multiple times*?
-What features of Bob will stay the same each time he smiles (or doesn't) and what features will change?
+> *Hint:* How will you represent the same person (Bob) smiling *multiple times*? What features of Bob will stay the same each time he smiles (or doesn't) and what features will change?
 
-In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
+> In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
 
 ~~~~
 var extendedSmilesModel = function() {
-  // copy your code frome above
+  var nice = mem(function(person) {return flip(.7)});
 
-  // make the appropriate observations
+  var wantsSomething = function(person) {
+    return nice(person) ? flip(.2) : flip(.5)
+  }
 
-  // return the appropriate query
-  return ...;
+  var smiles = function(person, wants) {
+    return (wants ? flip(.8) : flip(.5))
+            || (nice(person) ? flip(.8) : flip(.5))
+  }  
+
+  var wantToday = wantsSomething('bob');
+  condition(smiles('bob', wantToday)                  // smiles today!
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 1
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 2
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 3
+            && !smiles('bob', wantsSomething('bob'))  // no smile on day 4
+            && !smiles('bob', wantsSomething('bob'))) // no smile on day 5
+  return wantToday
 }
-
 
 Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
 
+We condition on all the data that we have; bob failed to smile 5 times before, but then smiled today. Again, critically, because wantsSomething is not memoized, each of these observations is independent. We have uncertainty over whether bob wanted something on *every* day, but we're only interested in whether he wanted something on the day that he smiled, thus why we store that value and return it at the end.
 
-Question 5: Sprinklers, Rain and mem
+## Question 5: Sprinklers, Rain and mem
 
 ### a)
 
