@@ -425,62 +425,43 @@ viz.table(Infer({method: "enumerate"}, function() {
 
 ## Exercise 5: Casino game
 
-Consider the following game.
-A machine randomly gives Bob a letter of the word "game"; it gives a, e (the vowels) with probability 0.45 each and the remaining letters (the consonants g, m) with probability 0.05 each.
-The probability that Bob wins depends on which letter he got.
-Letting $$h$$ denote the letter and letting $$Q(h)$$ denote the numeric position of that letter in the word "game" (e.g., $$Q(\text{g}) = 1, Q(\text{a}) = 2$$, and so on), the probability of winning is $$1/Q(h)^2$$.
-
-Suppose that we observe Bob winning but we don't know what letter he got.
-How can we use the observation that he won to update our beliefs about which letter he got?
-Let's express this formally.
-Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{g, a, m, e\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
+> Consider the following game.
+> A machine randomly gives Bob a letter of the word "game"; it gives a, e (the vowels) with probability 0.45 each and the remaining letters (the consonants g, m) with probability 0.05 each.
+> The probability that Bob wins depends on which letter he got.
+> Letting $$h$$ denote the letter and letting $$Q(h)$$ denote the numeric position of that letter in the word "game" (e.g., $$Q(\text{g}) = 1, Q(\text{a}) = 2$$, and so on), the probability of winning is $$1/Q(h)^2$$.
+> 
+> Suppose that we observe Bob winning but we don't know what letter he got.
+> How can we use the observation that he won to update our beliefs about which letter he got?
+> Let's express this formally.
+> Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{g, a, m, e\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
 
 ### a)
 
-In English, what does the posterior probability $$p(h \mid \text{win})$$ represent?
+> In English, what does the posterior probability $$p(h \mid \text{win})$$ represent?
+
+Given that Bob wins, which letter did he probably draw?
 
 ### b)
 
-Manually compute $$p(h \mid \text{win})$$ for each hypothesis.
-Remember to normalize --- make sure that summing all your $$p(h \mid \text{win})$$ values gives you 1.
+> Manually compute $$p(h \mid \text{win})$$ for each hypothesis.
+> Remember to normalize --- make sure that summing all your $$p(h \mid \text{win})$$ values gives you 1.
+
+Using Bayes rule,
+
+$$ P(h \mid \text{win}) \propto P(h) \cdot P(\text{win} \mid h) $$
+
+Let $$Z$$ be the sum of $$ P(h) \cdot P(\text{win} \mid h) $$ across all values of $$h$$.
 
 | $$h$$ | $$p(h)$$ | $$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
-| ----- | -------- | ------------------------ |------------------------- |
-| g     | 0.05     |                          |                          |
-| a     | 0.45     |                          |                          |
-| m     | 0.05     |                          |                          |
-| e     | 0.45     |                          |                          |
-
-
-
-| $$h$$ | $$p(h)$$ | $$$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
 | ----- | -------- | ------------------------ |------------------------- |
 | g     | 0.05     | 1                        | 0.05 / Z = 0.255         |
 | a     | 0.45     | 1/4                      | 0.45/4 / Z = 0.573       |
 | m     | 0.05     | 1/9                      | 0.05/9 / Z = 0.028       |
 | e     | 0.45     | 1/16                     | 0.45/16 / Z = 0.143      |
 
-
-<!-- ### c)
-
-What does the `Categorical` function do (hint: check the [docs](http://webppl.readthedocs.io/en/master/distributions.html))?
-Use `Categorical` to express this distribution:
-
-|x    | P(x)|
-|---- | -----|
-|red  | 0.5|
-|blue | 0.05|
-|green| 0.4|
-|black| 0.05|	
-
-~~~~ 
-var distribution = Categorical(...)
-~~~~ -->
-
 ### d)
 
-
-Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
+> Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
 
 ~~~~
 // define some variables and utility functions
@@ -494,19 +475,27 @@ var distribution = Infer({method: 'enumerate'}, function() {
   var letter = sample(letters);
   var position = letterVals.indexOf(letter) + 1; 
   var winProb = 1 / Math.pow(position, 2);
-  condition(...)
-  return ...
+  var win = flip(winProb);
+  condition(win)
+  return letter;
 });
 viz.auto(distribution);
+viz.table(distribution);
 ~~~~
 
-Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$.
-Include a screenshot of the resulting graph.
-What letter has the highest posterior probability?
-In English, what does it mean that this letter has the highest posterior?
-It might be interesting to comment out the `condition` statement so you can compare visually the prior (no `condition` statement) to the posterior (with `condition`).
+> Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$.
+> Include a screenshot of the resulting graph.
+> What letter has the highest posterior probability?
 
-Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
+`a`
+
+> In English, what does it mean that this letter has the highest posterior?
+
+If we had to guess a letter, `a` would be the best one. It's both likely to be drawn a priori (because it's a vowel) and likely to result in a win if Bob drew it.
+
+> It might be interesting to comment out the `condition` statement so you can compare visually the prior (no `condition` statement) to the posterior (with `condition`).
+> 
+> Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
 ### e)
 
@@ -531,9 +520,14 @@ var distribution = Infer({method: 'enumerate'}, function() {
 viz.auto(distribution);
 ~~~~
 
+A vowel is more likely ($$P(vowel) = 0.7168141592920354$$) than a consonant ($$P(vowel) = 0.28318584070796465 $$)
+
 ### f)
 
-What difference do you see between your code and the mathematical notation?
-What are the advantages and disadvantages of each?
-Which do you prefer?
+> What difference do you see between your code and the mathematical notation?
+> What are the advantages and disadvantages of each?
+> Which do you prefer?
+
+The mathematical notation is more precise in some cases (we might get some rounding errors on the computer), but it's less error prone, easier to think about, and much easier to extend. What if we did this with all the letters of the alphabet instead? That would be tedious.
+
 
