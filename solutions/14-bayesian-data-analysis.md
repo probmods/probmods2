@@ -8,6 +8,18 @@ custom_js:
 
 ## Exercise 1: Experimenting with priors and predictives
 
+### a)
+
+> Try different beta priors on `p`, by changing `priorDist = Uniform(...)` to `p = Beta({a: 10,b: 10})`, `Beta({a: 1, b: 5})` and `Beta({a: 0.1, b: 0.1})`.
+> (Note that `beta(1,1)` is mathematically the same as `uniform(0,1)`.)
+> Use the figures produced to describe the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions. 
+
+`a` can intuitively be thought of as the number of tails flips we've seen before, and `b` as the number of heads flips. If `a` is greater than `b`, the distribution will be skewed to the left. If those numbers are less than `1`, we have strong intuitions against 50-50.
+
+### b)
+
+> In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations.
+> Change the model to implement an example of this.
 
 ~~~~
 // observed data
@@ -41,20 +53,6 @@ var posterior = Infer(opts, model);
 
 viz.marginals(posterior)
 ~~~~
-
-### a)
-
-> Try different beta priors on `p`, by changing `priorDist = Uniform(...)` to `p = Beta({a: 10,b: 10})`, `Beta({a: 1, b: 5})` and `Beta({a: 0.1, b: 0.1})`.
-> (Note that `beta(1,1)` is mathematically the same as `uniform(0,1)`.)
-> Use the figures produced to describe the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions. 
-
-`a` can be thought of as the number of tails flips we've seen before, and `b` as the number of heads flips. If those numbers are less than `1`, we have strong intuitions against 50-50.
-
-### b)
-
-> In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations.
-> Change the model to implement an example of this.
-
 
 ## Exercise 2: Parameter fitting vs. Parameter integration
 
@@ -91,6 +89,8 @@ expectation(taskDifficultyPosterior)
 > Would you proceed with more data collection or would you change your paradigm?
 How did you come to this conclusion?
 
+*Note:* This is subjective. Justify your answer.
+
 Personally, I'm leaning towards going for it.
 If this participant did well, probably other participants won't do too badly.
 Depends on the relative costs of tweaking the experiment, having a task that's too difficult or too easy, and doing data collection.
@@ -102,23 +102,31 @@ Depends on the relative costs of tweaking the experiment, having a task that's t
 > Provide two answers.
 > One that applies to the data collection situation above, and one that applies to the metaphor of model or theory evaluation.
 
-* The MAP is only the MAP because of our strong prior beliefs.
-* The second most likely value is the complete opposite
+* The MAP is only 0.9 because of our strong prior beliefs.
+* The second most likely value is the complete opposite.
 
 
 ## Exercise 3: BDA of Bayesian Cognitive Models
 
-We saw in this chapter how to analyze our models of cognition by using Bayesian statistical techniques.
-Compare and contrast the results of our cognitive model of tug-of-war with our regression models.
-Some questions to ponder:
+> We saw in this chapter how to analyze our models of cognition by using Bayesian statistical techniques.
+> Compare and contrast the results of our cognitive model of tug-of-war with our regression models.
+> Some questions to ponder:
+> 
+> * What phenomena in the data was it better able to capture?
 
-* What phenomena in the data was it better able to capture?
+Explaining away Alice's strength if Bob and Alice win on a team together, but then Bob also wins on his own.
 
-* What, if anything, did it fail to capture?
+> * What, if anything, did it fail to capture?
 
-* Are there other aspects of the model you could 'lift' into the Bayesian Data Analysis (i.e. fixed parameters that you could put a prior on and include in your joint inference)?
+Teamwork, excitement or nervousness due to a winning streak, intimidation or loafing (e.g. being lazy because you think it wouldn't make a difference anyway)
 
-* How does WebPPL expose commonalities between these two models?
+> * Are there other aspects of the model you could 'lift' into the Bayesian Data Analysis (i.e. fixed parameters that you could put a prior on and include in your joint inference)?
+
+Lazy pulling isn't obviously a factor of 1/2. We could put a prior on that and fit to people's responses about strengths.
+
+> * How does WebPPL expose commonalities between these two models?
+
+Both are models, both infer parameters of the model, both set priors on the model parameters and update the parameters based on the observations.
 
 ## Exercise 4
 
@@ -258,15 +266,31 @@ Basically the expectation.
 
 > Look carefully at the priors (in the code) and the posteriors (in the plots) over blicketPower and nonBlicketPower. Did we impose any a priori assumptions about the relationship between these parameters? Think about the experimental setup. Do you think we would be justified in imposing any assumptions? Why or why not? What do the posteriors tell you? How was the data analysis model able to arrive at this conclusion?
 
-Humans get it.
+The priors over `blicketPower` and `nonBlicketPower` don't actually encode the information that `blicketPower` should be higher than `nonBlicketPower`.
+But this was basically told to kids in the experiment ("Blickets make the machine go off"), and kids show they know this from the responses they gave (when `A` makes the machine go off most of the time, they call it a blicket, not a non-blicket).
+
+The data analysis actually learns this asymmetric from the kids' responses.
+To see this, we can switch the `true` and `false` responses that kids give.
+
+~~~~
+var data = [
+  repeat(10, function(){return false}).concat(true),
+  repeat(6 , function(){return false}).concat(repeat(5, function(){return true})),
+  repeat(4, function(){return false}).concat(repeat(7, function(){return true})),
+  repeat(8, function(){return false}).concat(repeat(3, function(){return true})),
+  repeat(2, function(){return false}).concat(repeat(9, function(){return true}))
+];
+~~~~
+
+When we do that, we see that `nonBlicketPower` is greater than `blicketPower` in the posteriors.
+
+Leaving this relationship for the model to infer is a nice sanity check. It's cool that we can learn the appropriate relationship (`blicketPower > nonBlicketPower`) from the data, but it would be OK to bake it in. It wasn't a key part of our theory, and we're pretty confident that kids understand.
 
 ### f)
 
 > Do you notice anything about the scatter plot? How would you interpret this? Is there something we could add to the data analysis model to account for this? 
 
 There seems to be a linear relationship betweeen model and data, but the values are not always equal. If we add some scaling factor, we could get from model to accurate predictions of people's responses.
-
-Try switching the data!
 
 ### g)
 
@@ -342,4 +366,8 @@ var bestFitModelPredictions = map(function(evidence) {
 viz.scatter(bestFitModelPredictions, dataSummary(data))
 ~~~~
 
-H. What can you conclude about the two ways of looking at parameters in this model's case? Do you think the model is relatively robust to different parameter settings?
+### h)
+
+> What can you conclude about the two ways of looking at parameters in this model's case? Do you think the model is relatively robust to different parameter settings?
+
+Setting the parameters to just the modes changes the model fit. The fit is a lot better when we fit all the paramters at once. Some of the relationships between those parameters matter, in a way that we haven't really captured in the strucutre of our model. 
