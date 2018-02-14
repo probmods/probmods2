@@ -105,10 +105,12 @@ Describe (using ordinary English) what the second WebPPL program, `smilesModel` 
 
 ### b)
 
-Extend `smilesModel` to create a version of the model that captures these two intuitions:
+Extend `smilesModel` to create a version of the model that also captures these two intuitions:
 
 1. people are more likely to smile if they want something and
-1. *nice* people are less likely to want something.
+2. *nice* people are less likely to want something.
+
+Note: Do not lose the fact that niceness is also a risk factor for smiling.
 
 *Hint:* Which variables change at different times for the same person?
 Which values *depend* on other values?

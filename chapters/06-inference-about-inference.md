@@ -347,8 +347,6 @@ Here we have conditioned on Sally wanting the cookie and Sally choosing to press
 
 Now imagine a vending machine that has only one button, but it can be pressed many times. We don't know what the machine will do in response to a given button sequence. We do know that pressing more buttons is less a priori likely.
 
-**TODO: this model isn't working...**
-
 ~~~~
 ///fold:
 var getProbs = function(vector) {
@@ -369,7 +367,11 @@ var actionPrior = function() {
 
 var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
   var buttonsToOutcomeProbs = mem(function(buttons) {return getProbs(dirichlet(ones([2,1])))});
- 
+  buttonsToOutcomeProbs(['a']);
+  buttonsToOutcomeProbs(['a', 'a']);
+  buttonsToOutcomeProbs(['a', 'a', 'a']);
+  buttonsToOutcomeProbs(['a', 'a', 'a', 'a']);
+  buttonsToOutcomeProbs(['a', 'a', 'a', 'a', 'a']);
   var vendingMachine = function(state, action) {
     return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
   };
@@ -378,7 +380,7 @@ var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
   var goalSatisfied = function(outcome) {return outcome == goal;};
   var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'));
 
-  condition(goal == 'cookie' && _.isEqual(chosenAction, ['a', 'a']));
+  condition(goal == 'cookie' && _.isEqual(chosenAction, ['a']));
 
   return {once: buttonsToOutcomeProbs(['a'])[1],
           twice: buttonsToOutcomeProbs(['a', 'a'])[1]};
@@ -398,8 +400,6 @@ In these examples we have seen two important assumptions combining to allow us t
 
 In social cognition, we often make joint inferences about two kinds of mental states: agents' beliefs about the world and their desires, goals or preferences.  We can see an example of such a joint inference in the vending machine scenario.  Suppose we condition on two observations: that Sally presses the button twice, and that this results in a cookie. Then, assuming that she knows how the machine works, we jointly infer that she wanted a cookie, that pressing the button twice is likely to give a cookie, and that pressing the button once is unlikely to give a cookie.
 
-  **TODO: this model isn't working either (at least gets the 'twice' posterior, but not the others)**
-
 ~~~~
 ///fold:
 var getProbs = function(vector) {
@@ -416,26 +416,33 @@ var chooseAction = function(goalSatisfied, transition, state) {
 ///
 var actionPrior = function() {
   return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+…
 }
 
 var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
-  var buttonsToOutcomeProbs = mem(function(buttons) {return getProbs(dirichlet(ones([2,1])))})
-  
+  var buttonsToOutcomeProbs = mem(function(buttons) {return getProbs(dirichlet(ones([2,1])))});
+  buttonsToOutcomeProbs(['a']);
+  buttonsToOutcomeProbs(['a', 'a']);
+  buttonsToOutcomeProbs(['a', 'a', 'a']);
+  buttonsToOutcomeProbs(['a', 'a', 'a', 'a']);
+  buttonsToOutcomeProbs(['a', 'a', 'a', 'a', 'a']);
+ 
   var vendingMachine = function(state, action) {
     return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
-  }
+  };
   
-  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
-  var goalSatisfied = function(outcome) {return outcome == goal};
-  var actionDist = chooseAction(goalSatisfied, vendingMachine, 'state');
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]});
+  var goalSatisfied = function(outcome) {return outcome == goal;};
+  var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'));
 
-  condition(vendingMachine('state', ['a', 'a']) == 'cookie' &&
-            chooseAction(goalSatisfied, vendingMachine, 'state', ['a', 'a']))
-  
+  condition(_.isEqual(chosenAction, ['a', 'a']));
+  condition(vendingMachine('state', ['a', 'a']) == 'cookie')
+
   return {goal: goal, 
+…
           once: buttonsToOutcomeProbs(['a'])[1],
-          twice: buttonsToOutcomeProbs(['a', 'a'])[1]}
-})
+          twice: buttonsToOutcomeProbs(['a', 'a'])[1]};
+});
 
 print("probability of actions giving a cookie")
 viz.marginals(goalPosterior);
