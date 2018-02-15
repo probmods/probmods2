@@ -349,10 +349,6 @@ Now imagine a vending machine that has only one button, but it can be pressed ma
 
 ~~~~
 ///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
-
 var chooseAction = function(goalSatisfied, transition, state) {
   return Infer({method: 'rejection', samples: 1}, function() {
     var action = actionPrior()
@@ -362,37 +358,33 @@ var chooseAction = function(goalSatisfied, transition, state) {
 }
 ///
 var actionPrior = function() {
-  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
+  return categorical({vs: ['a', 'aa', 'aaa'], ps:[0.7, 0.2, 0.1] })
 }
 
 var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
-  var buttonsToOutcomeProbs = mem(function(buttons) {return getProbs(dirichlet(ones([2,1])))});
-  buttonsToOutcomeProbs(['a']);
-  buttonsToOutcomeProbs(['a', 'a']);
-  buttonsToOutcomeProbs(['a', 'a', 'a']);
-  buttonsToOutcomeProbs(['a', 'a', 'a', 'a']);
-  buttonsToOutcomeProbs(['a', 'a', 'a', 'a', 'a']);
+  var buttonsToOutcomeProbs = {'a': T.toScalars(dirichlet(ones([2,1]))),
+                               'aa': T.toScalars(dirichlet(ones([2,1]))),
+                               'aaa': T.toScalars(dirichlet(ones([2,1])))}
   var vendingMachine = function(state, action) {
-    return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
-  };
+    return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs[action]})
+  }
   
-  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]});
-  var goalSatisfied = function(outcome) {return outcome == goal;};
-  var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'));
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
+  var goalSatisfied = function(outcome) {return outcome == goal}
+  var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
 
-  condition(goal == 'cookie' && _.isEqual(chosenAction, ['a']));
+  condition(goal == 'cookie' && chosenAction == 'a')
 
-  return {once: buttonsToOutcomeProbs(['a'])[1],
-          twice: buttonsToOutcomeProbs(['a', 'a'])[1]};
-});
+  return {once: buttonsToOutcomeProbs['a'][1],
+          twice: buttonsToOutcomeProbs['aa'][1]}
+})
 
 print("probability of actions giving a cookie")
-viz.marginals(goalPosterior);
+viz.marginals(goalPosterior)
 ~~~~
 
 Compare the inferences that result if Sally presses the button twice to those if she only presses the button once. Why can we draw much stronger inferences about the machine when Sally chooses to press the button twice? When Sally does press the button twice, she could have done the "easier" (or rather, a priori more likely) action of pressing the button just once. Since she doesn't, a single press must have been unlikely to result in a cookie. This is an example of the *principle of efficiency*---all other things being equal, an agent will take the actions that require least effort (and hence, when an agent expends more effort all other things must not be equal). 
-<!---Indeed, this example shows that the principle of efficiency emerges from inference about inference via the Bayesian Occam's razor.-->
-Here, Sally has an infinite space of possible actions but, because these actions are constructed by a recursive generative process, simpler actions are a priori more likely.
+Here, Sally has three possible actions but simpler actions are a priori more likely.
 
 In these examples we have seen two important assumptions combining to allow us to infer something about the world from the indirect evidence of an agents actions. The first assumption is the principle of rational action, the second is an assumption of *knowledgeability*---we assumed that Sally knows how the machine works, though we don't. Thus inference about inference, can be a powerful way to learn what others already know, by observing their actions. (This example was inspired by @Goodman:2009uy)
 
@@ -402,10 +394,6 @@ In social cognition, we often make joint inferences about two kinds of mental st
 
 ~~~~
 ///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
-
 var chooseAction = function(goalSatisfied, transition, state) {
   return Infer({method: 'rejection', samples: 1}, function() {
     var action = actionPrior()
@@ -415,37 +403,32 @@ var chooseAction = function(goalSatisfied, transition, state) {
 }
 ///
 var actionPrior = function() {
-  return flip(.7) ? ['a'] : ['a'].concat(actionPrior());
-…
+  return categorical({vs: ['a', 'aa', 'aaa'], ps:[0.7, 0.2, 0.1] })
 }
 
 var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
-  var buttonsToOutcomeProbs = mem(function(buttons) {return getProbs(dirichlet(ones([2,1])))});
-  buttonsToOutcomeProbs(['a']);
-  buttonsToOutcomeProbs(['a', 'a']);
-  buttonsToOutcomeProbs(['a', 'a', 'a']);
-  buttonsToOutcomeProbs(['a', 'a', 'a', 'a']);
-  buttonsToOutcomeProbs(['a', 'a', 'a', 'a', 'a']);
- 
-  var vendingMachine = function(state, action) {
-    return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs(action)});
-  };
+  var buttonsToOutcomeProbs = {'a': T.toScalars(dirichlet(ones([2,1]))),
+                               'aa': T.toScalars(dirichlet(ones([2,1]))),
+                               'aaa': T.toScalars(dirichlet(ones([2,1])))}
   
-  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]});
-  var goalSatisfied = function(outcome) {return outcome == goal;};
-  var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'));
+  var vendingMachine = function(state, action) {
+    return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs[action]})
+  }
+  
+  var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
+  var goalSatisfied = function(outcome) {return outcome == goal}
+  var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
 
-  condition(_.isEqual(chosenAction, ['a', 'a']));
-  condition(vendingMachine('state', ['a', 'a']) == 'cookie')
+  condition(chosenAction == 'aa')
+  condition(vendingMachine('state', 'aa') == 'cookie')
 
   return {goal: goal, 
-…
-          once: buttonsToOutcomeProbs(['a'])[1],
-          twice: buttonsToOutcomeProbs(['a', 'a'])[1]};
-});
+          once: buttonsToOutcomeProbs['a'][1],
+          twice: buttonsToOutcomeProbs['aa'][1]};
+})
 
 print("probability of actions giving a cookie")
-viz.marginals(goalPosterior);
+viz.marginals(goalPosterior)
 ~~~~
 
 Notice the U-shaped distribution for the effect of pressing the button just once. Without any direct evidence about what happens when the button is pressed just once, we can infer that it probably won't give a cookie---because her goal is likely to have been a cookie but she didn't press the button just once---but there is a small chance that her goal was actually not to get a cookie, in which case pressing the button once could result in a cookie. This very complex (and hard to describe!) inference comes naturally from joint inference of goals and knowledge.
