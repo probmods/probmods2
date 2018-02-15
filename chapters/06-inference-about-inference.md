@@ -631,7 +631,7 @@ We see that if the listener hears "some" the probability of three out of three i
 -->
 
 
-
+<!--
 # Planning
 
 **TODO: Decide what to do with this section. I started to convert it, but wasn't sure if it was going to be kept because it already seems like a sketch**
@@ -745,7 +745,7 @@ Multi-step, suboptimal planning as inference
 (sample-action transition (pair 'green-light 1) goal-function ending?)
 ~~~~
 
-<!-- Recursively optimal planning.
+ Recursively optimal planning.
 
 Gergely and Csibra principle of efficiency and equifinality come from Bayes Occam.
 -->
