@@ -31,40 +31,37 @@ Suppose that we know some fixed fact, and we wish to consider hypotheses about h
 Consider the following simple generative model:
 
 ~~~~
-var options = {method: 'forward', samples: 1000}
 var model = function() {
   var A = flip()
   var B = flip()
   var C = flip()
   var D = A + B + C
-  return D
+  return {'D': D}
 }
-var dist = Infer(options, model)
+var dist = Infer({}, model)
 viz(dist)
 ~~~~
 
-This process described in `model` samples three numbers and adds the results (recall JavaScript converts booleans to $$0$$ or $$1$$ when they enter arithmetic). The value of the final expression here is 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` can take on?  It is obvious that `A` must be equal to 1 for this result to happen. We can see this in the following WebPPL inference, where we use `condition` to express the desired assumption:
+The process described in `model` samples three numbers and adds them (recall JavaScript converts booleans to $$0$$ or $$1$$ when they enter arithmetic). The value of the final expression here is 0, 1, 2 or 3. A priori, each of the variables `A`, `B`, `C` has .5 probability of being `1` or `0`.  However, suppose that we know that the sum `D` is equal to 3. How does this change the space of possible values that variable `A` could have taken?  `A` (and `B` and `C`) must be equal to 1 for this result to happen. We can see this in the following WebPPL inference, where we use `condition` to express the desired assumption:
 
 ~~~~
-var options = {method: 'enumerate'}
 var model = function () {
   var A = flip()
   var B = flip()
   var C = flip()
   var D = A + B + C
   condition(D == 3)
-  return A
+  return {'A': A}
 };
-var dist = Infer(options, model)
+var dist = Infer({}, model)
 viz(dist)
 ~~~~
 
-The output of `Infer` describes appropriate beliefs about the likely value of `A`, conditioned on `D` being equal to 3. Because `A` must necessarily equal `1`, the histogram shows 100% of the sampled values are `1`.
+The output of `Infer` describes appropriate beliefs about the likely value of `A`, conditioned on `D` being equal to 3.
 
 Now suppose that we condition on `D` being greater than or equal to 2.  Then `A` need not be 1, but it is more likely than not to be. (Why?) The corresponding plot shows the appropriate distribution of beliefs for `A` conditioned on this new fact:
 
 ~~~~
-var options = {method: 'enumerate'}
 var model = function () {
   var A = flip()
   var B = flip()
@@ -72,13 +69,15 @@ var model = function () {
   var D = A + B + C
   //add the desired assumption:
   condition(D >= 2)
-  return A
+  return {'A': A}
 };
-var dist = Infer(options, model)
+var dist = Infer({}, model)
 viz(dist)
 ~~~~
 
+<!--
 Predicting the outcome of a generative process is simply a special case of inference, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`; try removing this line altogether.
+-->
 
 Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation in the presence of `condition` can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical formulation of a *conditional distribution*.
 
@@ -141,7 +140,7 @@ Here $$P(A=a \mid B=b)$$ is the probability that "event" $$A$$ has value $$a$$ g
 The *joint probability*, $$P(A=a,B=b)$$,  is the probability that $$A$$ has value $$a$$ and $$B$$ has value $$b$$.
 So the conditional probability is simply the ratio of the joint probability to the probability of the condition.
 
-In the case of a WebPPL `Infer` statement with a `condition`, $$A=a$$ will be the "event" that the return value is $$a$$, while $$B=b$$ will be the event that the value passed to condition is `true` (so $$b$$ will be *True*). Because each of these is a regular (unconditional) probability, they and their ratio can often be computed exactly using the rules of probability. In WebPPL the inference method `'enumerate'` attempts to do this calculation (by first enumerating all the possible executions of the model):
+In the case of a WebPPL `Infer` statement with a `condition`, $$A=a$$ will be the "event" that the return value is $$a$$, while $$B=b$$ will be the event that the value passed to condition is `true` (so $$b$$ is *True*). Because each of these is a regular (unconditional) probability, they and their ratio can often be computed exactly using the rules of probability. In WebPPL the inference method `'enumerate'` attempts to do this calculation (by first enumerating all the possible executions of the model):
 
 ~~~~
 var model = function () {
@@ -158,9 +157,9 @@ viz(dist)
 
 ### Connection to rejection sampling
 
-The above notion of conditional distribution in terms of rejection sampling is equivalent to this mathematical definition, when both are well-defined. (There are special cases when only one definition makes sense. For instance, when continuous random choices are used it is possible to find situations where rejection sampling almost never returns a sample but the conditional distribution is still well defined. Why?)
+The above notion of conditional distribution in terms of rejection sampling is equivalent to the mathematical definition, when both are well-defined. (There are special cases when only one definition makes sense. For instance, when continuous random choices are used it is possible to find situations where rejection sampling almost never returns a sample but the conditional distribution is still well defined. Why?)
 
-Indeed, we can use the process of rejection sampling to understand this alternative definition of the conditional probability $$P(A=a \mid B=b)$$. We imagine sampling many times, but only keeping those samples in which the condition is true. The frequency of the query expression returning a particular value $$a$$ (i.e. $$A=a$$) *given* that the condition is true, will be the number of times that $$A=a$$ **and** $$B=True$$ divided by the number of times that $$B=True$$. Since the frequency of the conditioner returning true will be $$P(B=True)$$ in the long run, and the frequency that the condition returns true *and* the query expression returns a given value $$a$$ will be $$P(A=a, B=True)$$, we get the above formula for the conditional probability.
+Indeed, we can use the process of rejection sampling to understand this alternative definition of the conditional probability $$P(A=a \mid B=b)$$. We imagine sampling many times, but only keeping those samples in which the condition is true. The frequency of the function returning a particular value $$a$$ (i.e. $$A=a$$) *given* that the condition is true, will be the number of times that $$A=a$$ **and** $$B=True$$ divided by the number of times that $$B=True$$. Since the frequency of the condition returning true will be $$P(B=True)$$ in the long run, and the frequency that the condition returns true *and* the query expression returns a given value $$a$$ will be $$P(A=a, B=True)$$, we get the above formula for the conditional probability.
 <!-- FIXME: clarify this last argument? -->
 
 Try using the above formula for conditional probability to compute the probability of the different return values in the above examples. Check that you get the same probability that you observe when using rejection sampling.
