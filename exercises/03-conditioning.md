@@ -105,10 +105,12 @@ Describe (using ordinary English) what the second WebPPL program, `smilesModel` 
 
 ### b)
 
-Extend `smilesModel` to create a version of the model that captures these two intuitions:
+Extend `smilesModel` to create a version of the model that also captures these two intuitions:
 
 1. people are more likely to smile if they want something and
-1. *nice* people are less likely to want something.
+2. *nice* people are less likely to want something.
+
+Note: Do not lose the fact that niceness is also a risk factor for smiling.
 
 *Hint:* Which variables change at different times for the same person?
 Which values *depend* on other values?
@@ -214,7 +216,7 @@ In English, what does the posterior probability $$p(h \mid \text{win})$$ represe
 Manually compute $$p(h \mid \text{win})$$ for each hypothesis.
 Remember to normalize --- make sure that summing all your $$p(h \mid \text{win})$$ values gives you 1.
 
-| $$h$$ | $$p(h)$$ | $$$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
+| $$h$$ | $$p(h)$$ | $$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
 | ----- | -------- | ------------------------ |------------------------- |
 | g     | 0.05     |                          |                          |
 | a     | 0.45     |                          |                          |
@@ -244,7 +246,7 @@ Now, we're going to write this model in WebPPL using `Infer`. Here is some start
 
 ~~~~
 // define some variables and utility functions
-var checkVowel = function(letter) {return _.contains(['a', 'e', 'i', 'o', 'u'], letter);}
+var checkVowel = function(letter) {return _.includes(['a', 'e', 'i', 'o', 'u'], letter);}
 var letterVals = ['g', 'a', 'm', 'e'];
 var letterProbs = map(function(letter) {return checkVowel(letter) ? 0.45 : 0.05;}, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs})
@@ -275,7 +277,7 @@ Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` functio
 
 ~~~~
 // define some variables and utility functions
-var checkVowel = function(letter) {return _.contains(['a', 'e', 'i', 'o', 'u'], letter);}
+var checkVowel = function(letter) {return _.includes(['a', 'e', 'i', 'o', 'u'], letter);}
 var letterVals = ['g', 'a', 'm', 'e'];
 var letterProbs = map(function(letter) {return checkVowel(letter) ? 0.45 : 0.05;}, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs})

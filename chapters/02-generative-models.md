@@ -285,7 +285,7 @@ An important idea is that `flip` can be thought of in two different ways.
 From one perspective, `flip` is a procedure which returns a sample from a fair coin.
 That is, it's a *sampler* or *simulator*. As we saw above we can build more complex samplers by building more complex functions.
 From another perspective, `flip` is *itself* a characterization of the probability distribution over `true` and `false`.
-In order to make this view explicit, WebPPL has a special type of **distribution** objects. These are objects that can be sampled from using the `sample` operator, and that can explicit return the probability of a return value using the `score` method. Distributions are made by a family of distribution constructors:
+In order to make this view explicit, WebPPL has a special type of **distribution** objects. These are objects that can be sampled from using the `sample` operator, and that can explicitly return the probability of a return value using the `score` method. Distributions are made by a family of distribution constructors:
 
 ~~~
 //make a distribution using the Bernoulli constructor:
