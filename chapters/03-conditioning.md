@@ -79,7 +79,7 @@ viz(dist)
 Predicting the outcome of a generative process is simply a special case of inference, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`; try removing this line altogether.
 -->
 
-Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation in the presence of `condition` can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical formulation of a *conditional distribution*.
+Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation in the presence of `condition` can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the mathematical formulation of a *conditional distribution*.
 
 ## Rejection Sampling
 
