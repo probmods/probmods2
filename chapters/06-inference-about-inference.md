@@ -40,7 +40,7 @@ var widgetDist = Infer({method: 'rejection', samples: 300}, function() {
 viz.auto(widgetDist)
 ~~~~
 
-But notice that the definition of next-good-widget is exactly like the definition of rejection sampling! We can re-write this as a nested-query model:
+But notice that the definition of `makeWidgetSeq` is exactly like the definition of rejection sampling! We can re-write this as a nested-query model:
 
 ~~~~
 // this machine makes a widget -- which we'll just represent with a real number:
@@ -134,7 +134,7 @@ var chooseAction = function(goalSatisfied, transition, state) {
 viz.auto(chooseAction(haveCookie, vendingMachine, 'state'));
 ~~~~
 
-Technically, this method of making a choices is not optimal, but rather it is *soft-max* optimal (also known as following the "Boltzmann policy").
+Technically, this method of making a choice is not optimal, but rather it is *soft-max* optimal (also known as following the "Boltzmann policy").
 
 <!--
 
