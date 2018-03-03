@@ -264,7 +264,7 @@ viz.auto(goalPosterior);
 
 Try varying the amount and kind of evidence. For instance, if Sally one time says "I want a cookie" (so you have directly observed her goal that time) how much evidence does that give you about her preferences, relative to observing her actions?
 
-In the above preference inference, it is extremely important that sally *could
+In the above preference inference, it is extremely important that Sally *could
 have* taken a different action if she had a different preference (i.e. she could
 have pressed button *a* if she preferred to have a bagel). In the program below we have set up a situation in which both actions lead to cookie most of the time:
 
