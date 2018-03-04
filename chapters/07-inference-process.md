@@ -50,7 +50,7 @@ var model = function(){
 viz(Infer({method: 'enumerate'}, model))
 ~~~~
 
-Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this try adding more random choices to the sum (following the pattern of `A`). The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated).
+Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this try adding more random choices to the sum (following the pattern of `A`). The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many values that would need to be enumerated).
 
 There are many other algorithms and techniques for probabilistic inference; many are implemented as methods for `Infer` in WebPPL. For instance, *Markov chain Monte Carlo* inference approximates the posterior distribution via a random walk. (By default the 'method:"MCMC"' yields the *Metropolis Hastings* version of MCMC).
 
