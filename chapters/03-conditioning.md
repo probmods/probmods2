@@ -233,7 +233,7 @@ The workings of MH will be explored in a later chapter, but very roughly: The al
 -->
 
 
-# Conditions, observations, and factors
+# Conditions and observations
 
 A very common pattern is to condition directly on the value of a sample from some distribution. For instance here we try to recover a true number from a noisy observation of it:
 
@@ -282,24 +282,39 @@ In the traditional presentation of conditional probabilities we usually think of
 However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
 Using `condition` allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `Infer` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
 
-In WebPPL, `condition` is actually a special case of a more general operator: `factor`. The `factor` operator takes a real number, and it adjusts the probability of the execution by multiplying the probability by the exponent of this number.
-If `condition` is like making an assumption that must be true, then `factor` is like making a *soft* assumption that is merely preferred to be true.
+# Factors
 
-For instance, we can encourage the sum `A+B+C` to be bigger in the above example:
+In WebPPL, `condition` is actually a special case of a more general operator: `factor`. Whereas `condition` is like making an assumption that must be true, then `factor` is like making a *soft* assumption that is merely preferred to be true. For instance, suppose we flip a single coin. If we condition on the outcome being heads, then the outcome must be heads: 
 
 ~~~~
 var dist = Infer({method: 'enumerate'},
   function () {
     var A = flip()
-    var B = flip()
-    var C = flip()
-    factor(A + B + C)
+    condition(A)
     return A
 });
 viz(dist)
 ~~~~
 
-Play with this example. Can you use `factor` to make the sum close to (but not necessarily equal to) 2?
+However, if we swap `condition` for `factor`, we simply make heads more likely:
+
+~~~~
+var dist = Infer({method: 'enumerate'},
+  function () {
+    var A = flip()
+    factor(A)
+    return A
+});
+viz(dist)
+~~~~
+
+Technically, `factor(x)` adds `x` to the unnormalized log-probability of the program execution within which it occurs. Thus, to get the new probabilities induced by the `factor` statement we compute the normalizing constant given these log-scores. The resulting probability $$P(A=true)$$ is:
+
+$$
+P(A=true) = \frac {e^{1}} { (e^{0} + e^{1}) }
+$$
+
+Play with this example. Can you revise the example to increase the probability of heads? 
 
 The `factor` construct is very general. Both `condition` and `observe` can be written easily in terms of `factor`. However models are often clearer when written with the more specialized forms. In machine learning it is common to talk of *directed* and *undirected* generative models; directed models can be thought of as those made from only `sample` and `observe`, while undirected models include `factor` (and often have only factors).
 
