@@ -13,11 +13,12 @@ a) Complete the code below so that `chooseAction` chooses a misdirection if Sall
 var actionPrior = Categorical({vs: ['a', 'b', 'c'], ps: [1/3, 1/3, 1/3]});
 var foodPrior = Categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [1/3, 1/3, 1/3]});
 
-var vendingMachine = function(state action) {
+var vendingMachine = function(state, action) {
   return (action == 'a' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.8, .1, .1]}) :
           action == 'b' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.1, .8, .1]}) :
-	  action == 'c' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.1, .1, .8]}) :
-	  'nothing');
+	        action == 'c' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.1, .1, .8]}) :
+	        'nothing');
+}
 
 var chooseAction = function(goal, transition, state, deceive) {
   return Infer({method: 'enumerate'}, function() {
@@ -63,25 +64,25 @@ var doors = [1,2,3]
 var montyRandom = function(aliceDoor, prizeDoor) {
   return Infer({method: 'enumerate'}, function() {
     ... 
-  };
+  });
 };
 
 // var montyAvoidBoth = function(aliceDoor, prizeDoor) {
 //   return Infer({method: 'enumerate'}, function() {
 //     ... 
-//   };
+//   });
 // };
 
 // var montyAvoidAlice = function(aliceDoor, prizeDoor) {
 //   return Infer({method: 'enumerate'}, function() {
 //     ... 
-//   };
+//   });
 // };
 
 // var montyAvoidPrize = function(aliceDoor, prizeDoor) {
 //   return Infer({method: 'enumerate'}, function() {
 //     ... 
-//   };
+//   });
 // };
 
 Infer({method: 'enumerate'}, function() {
