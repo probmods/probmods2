@@ -18,6 +18,10 @@
     "jquery": "~2.2.3",
     "bootstrap": "~3.3.6",
     "KaTeX": "katex#^0.6.0",
-    "bigfoot": "^2.1.4"
+    "bigfoot": "^2.1.4”,
+    "webppl-agents": "github:agentmodels/webppl-agents",
+    "webppl-dp": "^0.1.1",
+    "webppl-nn": "github:null-a/webppl-nn",
+    "webppl-timeit": "^0.3.0"
   }
 }
