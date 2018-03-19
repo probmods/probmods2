@@ -28,7 +28,7 @@
     "npm": "^5.7.1",
     "paper": "^0.9.25",
     "underscore": "~1.8.3",
-    "webppl": "github:probmods/webppl.git#v0.9.10",
+    "webppl": "github:probmods/webppl",
     "webppl-agents": "github:agentmodels/webppl-agents",
     "webppl-dp": "^0.1.1",
     "webppl-editor": "github:probmods/webppl-editor",

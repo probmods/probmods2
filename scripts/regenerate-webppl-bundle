@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+set -x
+
+cd node_modules/webppl
+grunt bundle:../webppl-timeit:../webppl-dp:../webppl-agents
+cp bundle/webppl.min.js ../../assets/js/webppl.min.js
+cd ../..
+echo "Success."
