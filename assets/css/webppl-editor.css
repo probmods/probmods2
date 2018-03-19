@@ -1,46 +1,170 @@
-.CodeMirrorError {
-    background-color: red;
-}
+/* main */
 
 .wpedit {
     font-family: Menlo, Courier;
 }
-
-.wpedit .progress {
-    font-size: 11px;
-    position: relative;
-    height: 12px;
+.wpedit .hide {
+    display: none
 }
 
-.wpedit .progress .text {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.wpedit .progress .fill {
-    background-color: #99ccff;
-    transition: width 0.08s ease;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 100%;
-}
-
-/* these two styles prevent the ~300px empty space below editor; HT customized styling section of http://codemirror.net/2/doc/manual.html */
-
+/* these two styles prevent the ~300px empty space below editor */
+/* HT customized styling section of http://codemirror.net/2/doc/manual.html */
 .wpedit .CodeMirror {
     height: auto;
     border: 1px solid black;
     border-radius: 2px;
     max-height: 80%;
+    clear: both;
 }
 .wpedit .CodeMirror-scroll {
     height: auto;
     max-height: 80%;
 }
 
+/* code */
+/* -- syntax highlighting */
+.CodeMirrorError {
+    background-color: red;
+}
+.wpedit div.CodeMirror span.CodeMirror-matchingbracket {
+    background-color: #e0e0e0;
+}
+.wpedit div.CodeMirror span.CodeMirror-nonmatchingbracket {
+    color: black;
+    background-color: #ECAAB9;
+}
+
+/* wppl keywords */
+
+.cm-wppl {
+    font-weight: bold
+}
+
+/* -- folding */
+.wpedit .CodeMirror-foldmarker {
+    background-color: #ffffcc;
+    border: 1px solid gray;
+    border-radius: 4px;
+    display: inline;
+    padding: 0 0.5em
+}
+.wpedit .CodeMirror-foldmarker:hover {
+    cursor: pointer
+}
+
+/* results */
+.wpedit .result {
+    border: 1px solid gray;
+    border-radius: 2px;
+    margin: 0.5em 0;
+    min-height: 0.5em;
+    overflow-x: scroll;
+    position: relative;
+    max-height: 600px; /* todo: figure out why a percentage doesn't work here */
+}
+
+.wpedit .result pre {
+    border: none;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.wpedit .result pre.error {
+    color: red;
+}
+
+.wpedit .error-message {
+    font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer
+}
+
+.wpedit .clearButton {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    min-width: 0;
+    color: #ccc;
+    font-weight: bold;
+    margin: 0;
+    padding: 10px;
+    border: none;
+    z-index: 99;
+}
+
+.wpedit .clearButton:hover {
+    background-color: lightcoral;
+    color: black;
+}
+
+.wpedit .clearButton.running {
+    display: none;
+}
+
+/* -- console method intercepting */
+.result .icon {
+    border-radius: 5px;
+    padding: 0 3px;
+    float: left;
+    color: white;
+    margin: 4px 2px 0px 2px;
+    font-size: 12px;
+}
+.icon.warn {
+    background-color: orange;
+    color: black
+}
+.icon.info {
+    background-color: #2387d2;
+}
+.icon.error {
+    background-color: red;
+}
+.icon.log {
+    display: none
+}
+.result .count:not(:empty) {
+    font-family: Helvetica;
+    font-size: 10px;
+    float: left;
+    margin: 5px;
+    color: gray
+}
+
+/* meta drawer */
+.meta {
+    background-color: #eee;
+    font-size: 12px;
+    padding: 1em;
+    color: black;
+}
+
+/* progress bar */
+
+.wpedit .progress {
+    font-size: 11px;
+    position: relative;
+    height: 16px;
+    width: 95%;
+    margin: 5px 0px 5px 5px;
+    background-color: bisque
+}
+
+.wpedit .progress .text {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.wpedit .progress .fill {
+    background-color: #99ccff;
+    /* transition: width 0.08s ease; */
+    height: 100%;
+    padding: 0;
+    margin: 0
+}
+
+/* buttons */
 .wpedit button {
     border: 1px solid gray;
     font-family: Menlo;
@@ -48,6 +172,24 @@
     margin: 0.5em 0 0.5em 0;
     padding: 0.5em 1em;
     min-width: 100px;
+}
+
+.wpedit .drawerButton {
+    float: right;
+    color: #ddd;
+    z-index: 120;
+    background-color: white;
+    border: 1px solid #fff;
+    padding: 0.5em 0.5em;
+    min-width: 0;
+}
+
+.wpedit .drawerButton:hover {
+    color: #99ccff;
+}
+
+.wpedit button:focus { /* remove outline from clicked buttons */
+    outline:0;
 }
 
 .wpedit .cancel {
@@ -64,63 +206,7 @@
 
 .wpedit button:disabled {
     cursor: auto;
-}
-
-
-.wpedit .result {
-    border: 1px solid gray;
-    border-radius: 2px;
-    margin: 0.5em 0;
-    min-height: 0.5em;
-}
-
-.wpedit .result pre {
-    border: none
-}
-
-.wpedit pre.error {
-    background-color: red;
-    color: white;
-}
-
-.wpedit .error-message {
-    font-weight: bold;
-    text-decoration: underline;
-    cursor: pointer
-}
-
-.wpedit .stale {
-    opacity: 0.2
-}
-
-.wpedit .hide {
-    display: none
-}
-
-.wpedit .CodeMirror-foldmarker {
-    background-color: #ffffcc;
-    border: 1px solid gray;
-    border-radius: 4px;
-    display: inline;
-    padding: 0 0.5em
-}
-
-.wpedit .CodeMirror-foldmarker:hover {
-    cursor: pointer
-}
-
-.wpedit div.CodeMirror span.CodeMirror-matchingbracket {
-    background-color: #e0e0e0;
-}
-
-.wpedit div.CodeMirror span.CodeMirror-nonmatchingbracket {
-    color: black;
-    background-color: #ECAAB9;
-}
-
-
-.wpedit .hidden {
-    display: none;
+    color: gray;
 }
 /* BASICS */
 
@@ -129,6 +215,7 @@
   font-family: monospace;
   height: 300px;
   color: black;
+  direction: ltr;
 }
 
 /* PADDING */
@@ -182,7 +269,12 @@
 .cm-fat-cursor div.CodeMirror-cursors {
   z-index: 1;
 }
-
+.cm-fat-cursor-mark {
+  background-color: rgba(20, 255, 20, 0.5);
+  -webkit-animation: blink 1.06s steps(1) infinite;
+  -moz-animation: blink 1.06s steps(1) infinite;
+  animation: blink 1.06s steps(1) infinite;
+}
 .cm-animate-fat-cursor {
   width: auto;
   border: 0;
@@ -212,8 +304,14 @@
 
 .cm-tab { display: inline-block; text-decoration: inherit; }
 
+.CodeMirror-rulers {
+  position: absolute;
+  left: 0; right: 0; top: -50px; bottom: -20px;
+  overflow: hidden;
+}
 .CodeMirror-ruler {
   border-left: 1px solid #ccc;
+  top: 0; bottom: 0;
   position: absolute;
 }
 
@@ -237,7 +335,7 @@
 .cm-s-default .cm-property,
 .cm-s-default .cm-operator {}
 .cm-s-default .cm-variable-2 {color: #05a;}
-.cm-s-default .cm-variable-3 {color: #085;}
+.cm-s-default .cm-variable-3, .cm-s-default .cm-type {color: #085;}
 .cm-s-default .cm-comment {color: #a50;}
 .cm-s-default .cm-string {color: #a11;}
 .cm-s-default .cm-string-2 {color: #f50;}
@@ -257,8 +355,8 @@
 
 /* Default styles for common addons */
 
-div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
-div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
+div.CodeMirror span.CodeMirror-matchingbracket {color: #0b0;}
+div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #a22;}
 .CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }
 .CodeMirror-activeline-background {background: #e8f2ff;}
 
@@ -324,9 +422,6 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   display: inline-block;
   vertical-align: top;
   margin-bottom: -30px;
-  /* Hack to make IE7 behave */
-  *zoom:1;
-  *display:inline;
 }
 .CodeMirror-gutter-wrapper {
   position: absolute;
@@ -344,11 +439,8 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   cursor: default;
   z-index: 4;
 }
-.CodeMirror-gutter-wrapper {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
-}
+.CodeMirror-gutter-wrapper ::selection { background-color: transparent }
+.CodeMirror-gutter-wrapper ::-moz-selection { background-color: transparent }
 
 .CodeMirror-lines {
   cursor: text;
@@ -370,8 +462,8 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   position: relative;
   overflow: visible;
   -webkit-tap-highlight-color: transparent;
-  -webkit-font-variant-ligatures: none;
-  font-variant-ligatures: none;
+  -webkit-font-variant-ligatures: contextual;
+  font-variant-ligatures: contextual;
 }
 .CodeMirror-wrap pre {
   word-wrap: break-word;
@@ -388,10 +480,12 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 .CodeMirror-linewidget {
   position: relative;
   z-index: 2;
-  overflow: auto;
+  padding: 0.1px; /* Force widget margins to stay inside of the container */
 }
 
 .CodeMirror-widget {}
+
+.CodeMirror-rtl pre { direction: rtl; }
 
 .CodeMirror-code {
   outline: none;
@@ -415,7 +509,10 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   visibility: hidden;
 }
 
-.CodeMirror-cursor { position: absolute; }
+.CodeMirror-cursor {
+  position: absolute;
+  pointer-events: none;
+}
 .CodeMirror-measure pre { position: static; }
 
 div.CodeMirror-cursors {
@@ -438,12 +535,9 @@ div.CodeMirror-dragcursors {
 .CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }
 
 .cm-searching {
-  background: #ffa;
-  background: rgba(255, 255, 0, .4);
+  background-color: #ffa;
+  background-color: rgba(255, 255, 0, .4);
 }
-
-/* IE7 hack to prevent it from returning funny offsetTops on the spans */
-.CodeMirror span { *vertical-align: text-bottom; }
 
 /* Used to force a border model for a node */
 .cm-force-border { padding-right: .1px; }
