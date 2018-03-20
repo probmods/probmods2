@@ -1,3 +1,5 @@
+// custom code for probmods
+
 var matchConfigurations = [
   {
     "X": 1,

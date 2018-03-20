@@ -1,3 +1,5 @@
+//custom code for probmods.org
+
 "use strict";
 
 var renderMath = function() {

@@ -1,3 +1,5 @@
+// Custom code for probmods.org
+
 // Date
 
 function setDate(){

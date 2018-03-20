@@ -1,3 +1,5 @@
+// Custom code for probmods.org (looks like)
+
 function DrawObject(width, height, visible){
   this.canvas = $('<canvas/>', {
     "class": "drawCanvas",

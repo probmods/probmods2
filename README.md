@@ -2,7 +2,19 @@
 
 ### Dependencies
 
-You will need jekyll. If installing on a Mac, this can be complicated because MacOS's default Ruby installation is incompatible. Instead, install and use `rbenv` to set up virtual ruby environments:
+Make sure `npm` is up-to-date:
+
+```sh
+$ npm update -g npm
+```
+
+This may take a while. Next, run:
+
+```sh
+$ npm install -g browserify uglifyjs watchify grunt-cli
+```
+
+Next, you need to install jekyll. If installing on a Mac, this can be complicated because MacOS's default Ruby installation is incompatible. Instead, install and use `rbenv` to set up virtual ruby environments:
 
 ```sh
 $ brew install rbenv
@@ -34,11 +46,38 @@ $ gem install jekyll
 
 ### Installing packages
 
+The first line below installs some dependencies that aren't available through NPM. The second line installs all the NPM-managed dependencies listed in `package.json`.
+
 ```sh
-bower install
+$ brew install pkg-config cairo pango libpng jpeg giflib
+$ npm install
 ```
 
-## compiling
+If you run into problems on the first step, you may need to update homebrew or some of its dependencies. Try:
+
+```sh
+$ brew update
+$ brew upgrade
+```
+
+Then run `npm install` again.
+
+### Final step
+From the root directory:
+
+```
+$ scripts/deploy
+```
+
+This updates all dependencies and copies them to the assets folder. Note that there are several javascript libraries in `assets` that are NOT maintained through nmp: 
+
+* box2d.js
+* plinko.js
+* parse-bibtex.js
+
+While it may be valuable to have these updated automatically, it is not clear what the original sources are for any of them.
+
+## Running locally
 
 ```sh
 jekyll serve --watch --incremental
