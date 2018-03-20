@@ -17,10 +17,10 @@ grunt bundle
 grunt uglify
 cd ../..
 cp node_modules/webppl/bundle/webppl.min.js assets/js/webppl.min.js
-cp node_modules/webppl-editor/docs/webppl-editor.min.js assets/js/webppl-editor.min.css
-cp node_modules/webppl-editor/docs/webppl-editor.css assets/css/webppl-editor.css
-cp node_modules/webppl-viz/docs/webppl-viz.min.js assets/js/webppl-viz.min.css
-cp node_modules/webppl-viz/docs/webppl-viz.css assets/css/webppl-viz.css
+cp node_modules/webppl-editor/docs/webppl-editor.min.js assets/js
+cp node_modules/webppl-editor/docs/webppl-editor.css assets/css
+cp node_modules/webppl-viz/docs/webppl-viz.min.js assets/js
+cp node_modules/webppl-viz/docs/webppl-viz.css assets/css
 
 #Now copy things from non-webppl packages we need
 cp node_modules/bootstrap/dist/css/bootstrap.min.css assets/css

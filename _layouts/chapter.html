@@ -10,10 +10,8 @@ custom_js:
 custom_css:
 - assets/css/katex.min.css
 - assets/css/littlefoot.css
-
-external_css:
-- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-viz-0.7.11.css
-- //s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-editor-1.0.8.css
+- assets/css/webppl-viz.css
+- assets/css/webppl-editor.css
 ---
 
 <div class="page-header">
@@ -23,6 +21,6 @@ external_css:
 {{ content }}
 
 <!-- put big scripts at end so we don't block page load -->
-<script src="//s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-v0.9.6.js"></script>
-<script src="//s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-editor-1.0.8.js"></script>
-<script src="//s3-us-west-2.amazonaws.com/cdn.webppl.org/webppl-viz-0.7.11.js"></script>
+<script src="{{ site.baseurl }}/assets/js/webppl.min.js"></script>
+<script src="{{ site.baseurl }}/assets/js/webppl-editor.min.js"></script>
+<script src="{{ site.baseurl }}/assets/js/webppl-viz.min.js"></script>
