@@ -53,14 +53,6 @@ if (typeof Distribution !== 'undefined') {
   Distribution.prototype.__print__ = viz.print;
 }
 
-// Footnotes
-
-$("a.footnote").map(function(i,x) {
-  $(x).attr('rel', 'footnote')
-})
-
-$.bigfoot();
-
 // References and bibliography
 
 var textohtml_map = {
@@ -198,3 +190,7 @@ $(function() {
   })
 
 })
+
+// Footnotes
+//var littlefoot = require('littlefoot').default
+//littlefoot()
