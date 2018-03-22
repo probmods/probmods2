@@ -25,6 +25,8 @@ cp node_modules/webppl-viz/docs/webppl-viz.css assets/css
 #Now copy things from non-webppl packages we need
 cp node_modules/bootstrap/dist/css/bootstrap.min.css assets/css
 cp node_modules/bootstrap/dist/css/bootstrap-theme.min.css assets/css
+cp node_modules/bootstrap/dist/css/bootstrap.min.css.map assets/css
+cp node_modules/bootstrap/dist/css/bootstrap-theme.min.css.map assets/css
 cp node_modules/KaTeX/dist/katex.min.css assets/css
 cp node_modules/littlefoot/dist/littlefoot.css assets/css
 cp -r node_modules/KaTeX/dist/fonts assets/css
