@@ -6,17 +6,82 @@ custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js
 - assets/js/draw.js
+- assets/js/custom.js
+custom_css:
+- /assets/css/draw.css
 ---
 
 
-# The performance characteristics of different algorithms
+# Analytic Solutions
 
-When we introduced [conditioning]({{site.baseurl}}/chapters/03-conditioning.html) we pointed out that the rejection sampling and enumeration (or mathematical) definitions are equivalent---we could take either one as the definition of how `Infer` should behave with `condition`.
-There are many different ways to compute the same distribution, it is thus useful to separately think about the distributions we are building (including conditional distributions) and how we will compute them.
-Indeed, in the last few chapters we have explored the dynamics of inference without worrying about the details of inference algorithms.
-The efficiency characteristics of different implementations of `Infer` can be very different, however, and this is important both practically and for motivating cognitive hypotheses at the level of algorithms (or psychological processes).
+Conceptually, the simplest way to determine the probability of some variable under Bayesian inference is simply to apply Bayes' Rule and then carry out all the necessary multiplication, etc. However, this is not always possible. 
 
-The "guess and check" method of rejection sampling (implemented in `method:"rejection"`) is conceptually useful but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very large number of samples to find computations that do so. To see this, try making the `baserate` probability of `A`, `B`, and `C` lower in this example:
+For instance, suppose your model involves a continuous function such as a `gaussian` and `gamma`. Such choices can take on an infinite number of possible values, so it is not possible to consider every one of them. In WebPPL, if we use `method: 'enumerate'` to try to calculate the analytic solution for such a model using, we get a runtime error: 
+
+~~~~
+var gaussianModel = function() {
+	return gaussian(0, 1)
+};
+Infer({method: 'enumerate'}, gaussianModel);
+~~~~
+
+Even when all the variables are categorical, problems arise quickly. As a program makes more random choices, and as these choices gain more possible values, the number of possible execution paths through the program grows exponentially. Explicitly enumerating all of these paths can be prohibitively expensive. For instance, consider this program which computes the posterior distribution on rendered 2D lines, conditioned on those lines approximately matching this target image:
+
+<img src="../assets/img/box.png" alt="diagram" style="width: 400px;"/>
+
+~~~~
+///fold:
+var targetImage = Draw(50, 50, false);
+loadImage(targetImage, "../assets/img/box.png");
+
+var drawLines = function(drawObj, lines){
+  var line = lines[0];
+  drawObj.line(line[0], line[1], line[2], line[3]);
+  if (lines.length > 1) {
+    drawLines(drawObj, lines.slice(1));
+  }
+};
+///
+
+var makeLines = function(n, lines, prevScore){
+  // Add a random line to the set of lines
+  var x1 = randomInteger(50);
+  var y1 = randomInteger(50);
+  var x2 = randomInteger(50);
+  var y2 = randomInteger(50);
+  var newLines = lines.concat([[x1, y1, x2, y2]]);
+  // Compute image from set of lines
+  var generatedImage = Draw(50, 50, false);
+  drawLines(generatedImage, newLines);
+  // Factor prefers images that are close to target image
+  var newScore = -targetImage.distance(generatedImage)/1000;
+  factor(newScore - prevScore);
+  generatedImage.destroy();
+  // Generate remaining lines (unless done)
+  return (n==1) ? newLines : makeLines(n-1, newLines, newScore);
+};
+
+var lineDist = Infer(
+  { method: 'enumerate', strategy: 'depthFirst', maxExecutions: 10 },
+  function(){
+    var lines = makeLines(4, [], 0);
+    var finalGeneratedImage = Draw(50, 50, true);
+    drawLines(finalGeneratedImage, lines);
+    return lines;
+  });
+
+viz.table(lineDist);
+~~~~
+
+Running this program, we can see that enumeration starts by growing a line from the bottom-right corner of the image, and then proceeds to methodically plot out every possible line length that could be generated. These are all fairly terrible at matching the target image, and there are billions more states like them that enumeration would have to wade through in order to find those few that have high probability.
+
+# Approximate Inference
+
+Luckily, it is often possible to estimate the posterior probability fairly accurately, even though we cannot calculate it exactly. There are a number of different algorithms, each of which has different properties.
+
+## Rejection Sampling
+
+Rejection sampling (implemented in `method:"rejection"`), which we introduced in [conditioning]({{site.baseurl}}/chapters/03-conditioning.html), is conceptually the simplest. However, it is not very efficient. Recall that it works by randomly sampling values for the variables and then checking to see if the condition is met, rejecting the sample if it is not. If the condition is *a priori* unlikely, the vast majority of samples will be rejected, and so it will take a very large number of samples to find computations that do so. To see this, try running the following model with progressively smaller values for `baserate`:
 
 ~~~~
 var baserate = 0.1
@@ -32,10 +97,9 @@ var model = function(){
 viz(Infer({method: 'rejection', samples: 100}, model))
 ~~~~
 
-Even for this simple program, lowering the baserate by just one order of magnitude, to $$0.01$$, will make rejection sampling impractical.
+Even for this simple program -- and even though we are only asking for 100 successful (non-rejected) samples -- lowering the baserate by just one order of magnitude, to $$0.01$$, slows down inference considerably. Lowering the baserate to $$0.001$$ makes inference impractical.
 
-Another option that we've seen before is to enumerate all of the possible executions of the model, using the rules of probability to calculate the conditional distribution:
-
+It can be useful to compare this directly to what happens with enumeration. Changing the baserate has no effect on runtime, but adding additional variables (var D = flip(baserate), var E = flip(baserate), etc.) can slow down inference dramatically. (Why?)
 
 ~~~~
 var baserate = 0.1
@@ -51,9 +115,12 @@ var model = function(){
 viz(Infer({method: 'enumerate'}, model))
 ~~~~
 
-Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this try adding more random choices to the sum (following the pattern of `A`). The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated).
+## Markov chain Monte Carlo (MCMC)
 
-There are many other algorithms and techniques for probabilistic inference; many are implemented as methods for `Infer` in WebPPL. For instance, *Markov chain Monte Carlo* inference approximates the posterior distribution via a random walk. (By default the 'method:"MCMC"' yields the *Metropolis Hastings* version of MCMC).
+With rejection sampling, each sample is an independent draw from the model's prior. Markov chain Monte Carlo, in contrast involves a random walk through the posterior. Each sample depends on the prior sample -- but ony the prior sample (it is a *Markov* chain). If the random walk is done correctly, the probability you sample a particular set of values for the variables in the model is proportional to the conditional probability of those values. That is, instead of sampling randomly (as in rejection sampling), we sample smartly, focusing on exactly those parts of the probability space that are high-probability. In the limit, rejection sampling and MCMC will converge, but MCMC can be much faster. 
+
+Consider:
+
 
 ~~~~
 var baserate = 0.1
@@ -69,14 +136,138 @@ var model = function(){
 viz(Infer({method: 'MCMC', lag: 100}, model))
 ~~~~
 
-See what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably (but results will become less stable). Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
+Again, see what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably, though results will become less stable. Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
 This is an example of the kind of tradeoffs that are common between different inference algorithms.
 
-There are a number of other [inference methods available in WebPPL](http://docs.webppl.org/en/master/inference/methods.html). These include *sequential Monte Carlo* and *variational inference*. As with rejection sampling, enumeration, and MCMC, their performance characteristics can vary depending on details of the model.
+To get a better sense of what is going on, let's return to our attempt to match the 2D image. This time, we will take 50 MCMC samples:
 
-# The landscape of inference algorithms
+~~~~
+///fold:
+var targetImage = Draw(50, 50, false);
+loadImage(targetImage, "../assets/img/box.png");
 
-**This section is waiting for a refresh. In the meantime, see [PPAML Summer School 2016: Approximate Inference Algorithms.](http://probmods.github.io/ppaml2016/chapters/4-algorithms.html)**
+var drawLines = function(drawObj, lines){
+  var line = lines[0];
+  drawObj.line(line[0], line[1], line[2], line[3]);
+  if (lines.length > 1) {
+    drawLines(drawObj, lines.slice(1));
+  }
+};
+///
+
+var makeLines = function(n, lines, prevScore){
+  // Add a random line to the set of lines
+  var x1 = randomInteger(50);
+  var y1 = randomInteger(50);
+  var x2 = randomInteger(50);
+  var y2 = randomInteger(50);
+  var newLines = lines.concat([[x1, y1, x2, y2]]);
+  // Compute image from set of lines
+  var generatedImage = Draw(50, 50, false);
+  drawLines(generatedImage, newLines);
+  // Factor prefers images that are close to target image
+  var newScore = -targetImage.distance(generatedImage)/1000;
+  factor(newScore - prevScore);
+  generatedImage.destroy();
+  // Generate remaining lines (unless done)
+  return (n==1) ? newLines : makeLines(n-1, newLines, newScore);
+};
+
+var lineDist = Infer(
+  { method: 'MCMC', samples=50},
+  function(){
+    var lines = makeLines(4, [], 0);
+    var finalGeneratedImage = Draw(50, 50, true);
+    drawLines(finalGeneratedImage, lines);
+    return lines;
+  });
+
+viz.table(lineDist);
+~~~~
+
+As you can see, each successive sample is highly similar to the previous one. Since the first sample is chosen randomly, the sequence you see will be very different if you re-run the model. 
+
+There are a number of different algorithms for MCMC, each of which has different properties. By default `method:'MCMC'` yields the *Metropolis Hastings* version of MCMC).
+
+### Hamiltonian Monte Carlo
+
+When the input to a `factor` statement is a function of multiple variables, those variables become correlated in the posterior distribution. If the induced correlation is particularly strong, MCMC can sometimes become 'stuck.' In controling the random walk, Metropolis-Hastings choses a new point in probability space to go to and then decides whether or not to go based on the probability of the new point. If it has difficulty finding new points with reasonable probability, it will get stuck and simplly stay where it is. Given an infinite amount of time, Metropolis-Hastings will recover. However, the first N samples will be heavily dependent on where the chain started (the first sample) and will be a poor approximation of the true posterior. 
+
+Take this example below, where we use a Gaussian likelihood factor to encourage ten uniform random numbers to sum to the value 5:
+
+~~~~
+var bin = function(x) {
+  return Math.floor(x * 1000) / 1000;
+};
+
+var constrainedSumModel = function() {
+  var xs = repeat(10, function() {
+    return uniform(0, 1);
+  });
+  var targetSum = xs.length / 2;
+  factor(Gaussian({mu: targetSum, sigma: 0.005}).score(sum(xs)));
+  return map(bin, xs);
+};
+
+var post = Infer({
+	method: 'MCMC',
+	samples: 5000,
+	callbacks: [MCMC_Callbacks.finalAccept]
+}, constrainedSumModel);
+var samps = repeat(10, function() { return sample(post); });
+reduce(function(x, acc) {
+	return acc + 'sum: ' + sum(x).toFixed(3) + ' | nums: ' + x.toString() + '\n';
+}, '', samps);
+~~~~
+
+The output box displays 10 random samples from the posterior. You'll notice that they are all very similiar, despite there being many distinct ways for ten real numbers to sum to 5. The reason is technical but straight-forward.  The program above uses the `callbacks` option to `MCMC` to display the final acceptance ratio (i.e. the percentage of proposed samples that were accepted)--it should be around 1-2%, which is very inefficient.
+
+To deal with situations like this one, WebPPL provides an implementation of [Hamiltonian Monte Carlo](http://docs.webppl.org/en/master/inference.html#kernels), or HMC. HMC automatically computes the gradient of the posterior with respect to the random choices made by the program. It can then use the gradient information to make coordinated proposals to all the random choices, maintaining posterior correlations. Below, we apply HMC to `constrainedSumModel`:
+
+~~~~
+///fold:
+var bin = function(x) {
+  return Math.floor(x * 1000) / 1000;
+};
+
+var constrainedSumModel = function() {
+  var xs = repeat(10, function() {
+    return uniform(0, 1);
+  });
+  var targetSum = xs.length / 2;
+  factor(Gaussian({mu: targetSum, sigma: 0.005}).score(sum(xs)));
+  return map(bin, xs);
+};
+///
+
+var post = Infer({
+	method: 'MCMC',
+	samples: 100,
+	callbacks: [MCMC_Callbacks.finalAccept],
+	kernel: {
+		HMC : { steps: 50, stepSize: 0.0025 }
+	}
+}, constrainedSumModel);
+var samps = repeat(10, function() { return sample(post); });
+reduce(function(x, acc) {
+	return acc + 'sum: ' + sum(x).toFixed(3) + ' | nums: ' + x.toString() + '\n';
+}, '', samps);
+~~~~
+
+The approximate posterior samples produced by this program are more varied, and the final acceptance rate is much higher.
+
+There are a couple of caveats to keep in mind when using HMC:
+
+ - Its parameters can be extremely sensitive. Try increasing the `stepSize` option to `0.004` and seeing how the output samples degenerate. 
+ - It is only applicable to continuous random choices, due to its gradient-based nature. You can still use HMC with models that include discrete choices, though: under the hood, this will alternate between HMC for the continuous choices and MH for the discrete choices.
+
+## Particle Filters
+
+TODO
+
+## Variational Inference
+
+TODO
 
 # Process-level cognitive modeling
 

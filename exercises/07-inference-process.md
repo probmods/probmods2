@@ -6,6 +6,7 @@ description: MCMC, etc.
 
 # Exercises
 
+TODO
 
 <!--
 1) Why does the Church MH algorithm return less stable estimates when you lower the baserate for the following program?
