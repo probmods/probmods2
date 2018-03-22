@@ -5,6 +5,7 @@ description: From competence to process, efficiency tradeoffs of different algor
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js
+- assets/js/draw.js
 ---
 
 
@@ -450,5 +451,9 @@ We can also mix these methods---using enumeration for levels of query with few s
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/07-inference-process.html)
 -->
+
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/07-inference-process.html)
+
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/07-inference-process.html)
 
 Next chapter: [Learning as conditional inference]({{site.baseurl}}/chapters/08-learning-as-conditional-inference.html)

@@ -1,11 +1,13 @@
 ---
 layout: exercise
-title: Inference - exercises
-description: Inference
+title: Algorithms for Inference - exercises
+description: MCMC, etc.
 ---
 
 # Exercises
 
+
+<!--
 1) Why does the Church MH algorithm return less stable estimates when you lower the baserate for the following program?
 
 ~~~~ {data-exercise="ex1"}
@@ -25,6 +27,7 @@ description: Inference
 
 (hist samples "Value of A, given that D is greater than or equal to 2")
 ~~~~
+-->
 
 <!--
 
