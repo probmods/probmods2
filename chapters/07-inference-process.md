@@ -263,9 +263,310 @@ There are a couple of caveats to keep in mind when using HMC:
 
 ## Particle Filters
 
-TODO
+Particle filters -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintain a collection of samples (particles) that are resampled upon encountering new evidence. They are particularly useful for models that incrementally update beliefs as new observations come in. Before considering such models, though, let's get a sense of how particle filters work. Below, we apply a particle filter to our 2D image rendering model, using `method: 'SMC'`.
+
+~~~~
+///fold: 2D image drawing
+var targetImage = Draw(50, 50, false);
+loadImage(targetImage, "../assets/img/box.png")
+
+var drawLines = function(drawObj, lines){
+  var line = lines[0];
+  drawObj.line(line[0], line[1], line[2], line[3]);
+  if (lines.length > 1) {
+    drawLines(drawObj, lines.slice(1));
+  }
+}
+
+var makeLines = function(n, lines, prevScore){
+  // Add a random line to the set of lines
+  var x1 = randomInteger(50);
+  var y1 = randomInteger(50);
+  var x2 = randomInteger(50);
+  var y2 = randomInteger(50);
+  var newLines = lines.concat([[x1, y1, x2, y2]]);
+  // Compute image from set of lines
+  var generatedImage = Draw(50, 50, false);
+  drawLines(generatedImage, newLines);
+  // Factor prefers images that are close to target image
+  var newScore = -targetImage.distance(generatedImage)/1000;
+  factor(newScore - prevScore);
+  generatedImage.destroy();
+  // Generate remaining lines (unless done)
+  return (n==1) ? newLines : makeLines(n-1, newLines, newScore);
+}
+///
+
+var numParticles = 100;
+
+var post = Infer(
+  {method: 'SMC', particles: numParticles},
+  function(){
+    return makeLines(4, [], 0);
+   });
+
+repeat(20, function() {
+  var finalGeneratedImage = Draw(50, 50, true);
+  var lines = sample(post);
+  drawLines(finalGeneratedImage, lines);
+});
+~~~~
+
+Try running this program multiple times. Note that while each run produces different outputs, within a run, all of the output particles look extremely similar. We will return to this issue later on in the next section.
+
+Notice the variable `numParticles`. This sets the number of estimates (particles) drawn at each inference step. More particles tends to mean more precise estimates. Try adjusting `numParticles` in order to see the difference in accuracy.
+
+For another example, consider inferring the 2D location of a static object given several noisy observations of its position, i.e. from a radar detector:
+
+~~~~
+///fold: helper drawing function
+var drawPoints = function(canvas, positions, strokeColor){
+  if (positions.length == 0) { return []; }
+  var next = positions[0];
+  canvas.circle(next[0], next[1], 5, strokeColor, "white");
+  drawPoints(canvas, positions.slice(1), strokeColor);
+};
+///
+
+var observe = function(pos, obs) {
+  factor(Gaussian({mu: pos[0], sigma: 5}).score(obs[0]));
+  factor(Gaussian({mu: pos[1], sigma: 5}).score(obs[1]));
+};
+
+var radarStaticObject = function(observations) {
+  var pos = [gaussian(200, 100), gaussian(200, 100)];
+  map(function(obs) { observe(pos, obs); }, observations);
+  return pos;
+};
+
+var trueLoc = [250, 250]
+var numParticles = 1000
+var numObservations = 20
+
+var observations = repeat(numObservations, function() {
+  return [ gaussian(trueLoc[0], 100), gaussian(trueLoc[1], 100) ];
+});
+
+var posterior = Infer({method: 'SMC', particles: 1000}, function() {
+  return radarStaticObject(observations);
+});
+var posEstimate = sample(posterior);
+
+var canvas = Draw(400, 400, true);
+drawPoints(canvas, observations, 'grey'); // observations
+drawPoints(canvas, [posEstimate], 'blue'); // estimate
+drawPoints(canvas, [trueLoc], 'green'); // actual location
+posEstimate;
+~~~~
+
+We display the true location (`trueLoc`) in green, the observations in grey, and the inferred location (`posEstimate`) in blue. Again, try adjusting the number of particles (`numParticles`) and number of observations (`numObservations`) to see how these affect accuracy. 
+
+#### Interlude on `factor` vs. `condition`
+
+Although we initially introduced conditioning using the function `condition`, in recent chapters we have increasingly used `factor` instead of `condition`. While the notion of conditioning on an observation is more conceptually straight-forward, it has a number of computational drawbacks. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` provides a much softer constraint: parameter values that do not give rise to our observations are low-probability, but not impossible. 
+
+#### Incremental inference based on incremental evidence
+
+When a particle filter encounters new evidence, it updates its collection of particles (estimates). Those particles that predict the new data well are likely to be retained or even multiplied. Those particles that do not predict the new data well are likely to be eliminated. Thus, particle filters integrate new data with prior beliefs. This makes them particularly well-suited for programs that interleave inference and observation. 
+
+Below, we extend the the radar detection example to infer the trajectory of a moving object, rather than the position of a static one--the program receives a sequence of noisy observations and must infer the underlying sequence of true object locations. Our program assumes that the object's motion is governed by a momentum term which is a function of its previous two locations; this tends to produce smoother trajectories.
+
+The code below generates observations from a randomly-sampled underlying trajectory (notice that we only have one observation per time step):
+
+~~~~
+///fold: helper functions for drawing
+var drawLines = function(canvas, start, positions){
+  if (positions.length == 0) { return []; }
+  var next = positions[0];
+  canvas.line(start[0], start[1], next[0], next[1], 4, 0.2);
+  drawLines(canvas, next, positions.slice(1));
+};
+
+var drawPoints = function(canvas, positions, mycolor){
+  if (positions.length == 0) { return []; }
+  var next = positions[0];
+  canvas.circle(next[0], next[1], 2, mycolor, "white");
+  drawPoints(canvas, positions.slice(1), mycolor);
+};
+///
+
+var genObservation = function(pos){
+  return map(
+    function(x){ return gaussian(x, 15); },
+	pos
+  );
+};
+
+var init = function(){
+	var state1 = [gaussian(300, 1), gaussian(300, 1)];
+	var state2 = [gaussian(300, 1), gaussian(300, 1)];
+	var states = [state1, state2];
+  	var observations = map(genObservation, states);
+	return {
+		states: states,
+		observations: observations
+	};
+};
+
+var transition = function(lastPos, secondLastPos){
+  return map2(
+    function(lastX, secondLastX){
+      var momentum = (lastX - secondLastX) * .7;
+      return gaussian(lastX + momentum, 3);
+    },
+	lastPos,
+    secondLastPos
+  );
+};
+
+var trajectory = function(n) {
+  var prevData = (n == 2) ? init() : trajectory(n - 1);
+  var prevStates = prevData.states;
+  var prevObservations = prevData.observations;
+  var newState = transition(last(prevStates), secondLast(prevStates));
+  var newObservation = genObservation(newState);
+  return {
+    states: prevStates.concat([newState]),
+    observations: prevObservations.concat([newObservation])
+  }
+};
+
+var numSteps = 80;
+var atrajectory = trajectory(numSteps)
+var synthObservations = atrajectory.observations;
+var trueLocs = atrajectory.states;
+var canvas = Draw(400, 400, true)
+drawPoints(canvas, synthObservations, "grey") // observations
+drawPoints(canvas, trueLocs, "blue") // actual trajectory
+~~~~
+
+The actual trajectory is displayed in blue. The observations are in grey.
+
+We can then use `'SMC'` inference to estimate the underlying trajectory which generated a synthetic observation sequence:
+
+~~~~
+///fold:
+var drawLines = function(canvas, start, positions, mycolor){
+  if (positions.length == 0) { return []; }
+  var next = positions[0];
+  canvas.line(start[0], start[1], next[0], next[1], 4, 0.2, mycolor);
+  drawLines(canvas, next, positions.slice(1), mycolor);
+};
+
+var drawPoints = function(canvas, positions, mycolor){
+  if (positions.length == 0) { return []; }
+  var next = positions[0];
+  canvas.circle(next[0], next[1], 2, mycolor, "white");
+  drawPoints(canvas, positions.slice(1), mycolor);
+};
+
+var genObservation = function(pos){
+  return map(
+    function(x){ return gaussian(x, 15); },
+	pos
+  );
+};
+
+var init = function(){
+	var state1 = [gaussian(250, 1), gaussian(250, 1)];
+	var state2 = [gaussian(250, 1), gaussian(250, 1)];
+	var states = [state1, state2];
+  	var observations = map(genObservation, states);
+	return {
+		states: states,
+		observations: observations
+	};
+};
+
+var transition = function(lastPos, secondLastPos){
+  return map2(
+    function(lastX, secondLastX){
+      var momentum = (lastX - secondLastX) * .7;
+      return gaussian(lastX + momentum, 3);
+    },
+	lastPos,
+    secondLastPos
+  );
+};
+
+var trajectory = function(n) {
+  var prevData = (n == 2) ? init() : trajectory(n - 1);
+  var prevStates = prevData.states;
+  var prevObservations = prevData.observations;
+  var newState = transition(last(prevStates), secondLast(prevStates));
+  var newObservation = genObservation(newState);
+  return {
+    states: prevStates.concat([newState]),
+    observations: prevObservations.concat([newObservation])
+  }
+};
+///
+
+var observe = function(pos, trueObs){
+  return map2(
+    function(x, trueObs) {
+    	return factor(Gaussian({mu: x, sigma: 5}).score(trueObs));
+    },    
+	pos,
+    trueObs
+  );
+};
+
+var initWithObs = function(trueObs){
+	var state1 = [gaussian(250, 1), gaussian(250, 1)];
+	var state2 = [gaussian(250, 1), gaussian(250, 1)];
+  	var obs1 = observe(state1, trueObs[0]);
+  	var obs2 = observe(state2, trueObs[1]);
+	return {
+		states: [state1, state2],
+		observations: [obs1, obs2]
+	}
+};
+
+var trajectoryWithObs = function(n, trueObservations) {
+  var prevData = (n == 2) ?
+  	initWithObs(trueObservations.slice(0, 2)) :
+    trajectoryWithObs(n-1, trueObservations.slice(0, n-1));
+  var prevStates = prevData.states;
+  var prevObservations = prevData.observations;
+  var newState = transition(last(prevStates), secondLast(prevStates));
+  var newObservation = observe(newState, trueObservations[n-1]);
+  return {
+    states: prevStates.concat([newState]),
+    observations: prevObservations.concat([newObservation])
+  }
+};
+
+var numSteps = 80;
+var numParticles = 10;
+
+// Gen synthetic observations
+var atrajectory = trajectory(numSteps)
+var synthObservations = atrajectory.observations;
+var trueLocs = atrajectory.states;
+
+// Infer underlying trajectory using particle filter
+var posterior = Infer({method: 'SMC', particles: numParticles}, function() {
+  return trajectoryWithObs(numSteps, synthObservations);
+});
+var inferredTrajectory = sample(posterior).states;
+
+// Draw model output
+var canvas = Draw(400, 400, true)
+drawPoints(canvas, synthObservations, "grey") // observations
+drawLines(canvas, inferredTrajectory[0], inferredTrajectory.slice(1), "blue") // inferred
+drawLines(canvas, trueLocs[0], trueLocs.slice(1), "green") // true
+~~~~
+
+Again, the actual trajectory is in green, the observations are in grey, and the inferred trajectory is in green. Try increasing or decreasing the number of particles to see how this affects inference. 
+
+[Here](http://dritchie.github.io/web-procmod/) is a more complex example of using SMC to generate a 3D model that matches a given volumetric target (Note: this demo uses a much older version of WebPPL, so some of the syntax is different / not compatible with the code we've been working with).
 
 ## Variational Inference
+
+TODO
+
+## Efficiency of Inference
 
 TODO
 
@@ -640,7 +941,6 @@ Here we are caching a set of samples from each query, and drawing one at random 
 
 We can also mix these methods---using enumeration for levels of query with few states, rejection for queries with likely conditions, and MCMC for queries where these methods take too long.
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/07-inference-process.html)
 -->
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/07-inference-process.html)
