@@ -789,4 +789,7 @@ condition on effect of observing contour
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/04-patterns-of-inference.html)
 
+
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/04-patterns-of-inference.html)
+
 Next chapter: [Models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)
