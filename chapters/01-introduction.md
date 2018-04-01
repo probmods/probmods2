@@ -41,4 +41,6 @@ Talk about the default library: objects, agents, events...
 While such generative models often describe how we think the "actual world" works, there are many cases where it is useful to have a generative model even if there is no "fact of the matter". A prime example of the latter is in linguistics, where generative models of grammar can usefully describe the possible sentences in a language by describing a process for constructing sentences.
 -->
 
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/01-introduction.html)
+
 Next chapter: [Generative models]({{site.baseurl}}/chapters/02-generative-models.html)
