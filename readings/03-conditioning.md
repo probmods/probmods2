@@ -25,3 +25,5 @@ b) How do Bayesian computational models differ from other kinds of reasoning sys
 ## Extras
 
 * **Theory of Mind**. Theory of Mind is a paradigmatic example of a Theory Theory theory. Readers not familiar with Theory of Mind may find [this short overview useful](https://pdfs.semanticscholar.org/7f87/7e8b42c2a0ef210edff65f572dd43b2e00a8.pdf).
+
+* **Bayesian Inference**. For those finding the notion of conditioning confusing, [this video](https://www.youtube.com/watch?v=5NMxiOGL39M) may be helpful.
