@@ -1,7 +1,7 @@
 ---
 layout: exercise
-title: "Agents as probabilistic programs - readings"
-description: "One-shot decision problems, softmax choice, and RSA." 
+title: "Introduction - readings"
+description: "Introduction" 
 ---
 
 ## 1. The nature and scope of computational models
