@@ -136,6 +136,7 @@ viz(urnDist)
 Here, we sample a shared latent parameter -- in this case, a sample from a Beta distribution -- generating the sequence samples independently given this parameter.
 We obtain the same distribution on sequences of draws.
 
+<a name="markov-models"></a>
 # Markov Models
 
 Exchangeable sequences don't depend on the order of the observations, but often the order *is* important. For instance, the temperature today is highly correlated with the temperature yesterday---if we were building a model of temperature readings we would want to take this into account.

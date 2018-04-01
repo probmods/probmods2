@@ -7,6 +7,7 @@ custom_js:
 - assets/js/physics.js
 - assets/js/draw.js
 - assets/js/custom.js
+- assets/js/paper-full.js
 custom_css:
 - /assets/css/draw.css
 ---
@@ -117,10 +118,9 @@ viz(Infer({method: 'enumerate'}, model))
 
 ## Markov chain Monte Carlo (MCMC)
 
-With rejection sampling, each sample is an independent draw from the model's prior. Markov chain Monte Carlo, in contrast involves a random walk through the posterior. Each sample depends on the prior sample -- but ony the prior sample (it is a *Markov* chain). If the random walk is done correctly, the probability you sample a particular set of values for the variables in the model is proportional to the conditional probability of those values. That is, instead of sampling randomly (as in rejection sampling), we sample smartly, focusing on exactly those parts of the probability space that are high-probability. In the limit, rejection sampling and MCMC will converge, but MCMC can be much faster. 
+With rejection sampling, each sample is an independent draw from the model's prior. Markov chain Monte Carlo, in contrast involves a random walk through the posterior. Each sample depends on the prior sample -- but ony the prior sample (it is a *Markov* chain). We describe this in more detail below.
 
-Consider:
-
+Importantly, while you can approximate an arbitrary conditional distribution with arbitrary precision using rejection sampling or MCMC if you run the algorithms long enough, MCMC tends to approach the conditional distribution much more rapidly. Consider again this simple model:
 
 ~~~~
 var baserate = 0.1
@@ -139,7 +139,117 @@ viz(Infer({method: 'MCMC', lag: 100}, model))
 Again, see what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably, though results will become less stable. Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
 This is an example of the kind of tradeoffs that are common between different inference algorithms.
 
-To get a better sense of what is going on, let's return to our attempt to match the 2D image. This time, we will take 50 MCMC samples:
+Next, we provide more intuition on how MCMC works. 
+
+#### Markov chains as samplers
+
+We have already seen [Markov models](05-observing-sequences.html#markov-models) used to describe sequences of observations. A Markov model (or Markov *chain*, as it is often called in the context of inference algorithms) is a discrete dynamical system that unfolds over iterations of the `transition` function.
+Here is a Markov chain:
+
+~~~~
+var states = ['a', 'b', 'c', 'd'];
+var transition = function(state){
+	return (state == 'a' ? sample(Categorical({vs: states, ps: [.48, .48, .02, .02]})) :
+			  state == 'b' ? sample(Categorical({vs: states, ps: [.48, .48, .02, .02]})) :
+			  state == 'c' ? sample(Categorical({vs: states, ps: [.02, .02, .48, .48]})) :
+			  state == 'd' ? sample(Categorical({vs: states, ps: [.02, .02, .48, .48]})) :
+			  false)
+}
+
+var chain = function(state, n){
+	return (n == 0 ? state : chain(transition(state), n-1))
+}
+
+
+print("State after 10 steps:")
+viz.hist(repeat(1000,function() {chain('a',10)}))
+viz.hist(repeat(1000,function() {chain('c',10)}))
+
+print("State after 25 steps:")
+viz.hist(repeat(1000,function() {chain('a',25)}))
+viz.hist(repeat(1000,function() {chain('c',25)}))
+
+print("State after 50 steps:")
+viz.hist(repeat(1000,function() {chain('a',50)}))
+viz.hist(repeat(1000,function() {chain('c',50)}))
+~~~~
+
+Notice that the distribution of states after only a few steps is highly influenced by the starting state. In the long run the distribution looks the same from any starting state: this long-run distribution is the called the *stable distribution* (also known as *stationary distribution*). To define *stationary distribution* formally, let $$p(x)$$ be the target distribution, and let $$\pi(x \rightarrow x')$$ be the transition distribution (i.e. the `transition` function in the above program). Since the stationary distribution is characterized by not changing when the transition is applied we have a *balance condition*:
+$$p(x') = \sum_x p(x)\pi(x \rightarrow x')$$.
+Note that the balance condition holds for the distribution as a whole---a single state can of course be moved by the transition.
+
+For the chain above, the stable distribution is uniform---we have another (fairly baroque!) way to sample from the uniform distribution on `['a', 'b', 'c', 'd']`! Of course we could have sampled from the uniform distribution using other Markov chains. For instance the following chain is more natural, since it transitions uniformly:
+
+~~~~
+var states = ['a', 'b', 'c', 'd'];
+var transition = function(state){
+	return sample(Categorical({vs: states, ps: [.25, .25, .25, .25]}))
+	}
+
+var chain = function(state, n){
+	return (n == 0 ? state : chain(transition(state), n-1))
+}
+
+
+print("State after 10 steps:")
+viz.hist(repeat(1000,function() {chain('a',10)}))
+viz.hist(repeat(1000,function() {chain('c',10)}))
+
+print("State after 25 steps:")
+viz.hist(repeat(1000,function() {chain('a',25)}))
+viz.hist(repeat(1000,function() {chain('c',25)}))
+
+print("State after 50 steps:")
+viz.hist(repeat(1000,function() {chain('a',50)}))
+viz.hist(repeat(1000,function() {chain('c',50)}))
+~~~~
+
+Notice that this chain converges much more quickly to the uniform distribution. Edit the code to confirm to yourself that the chain converges on the stationary distribution after a single step. 
+The number of steps it takes for the distribution on states to reach the stable distribution (and hence lose traces of the starting state) is called the *burn-in time*. Thus, while we can use a Markov chain as a way to (approximately) sample from its stable distribution, the efficiency depends on burn-in time.
+While many Markov chains have the same stable distribution they can have very different burn-in times, and hence different efficiency.
+
+While state space in our examples above involved a finite number of states (4!), Markov chains can also be constructed over infinite state spaces. Here's a chain over the integers:
+
+~~~~
+var p = 0.7
+
+var transition = function(state){
+	return (state == 3 ? sample(Categorical({vs: [3, 4], ps: [(1 - 0.5 * (1 - p)), (0.5 * (1 - p))]})) :
+						    sample(Categorical({vs: [(state - 1), state, (state + 1)], ps: [0.5, (0.5 - 0.5 * (1 - p)), (0.5 * (1 - p))]})))
+}
+
+var chain = function(state, n){
+	return (n == 0 ? state : chain(transition(state), n-1))
+}
+
+var samples = repeat(5000, function() {chain(3, 250)})
+viz.table(samples)
+~~~~
+
+As we can see, this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the query below, in the sense that it specifies a way to sample from the required conditional distribution.
+
+We can also write it using `query` syntax:
+
+~~~~
+var p = .7
+
+var geometric = function(p){
+	return ((flip(p) == true) ? 1 : (1 + geometric(p)))
+}
+
+var post = Infer({method: 'MCMC', samples: 25000, lag: 10, model: function(){
+	var mygeom = geometric(p);
+	condition(mygeom>2)
+	return(mygeom)
+	}
+})
+
+viz.table(post)
+~~~~
+
+Thus, MCMC involves identifying a Markov chain whose stationary distribution matches the condition distribution you'd like to estimate. That is, you want a Markov chain such that in the limit a histogram (or density plot) of states in the Markov chain approaches the conditional distribution in question. 
+
+As we have already seen, each successive sample from a Markov chain is highly correlated with the prior state. (Why?). To see another example, let's return to our attempt to match the 2D image. This time, we will take 50 MCMC samples:
 
 ~~~~
 ///fold:
@@ -185,13 +295,82 @@ var lineDist = Infer(
 viz.table(lineDist);
 ~~~~
 
-As you can see, each successive sample is highly similar to the previous one. Since the first sample is chosen randomly, the sequence you see will be very different if you re-run the model. 
+As you can see, each successive sample is highly similar to the previous one. Since the first sample is chosen randomly, the sequence you see will be very different if you re-run the model. If you run the chain long enough, these local correlations wash out. However, that can result in a very large collection of samples. For convenience, modelers sometimes record only every Nth states in the chain. WebPPL provides an option for MCMC called `'lag'`, which we actually saw in the first example from this section.
 
-There are a number of different algorithms for MCMC, each of which has different properties. By default `method:'MCMC'` yields the *Metropolis Hastings* version of MCMC).
 
-### Hamiltonian Monte Carlo
 
-When the input to a `factor` statement is a function of multiple variables, those variables become correlated in the posterior distribution. If the induced correlation is particularly strong, MCMC can sometimes become 'stuck.' In controling the random walk, Metropolis-Hastings choses a new point in probability space to go to and then decides whether or not to go based on the probability of the new point. If it has difficulty finding new points with reasonable probability, it will get stuck and simplly stay where it is. Given an infinite amount of time, Metropolis-Hastings will recover. However, the first N samples will be heavily dependent on where the chain started (the first sample) and will be a poor approximation of the true posterior. 
+<!--
+To construct a Markov chain that converges to a stationary distribution of interest, we also need to ensure that any state can be reached from any other state in a finite number of steps. This requirement is called *ergodicity*. If a chain is not ergodic, it may still leave the stationary distribution unchanged when the transition operator is applied, but the chain will not reliably converge to the stationary distribution when initialized with a state sampled from an arbitrary distribution.
+-->
+
+
+#### Metropolis-Hastings
+
+Fortunately, it turns out htat for any given (condition) distribution we might want to sample from, there is at least one Markov chain with a matching stationary distribution. There are a number of methods for finding an appropriate Markov chain. One particularly common method is *Metropolis Hastings* recipe. 
+
+To create the necessary transition function, we first create a *proposal distribution*, $$q(x\rightarrow x')$$, which does not need to have the target distribution as its stationary distribution, but should be easy to sample from (otherwise it will be unwieldy to use!). A common option for continuous state spaces is to sample a new state from a multivariate Gaussian centered on the current state. To turn a proposal distribution into a transition function with the right stationary distribution, we either accepting or reject the proposed transition with probability: $$\min\left(1, \frac{p(x')q(x'\rightarrow x)}{p(x)q(x\rightarrow x')}\right).$$
+That is, we flip a coin with that probability: if it comes up heads our next state is $x'$, otherwise our next state is still $$x$$.
+
+Such a transition function not only satisfies the *balance condition*, it actually satisfies a stronger condition, *detailed balance*. Specifically, $$p(x)\pi(x \rightarrow x') = p(x')\pi(x' \rightarrow x)$$.
+(To show that detailed balance implies balance, substitute the right-hand side of the detailed balance equation into the balance equation, replacing the summand), and then simplify.) It can be shown that the *Metropolis-hastings algorithm* gives a transition probability (i.e. $$\pi(x\rightarrow x')$$) that satisfies detailed balance and thus balance. (Recommended exercise: prove this fact. Hint: the probability of transitioning depends on first proposing a given new state, then accepting it; if you don't accept the proposal you "transition" to the original state.)
+
+Note that in order to use this recipe we need to have a function that computes the target probability (not just one that samples from it) and the transition probability, but they need not be normalized (since the normalization terms will cancel).
+
+We can use this recipe to construct a Markov chain for the conditioned geometric distribution, as above, by using a proposal distribution that is equally likely to propose one number higher or lower:
+
+~~~~
+var p = 0.7
+
+//the target distribution (not normalized):
+//prob = 0 if x condition is violated, otherwise proportional to geometric distribution
+var target_dist = function(x){
+  return (x < 3 ? 0 : (p * Math.pow((1-p),(x-1))))
+}
+
+// the proposal function and distribution,
+// here we're equally likely to propose x+1 or x-1.
+var proposal_fn = function(x){
+  return (flip() ? x - 1 : x + 1)
+}
+var proposal_dist = function (x1, x2){
+  return 0.5
+}
+
+// the MH recipe:
+var accept = function (x1, x2){
+  let p = Math.min(1, (target_dist(x2) * proposal_dist(x2, x1)) / (target_dist(x1) * proposal_dist(x1,x2)))
+  return flip(p)
+}
+var transition = function(x){
+  let proposed_x = proposal_fn(x)
+  return (accept(x, proposed_x) ? proposed_x : x)
+}
+
+//the MCMC loop:
+var mcmc = function(state, iterations){
+  return ((iterations == 1) ? [state] : mcmc(transition(state), iterations-1).concat(state))
+}
+
+var post = mcmc(3, 10000) // mcmc for conditioned geometric
+viz.table(post)
+~~~~
+
+Note that the transition function that is automatically derived using the MH recipe is actually the same as the one we wrote by hand earlier: 
+
+```js
+var transition = function(state){
+	return (state == 3 ? sample(Categorical({vs: [3, 4], ps: [(1 - 0.5 * (1 - p)), (0.5 * (1 - p))]})) :
+						    sample(Categorical({vs: [(state - 1), state, (state + 1)], ps: [0.5, (0.5 - 0.5 * (1 - p)), (0.5 * (1 - p))]})))
+}
+```
+
+<!--
+For background on MH and MCMC, see the excellent introductions by David MacKay ([Chapter 29](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/356.384.pdf) and [30](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/387.412.pdf) of Information Theory, Inference, and Learning Algorithms) or [Radford Neal](http://www.cs.utoronto.ca/~radford/review.abstract.html).
+-->
+
+#### Hamiltonian Monte Carlo
+
+WebPPL's `method:'MCMC'` uses *Metropolis-Hastings* by default. However, it is not the only option, nor is it always the best. When the input to a `factor` statement is a function of multiple variables, those variables become correlated in the posterior distribution. If the induced correlation is particularly strong, MCMC can sometimes become 'stuck.' In controling the random walk, Metropolis-Hastings choses a new point in probability space to go to and then decides whether or not to go based on the probability of the new point. If it has difficulty finding new points with reasonable probability, it will get stuck and simplly stay where it is. Given an infinite amount of time, Metropolis-Hastings will recover. However, the first N samples will be heavily dependent on where the chain started (the first sample) and will be a poor approximation of the true posterior. 
 
 Take this example below, where we use a Gaussian likelihood factor to encourage ten uniform random numbers to sum to the value 5:
 
@@ -564,11 +743,376 @@ Again, the actual trajectory is in green, the observations are in grey, and the 
 
 ## Variational Inference
 
-TODO
+The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent the posterior distribution. This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can be unwieldy to work with. For instance, we represent can represent a Gaussian (or any other function) with a large number of samples drawn from that distribution. Unfortunately, accurately representing a complex function can require a very many samples. 
 
-## Efficiency of Inference
+On the other side of the same coin, we have [*parametric*](https://en.wikipedia.org/wiki/Parametric_statistics) representations--that is, we can try to design and fit a parameterized density function to approximate the posterior distribution. By definition a parametric function can be described without loss by some finite number of parameters. For instance, a Gaussian is fully described by two numbers: its mean and standard deviation. In addition to greater efficiency of representation, fitting a parametric model may require far less data. Whereas non-parametric methods make no assumptions about the shape of the distribution of interest, parametric methods assume it can be represented by some finite set of families of parametric distributions, thus baking in a strong prior. If this prior is correct, we can learn quickly. (What happens when the prior is incorrect illustrates the inherent limits of non-parametric methods). 
 
-TODO
+Thus, if we believe we can fit the distribution of interest reasonably well parametrically, there are a number of advantages to doing so. This is the approach taken by the family of [variational inference](http://docs.webppl.org/en/master/inference.html#optimization) methods, and WebPPL provides a version of these algorithms via the `optimize` inference option (the name 'optimize' comes from the fact that we're optimizing the parameters of a density function such it is as close as possible to the true posterior).
+Below, we use `optimize` to fit the hyperparameters of a Gaussian distribution from data:
+
+~~~~
+var trueMu = 3.5;
+var trueSigma = 0.8;
+
+var data = repeat(100, function() { return gaussian(trueMu, trueSigma); });
+
+var gaussianModel = function() {
+  var mu = gaussian(0, 1);
+  var sigma = Math.exp(gaussian(0, 1));
+  var G = Gaussian({mu: mu, sigma: sigma});
+  map(function(d) {
+    factor(G.score(d));
+  }, data);
+  return {mu: mu, sigma: sigma};
+};
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: 'adam',
+  steps: 500,
+  // Also try using MCMC and seeing how long it takes to converge
+  // method: 'MCMC',
+  // onlyMAP: true,
+  // samples: 5000
+}, gaussianModel);
+
+sample(post);
+~~~~
+
+Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly longer to converge.
+
+How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 1)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). There are other methods for variational inference in addition to *mean-field*.
+
+<!-- //The following is copied and partly edited from summer school. However, significant changes in how optimization works in WebPPL means that a lot of this code no longer runs. I partly updated some of this, but ran into multiple problems and gave up.
+
+#### Example: Topic models
+
+[Topic models](https://en.wikipedia.org/wiki/Topic_model) are a popular method for classifying texts. A "topic" is a probability distribution over a vocabulary. Importantly, different topics have different distributions: a topic pertaining to animals will have higher probability on "wolf" than a topic pertaining to programming. Crucially, different documents are assumed to be generated by drawing words from one or more topics. The job of the model is to, based on some set of documents, infer the latent topics, their probability distributions, and which topics are implicated in which documents. 
+
+Here's a simple example using mean-field inference for a simple topic model based on [Latent Dirichlet Allocation](https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation):
+
+~~~~
+var nTopics = 2;
+var vocabulary = ['zebra', 'wolf', 'html', 'css'];
+var docs = {
+  'doc1': 'zebra wolf zebra wolf zebra wolf wolf zebra wolf zebra wolf wolf zebra wolf'.split(' '),
+  'doc2': 'zebra wolf zebra wolf zebra wolf zebra wolf zebra wolf wolf zebra wolf zebra wolf'.split(' '),
+  'doc3': 'zebra wolf zebra zebra wolf zebra wolf zebra wolf wolf zebra wolf zebra wolf'.split(' '),
+  'doc4': 'zebra wolf zebra zebra wolf zebra wolf zebra wolf zebra wolf zebra wolf'.split(' '),
+  'doc5': 'zebra wolf zebra zebra wolf zebra wolf zebra wolf zebra wolf zebra zebra wolf'.split(' '),
+  'doc6': 'html css html css html css html css html css css html css html css'.split(' '),
+  'doc7': 'html css html css html css html css html css css html css html css'.split(' '),
+  'doc8': 'html css html css html css html css html css css html css html css html css'.split(' '),
+  'doc9': 'html css html css html css html css html css css html css'.split(' '),
+  'doc10': 'html css html css html css html css html css css html css html css html css html css html css html css css html css'.split(' '),
+};
+
+var makeWordDist = function() { dirichlet(ones([vocabulary.length,1])) };
+var makeTopicDist = function() { dirichlet(ones([nTopics,1])) };
+
+var model = function() {
+  var wordDistForTopic = repeat(nTopics, makeWordDist);
+  var topicDistForDoc = mem(function(doc){
+    return makeTopicDist();
+  })
+  
+  mapObject(function(docname, words) {
+     map(function(word) {
+      var topic = topicDistForDoc(docname);
+      var wordDist = wordDistForTopic[discrete(topic)];
+      var wordID = vocabulary.indexOf(word);
+      factor(Discrete({ps: wordDist}).score(wordID));
+    }, words);
+  }, docs);
+
+  return {'topics': map(function(v) { return _.toArray(v.data); }, wordDistForTopic),
+          'docs': map(topicDistForDoc, Object.keys(docs))}
+};
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: 'adam',
+  steps: 1000
+}, model);
+
+var samp = sample(post);
+
+print("Topic 1:"); viz.bar(vocabulary, samp.topics[0]);
+print("Topic 2:"); viz.bar(vocabulary, samp.topics[1]);
+
+var docsresults = map(function(d){
+  return(d.data[1])},
+  samp.docs)
+print("Probability of Topic #1, by document:");
+viz.bar(Object.keys(docs),docsresults)
+~~~~
+
+Unfortunately, running this program produces poor results--the resulting word distributions per-topic do not do a good job of separating the animal-related words from the programming-related ones (first two graphs). Nor is the model especially good at distinguishing the docs that are primarily about animals from those primarily about programming (final graph). This is because WebPPL's implementation of variational inference (for the time being, anyway) works much better with continuous random choices than discrete ones (notice the `discrete` choice of topic in the program above). In particular, the algorithm works best when the program contains only random choices from the following distributions:
+
+  - `Gaussian`
+  - `Dirichlet`
+
+If, when running `Infer` with method `optimize`, the program prints the message `ELBO: Using PW estimator`, then the program satisfies this criterion. If you see message about a different estimator, then expect things not to work as well.c
+
+We can make LDA better suited for variational inference by explicitly integrating out the latent choice of topic per word:
+
+~~~~
+///fold:
+var nTopics = 2;
+var vocabulary = ['zebra', 'wolf', 'html', 'css'];
+var docs = {
+  'doc1': 'zebra wolf zebra wolf zebra wolf html wolf zebra wolf'.split(' '),
+  'doc2': 'html css html css html css html css html css'.split(' '),
+  'doc3': 'zebra wolf zebra wolf zebra wolf zebra wolf zebra wolf'.split(' '),
+  'doc4': 'html css html css html css html css html css'.split(' '),
+  'doc5': 'zebra wolf zebra html zebra wolf zebra wolf zebra wolf'.split(' ')
+};
+var makeWordDist = function() { dirichlet(ones([vocabulary.length,1])) };
+var makeTopicDist = function() { dirichlet(ones([nTopics,1])) };
+///
+
+var model = function() {
+  var wordDistForTopic = repeat(nTopics, makeWordDist);
+  
+  mapObject(function(docname, words) {
+    var topicDist = makeTopicDist();
+    map(function(word) {
+      // Explicitly integrate out choice of topic per word
+      var wordMarginal = Enumerate(function() {
+        var z = discrete(topicDist);
+        return discrete(wordDistForTopic[z]);
+      });
+      var wordID = vocabulary.indexOf(word);
+      factor(wordMarginal.score(wordID));
+    }, words);
+  }, docs);
+
+  return map(function(v) { return _.toArray(v.data); }, wordDistForTopic);
+};
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: 'adam',
+  steps: 400
+}, model);
+
+var samp = sample(post);
+
+print("Topic 1:"); viz.bar(vocabulary, samp[0]);
+print("Topic 2:"); viz.bar(vocabulary, samp[1]);
+~~~~
+
+The computed posterior now exhibits much better separation between topics.
+
+#### Beyond Mean Field: Custom Guide Distributions
+
+Sometimes, the basic mean-field approximation strategy isn't quite enough. Consider the following program, in which we try to choose 10 numbers such that they sum to 5: 
+
+~~~~
+var n = 10;
+var targetSum = n / 2;
+
+var numPrior = Gaussian({mu: 0, sigma: 2});
+var sampleNumber = function() {
+  return sample(numPrior);
+};
+
+var constrainedSum = function() {
+  globalStore.nums = [];
+  repeat(n, function() {
+    var num = sampleNumber();
+    globalStore.nums = cons(num, globalStore.nums);
+  });
+  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  return globalStore.nums;
+};
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: { adam: {stepSize: 0.25} },
+  estimator: { ELBO : {samples: 5} },
+  steps: 500,
+  samples: 100
+}, constrainedSum);
+
+var samps = repeat(10, function() {
+  return sample(post);
+});
+map(function(x) {
+  var numsRounded = map(function(xi) { xi.toFixed(2) }, x).join(' ');
+  return 'sum: ' + sum(x).toFixed(3) + ' | nums: ' + numsRounded;
+}, samps).join('\n');
+~~~~
+
+Try running this program. Notice the structure of the output posterior samples--the mean-field algorithm has essentially learned that to achieve a sum of 5 from ten numbers, it can make each number independently take a value as close as possible ot 0.5. This is not a particularly good approximation of the true posterior.
+
+To do better, we need to move away from the independence assumptions of mean-field and try to capture the dependencies between the different random choices that are induced by the sum-to-5 constraint. One reasonable idea is to posit that each random choice should be close to an affine transformation of all the choices that came before it:
+
+~~~~
+var n = 10;
+var targetSum = n / 2;
+
+var affine = function(xs) {
+  if (xs.length === 0) {
+    return scalarParam(0, 1);
+  } else {
+    return scalarParam(0, 1) * xs[0] +
+      affine(xs.slice(1));
+  }
+};
+
+var numPrior = Gaussian({mu: 0, sigma: 2});
+var sampleNumber = function() {
+  var guideMu = affine(globalStore.nums);
+  var guideSigma = Math.exp(scalarParam(0, 1));
+  return sample(numPrior, {
+    guide: Gaussian({mu: guideMu, sigma: guideSigma})
+  });
+};
+
+var constrainedSum = function() {
+  globalStore.nums = [];
+  repeat(n, function() {
+    var num = sampleNumber();
+    globalStore.nums = cons(num, globalStore.nums);
+  });
+  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  return globalStore.nums;
+};
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: { adam: {stepSize: 0.25} },
+  estimator: { ELBO : {samples: 5} },
+  steps: 500,
+  samples: 100
+}, constrainedSum);
+
+var samps = repeat(10, function() {
+  return sample(post);
+});
+map(function(x) {
+  var numsRounded = map(function(xi) { xi.toFixed(2) }, x).join(' ');
+  return 'sum: ' + sum(x).toFixed(3) + ' | nums: ' + numsRounded;
+}, samps).join('\n');
+~~~~
+
+In the above program, we are introducing a few new features:
+
+ - `guide` optionally specifies how each random choice should be distributed in the approximate posterior.
+ - `scalarParam(mu, sigma)` samples a new optimizable parameter value.
+
+To make this more concrete: for a random choice `sample(Gaussian(params))`, mean-field, under the hood, actually does something like:
+
+~~~~
+sample(Gaussian(params), {
+  guide: Gaussian({mu: scalarParam(0, 1), sigma: Math.exp(scalarParam(0, 1))})
+});
+~~~~
+
+With these new features at our disposal, the revised program above does a much better job of capturing the variability of the true posterior distribution.
+
+#### Decoupling Optimization from Sampling
+
+One nice feature of a parametric approximation to the posterior is that once we have optimized its parameters, we can generate arbitrarily many samples from it whenever we want. So, if we first optimize the parameters of the `constrainedSum` program and then save the optimized parameters:
+
+~~~~
+///fold:
+var n = 10;
+var targetSum = n / 2;
+
+var affine = function(xs) {
+  if (xs.length === 0) {
+    return scalarParam(0, 1);
+  } else {
+    return scalarParam(0, 1) * xs[0] +
+      affine(xs.slice(1));
+  }
+};
+
+var numPrior = Gaussian({mu: 0, sigma: 2});
+var sampleNumber = function() {
+  var guideMu = affine(globalStore.nums);
+  var guideSigma = Math.exp(scalarParam(0, 1));
+  return sample(numPrior, {
+    guide: Gaussian({mu: guideMu, sigma: guideSigma})
+  });
+};
+
+var constrainedSum = function() {
+  globalStore.nums = [];
+  repeat(n, function() {
+    var num = sampleNumber();
+    globalStore.nums = cons(num, globalStore.nums);
+  });
+  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  return globalStore.nums;
+};
+///
+
+var params = Optimize(constrainedSum, {
+  optMethod: { adam: {stepSize: 0.25} },
+  estimator: { ELBO : {samples: 5} },
+  steps: 500,
+});
+wpEditor.put('constrainedSumParams', params);
+~~~~
+
+we can then draw samples using these optimized parameters without having to re-run optimization:
+
+~~~~
+///fold:
+var n = 10;
+var targetSum = n / 2;
+
+var affine = function(xs) {
+  if (xs.length === 0) {
+    return scalarParam(0, 1);
+  } else {
+    return scalarParam(0, 1) * xs[0] +
+      affine(xs.slice(1));
+  }
+};
+
+var numPrior = Gaussian({mu: 0, sigma: 2});
+var sampleNumber = function() {
+  var guideMu = affine(globalStore.nums);
+  var guideSigma = Math.exp(scalarParam(0, 1));
+  return sample(numPrior, {
+    guide: Gaussian({mu: guideMu, sigma: guideSigma})
+  });
+};
+
+var constrainedSum = function() {
+  globalStore.nums = [];
+  repeat(n, function() {
+    var num = sampleNumber();
+    globalStore.nums = cons(num, globalStore.nums);
+  });
+  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  return globalStore.nums;
+};
+///
+
+var post = Infer({
+  method: 'forward',
+  samples: 100,
+  guide: true,
+  params: wpEditor.get('constrainedSumParams')
+}, constrainedSum);
+
+var samps = repeat(10, function() {
+  return sample(post);
+});
+map(function(x) {
+  var numsRounded = map(function(xi) { xi.toFixed(2) }, x).join(' ');
+  return 'sum: ' + sum(x).toFixed(3) + ' | nums: ' + numsRounded;
+}, samps).join('\n');
+~~~~
+
+One motivation for this division: if your program makes predictions from data (as the next chapter covers), then you can spend time up-front optimizing parameters for an approximate posterior that work well for many possible input data. Then, when presented with new data, all that's required is to quickly generate some samples using the pre-optimized parameters. This paradigm is sometimes called *amortized inference*.
+
+-->
 
 # Process-level cognitive modeling
 
@@ -588,220 +1132,6 @@ If we take the algorithms for inference as psychological hypotheses, then the ap
 
 
 <!--
-
-# Markov chains as samplers
-
-We have already seen [Markov models](observing-sequences.html#markov-models) used to describe sequences of observations.
-A Markov model (or Markov *chain*, as it is often called in the context of inference algorithms) is a discrete dynamical system that unfolds over iterations of the `transition` function.
-Here is a Markov chain:
-
-~~~~
-(define (transition state)
-  (case state
-    (('a) (multinomial '(a b c d) '(0.48 0.48 0.02 0.02)))
-    (('b) (multinomial '(a b c d) '(0.48 0.48 0.02 0.02)))
-    (('c) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))
-    (('d) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))))
-
-
-(define (chain state n)
-  (if (= n 0)
-      state
-      (chain (transition state) (- n 1))))
-
-(hist (repeat 2000 (lambda () (chain 'a 10))) "10 steps, starting at a.")
-(hist (repeat 2000 (lambda () (chain 'c 10))) "10 steps, starting at c.")
-(hist (repeat 2000 (lambda () (chain 'a 30))) "30 steps, starting at a.")
-(hist (repeat 2000 (lambda () (chain 'c 30))) "30 steps, starting at c.")
-~~~~
-
-Notice that the distribution of states after only a few steps is highly influenced by the starting state. In the long run the distribution looks the same from any starting state: this long-run distribution is the called the *stable distribution* (also known as *stationary distribution*). For the chain above, the stable distribution is uniform---we have another (fairly baroque!) way to sample from the uniform distribution on `'(a b c d)`!
-
-Of course we could have sampled from the uniform distribution using other Markov chains. For instance the following chain is more natural, since it transitions uniformly:
-
-~~~~
-(define (transition state)
-  (uniform-draw '(a b c d)))
-
-(define (chain state n)
-  (if (= n 0)
-      state
-      (chain (transition state) (- n 1))))
-
-(hist (repeat 2000 (lambda () (chain 'a 2))) "a 2")
-(hist (repeat 2000 (lambda () (chain 'c 2))) "c 2")
-(hist (repeat 2000 (lambda () (chain 'a 10))) "a 10")
-(hist (repeat 2000 (lambda () (chain 'c 10))) "c 10")
-~~~~
-
-Notice that this chain converges much more quickly to the uniform distribution---after only one step.
-The number of steps it takes for the distribution on states to reach the stable distribution (and hence lose traces of the starting state) is called the *burn-in time*.
-We can use a Markov chain as a way to (approximately) sample from its stable distribution, but the efficiency depends on burn-in time.
-While many Markov chains have the same stable distribution they can have very different burn-in times, and hence different efficiency.
--->
-
-<!--
-## Markov chains with lag
-
-We get the same distribution from samples from a single run, if we wait long enough between samples:
-
-~~~~
-(define (transition state)
-  (case state
-    (('a) (multinomial '(a b c d) '(0.48 0.48 0.02 0.02)))
-    (('b) (multinomial '(a b c d) '(0.48 0.48 0.02 0.02)))
-    (('c) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))
-    (('d) (multinomial '(a b c d) '(0.02 0.02 0.48 0.48)))))
-
-
-(define (chain state n)
-  (if (= n 0)
-      (list state)
-      (pair state (chain (transition state) (- n 1)))))
-
-(define (take-every lst n)
-  (if (< (length lst) n)
-      '()
-      (pair (first lst) (take-every (drop lst n) n))))
-
-(hist (drop (chain 'a 100) 30) "burn-in 30, lag 0")
-(hist (take-every (drop (chain 'a 2000) 30) 20) "burn-in 30, lag 10")
-'done
-~~~~
-
--->
-
-<!--
-# Markov chains with infinite state space
-
-Markov chains can also be constructed over infinite state spaces. Here's a chain over the integers:
-
-~~~~
-(define theta 0.7)
-
-(define (transition state)
-  (if (= state 3)
-      (multinomial (list 3 4)
-                   (list (- 1 (* 0.5 theta)) (* 0.5 theta)))
-      (multinomial (list (- state 1) state (+ state 1))
-                   (list 0.5 (- 0.5 (* 0.5 theta)) (* 0.5 theta)))))
-
-(define (chain state n)
-  (if (= n 0)
-      state
-      (chain (transition state) (- n 1))))
-
-(hist (repeat 2000 (lambda () (chain 3 20))) "markov chain")
-~~~~
-
-As we can see, this Markov chain has as its stationary distribution a geometric distribution conditioned to be greater than 2. We can also write it using `query` syntax:
-
-~~~~
-(define (geometric theta) (if (not (flip theta)) ;; assume theta is prob(success)
-                              (+ 1 (geometric theta))
-                              1))
-
-(define samples
-  (mh-query 2000 20
-   (define x (geometric 0.3))
-   x
-   (> x 2)))
-
-(hist samples "geometric > 2.")
-~~~~
-
-The Markov chain above *implements* the query below, in the sense that it specifies a way to sample from the required conditional distribution.
-
-
-
-# Getting the right chain: MCMC
-
-It turns out that for any (conditional) distribution there is a Markov chain with that stationary distribution. How can we find one when we need it? There are several methods for constructing them---they go by the name "Markov chain Monte Carlo".
-
-First, if we have a target distribution, how can we tell if a Markov chain has this target distribution as its stationary distribution? Let $p(x)$ be the target distribution, and let $\pi(x \rightarrow x')$ be the transition distribution (i.e. the `transition` function in the above programs). Since the stationary distribution is characterized by not changing when the transition is applied we have a *balance condition*:
-$p(x') = \sum_x p(x)\pi(x \rightarrow x')$.
-Note that the balance condition holds for the distribution as a whole---a single state can of course be moved by the transition.
-
-There is another condition, called *detailed balance*, that is sufficient (but not necessary) to give the balance condition, and is often easier to work with: $p(x)\pi(x \rightarrow x') = p(x')\pi(x' \rightarrow x)$.
-To show that detailed balance implies balance, substitute the right-hand side of the detailed balance equation into the balance equation (replacing the summand), then simplify.
-
-To construct a Markov chain that converges to a stationary distribution of interest, we also need to ensure that any state can be reached from any other state in a finite number of steps. This requirement is called *ergodicity*. If a chain is not ergodic, it may still leave the stationary distribution unchanged when the transition operator is applied, but the chain will not reliably converge to the stationary distribution when initialized with a state sampled from an arbitrary distribution.
-
-
-
-## Satisfying detailed balance: MH
-
-How can we come up with a `transition` function, $\pi$, that satisfies detailed balance? One way is the *Metropolis-Hastings* recipe.
-
-We start with a *proposal distribution*, $q(x\rightarrow x')$, which does not need to have the target distribution as its stationary distribution, but should be easy to sample from. We correct this into a transition function with the right stationary distribution by either accepting or rejecting each proposed transition. We accept with probability: $\min\left(1, \frac{p(x')q(x'\rightarrow x)}{p(x)q(x\rightarrow x')}\right).$
-That is, we flip a coin with that probability: if it comes up heads our next state is $x'$, otherwise our next state is still $x$.
-
-As an exercise, try to show that this rule gives an actual transition probability (i.e. $\pi(x\rightarrow x')$) that satisfies detailed balance. (Hint: the probability of transitioning depends on first proposing a given new state, then accepting it; if you don't accept the proposal you "transition" to the original state.)
-
-In Church the MH recipe looks like:
-
-~~~~{.norun}
-(define (target-distr x) ...)
-(define (proposal-fn x) ...)
-(define (proposal-distr x1 x2) ...)
-
-(define (accept? x1 x2)
-  (flip (min 1 (/ (* (target-distr x2) (proposal-distr x2 x1))
-                  (* (target-distr x1) (proposal-distr x1 x2))))))
-
-(define (transition x)
-  (let ((proposed-x (proposal-fn x)))
-    (if (accept? x proposed-x) proposed-x x)))
-
-(define (mcmc state iterations)
-  (if (= iterations 0)
-      '()
-      (pair state (mcmc (transition state) (- iterations 1)))))
-~~~~
-
-Note that in order to use this recipe we need to have a function that computes the target probability (not just one that samples from it) and the transition probability, but they need not be normalized (since the normalization terms will cancel).
-
-We can use this recipe to construct a Markov chain for the conditioned geometric distribution, as above, by using a proposal distribution that is equally likely to propose one number higher or lower:
-
-~~~~
-(define theta 0.7)
-
-;;the target distribution (not normalized):
-(define (target-distr x)
-  (if (< x 3) ;;the condition
-      0.0     ;;prob is 0 if condition is violated
-      (* (expt (- 1 theta) (- x 1)) theta))) ;;otherwise prob is (proportional to) geometric distrib.
-
-;;the proposal function and distribution,
-;;here we're equally likely to propose x+1 or x-1.
-(define (proposal-fn x) (if (flip) (- x 1) (+ x 1)))
-(define (proposal-distr x1 x2) 0.5)
-
-;;the MH recipe:
-(define (accept? x1 x2)
-  (flip (min 1.0 (/ (* (target-distr x2) (proposal-distr x2 x1))
-                    (* (target-distr x1) (proposal-distr x1 x2))))))
-
-(define (transition x)
-  (let ((proposed-x (proposal-fn x)))
-    (if (accept? x proposed-x) proposed-x x)))
-
-;;the MCMC loop:
-(define (mcmc state iterations)
-  (if (= iterations 0)
-      '()
-      (pair state (mcmc (transition state) (- iterations 1)))))
-
-
-(hist (mcmc 3 1000) "mcmc for conditioned geometric")
-~~~~
-
-The transition function that is automatically derived using the MH recipe is equivalent to the one we wrote by hand above.
--->
-
-<!--
-For background on MH and MCMC, see the excellent introductions by David MacKay ([Chapter 29](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/356.384.pdf) and [30](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/387.412.pdf) of Information Theory, Inference, and Learning Algorithms) or [Radford Neal](http://www.cs.utoronto.ca/~radford/review.abstract.html).
--->
 
 <!--
 
