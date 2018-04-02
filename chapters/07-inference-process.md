@@ -21,7 +21,7 @@ For instance, suppose your model involves a continuous function such as a `gauss
 
 ~~~~
 var gaussianModel = function() {
-	return gaussian(0, 1)
+	return sample(Gaussian({mu: 0, sigma: 1}))
 };
 Infer({method: 'enumerate'}, gaussianModel);
 ~~~~
@@ -312,7 +312,7 @@ To create the necessary transition function, we first create a *proposal distrib
 That is, we flip a coin with that probability: if it comes up heads our next state is $x'$, otherwise our next state is still $$x$$.
 
 Such a transition function not only satisfies the *balance condition*, it actually satisfies a stronger condition, *detailed balance*. Specifically, $$p(x)\pi(x \rightarrow x') = p(x')\pi(x' \rightarrow x)$$.
-(To show that detailed balance implies balance, substitute the right-hand side of the detailed balance equation into the balance equation, replacing the summand), and then simplify.) It can be shown that the *Metropolis-hastings algorithm* gives a transition probability (i.e. $$\pi(x\rightarrow x')$$) that satisfies detailed balance and thus balance. (Recommended exercise: prove this fact. Hint: the probability of transitioning depends on first proposing a given new state, then accepting it; if you don't accept the proposal you "transition" to the original state.)
+(To show that detailed balance implies balance, substitute the right-hand side of the detailed balance equation into the balance equation, replacing the summand, and then simplify.) It can be shown that the *Metropolis-hastings algorithm* gives a transition probability (i.e. $$\pi(x\rightarrow x')$$) that satisfies detailed balance and thus balance. (Recommended exercise: prove this fact. Hint: the probability of transitioning depends on first proposing a given new state, then accepting it; if you don't accept the proposal you "transition" to the original state.)
 
 Note that in order to use this recipe we need to have a function that computes the target probability (not just one that samples from it) and the transition probability, but they need not be normalized (since the normalization terms will cancel).
 
@@ -351,8 +351,8 @@ var mcmc = function(state, iterations){
   return ((iterations == 1) ? [state] : mcmc(transition(state), iterations-1).concat(state))
 }
 
-var post = mcmc(3, 10000) // mcmc for conditioned geometric
-viz.table(post)
+var chain = mcmc(3, 10000) // mcmc for conditioned geometric
+viz.table(chain)
 ~~~~
 
 Note that the transition function that is automatically derived using the MH recipe is actually the same as the one we wrote by hand earlier: 
