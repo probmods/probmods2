@@ -743,4 +743,6 @@ In a hierarchically structured model the deeper random choices are more abstract
 
 <!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/09-hierarchical-models.html)  -->
 
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/09-hierarchical-models.html)
+
 Next chapter: [Occam's razor]({{site.baseurl}}/chapters/10-occam's-razor.html)
