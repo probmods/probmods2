@@ -13,6 +13,79 @@ Learn about superordinate level from basic.  This is transfer learning, learning
 
 Human knowledge is organized hierarchically into levels of abstraction.  For instance, the most common or *basic-level* categories  (e.g. *dog*, *car*) can be thought of as abstractions across individuals, or more often across subordinate categories (e.g., *poodle*, *Dalmatian*, *Labrador*, and so on).  Multiple basic-level categories in turn can be organized under superordinate categories: e.g., *dog*, *cat*, *horse* are all *animals*; *car*, *truck*, *bus* are all *vehicles*. Some of the deepest questions of cognitive development are: How does abstract knowledge influence learning of specific knowledge?  How can abstract knowledge be learned? In this section we will see how such hierarchical knowledge can be modeled with *hierarchical generative models*: generative models with uncertainty at several levels, where lower levels depend on choices at higher levels.
 
+### Some preliminary notes on the Dirichlet distribution
+
+In this chapter, we will make considerable use of Dirichlet distributions. In many models, we want to sample a category from a set of categories (e.g., a word from a list of words). When we use `categorical()`, we need to provide the probability for each category. This is problematic when we don't know the probabilities in question. 
+
+As usual when we don't know the value of something, we sample it from a prior. The Dirichlet distribution -- which is the higher-dimensional analogue of the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) -- provides a natural prior for those probabilities. For example:
+
+~~~~norun
+var ps = dirichlet(Vector([1, 1, 1]))
+
+Categorical({
+	ps: T.toScalars(ps),
+	vs: ['A', 'B', 'C']
+	})
+
+// Note: Vector() turns the array [1, 1, 1] into the format required by the WebPPL function dirichlet().
+
+// Note also: We return to the function T.toScalars() below.
+~~~~
+
+defines a categorical distribution over 'A', 'B', and 'C', where the probabilities for each have been drawn from a Dirichlet with parameter $$\alpha = [1, 1, 1]$$. To understand α, it's helpful to realize that just like many other distributions we are familiar with (e.g., Gaussian), the Dirichlet distribution is really a family of distributions defined by parameters. For a Gaussian, the parameters are the mean and standard deviation. For Dirichlet, it is a vector $$\alpha = [\alpha_1, \alpha_2, ..., \alpha_n]$$ where `n` is the number of categories. You can think of α as a kind of prior on the categories:
+
+~~~~js
+var dir = function(v) {
+	var d = dirichlet(Vector(v))
+	print(d)
+}
+
+print("alpha = [5, 1, 1]")
+repeat(10, function() {dir([5,1,1])})
+
+print("alpha = [1, 5, 1]")
+repeat(10, function() {dir([1,5,1])})
+
+print("alpha = [1, 1, 5]")
+repeat(10, function() {dir([1,1,5])})
+
+// Note that `dirichlet()` returns a sample from a Dirichlet distribution. If you want the distribution itself, use `Dirichlet()`.
+~~~~
+
+In many cases, we don't have any prior beliefs, so we set $$\alpha = [1, 1, 1, ...]$$. WebPPL provides a convenience function `ones(x,y)`, which returns an array of ones of dimensions `x, y`. 
+
+~~~~js
+print(ones([5,1]))
+dirichlet(ones([5,1]))
+~~~~
+
+Finally, `Categorical` requires a vector of probabilities, whereas `dirichlet()` actually returns an object with several properties, only one of which is the probabilities we want. The WebPPL function `T.toScalars()` extracts the probabilities for us: 
+
+~~~~js
+var dir = function(v) {
+	var d = dirichlet(v)
+	print(T.toScalars(d))
+}
+
+print("alpha = [1, 1, 1]")
+repeat(10, function() {dir(ones([3,1]))})
+~~~~
+
+Thus, the following code samples from a categorical distribution over 'A', 'B', and 'C', with probabilities drawn from a Dirichlet with the uninformative prior [1, 1, 1]:
+
+~~~~js
+var ps = dirichlet(ones([3,1]))
+
+var acat = function () {Categorical({
+	ps: T.toScalars(ps),
+	vs: ['A', 'B', 'C']
+	})}
+	
+sample(acat())
+~~~~
+
+With these preliminaries, we are ready to start looking at some hierarchical Bayesian models. 
+
 # Learning a Shared Prototype: Abstraction at the Basic Level
 
 Hierarchical models allow us to capture the shared latent structure underlying observations of multiple related concepts, processes, or systems -- to abstract out the elements in common to the different sub-concepts, and to filter away uninteresting or irrelevant differences. Perhaps the most familiar example of this problem occurs in learning about categories.  Consider a child learning about a basic-level kind, such as *dog* or *car*.  Each of these kinds has a prototype or set of characteristic features, and our question here is simply how that prototype is acquired.
@@ -21,9 +94,9 @@ The task is challenging because real-world categories are not homogeneous.  A ba
 *car* actually spans many different subtypes: e.g., *poodle*, *Dalmatian*, *Labrador*, and such, or
 *sedan*, *coupe*, *convertible*, *wagon*, and so on.  The child observes examples of these sub-kinds or *subordinate*-level categories: a few poodles, one Dalmatian, three Labradors, etc. From this data she must infer what it means to be a dog in general, in addition to what each of these different kinds of dog is like.  Knowledge about the prototype level includes understanding what it means to be a prototypical dog and what it means to be non-prototypical, but still a dog. This will involve understanding that dogs come in different breeds which share features between them, but also differ systematically as well.
 
-As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following WebPPL example using the Dirichlet distribution (the Dirichlet is the higher-dimensional analogue of the Beta distribution).
+As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following WebPPL example.
 
-~~~~
+~~~~js
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var makeBag = mem(function(bagName){
@@ -44,11 +117,12 @@ viz(drawMarbles('bagA', 100))
 viz(drawMarbles('bagB', 100))
 ~~~~
 
+
 As this examples shows, `mem` is particularly useful when writing hierarchical models because it allows us to associate arbitrary random draws with categories across entire runs of the program. In this case it allows us to associate a particular mixture of marble colors with each bag. The mixture is drawn once, and then remains the same thereafter for that bag. Intuitively, you can see how each sample is sufficient to learn a lot about what that bag is like; there is typically a fair amount of similarity between the empirical color distributions in each of the four samples from `bagA`.  In contrast, you should see a different distribution of samples from `bagB`.
 
 Now let's add a few twists: we will generate three different bags, and try to learn about their respective color prototypes by conditioning on observations. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
 
-~~~~
+~~~~js
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var observedData = [
@@ -97,7 +171,7 @@ This generative model describes the prototype mixtures in each bag, but it does 
 
 Now let us introduce another level of abstraction: a global prototype that provides a prior on the specific prototype mixtures of each bag.
 
-~~~~
+~~~~js
 ///fold:
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
@@ -223,7 +297,7 @@ viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseGlob')))
 ~~~~
 -->
 
-~~~~
+~~~~js
 var colors = ['red', 'blue'];
 var bagPosterior = function(observedData) {
   return Infer({method: 'MCMC', samples: 5000}, function() {
@@ -281,7 +355,7 @@ We are plotting learning curves: the mean squared error of the prototype from th
 
 This dynamic depends crucially on the fact that we get very diverse evidence: let's change the above example to observe the same N examples, but coming from a single bag (instead of N bags).
 
-~~~~
+~~~~js
 ///fold:
 var colors = ['red', 'blue'];
 var bagPosterior = function(observedData) {
@@ -469,7 +543,7 @@ This abstract knowledge about what animal kinds are like can be extremely useful
 
 We can study a simple version of this phenomenon by modifying our bags of marbles example, articulating more structure to the hierarchical model as follows.  We now have two higher-level parameters: `phi` describes the expected proportions of marble colors across bags of marbles, while `alpha`, a real number, describes the strength of the learned prior -- how strongly we expect any newly encountered bag to conform to the distribution for the population prototype `phi`.  For instance, suppose that we observe that `bag1` consists of all blue marbles, `bag2` consists of all green marbles, `bag3` all red, and so on. This doesn't tell us to expect a particular color in future bags, but it does suggest that bags are very regular---that all bags consist of marbles of only one color.
 
-~~~~
+~~~~js
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var observedData = [
@@ -536,7 +610,7 @@ One well studied overhypothesis in cognitive development is the 'shape bias': th
 
 We now consider a model of learning the shape bias which uses the compound Dirichlet-Discrete model that we have been discussing in the context of bags of marbles. This model for the shape bias is from [@Kemp2007]. Rather than bags of marbles we now have object categories and rather than observing marbles we now observe the features of an object (e.g. its shape, color, and texture) drawn from one of the object categories. Suppose that a feature from each dimension of an object is generated independently of the other dimensions and there are separate values of alpha and phi for each dimension. Importantly, one needs to allow for more values along each dimension than appear in the training data so as to be able to generalize to novel shapes, colors, etc. To test the model we can feed it training data to allow it to learn the values for the alphas and phis corresponding to each dimension. We can then give it a single instance of some new category and then ask what the probability is that the various choice objects also come from the same new category. The WebPPL code below shows a model for the shape bias, conditioned on the same training data used in the Smith et al experiment. We can then ask both for draws from some category which we've seen before, and from some new category which we've seen a single instance of. One small difference from the previous models we've seen for the example case is that the alpha hyperparameter is now drawn from an exponential distribution with inverse mean 1, rather than a Gamma distribution. This is simply for consistency with the model given in the Kemp et al (2007) paper.
 
-~~~~
+~~~~js
 var attributes = ['shape', 'color', 'texture', 'size'];
 var values = {shape: _.range(11), color: _.range(11), texture: _.range(11), size: _.range(11)};
 
@@ -675,7 +749,7 @@ An important way in which languages vary is the order in which heads appear with
 
 The fact that languages show consistency in head directionality could be of great advantage to the learner; after encountering a relatively small number of phrase types and instances the learner of a consistent language can learn the dominant head direction in their language, transferring this knowledge to new phrase types. The fact that within many languages there are exceptions suggests that this generalization cannot be deterministic, however, and, furthermore means that a learning approach will have to be robust to  within-language variability. Here is a highly simplified model of X-Bar structure:
 
-~~~~
+~~~~js
 ///fold:
 var observePhrase = function(dist, values) {
   return sum(map(function(v) {return dist.score(v)}, values));
