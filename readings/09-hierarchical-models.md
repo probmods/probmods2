@@ -1,5 +1,5 @@
 ---
-layout: chapter
+layout: exercise
 title: Hierarchical models - readings
 description: The power of abstraction.
 ---

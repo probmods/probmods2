@@ -411,7 +411,7 @@ Is it possible to get graded effects from rule-based concepts? Perhaps these eff
 // first set up the training (cat A/B) and test objects:
 var numFeatures = 4;
 
-var makeObj = function(l) {return _.object(['trait1', 'trait2', 'trait3', 'trait4'], l)}
+var makeObj = function(l) {return _.zipObject(['trait1', 'trait2', 'trait3', 'trait4'], l)}
 var AObjects = map(makeObj, [[0,0,0,1], [0,1,0,1], [0,1,0,0], [0,0,1,0], [1,0,0,0]])
 var BObjects = map(makeObj, [[0,0,1,1], [1,0,0,1], [1,1,1,0], [1,1,1,1]])
 var TObjects = map(makeObj, [[0,1,1,0], [0,1,1,1], [0,0,0,0], [1,1,0,1], [1,0,1,0], [1,1,0,0], [1,0,1,1]])
@@ -464,7 +464,7 @@ var rulePosterior = Infer({method: 'MCMC', samples: 20000}, function() {
   mapData({data:BObjects}, obsFnB)
   // return posterior predictive
   var allObjs = TObjects.concat(AObjects).concat(BObjects);
-  return _.object(_.range(allObjs.length), map(rule, allObjs));
+  return _.zipObject(_.range(allObjs.length), map(rule, allObjs));
 })
 
 //build predictive distribution for each item

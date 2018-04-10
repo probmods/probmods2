@@ -200,6 +200,7 @@ var observedData = [
 var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
   // we make a global prototype which is a dirichlet sample scaled to total 5.
   var prototype = T.mul(dirichlet(ones([5, 1])), 5)
+  // T.mul(d,x) multiplies the probabilities in `d` by x
 
   var makeBag = mem(function(bag){
     var colorProbs = T.toScalars(dirichlet(prototype))
@@ -346,9 +347,9 @@ var learningCurves = map(function(N) {
 }, numObs)
 
 print("bag1 beliefs")
-viz.line([0].concat(numObs), [1].concat(_.pluck(learningCurves, 'mseSpec')))
+viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseSpec')))
 print("global beliefs")
-viz.line([0].concat(numObs), [1].concat(_.pluck(learningCurves, 'mseGlob')))
+viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseGlob')))
 ~~~~
 
 We are plotting learning curves: the mean squared error of the prototype from the true prototype for the specific level (the first bag) and the general (global prototype) level as a function of the number of observed data points. Note that these quantities are directly comparable because they are each samples from a Dirichlet distribution of the same size (this is often not the case in hierarchical models). What we see is that learning is faster at the general level than the specific level&mdash;that is that the error in the estimated prototype drops faster in the general than the specific plots. We also see that there is continued learning at the specific level, even though we see no additional samples from the first bag after the first; this is because the evolving knowledge at the general level further constrains the inferences at the specific level. Going back to our familiar categorization example, this suggests that a child could be quite confident in the prototype of "dog" while having little idea of the prototype for any specific kind of dog&mdash;learning more quickly at the abstract level than the specific level, but then using this abstract knowledge to constrain expectations about the specific level.  
@@ -408,9 +409,9 @@ var learningCurves = map(function(N) {
 ///
 
 print("bag1 beliefs")
-viz.line([0].concat(numObs), [1].concat(_.pluck(learningCurves, 'mseSpec')))
+viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseSpec')))
 print("global beliefs")
-viz.line([0].concat(numObs), [1].concat(_.pluck(learningCurves, 'mseGlob')))
+viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseGlob')))
 ~~~~
 
 We now see that learning for this bag is quick, while global learning (and transfer) is slow.
@@ -655,7 +656,7 @@ viz.marginals(categoryPosterior)
 
 The program above gives us draws from some novel category for which we've seen a single instance. In the experiments with children, they had to choose one of three choice objects which varied according to the dimension they matched the example object from the category. We show below model predictions (from Kemp et al (2007)) for performance on the shape bias task which show the probabilities (normalized) that the choice object belongs to the same category as the test exemplar. The model predictions reproduce the general pattern of the experimental results of Smith et al in that shape matches are preferred in both the first and second order generalization case, and more strong in the first order generalization case. The model also helps to explain the childrens' vocabulary growth in that it shows how the shape bias can be generally learned, as seen by the differing values learned for the various alpha parameters, and so used outside the lab.
 
-<center><img src='{{site.baseurl}}/assets/img/shape_bias_results_model.png' width='400' /></center>
+<center><img src='../assets/img/shape_bias_results_model.png' width='400' /></center>
 
 The model can be extended to learn to apply the shape bias only to the relevant ontological kinds, for example to object categories but not to substance categories. The  Kemp et al (2007) paper discusses such an extension to the model which learns the hyperparameters separately for each kind and further learns what categories belong to each kind and how many kinds there are. This involves the use of a non-parametric prior, called the Chinese Restaurant Process, which will be discussed in the section on non-parametric models.
 
@@ -675,7 +676,7 @@ The number of encountered instances of an object were varied (one, three, or twe
 
 Results for two questions of the experiment are shown below. The results accord both with the beliefs of the experimenters about how heterogeneous different groups would be, and subjects stated reasons for generalizing in the way they did for the different instances (which were coded for beliefs about how homogeneous objects are with respect to some property).
 
-<center><img src='{{site.baseurl}}/assets/img/nisbett_model_humans.png' width='400' /></center>
+<center><img src='../assets/img/nisbett_model_humans.png' width='400' /></center>
 
 Again, we can use the compound Dirichlet-multinomial model we have been working with throughout to model this task, following Kemp et al (2007). In the context of the question about members of the Barratos tribe, replace bags of marbles with tribes and the color of marbles with skin color, or the property of being obese. Observing data such that skin color is consistent within tribes but varies between tribes will cause a low value of the alpha corresponding to skin color to be learned, and so seeing a single example from some new tribe will result in a sharply peaked predictive posterior distribution for the new tribe. Conversely, given data that obesity varies within a tribe the model will learn a higher value of the alpha corresponding to obesity and so will not generalize nearly as much from a single instance from a new tribe. Note that again it's essential to have learning at the level of hyperparameters in order to capture this phenomenon. It is only by being able to learn appropriate values of the hyperparameters from observing a number of previous tribes that the model behaves reasonably when given a single observation from a new tribe.
 
@@ -683,7 +684,7 @@ Again, we can use the compound Dirichlet-multinomial model we have been working 
 
 Humans are able to categorize objects (in a space with a huge number of dimensions) after seeing just one example of a new category. For example, after seeing a single wildebeest people are able to identify other wildebeest, perhaps by drawing on their knowledge of other animals. The model in Salakhutdinov et al [-@Salakhutdinov2010] uses abstract knowledge learned from other categories as a prior on the mean and covariance matrix of new categories.
 
-<center><img src='{{site.baseurl}}/assets/img/russ_model_graphical.png' width='400' /></center>
+<center><img src='../assets/img/russ_model_graphical.png' width='400' /></center>
 
 Suppose, first that the model is given an assignment of objects to basic categories and basic categories to superordinate categories. Objects are represented as draws from a multivariate Gaussian and the mean and covariance of each basic category
 is determined by hyperparameters attached to the corresponding superordinate category. The parameters
@@ -691,9 +692,9 @@ of the superordinate categories are all drawn from a common set of hyperparamete
 
 The model in the Salakhutdinov et al (2010) paper is not actually given the assignment of objects to categories and basic categories to superordinate categories, but rather learns this from the data by putting a non-parametric prior over the tree of object and category assignments.
 
-<center><img src='{{site.baseurl}}/assets/img/russ_results_categories.png' width='400' /></center>
+<center><img src='../assets/img/russ_results_categories.png' width='400' /></center>
 
-Results are shown for this model when run on the MSR Cambridge dataset which contains images in 24 different basic level categories. Specifically, the model is given a single instance of a cow and asked to retrieve other cow images. Shown are ROC curves for classifying test images belonging to a novel category versus the rest based on observing a single instance of the novel category. The red curve shows model results using a Euclidean metric, the blue curve results from the model described above, and the black curve from an Oracle model which uses the best possible metric. Also shown is a typical partition the model discovers of basic categories into superordinate categories.
+Results are shown for this model when run on the MSR Cambridge dataset which contains images in 24 different basic level categories. Specifically, the model is given a single instance of a cow and asked to retrieve other cow images. Shown are ROC curves for classifying test images belonging to a novel category versus the rest based on observing a single instance of the novel category. The red curve shows model results using a Euclidean metric, the blue curve results from the model described above, and the black curve from an Oracle model which uses the best possible metric. Also shown is a typical partition the model discovers of basic categories into superordinate categories. **TODO: THESE DON'T ACTUALLY APPEAR TO BE SHOWN!**
 
 <!--
 So far, we've been using the compound Dirichlet-multinomial to do one shot learning, by learning low values for the alpha hyperparameter. This causes the Dirichlet distribution at the second level to have parameters less than 1, and so to be 'spiky'. While such a Dirichlet distribution can lead to one shot learning, we're not explicitly learning about the variance of
@@ -784,7 +785,7 @@ var data = [['D', 'N']];
 
 var results = Infer({method: 'MCMC', samples: 20000}, function() {
   var languageDir = beta(1,1);
-  var headToPhraseDirs = _.object(categories, map(function() {
+  var headToPhraseDirs = _.zipObject(categories, map(function() {
     return T.get(dirichlet(Vector([languageDir, 1 - languageDir])), 1)
   }, categories))
 
@@ -815,7 +816,7 @@ There is a third notion of abstraction in a generative model which may explain t
 
 In a hierarchically structured model the deeper random choices are more abstract in this sense of causal distance from the data. More subtly, when a procedure is created with `function` the expressions inside this procedure will tend to be more causally distant from the data (since the procedure must be applied before these expressions can be used), and hence greater depth of lambda abstraction will tend to lead to greater abstraction in the causal distance sense.
 
-<!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/09-hierarchical-models.html)  -->
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/09-hierarchical-models.html)
 
 Reading & Discussion: [Readings]({{site.baseurl}}/readings/09-hierarchical-models.html)
 

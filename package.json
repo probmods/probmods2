@@ -27,7 +27,6 @@
     "littlefoot": "1.0.0",
     "npm": "^5.7.1",
     "paper": "^0.9.25",
-    "underscore": "~1.8.3",
     "webppl": "github:probmods/webppl",
     "webppl-agents": "github:agentmodels/webppl-agents",
     "webppl-dp": "^0.1.1",

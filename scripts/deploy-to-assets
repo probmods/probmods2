@@ -33,7 +33,6 @@ cp -r node_modules/KaTeX/dist/fonts assets/css
 
 cp node_modules/jquery/dist/jquery.min.js assets/js
 cp node_modules/bootstrap/dist/js/bootstrap.min.js assets/js
-cp node_modules/underscore/underscore.js assets/js
 cp node_modules/KaTeX/dist/katex.min.js assets/js
 cp node_modules/littlefoot/dist/littlefoot.min.js assets/js
 cp node_modules/paper/dist/paper-full.js assets/js
