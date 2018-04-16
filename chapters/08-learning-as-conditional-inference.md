@@ -38,7 +38,43 @@ This distribution expresses our prior knowledge about how the process we observe
 The function `obsFn` captures the relation between the `hypothesis` and a single `datum`, and will usually contain an `observe` statement.
 Here we have used the special operator [`mapData`](http://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapData) whose meaning is the same as `map`. We use `mapData` both to remind ourselves that we are expressing the special pattern of observing a sequence of observations, and because some inference algorithms can use this hint to do better learning.
 
-What can be inferred about the hypothesis given a certain subset of the observed data? How much more can we learn as the size of the observed data set increases---what is the *learning curve*? These are the main questions we wish to answer when thinking about learning as inference.
+When thinking about learning as inference, there are a couple key questions. First, what can be inferred about the hypothesis given a certain subset of the observed data? For example, in most cases, you cannot learn much about the weight of an object based on its color. However, if there is a correlation between weight and color -- as is the case in many children's toys -- observing color does allow you to learn about weight. 
+
+Second, what is the expected relationship between the amount of input (how much data we've observed) and the amount of knowledge gained. In psychology, this relationship is often called the *learning curve*. The code below generates three simple learning curves. In the first, there is a linear relationship between amount of input and amount of knowledge. 
+
+The second shows an exponential relationship: each additional bit of data results in more knowledge than the last one. This learning curve is common when learning an integrated set of facts (like a theory): learning additional parts of the theory help you understand the parts you've already learned better. 
+
+The third learning curve depicts decreasing returns: each additional bit of data provides less and less new knowledge. This is sadly quite common. For instance, in memorizing unrelated facts (like the capitals of countries), new information can interfere with already-acquired knowledge, making it harder to learn the new information and causing you to forget what you have already learned. Other examples involve repetition in the input: after moving to a new city, you are likely to meet fewer and fewer new people each day. Thus, each additional day results in less additional knowledge. 
+
+~~~~js
+var fn_increase = function(){
+  var x = uniform(0,1)
+  var y = x*x
+  return {input:x,knowledge:y}
+}
+
+var fn_decrease = function(){
+  var x = uniform(0,1)
+  var y = x*x
+  return {input:x,knowledge:y}
+}
+
+var fn_linear = function(){
+  var x = uniform(0,1)
+  return {input:x,knowledge:x}
+}
+
+print("")
+print("Three kinds of learning curves")
+print("Equivalent returns on input regardless of amount of knowledge:")
+viz(repeat(100, fn_linear))
+
+print("Increasing returns on input as knowledge grows:")
+viz(repeat(100, fn_increase))
+
+print("Decreasing returns on input as knowledge grows:")
+viz(repeat(100, fn_decrease))
+~~~~
 
 # Example: Learning About Coins
 
@@ -489,6 +525,6 @@ It has been used to model theory acquisition, learning natural numbers concepts,
 
 * Learning Structured Generative Concepts. A. Stuhlmueller, J. B. Tenenbaum, and N. D. Goodman (2010). Proceedings of the Thirty-Second Annual Conference of the Cognitive Science Society.
 
-<!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/08-learning-as-conditional-inference.html)  -->
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/08-learning-as-conditional-inference.html)
 
 Next chapter: [Hierarchical models]({{site.baseurl}}/chapters/09-hierarchical-models.html)
