@@ -9,6 +9,8 @@ title: learning - exercises
 
 How does a *learning curve* differ from a *learning trajectory*?
 
+*A learning curve depicts how much one knows as a function of experience. A learning trajectory depicts how one's beliefs change as a function of experience.*
+
 #### b)
 
 In the chapter, we graphed *learning trajectories* for a number of models. Below is one of these models (the one with the Beta(10,10) prior). In the chapter, we observed how the model's best guess as to the weight of the coin changed across a sequence of sucessive heads. See what happens if instead we see heads and tails in alternation:
@@ -80,14 +82,14 @@ var weightPosterior = function(observedData){
   })
 }
 
-var prior = //your code here
-var post = //your code here
+var prior = Beta(pseudoCounts)
+var post = weightPosterior(globalStore.fullDataSet)
 
 viz(prior); //should graph the prior distribution on weights
 viz(post); //should graph the posterior distribution on weights
 ~~~~
 
-You should see a much sharper peak in the posterior. Note that the bounds on the x-axis are likely to be different in the two graphs, which could obscure this. (The `viz` package doesn't appear to allow you to adjust the bounds on the axes.)
+![](Figures/learning-as-inference-1.PNG)
 
 #### c)
 
@@ -124,7 +126,6 @@ var ignore = repeat(499, function(){
 });
 ///
 
-
 var observedDataSizes = [0,2,4,8,16,32,64,128,256,512];
 var posts = map(function(N) {
   return weightPosterior(globalStore.fullDataSet.slice(0,N))
@@ -132,15 +133,19 @@ var posts = map(function(N) {
 // returns an array of posteriors of length observedDataSizes.length
 
 var variances = mapN(function(i){
-	// your code here
+  var mymean = expectation(Infer({method: 'forward', samples:1000}, function(){
+    return sample(posts[i])
+  }))
+  var variance = expectation(Infer({method: 'forward', samples:1000}, function(){
+    return Math.pow(sample(posts[i]) - mymean,2)
+  }))
+  return(variance)
 }, observedDataSizes.length)
 
 viz.line(observedDataSizes, variances);
 ~~~~
 
-You may need to look up how to use [mapN()](https://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapN).
-
-HINT: notice how the variable `posts` differs from `estimates` in the code above.
+![](Figures/learning-as-inference-2.PNG)
 
 ## 2. Causal Power
 
@@ -174,17 +179,59 @@ viz.marginals(causalPowerPost);
 
 Find a set of observations that result in inferring a fairly high causal power for C and a low background probability of E. Explain why this works.
 
+```js
+var observedData = [{C:true, E:true},{C:true, E:true},{C:true, E:true},{C:false, E:false},{C:false, E:false},{C:false, E:false}]
+```
+
+![](Figures/learning-as-inference-3.PNG)
+
+*The fact that we never observe E even in the absence of C suggests a low baserate of E. Given that, and the fact that we do see E when C is present suggests a high causal power for C.*
+
 #### b)
 
 Find a set of observations that result in inferring a fairly low causal power for C and a high background probability of E. Explain why this works.
+
+```js
+var observedData = [{C:true, E:false},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true}]
+```
+
+*We frequently see E regardless of the presence of C, suggesting a high background rate. The only time we didn't observe E was the one time C was actually present, suggesting low causal power for C.*
+
+![](Figures/learning-as-inference-5.PNG)
 
 #### c)
 
 Find a set of observations that result in inferring a fairly high causal power for C and a high background probability of E. Explain why this works.
 
+```js
+var observedData = [{C:true, E:true},{C:true, E:true},{C:true, E:true},{C:true, E:true},{C:true, E:true},{C:true, E:true},{C:true, E:true}]
+```
+
+*One option is to observe C a number of times with E present. This is ambiguous between a high causal power for C and a high background rate of E, so both are considered reasonably likely.*
+
+![](Figures/learning-as-inference-6.PNG)
+
 #### d)
 
 Suppose every time C is present, so is the effect E. Suppose C is present at least 5 times. Is there a way to nonetheless fail to infer a high causal power for C? 
+
+*Yes, given enough times observing E even in the absence of C:*
+
+```js
+var observedData = [{C:true, E:true},{C:true, E:true},{C:true, E:true},{C:true, E:true},{C:true, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},
+                   {C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true},{C:false, E:true}];
+```
+
+![](Figures/learning-as-inference-4.PNG)
 
 ## 3. Inferring Functions
 
@@ -285,6 +332,8 @@ Why does this think the probability of `x * 2` is so much lower than `x * x`?
 
 HINT: Think about the probability assigned to `x ^ 2`.
 
+*The two expressions differ in the final draw from the recursive function `randomArithmeticExpression`. On each step through the function, there is a 0.3 * 0.5 = 0.15 chance of returning `x`, but only a 0.3 * 0.5 * 0.1 = 0.015 chance of drawing `2`.*
+
 #### b)
 
 Let's reconceptualize of our program as a sequence-generator. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
@@ -382,6 +431,10 @@ viz.table(Infer({method: 'enumerate', maxExecutions: 10000}, function() {
 
 Not surprisingly, the model predicts `9` as the most likely next number. However, it also puts significant probability on `27`. Why does this happen? 
 
+*These results are largely due to the high probability of the functions `x * x` and `x ^ x`, which return give `9` and `27` for `f(3)`, respectively.*
+
 #### c)
 
 Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive. This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
+
+*Currently, each function (`*`, `^`, `+`) is equally likely (they are drawn from a uniform distriution). We could decrease the probability of the latter function by decreasing the probability of drawing `^`. It seems reasonable that people are less likely to consider sequences made from powers, though this would need to be tested.*
