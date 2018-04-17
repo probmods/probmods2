@@ -731,6 +731,8 @@ It has been used to model theory acquisition, learning natural numbers concepts,
 
 * Learning Structured Generative Concepts. A. Stuhlmueller, J. B. Tenenbaum, and N. D. Goodman (2010). Proceedings of the Thirty-Second Annual Conference of the Cognitive Science Society.
 
+[Readings]({{site.baseurl}}/readings/08-learning-as-conditional-inference.html)
+
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/08-learning-as-conditional-inference.html)
 
 Next chapter: [Hierarchical models]({{site.baseurl}}/chapters/09-hierarchical-models.html)
