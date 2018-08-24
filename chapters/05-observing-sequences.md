@@ -441,6 +441,8 @@ The PCFG can't be written with `unfold` because it builds a tree (nested list) r
 Note that this samples a hierarchical (or "parenthesized") sequence of terminals. How would you "flatten" this to return a sequence without parentheses?
 -->
 
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/05-observing-sequences.html)
+
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/05-observing-sequences.html)
 
 Next chapter: [Inference about inference]({{site.baseurl}}/chapters/06-inference-about-inference.html)

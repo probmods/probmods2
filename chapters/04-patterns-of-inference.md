@@ -793,4 +793,4 @@ Test your knowledge: [Exercises]({{site.baseurl}}/exercises/04-patterns-of-infer
 
 Reading & Discussion: [Readings]({{site.baseurl}}/readings/04-patterns-of-inference.html)
 
-Next chapter: [Models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)
+Next chapter: [Agents as Probabilistic Programs]({{site.baseurl}}/chapters/04.1-agents-as-programs.html)
