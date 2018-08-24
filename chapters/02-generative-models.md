@@ -635,7 +635,7 @@ viz(
 ~~~~
 
 
-Reading & Discussion: [Readings]({{site.baseurl}}/02-generative-models.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/02-generative-models.html)
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/02-generative-models.html)
 
