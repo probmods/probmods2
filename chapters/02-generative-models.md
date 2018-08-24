@@ -634,6 +634,9 @@ viz(
 // physics.animate(1000, unstableWorld)
 ~~~~
 
+
+Reading & Discussion: [Readings]({{site.baseurl}}/02-generative-models.html)
+
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/02-generative-models.html)
 
 Next chapter: [Conditioning]({{site.baseurl}}/chapters/03-conditioning.html)

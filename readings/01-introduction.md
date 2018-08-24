@@ -12,11 +12,3 @@ Reading Sec. 1.2 of [Marr's classic book *Vision*](http://ling.umd.edu/~idsardi/
 a) Many neuroscientists argue that learning involves changing the structure of the synapses of neurons. [Randy Gallistel](http://psych.rutgers.edu/faculty-profiles-a-contacts/96-charles-randy-gallistel) has argued that other mechanisms may be involved as well. At which of Marr's levels is this discussion happening?
 
 b) Psychologists and artificial intelligence researchers both study the nature of intelligence. At which of Marr's levels are their interests most likely to interact?
-
-## Extras
-
-* **Background in Psychology**. Readers who have little background in psychology may find it useful to read *How the Mind Works* by Steven Pinker. Although it is getting on in years, it remains an excellent introduction to basic psychological phenomena and theory. 
-
-* **Javascript**. Experienced programmers who need an introduction to Javascript may find the [appendix on Javascript](13-appendix-js-basics.html) sufficient. Students who have limited experience programming are encouraged to check out [*Introduction to JavaScript*](https://www.codecademy.com/learn/introduction-to-javascript) from Codeacademy (esp. Chapters 1-8). 
-
-* **Background in Mathematics**. This textbook requires a basic understanding of probability theory. The Khan Academy has a [gentle introduction](https://www.khanacademy.org/math/statistics-probability/probability-library) that should be sufficient for most students. 

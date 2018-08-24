@@ -13,15 +13,6 @@ a) In what ways are the generative models from the last two chapters in this tex
 
 b) At which of Marr's levels does Theory Theory operate?
 
-## 2. Overview of Bayesian computational models
-
-Read "[How to Grow a Mind: Statistics, Structure, and Abstraction](http://science.sciencemag.org/content/331/6022/1279)" by Joshua B. Tenenbaum, Charles Kemp, Thomas L. Griffiths, and Noah D. Goodman. This provides an overview of the approach taken by many of the models we'll be looking at.
-
-#### Reading questions:
-a) In what ways do the models described in this paper resemble (or not resemble) the intuitive theories invoked by Theory Theory?
-
-b) How do Bayesian computational models differ from other kinds of reasoning systems you may be familiar with (formal logic, algebra, connectionism, deep learning, etc.)?
-
 ## Extras
 
 * **Theory of Mind**. Theory of Mind is a paradigmatic example of a Theory Theory theory. Readers not familiar with Theory of Mind may find [this short overview useful](https://pdfs.semanticscholar.org/7f87/7e8b42c2a0ef210edff65f572dd43b2e00a8.pdf).
