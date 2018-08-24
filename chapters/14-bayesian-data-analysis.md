@@ -45,18 +45,17 @@ You conduct an experiment.
 You spin the coin 20 times.
 Fifteen out of these 20 times, the coin spins to heads.
 
-Let's say you can $100 if you can predict the next coin flip (heads or tail).
+Let's say you can win $10 if you can predict the next coin flip (heads or tail).
 What would you predict (Heads or Tails)?
 
 Let's consider a slightly more challenging question.
-I'll give you this bet for a price. (This is conceptually the same as you losing money if you're wrong.)
-Up to how much would you pay for this bet?
-
-Imagine you pay $50 for the bet.
-If you guess correctly, you end up winning $50.
-If you guess incorrectly, you end up losing $50.
-$50 would be a good price to pay if you didn't have any preference for choosing Heads or Tails.
-If you think you have better than even odds at winning money, you should be willing to pay even more for this bet.
+You pay me $10 if you are wrong, but if you are correct, I pay you.
+How much do you propose you take from me, should you guess correctly?
+Imagine you demand $10 for being correct.
+(If you guess correctly, you win $10.
+If you guess incorrectly, you lose $10.)
+If we believed the coin would spin to Heads or Tails with equal probability, this is a fair betting scheme.
+But if we believe the coin is biased to spin to one side or the other with greater than 50% probability, you should offer me more than $10, given that you get to choose which side counts as winning for you.
 
 ~~~~
 var observerModel = function(){
