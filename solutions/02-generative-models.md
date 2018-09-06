@@ -516,8 +516,8 @@ var doesTowerFall = function (initialW, finalW) {
 }
 
 var towerFallDegree = function(initialW, finalW) {
-  var initialHeight = highestY(initialW);
-  var finalHeight = highestY(finalW)
+  var initialHeight = getTowerHeight(initialW);
+  var finalHeight = getTowerHeight(finalW)
   return (finalHeight - initialHeight) / initialHeight;
 };
 
