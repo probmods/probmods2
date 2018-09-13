@@ -15,6 +15,6 @@ b) Gerstenberg and colleagues rely on a notion of counter-factual simulation. In
 
 ## Extras
 
-* **Embodiment**. For an overview of psychological theories based on embodied simulation, read [https://pdfs.semanticscholar.org/6d59/0439cd137f7ebbfced7d3c6e72514e9f9f65.pdf](this).
+* **Embodiment**. For an overview of psychological theories based on embodied simulation, read [this](https://onlinelibrary.wiley.com/doi/pdf/10.1002/wcs.55).
 
 * **Learning with causal models**. For more discussion of how the kinds of models discussed here can inform psychological theory, read ["Mechanisms of theory formation in young children"](http://eccl.mit.edu/papers/gopnikschulz.pdf) by Laura Schulz and Alison Gopnik.
