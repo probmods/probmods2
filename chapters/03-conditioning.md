@@ -301,7 +301,7 @@ However, if we swap `condition` for `factor`, we simply make heads more likely:
 var dist = Infer({method: 'enumerate'},
   function () {
     var A = flip()
-    factor(A)
+    factor(A?1:0)
     return A
 });
 viz(dist)
