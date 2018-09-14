@@ -12,6 +12,8 @@ custom_css:
 - /assets/css/draw.css
 ---
 
+Portions of the examples here were adapted from "[Notes of the PPAML Summer School 2016](http://probmods.github.io/ppaml2016/)".
+<!--TODO get permission? -->
 
 # Analytic Solutions
 
