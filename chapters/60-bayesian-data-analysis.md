@@ -1155,4 +1155,10 @@ viz.table(summaryData)
 
 An extended analysis of the Tug of War model (using [RWebPPL](https://github.com/mhtess/rwebppl)) can be found [here](http://rpubs.com/mhtess/bda-tow).
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/60-bayesian-data-analysis.html)
+
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/60-bayesian-data-analysis.html)
+<!--TODO: link to a few BDA textbooks here-->
+
+Next chapter: [Algorithms for inference]({{site.baseurl}}/chapters/70-inference-algorithms.html)
+

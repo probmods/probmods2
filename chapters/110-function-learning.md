@@ -1,8 +1,7 @@
 ---
-layout: 
-title: Deep probabilistic models
-description: Sketchy sketch
-
+layout: chapter
+title: Learning continuous functions
+description: Continuous functions and deep probabilistic models
 ---
 
 Recall curve fitting with polynomials:
@@ -198,3 +197,9 @@ var postSample = function(){
 
 viz.scatter(repeat(10, postSample))
 ~~~~
+
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/110-function-learning.html)
+
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/110-function-learning.html)
+
+Next chapter: [Hierarchical models]({{site.baseurl}}/chapters/120-hierarchical-models.html)

@@ -539,6 +539,6 @@ We see that there is a much stronger preference for the one object interpretatio
 
 We see from these examples that several of the gestalt principles for perceptual grouping emerge from this probabilistic scene inference setup (in this case "good continuation" and "common fate"). However, these are graded inferences, rather than hard rules: we found that the information available in a static image was much weaker that the information in a moving image (and hence good continuation was weaker than common fate). This effect may have important developmental implications: the psychologist Elizabeth Spelke has found that young infants do not group objects by any static features (such as good continuation) but they do group them by common motion (see Spelke, 1990, Cognitive Science).
 
-<!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/10-occam's-razor.html)  -->
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/130-occams-razor.html)
 
-Next chapter: [Mixture models]({{site.baseurl}}/chapters/11-mixture-models.html)
+Next chapter: [Mixture models]({{site.baseurl}}/chapters/140-mixture-models.html)

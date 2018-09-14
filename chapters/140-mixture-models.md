@@ -347,4 +347,4 @@ Unbounded models give a straightforward way to represent uncertainty over the nu
 
 <!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/11-mixture-models.html)  -->
 
-Next chapter: [Non-parametric models]({{site.baseurl}}/chapters/12-non-parametric-models.html)
+Next chapter: [Non-parametric models]({{site.baseurl}}/chapters/145-non-parametric-models.html)

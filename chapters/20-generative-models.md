@@ -19,8 +19,7 @@ a couple issues with the chapter:
 # Models, simulation, and degrees of belief
 
 One view of knowledge is that the mind maintains working models of parts of the world.
-'Model' in the sense that it captures some of the structure in the world, but not all (and what it captures need not be exactly what is in the world---just useful).
-<!--mht: "just useful" -> "just whatever is useful" -->
+'Model' in the sense that it captures some of the structure in the world, but not all (and what it captures need not be exactly what is in the world---just what is useful).
 'Working' in the sense that it can be used to simulate this part of the world, imagining what will follow from different initial conditions.
 As an example take the Plinko machine: a box with uniformly spaced pegs, with bins at the bottom.
 Into this box we can drop marbles:
@@ -319,8 +318,6 @@ var foo = function(){return gaussian(0,1)*gaussian(0,1)}
 foo()
 ~~~
 
-<!--
-The `flip` function is the simplest way to interface with a distribution in WebPPL, but you will also find other familiar probability distributions, such as `gaussian`, `gamma`, `dirichlet`, and so on.-->
 
 <!-- describe Distribution generators, distirbutions, and sample here. -->
 
@@ -635,8 +632,8 @@ viz(
 ~~~~
 
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/02-generative-models.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/20-generative-models.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/02-generative-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/20-generative-models.html)
 
-Next chapter: [Conditioning]({{site.baseurl}}/chapters/03-conditioning.html)
+Next chapter: [Conditioning]({{site.baseurl}}/chapters/30-conditioning.html)

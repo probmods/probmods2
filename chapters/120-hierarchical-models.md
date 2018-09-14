@@ -36,7 +36,7 @@ Categorical({
 
 defines a categorical distribution over 'A', 'B', and 'C', where the probabilities for each have been drawn from a Dirichlet with parameter $$\alpha = [1, 1, 1]$$. To understand α, it's helpful to realize that just like many other distributions we are familiar with (e.g., Gaussian), the Dirichlet distribution is really a family of distributions defined by parameters. For a Gaussian, the parameters are the mean and standard deviation. For Dirichlet, it is a vector $$\alpha = [\alpha_1, \alpha_2, ..., \alpha_n]$$ where `n` is the number of categories. You can think of α as a kind of prior on the categories:
 
-~~~~js
+~~~~
 var dir = function(v) {
 	var d = dirichlet(Vector(v))
 	print(d)
@@ -56,14 +56,14 @@ repeat(10, function() {dir([1,1,5])})
 
 In many cases, we don't have any prior beliefs, so we set $$\alpha = [1, 1, 1, ...]$$. WebPPL provides a convenience function `ones(x,y)`, which returns an array of ones of dimensions `x, y`. 
 
-~~~~js
+~~~~
 print(ones([5,1]))
 dirichlet(ones([5,1]))
 ~~~~
 
 Finally, `Categorical` requires a vector of probabilities, whereas `dirichlet()` actually returns an object with several properties, only one of which is the probabilities we want. The WebPPL function `T.toScalars()` extracts the probabilities for us: 
 
-~~~~js
+~~~~
 var dir = function(v) {
 	var d = dirichlet(v)
 	print(T.toScalars(d))
@@ -75,7 +75,7 @@ repeat(10, function() {dir(ones([3,1]))})
 
 Thus, the following code samples from a categorical distribution over 'A', 'B', and 'C', with probabilities drawn from a Dirichlet with the uninformative prior [1, 1, 1]:
 
-~~~~js
+~~~~
 var ps = dirichlet(ones([3,1]))
 
 var acat = function () {Categorical({
@@ -98,7 +98,7 @@ The task is challenging because real-world categories are not homogeneous.  A ba
 
 As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following WebPPL example.
 
-~~~~js
+~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var makeBag = mem(function(bagName){
@@ -124,7 +124,7 @@ As this examples shows, `mem` is particularly useful when writing hierarchical m
 
 Now let's add a few twists: we will generate three different bags, and try to learn about their respective color prototypes by conditioning on observations. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
 
-~~~~js
+~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var observedData = [
@@ -173,7 +173,7 @@ This generative model describes the prototype mixtures in each bag, but it does 
 
 Now let us introduce another level of abstraction: a global prototype that provides a prior on the specific prototype mixtures of each bag.
 
-~~~~js
+~~~~
 ///fold:
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
@@ -300,7 +300,7 @@ viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseGlob')))
 ~~~~
 -->
 
-~~~~js
+~~~~
 var colors = ['red', 'blue'];
 var bagPosterior = function(observedData) {
   return Infer({method: 'MCMC', samples: 5000}, function() {
@@ -358,7 +358,7 @@ We are plotting learning curves: the mean squared error of the prototype from th
 
 This dynamic depends crucially on the fact that we get very diverse evidence: let's change the above example to observe the same N examples, but coming from a single bag (instead of N bags).
 
-~~~~js
+~~~~
 ///fold:
 var colors = ['red', 'blue'];
 var bagPosterior = function(observedData) {
@@ -431,110 +431,6 @@ In contrast, we have seen that adding additional levels of abstraction (and henc
 
 In general, the blessing of abstraction can be surprising because our intuitions often suggest that adding more hierarchical levels to a model increases the model's complexity. More complex models should make learning harder, rather than easier. On the other hand, it has long been understood in cognitive science that learning is made easier by the addition of *constraints* on possible hypothesis. For instance, proponents of universal grammar have long argued for a highly constrained linguistic system on the basis of learnability. Hierarchical Bayesian models can be seen as a way of introducing soft, probabilistic constraints on hypotheses that allow for the transfer of knowledge between different kinds of observations.
 
-<!--
-
-old blessing of abstraction stuff
-
-~~~~ {data-engine="mit-church"}
-(mh-query
-    100 100
-
- (define global-prototype (dirichlet '(1 1)))
- (define bag->prototype
-   (mem
-    (lambda (bag)
-      (dirichlet global-prototype))))
-
- (define (draw-marbles bag num-draws)
-   (repeat num-draws
-           (lambda () (multinomial '(red blue) (bag->prototype bag)))))
-
- (list global-prototype (bag->prototype 'bag-1))
- (and (equal? (draw-marbles 'bag-1 3) '(red red red))
-           (equal? (draw-marbles 'bag-2 2) '(red red)))
-)
-~~~~
-
-There are several things to vary in this setup: how many samples are observed overall? How many samples are observed from each bag? In particular, what happens when there are many different bags, but only one sample is observed from each bag? You should find that the overall prototype is learned while the specific prototypes still have a fair amount of uncertainty. Going back to our *dogs* example, this suggests that a child could be quite confident in the prototype of "dog" while having little idea of the prototype for any specific kind of dog&mdash;learning more quickly at the abstract level than the specific level, but then using this abstract knowledge to constrain expectations about the specific level.
---><!--
-
-~~~~ {data-engine="mit-church"}
-(define vector-sum (lambda (a b)
-    (list->vector (map (lambda (x y) (+ x y)) (vector->list a) (vector->list b)))))
-(define num-samples 200)
-(define zero-vec (list->vector '(0 0 0 0 0)))
-(define colors '(black blue green orange red))
-
-(define samples
- (mh-query
-   num-samples 100
-
-  (define phi (dirichlet '(1 1 1 1 1)))
-  (define alpha (gamma 2 2))
-  (define prototype (map (lambda (w) (* alpha w)) phi))
-
-  (define bag->prototype
-    (mem
-          (lambda (bag) (dirichlet prototype))))
-
-  (define (draw-marbles bag num-draws)
-    (repeat num-draws
-          (lambda () (multinomial colors (bag->prototype bag)))))
-
-  (list (list->vector (bag->prototype 'bag-1))
-        (list->vector (bag->prototype 'bag-2))
-        (list->vector (bag->prototype 'bag-3))
-        (list (log alpha))
-        (list->vector prototype))
-
-(and
-    (equal? (draw-marbles 'bag-1 2) '(blue black))
-    (equal? (draw-marbles 'bag-2 2) '(green blue))
-    (equal? (draw-marbles 'bag-3 2) '(black black))
-    (equal? (draw-marbles 'bag-4 2) '(black blue))
-    (equal? (draw-marbles 'bag-5 2) '(blue green))
-    (equal? (draw-marbles 'bag-6 2) '(black green))
-   )))
-
-(define bag-1-prototype (vector->list (fold vector-sum zero-vec (map first samples))))
-(define bag-2-prototype (vector->list (fold vector-sum zero-vec (map second samples))))
-(define bag-3-prototype (vector->list (fold vector-sum zero-vec (map third samples))))
-(define overall-prototype (vector->list (fold vector-sum zero-vec (map fifth samples))))
-
-(hist (repeat 1000 (lambda () (multinomial colors bag-1-prototype))) "bag one prototype")
-(hist (repeat 1000 (lambda () (multinomial colors bag-2-prototype))) "bag two prototype")
-(hist (repeat 1000 (lambda () (multinomial colors bag-3-prototype))) "bag three prototype")
-(hist (repeat 1000 (lambda () (multinomial colors overall-prototype))) "overall prototype")
-(hist (fold append '() (map fourth samples)) "log alpha")
-~~~~
-You should see that the overall prototype learned is reasonably close to the true distribution in the world (black, blue, green in proportions 5:4:3), as reflected in the distribution of colors across all the bags.  This is also what the prototype for each bag should be, yet what the learner can infer about each individual bag's prototype may be far from this, because it is based mostly on the two draws she happens to see from that particular bag.
-
-Explore the learning curve, adding more bags with just two marbles observed in the same overall proportions, or adding more draws from each bag.  When there are many bags drawn from the same underlying distribution but each is observed sparsely, you should find that the overall prototype can be learned quite well even while the specific prototypes still have a fair amount of uncertainty or distance from their true predictive distribution.
-
-
-To see an example of this with marbles, try replacing the conditioning statements in the box above with the following - a version of the basic-level prototype abstraction example we had above but with sparser observations for each bag.
-
-  (and
-    (equal? (draw-marbles 'bag-1 2) '(blue black))
-    (equal? (draw-marbles 'bag-2 2) '(blue green))
-    (equal? (draw-marbles 'bag-3 2) '(blue orange))
-    (equal? (draw-marbles 'bag-4 2) '(blue red))
-   )))
-
-Here the learned overall prototype shows a reasonably clear tendency towards blue over other colors, but there is significantly more variability in the distribution inferred for each individual bag's prototype, reflecting the particular colors that happened to be observed in two random draws.
-
-You can see the same learning curve with the example of an overhypothesis about a superordinate class.  Try the following conditioning data in the above box:
-
- (and
-   (equal? (draw-marbles 'bag-1 1) '(blue))
-   (equal? (draw-marbles 'bag-2 2) '(green green))
-   (equal? (draw-marbles 'bag-3 2) '(orange orange))
-   (equal? (draw-marbles 'bag-4 2) '(red red))
-   (equal? (draw-marbles 'bag-5 2) '(black black))
-  )))
-
-Here the learner can infer that bags are homogeneous and apply that abstract knowledge to constrain generalization for a bag that has only been observed once.  That is, the learned prototype for `bag-1` is strongly blue, even though we have just one example of a blue draw from that bag.  The abstract constraint is inferred across several bags that have themselves only been observed twice each: each bag on its own provides only weak evidence that bags are homogeneous but across bags there is strong evidence for the overhypothesis.
--->
 
 # Learning Overhypotheses: Abstraction at the Superordinate Level
 
@@ -546,7 +442,7 @@ This abstract knowledge about what animal kinds are like can be extremely useful
 
 We can study a simple version of this phenomenon by modifying our bags of marbles example, articulating more structure to the hierarchical model as follows.  We now have two higher-level parameters: `phi` describes the expected proportions of marble colors across bags of marbles, while `alpha`, a real number, describes the strength of the learned prior -- how strongly we expect any newly encountered bag to conform to the distribution for the population prototype `phi`.  For instance, suppose that we observe that `bag1` consists of all blue marbles, `bag2` consists of all green marbles, `bag3` all red, and so on. This doesn't tell us to expect a particular color in future bags, but it does suggest that bags are very regular---that all bags consist of marbles of only one color.
 
-~~~~js
+~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var observedData = [
@@ -613,7 +509,7 @@ One well studied overhypothesis in cognitive development is the 'shape bias': th
 
 We now consider a model of learning the shape bias which uses the compound Dirichlet-Discrete model that we have been discussing in the context of bags of marbles. This model for the shape bias is from [@Kemp2007]. Rather than bags of marbles we now have object categories and rather than observing marbles we now observe the features of an object (e.g. its shape, color, and texture) drawn from one of the object categories. Suppose that a feature from each dimension of an object is generated independently of the other dimensions and there are separate values of alpha and phi for each dimension. Importantly, one needs to allow for more values along each dimension than appear in the training data so as to be able to generalize to novel shapes, colors, etc. To test the model we can feed it training data to allow it to learn the values for the alphas and phis corresponding to each dimension. We can then give it a single instance of some new category and then ask what the probability is that the various choice objects also come from the same new category. The WebPPL code below shows a model for the shape bias, conditioned on the same training data used in the Smith et al experiment. We can then ask both for draws from some category which we've seen before, and from some new category which we've seen a single instance of. One small difference from the previous models we've seen for the example case is that the alpha hyperparameter is now drawn from an exponential distribution with inverse mean 1, rather than a Gamma distribution. This is simply for consistency with the model given in the Kemp et al (2007) paper.
 
-~~~~js
+~~~~
 var attributes = ['shape', 'color', 'texture', 'size'];
 var values = {shape: _.range(11), color: _.range(11), texture: _.range(11), size: _.range(11)};
 
@@ -820,8 +716,8 @@ There is a third notion of abstraction in a generative model which may explain t
 
 In a hierarchically structured model the deeper random choices are more abstract in this sense of causal distance from the data. More subtly, when a procedure is created with `function` the expressions inside this procedure will tend to be more causally distant from the data (since the procedure must be applied before these expressions can be used), and hence greater depth of lambda abstraction will tend to lead to greater abstraction in the causal distance sense.
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/09-hierarchical-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/120-hierarchical-models.html)
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/09-hierarchical-models.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/120-hierarchical-models.html)
 
-Next chapter: [Occam's razor]({{site.baseurl}}/chapters/10-occam's-razor.html)
+Next chapter: [Occam's razor]({{site.baseurl}}/chapters/130-occams-razor.html)
