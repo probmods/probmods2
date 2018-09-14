@@ -750,7 +750,7 @@ Multi-step, suboptimal planning as inference
 Gergely and Csibra principle of efficiency and equifinality come from Bayes Occam.
 -->
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/6-inference-about-inference.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/06-inference-about-inference.html)
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/06-inference-about-inference.html) 
 
