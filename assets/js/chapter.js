@@ -1,3 +1,5 @@
+//custom code for probmods.org
+
 "use strict";
 
 var renderMath = function() {
@@ -50,14 +52,6 @@ $(setupCodeBoxes);
 if (typeof Distribution !== 'undefined') {
   Distribution.prototype.__print__ = viz.print;
 }
-
-// Footnotes
-
-$("a.footnote").map(function(i,x) {
-  $(x).attr('rel', 'footnote')
-})
-
-$.bigfoot();
 
 // References and bibliography
 
@@ -196,3 +190,7 @@ $(function() {
   })
 
 })
+
+// Footnotes
+//var littlefoot = require('littlefoot').default
+//littlefoot()

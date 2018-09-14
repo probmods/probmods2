@@ -672,6 +672,7 @@ var blicketPosterior = Infer({method: 'enumerate'}, function() {
             flip(power(first(blocks))) || machine(rest(blocks)))
   }
   condition(machine(['A', 'B']))
+  //condition(machine(['B'])) //uncomment to see explaining away!
   return blicket('A')
 });
 
@@ -789,4 +790,7 @@ condition on effect of observing contour
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/04-patterns-of-inference.html)
 
-Next chapter: [Models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)
+
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/04-patterns-of-inference.html)
+
+Next chapter: [Agents as Probabilistic Programs]({{site.baseurl}}/chapters/04.1-agents-as-programs.html)

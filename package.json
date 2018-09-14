@@ -1,0 +1,38 @@
+{
+  "name": "probmods",
+  "version": "3.0.0",
+  "homepage": "https://github.com/probmods/chapter",
+  "authors": [
+    "Noah Goodman <ngoodman@stanford.edu>",
+    "Josh Tenenbaum <jbt@mit.edu>"
+  ],
+  "main": "index.md",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/probmods/probmods2.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/probmods/probmods2/issues"
+  },
+  "keywords": [],
+  "dependencies": {
+    "bootstrap": "~3.3.6",
+    "d3": "^4.13.0",
+    "jquery": "~2.2.3",
+    "katex": "0.6.0",
+    "littlefoot": "1.0.0",
+    "npm": "^5.7.1",
+    "paper": "^0.9.25",
+    "webppl": "github:probmods/webppl",
+    "webppl-agents": "github:agentmodels/webppl-agents",
+    "webppl-dp": "^0.1.1",
+    "webppl-editor": "github:probmods/webppl-editor",
+    "webppl-nn": "github:null-a/webppl-nn",
+    "webppl-timeit": "^0.3.0",
+    "webppl-viz": "github:probmods/webppl-viz.git#0.7.11"
+  }
+}

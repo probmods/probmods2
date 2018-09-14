@@ -3,3 +3,6 @@ _site
 .jekyll-metadata
 _corn
 _prod
+.DS_Store
+node_modules
+package-lock.json

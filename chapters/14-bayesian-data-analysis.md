@@ -614,7 +614,7 @@ To explore a Bayesian linear regression model, we will use data from the Tug-of-
 Let's be good data scientists, and start by just taking a look at the data set, found in the `towData` variable (available in this page only).
 
 ~~~~
-var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+var levels = function(a, lvl){ return _.uniq(_.map(a, lvl)) }
 
 // display single row of the data frame
 print(towData[0])
@@ -637,7 +637,7 @@ The other lines show the unique values different variables can take on.
 Let's plot the `ratingZ` variable (a normalized rating).
 
 ~~~~
-viz.hist(_.pluck(towData, "ratingZ"))
+viz.hist(_.map(towData, "ratingZ"))
 ~~~~
 
 This distribution of ratings is from all trials, all participants, all experimental conditions.
@@ -717,7 +717,7 @@ var merge = function(m, d){
   map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
 }
 
-var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+var levels = function(a, lvl){ return _.uniq(_.map(a, lvl)) }
 
 var outcomes = levels(towData, "outcome");
 var tournaments = levels(towData, "tournament");
@@ -748,14 +748,14 @@ var singleRegression = function(){
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)}, itemData)
 
-        return _.object([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
+        return _.zipObject([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
     }, outcomes)
   }, tournaments)
 
   // nasty data munging
-  return _.object(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+  return _.zipObject(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
 }
 
 var nSamples = 500
@@ -793,9 +793,9 @@ var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
-print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
+print("Mean squared error = " + listMean(_.map(summaryData, "sqErr")))
 
-var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
+var varianceExplained = Math.pow(correlation(_.map(summaryData, "data"), _.map(summaryData, "model")), 2)
 print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 
 viz.table(summaryData)
@@ -816,7 +816,7 @@ $$y_{predicted} = \beta_0 + \beta_1 * n_{wins} + \beta_2 * wins_{unique}$$
 
 ~~~~
 ///fold:
-var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+var levels = function(a, lvl){ return _.uniq(_.map(a, lvl)) }
 
 var outcomes = levels(towData, "outcome");
 var tournaments = levels(towData, "tournament");
@@ -850,7 +850,7 @@ var multipleRegression = function(){
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ) }, itemData)
 
-        return _.object([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
+        return _.zipObject([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
     }, outcomes)
@@ -858,7 +858,7 @@ var multipleRegression = function(){
 
   return {
     parameters: {b0: b0, b1: b1, b2: b2, sigma: sigma},
-    predictives: _.object(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+    predictives: _.zipObject(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
   }
 }
 
@@ -919,8 +919,8 @@ var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
-print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
-var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
+print("Mean squared error = " + listMean(_.map(summaryData, "sqErr")))
+var varianceExplained = Math.pow(correlation(_.map(summaryData, "data"), _.map(summaryData, "model")), 2)
 print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 
 viz.scatter(modelDataDF)
@@ -991,7 +991,7 @@ Rather than guessing at what values we should put for these parameters, we can u
 
 ~~~~
 ///fold:
-var levels = function(a, lvl){ return _.uniq(_.pluck(a, lvl)) }
+var levels = function(a, lvl){ return _.uniq(_.map(a, lvl)) }
 
 var outcomes = levels(towData, "outcome");
 var tournaments = levels(towData, "tournament");
@@ -1077,7 +1077,7 @@ var dataAnalysisModel = function(){
 
         map(function(d){ observe(smoothedPredictions, d.roundedRating) }, itemData)
 
-        return _.object([[pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]])
+        return _.zipObject([[pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]])
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
     }, outcomes)
@@ -1085,7 +1085,7 @@ var dataAnalysisModel = function(){
 
   return {
     parameters: {lazinessPrior: lazinessPrior, lazyPulling: lazyPulling},
-    predictives: _.object(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+    predictives: _.zipObject(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
   }
 }
 
@@ -1145,8 +1145,8 @@ var summaryData = map(function(x){
   return _.extend(x, {sqErr: Math.pow(x.model-x.data, 2)})
 }, modelDataDF)
 
-print("Mean squared error = " + listMean(_.pluck(summaryData, "sqErr")))
-var varianceExplained = Math.pow(correlation(_.pluck(summaryData, "data"), _.pluck(summaryData, "model")), 2)
+print("Mean squared error = " + listMean(_.map(summaryData, "sqErr")))
+var varianceExplained = Math.pow(correlation(_.map(summaryData, "data"), _.map(summaryData, "model")), 2)
 print("Model explains " + Math.round(varianceExplained*100) + "% of the data")
 
 viz.scatter(modelDataDF)

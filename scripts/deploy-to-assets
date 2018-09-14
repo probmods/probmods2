@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+set -x
+
+#npm install --save probmods/webppl webppl-timeit@latest webppl-dp@latest agentmodels/webppl-agents null-a/webppl-nn
+npm install
+cd node_modules/webppl
+npm install
+grunt bundle:../webppl-timeit:../webppl-dp:../webppl-agents:../webppl-nn
+cd ../webppl-editor
+npm install
+grunt bundle
+grunt uglify
+cd ../webppl-viz
+npm install
+grunt bundle
+grunt uglify
+cd ../..
+cp node_modules/webppl/bundle/webppl.min.js assets/js/webppl.min.js
+cp node_modules/webppl-editor/docs/webppl-editor.min.js assets/js
+cp node_modules/webppl-editor/docs/webppl-editor.css assets/css
+cp node_modules/webppl-viz/docs/webppl-viz.min.js assets/js
+cp node_modules/webppl-viz/docs/webppl-viz.css assets/css
+
+#Now copy things from non-webppl packages we need
+cp node_modules/bootstrap/dist/css/bootstrap.min.css assets/css
+cp node_modules/bootstrap/dist/css/bootstrap-theme.min.css assets/css
+cp node_modules/bootstrap/dist/css/bootstrap.min.css.map assets/css
+cp node_modules/bootstrap/dist/css/bootstrap-theme.min.css.map assets/css
+cp node_modules/KaTeX/dist/katex.min.css assets/css
+cp node_modules/littlefoot/dist/littlefoot.css assets/css
+cp -r node_modules/KaTeX/dist/fonts assets/css
+
+cp node_modules/jquery/dist/jquery.min.js assets/js
+cp node_modules/bootstrap/dist/js/bootstrap.min.js assets/js
+cp node_modules/KaTeX/dist/katex.min.js assets/js
+cp node_modules/littlefoot/dist/littlefoot.min.js assets/js
+cp node_modules/paper/dist/paper-full.js assets/js
+
+echo "Success."
