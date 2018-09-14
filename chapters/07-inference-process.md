@@ -143,6 +143,8 @@ Next, we provide more intuition on how MCMC works.
 
 #### Markov chains as samplers
 
+<!-- TODO: This discussion hasn't felt that useful to me recently. Revise and shorten? -->
+
 We have already seen [Markov models](05-observing-sequences.html#markov-models) used to describe sequences of observations. A Markov model (or Markov *chain*, as it is often called in the context of inference algorithms) is a discrete dynamical system that unfolds over iterations of the `transition` function.
 Here is a Markov chain:
 
@@ -226,9 +228,8 @@ var samples = repeat(5000, function() {chain(3, 250)})
 viz.table(samples)
 ~~~~
 
-As we can see, this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the query below, in the sense that it specifies a way to sample from the required conditional distribution.
-
-We can also write it using `query` syntax:
+As we can see, this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the inference below, in the sense that it specifies a way to sample from the required conditional distribution.
+We can get the same computation using `Infer`:
 
 ~~~~
 var p = .7
@@ -542,7 +543,8 @@ We display the true location (`trueLoc`) in green, the observations in grey, and
 
 #### Interlude on `factor` vs. `condition`
 
-Although we initially introduced conditioning using the function `condition`, in recent chapters we have increasingly used `factor` instead of `condition`. While the notion of conditioning on an observation is more conceptually straight-forward, it has a number of computational drawbacks. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` provides a much softer constraint: parameter values that do not give rise to our observations are low-probability, but not impossible. 
+Although we initially introduced conditioning using the function `condition`, we have often used `factor` instead of `condition`. While the notion of conditioning on an observation is conceptually straight-forward, it has a number of computational drawbacks. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` provides a much softer constraint: parameter values that do not give rise to our observations are low-probability, but not impossible. 
+<!-- TODO: rewrite models above in terms of observe keyword, and adjust this discussion accordingly. Se the discussion of observe that's already in the learning chapter? -->
 
 #### Incremental inference based on incremental evidence
 
@@ -743,11 +745,12 @@ Again, the actual trajectory is in green, the observations are in grey, and the 
 
 ## Variational Inference
 
-The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent the posterior distribution. This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can be unwieldy to work with. For instance, we represent can represent a Gaussian (or any other function) with a large number of samples drawn from that distribution. Unfortunately, accurately representing a complex function can require a very many samples. 
+The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent the posterior distribution. This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can require a very many expensive samples. 
 
-On the other side of the same coin, we have [*parametric*](https://en.wikipedia.org/wiki/Parametric_statistics) representations--that is, we can try to design and fit a parameterized density function to approximate the posterior distribution. By definition a parametric function can be described without loss by some finite number of parameters. For instance, a Gaussian is fully described by two numbers: its mean and standard deviation. In addition to greater efficiency of representation, fitting a parametric model may require far less data. Whereas non-parametric methods make no assumptions about the shape of the distribution of interest, parametric methods assume it can be represented by some finite set of families of parametric distributions, thus baking in a strong prior. If this prior is correct, we can learn quickly. (What happens when the prior is incorrect illustrates the inherent limits of non-parametric methods). 
+On the other side of the same coin, we have [*parametric*](https://en.wikipedia.org/wiki/Parametric_statistics) representations--that is, we can try to design and fit a parameterized density function to approximate the posterior distribution. By definition a parametric function can be described by some finite number of parameters. For instance, a Gaussian is fully described by two numbers: its mean and standard deviation. By approximating a complex posterior distribution within a parametric family, we can often acheive reasonabe result much more quickly. Unlike Monte Carlo methods, however, if the true posterior is badly fit by the family we will never get good results.
 
-Thus, if we believe we can fit the distribution of interest reasonably well parametrically, there are a number of advantages to doing so. This is the approach taken by the family of [variational inference](http://docs.webppl.org/en/master/inference.html#optimization) methods, and WebPPL provides a version of these algorithms via the `optimize` inference option (the name 'optimize' comes from the fact that we're optimizing the parameters of a density function such it is as close as possible to the true posterior).
+Thus, if we believe we can fit the distribution of interest reasonably well parametrically, there are a number of advantages to doing so. This is the approach taken by the family of [variational inference](http://docs.webppl.org/en/master/inference.html#optimization) methods, and WebPPL provides a version of these algorithms via the `optimize` inference option (the name 'optimize' comes from the fact that we're optimizing the parameters of a density function to make it as close as possible to the true posterior).
+<!-- TODO: explain inference as optimizatio more clearly. -->
 Below, we use `optimize` to fit the hyperparameters of a Gaussian distribution from data:
 
 ~~~~
