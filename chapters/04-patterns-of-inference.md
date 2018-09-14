@@ -672,7 +672,7 @@ var blicketPosterior = Infer({method: 'enumerate'}, function() {
             flip(power(first(blocks))) || machine(rest(blocks)))
   }
   condition(machine(['A', 'B']))
-  condition(machine(['B']))
+  //condition(machine(['B'])) //uncomment to see explaining away!
   return blicket('A')
 });
 
