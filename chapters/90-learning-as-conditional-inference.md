@@ -2,6 +2,7 @@
 layout: chapter
 title: Learning as conditional inference
 description: How inferences change as data accumulate.
+chapter_num: 9
 ---
 
 <!--

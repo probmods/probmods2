@@ -2,6 +2,7 @@
 layout: chapter
 title: Introduction
 description: A brief introduction to the philosophy.
+chapter_num: 1
 ---
 
 What is thought?

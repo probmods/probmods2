@@ -2,6 +2,7 @@
 layout: chapter
 title: Appendix - JavaScript basics
 description: A very brief primer on JavaScript.
+chapter_num: 20
 ---
 
 # Introduction to JavaScript

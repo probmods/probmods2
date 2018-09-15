@@ -2,6 +2,7 @@
 layout: chapter
 title: Conditional dependence
 description: Patterns of inference.
+chapter_num: 5
 ---
 
 # From *A Priori* Dependence to Conditional Dependence

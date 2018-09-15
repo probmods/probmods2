@@ -2,6 +2,7 @@
 layout: chapter
 title: Causal and statistical dependence
 description: Causal and statistical dependence.
+chapter_num: 4
 ---
 
 # Causal Dependence

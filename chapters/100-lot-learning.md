@@ -2,6 +2,7 @@
 layout: chapter
 title: Learning with a language of thought
 description: 
+chapter_num: 10
 ---
 
 <!--

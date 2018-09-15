@@ -2,6 +2,7 @@
 layout: chapter
 title: Hierarchical models
 description: The power of abstraction.
+chapter_num: 12
 ---
 
 <!-- NEED TO BREAK THIS DOWN INTO TWO KINDS OF POINTS:

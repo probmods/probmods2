@@ -2,6 +2,7 @@
 layout: chapter
 title: Bayesian data analysis
 description: Making scientific inferences about data and models
+chapter_num: 6
 custom_js:
 - assets/js/towData.js
 - assets/js/towConfigurations.js

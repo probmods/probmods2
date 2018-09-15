@@ -2,6 +2,7 @@
 layout: chapter
 title: Learning continuous functions
 description: Continuous functions and deep probabilistic models
+chapter_num: 11
 ---
 
 Recall curve fitting with polynomials:

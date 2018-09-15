@@ -2,6 +2,7 @@
 layout: chapter
 title: Mixture models
 description: Models for inferring the kinds of things.
+chapter_num: 14
 ---
 
 In the chapter on [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html), we saw the power of probabilistic inference in learning about the latent structure underlying different kinds of observations: the mixture of colors in different bags of marbles, or the prototypical features of categories of animals. In that discussion we always assumed that we knew what kind each observation belonged to---the bag that each marble came from, or the subordinate, basic, and superordinate category of each object. Knowing this allowed us to pool the information from each observation for the appropriate latent variables. What if we don't know *a priori* how to divide up our observations? In this chapter we explore the problem of simultaneously discovering kinds and their properties -- this can be done using *mixture models*.

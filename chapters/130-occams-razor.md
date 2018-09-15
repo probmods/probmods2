@@ -2,6 +2,7 @@
 layout: chapter
 title: Occam's Razor
 description: Penalizing extra model flexibility.
+chapter_num: 13
 custom_js:
 - assets/js/draw.js
 ---

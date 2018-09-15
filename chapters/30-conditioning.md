@@ -2,6 +2,7 @@
 layout: chapter
 title: Conditioning
 description: Asking questions of models by conditional inference.
+chapter_num: 3
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js
