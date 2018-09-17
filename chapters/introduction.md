@@ -42,5 +42,3 @@ While such generative models often describe how we think the "actual world" work
 -->
 
 Reading & Discussion: [Readings]({{site.baseurl}}/readings/10-introduction.html)
-
-Next chapter: [Generative models]({{site.baseurl}}/chapters/20-generative-models.html)
