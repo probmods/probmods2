@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Conditional dependence
-description: Patterns of inference.
+description: Patterns of inference as evidence changes.
 chapter_num: 5
 ---
 
@@ -549,9 +549,6 @@ condition on effect of observing contour
 
 -->
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/50-conditional-dependence.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/conditional-dependence.html)
 
-
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/50-conditional-dependence.html)
-
-Next chapter: [Bayesian data analysis]({{site.baseurl}}/chapters/60-bayesian-data-analysis.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/conditional-dependence.html)

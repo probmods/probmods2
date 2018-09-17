@@ -1,7 +1,7 @@
 ---
 layout: chapter
-title: Algorithms for inference
-description: From competence to process, efficiency tradeoffs of different algorithms.
+title: Rational process models
+description: The psycological reality of inference algorithms.
 chapter_num: 8
 custom_js:
 - assets/js/box2d.js
@@ -32,8 +32,6 @@ If we take the algorithms for inference as psychological hypotheses, then the ap
 
 
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/80-process-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/process-models.html)
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/80-process-models.html)
-
-Next chapter: [Learning as conditional inference]({{site.baseurl}}/chapters/90-learning-as-conditional-inference.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/process-models.html)

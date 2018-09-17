@@ -346,6 +346,4 @@ For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipe
 
 Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. In the next section we describe another method for allowing an unknown number of things: In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an 'infinite model' we construct distributions assuming a truly infinite numbers of objects.
 
-<!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/11-mixture-models.html)  -->
-
-Next chapter: [Non-parametric models]({{site.baseurl}}/chapters/145-non-parametric-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/mixture-models.html)

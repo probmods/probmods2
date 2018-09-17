@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Algorithms for inference
-description: From competence to process, efficiency tradeoffs of different algorithms.
+description: The many ways to approximate inference. Efficiency tradeoffs of different algorithms.
 chapter_num: 7
 custom_js:
 - assets/js/box2d.js
@@ -1121,8 +1121,6 @@ One motivation for this division: if your program makes predictions from data (a
 -->
 
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/70-inference-algorithms.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/inference-algorithms.html)
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/70-inference-algorithms.html)
-
-Next chapter: [Rational process models]({{site.baseurl}}/chapters/80-process-models.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/inference-algorithms.html)

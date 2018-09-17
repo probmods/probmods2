@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Hierarchical models
-description: The power of abstraction.
+description: The power of statistical abstraction.
 chapter_num: 12
 ---
 
@@ -14,80 +14,6 @@ Learn about superordinate level from basic.  This is transfer learning, learning
 
 Human knowledge is organized hierarchically into levels of abstraction.  For instance, the most common or *basic-level* categories  (e.g. *dog*, *car*) can be thought of as abstractions across individuals, or more often across subordinate categories (e.g., *poodle*, *Dalmatian*, *Labrador*, and so on).  Multiple basic-level categories in turn can be organized under superordinate categories: e.g., *dog*, *cat*, *horse* are all *animals*; *car*, *truck*, *bus* are all *vehicles*. Some of the deepest questions of cognitive development are: How does abstract knowledge influence learning of specific knowledge?  How can abstract knowledge be learned? In this section we will see how such hierarchical knowledge can be modeled with *hierarchical generative models*: generative models with uncertainty at several levels, where lower levels depend on choices at higher levels.
 
-
-<!-- TODO: move to an appendix? an appendix on different common distributions and how to use them in webppl would be useful for other chapters... -->
-### Some preliminary notes on the Dirichlet distribution
-
-In this chapter, we will make considerable use of Dirichlet distributions. In many models, we want to sample a category from a set of categories (e.g., a word from a list of words). When we use `categorical()`, we need to provide the probability for each category. This is problematic when we don't know the probabilities in question. 
-
-As usual when we don't know the value of something, we sample it from a prior. The Dirichlet distribution -- which is the higher-dimensional analogue of the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) -- provides a natural prior for those probabilities. For example:
-
-~~~~norun
-var ps = dirichlet(Vector([1, 1, 1]))
-
-Categorical({
-	ps: T.toScalars(ps),
-	vs: ['A', 'B', 'C']
-	})
-
-// Note: Vector() turns the array [1, 1, 1] into the format required by the WebPPL function dirichlet().
-
-// Note also: We return to the function T.toScalars() below.
-~~~~
-
-defines a categorical distribution over 'A', 'B', and 'C', where the probabilities for each have been drawn from a Dirichlet with parameter $$\alpha = [1, 1, 1]$$. To understand α, it's helpful to realize that just like many other distributions we are familiar with (e.g., Gaussian), the Dirichlet distribution is really a family of distributions defined by parameters. For a Gaussian, the parameters are the mean and standard deviation. For Dirichlet, it is a vector $$\alpha = [\alpha_1, \alpha_2, ..., \alpha_n]$$ where `n` is the number of categories. You can think of α as a kind of prior on the categories:
-
-~~~~
-var dir = function(v) {
-	var d = dirichlet(Vector(v))
-	print(d)
-}
-
-print("alpha = [5, 1, 1]")
-repeat(10, function() {dir([5,1,1])})
-
-print("alpha = [1, 5, 1]")
-repeat(10, function() {dir([1,5,1])})
-
-print("alpha = [1, 1, 5]")
-repeat(10, function() {dir([1,1,5])})
-
-// Note that `dirichlet()` returns a sample from a Dirichlet distribution. If you want the distribution itself, use `Dirichlet()`.
-~~~~
-
-In many cases, we don't have any prior beliefs, so we set $$\alpha = [1, 1, 1, ...]$$. WebPPL provides a convenience function `ones(x,y)`, which returns an array of ones of dimensions `x, y`. 
-
-~~~~
-print(ones([5,1]))
-dirichlet(ones([5,1]))
-~~~~
-
-Finally, `Categorical` requires a vector of probabilities, whereas `dirichlet()` actually returns an object with several properties, only one of which is the probabilities we want. The WebPPL function `T.toScalars()` extracts the probabilities for us: 
-
-~~~~
-var dir = function(v) {
-	var d = dirichlet(v)
-	print(T.toScalars(d))
-}
-
-print("alpha = [1, 1, 1]")
-repeat(10, function() {dir(ones([3,1]))})
-~~~~
-
-Thus, the following code samples from a categorical distribution over 'A', 'B', and 'C', with probabilities drawn from a Dirichlet with the uninformative prior [1, 1, 1]:
-
-~~~~
-var ps = dirichlet(ones([3,1]))
-
-var acat = function () {Categorical({
-	ps: T.toScalars(ps),
-	vs: ['A', 'B', 'C']
-	})}
-	
-sample(acat())
-~~~~
-
-With these preliminaries, we are ready to start looking at some hierarchical Bayesian models. 
 
 # Learning a Shared Prototype: Abstraction at the Basic Level
 
@@ -717,8 +643,6 @@ There is a third notion of abstraction in a generative model which may explain t
 
 In a hierarchically structured model the deeper random choices are more abstract in this sense of causal distance from the data. More subtly, when a procedure is created with `function` the expressions inside this procedure will tend to be more causally distant from the data (since the procedure must be applied before these expressions can be used), and hence greater depth of lambda abstraction will tend to lead to greater abstraction in the causal distance sense.
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/120-hierarchical-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/hierarchical-models.html)
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/120-hierarchical-models.html)
-
-Next chapter: [Occam's razor]({{site.baseurl}}/chapters/130-occams-razor.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/hierarchical-models.html)

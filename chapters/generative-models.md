@@ -633,8 +633,7 @@ viz(
 ~~~~
 
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/20-generative-models.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/generative-models.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/20-generative-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/generative-models.html)
 
-Next chapter: [Conditioning]({{site.baseurl}}/chapters/30-conditioning.html)

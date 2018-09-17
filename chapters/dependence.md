@@ -245,9 +245,6 @@ More complicated generative models, which can be expressed as probabilistic prog
 Recursive models generally give rise to such ambiguous (or loopy) Bayes nets.
 
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/40-dependence.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/dependence.html)
 
-
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/40-dependence.html)
-
-Next chapter: [Conditional dependence]({{site.baseurl}}/chapters/50-conditional-dependence.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/dependence.html)

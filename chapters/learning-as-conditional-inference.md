@@ -389,8 +389,6 @@ viz(causalPowerPost);
 
 Experiment with this model: when does it conclude that a causal relation is likely (high `cp`)? Does this match your intuitions? What role does the background rate `b` play? What happens if you change the functional relationship in `obsFn`?
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/90-learning-as-conditional-inference.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/learning-as-conditional-inference.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/90-learning-as-conditional-inference.html)
-
-Next chapter: [Learning with a language of thought]({{site.baseurl}}/chapters/100-lot-learning.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/learning-as-conditional-inference.html)

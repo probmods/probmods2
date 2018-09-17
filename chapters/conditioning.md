@@ -577,8 +577,6 @@ viz(dist)
 Under this model, a patient with coughing, chest pain and shortness of breath is likely to have either lung cancer or TB.  Modify the above code to see how these conditional inferences shift if you also know that the patient smokes or works in a hospital (where they could be exposed to various infections, including many worse infections than the typical person encounters).  More generally, the causal structure of knowledge representation in a probabilistic program allows us to model intuitive theories that can grow in complexity continually over a lifetime, adding new knowledge without bound.
 
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/30-conditioning.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/conditioning.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/30-conditioning.html)
-
-Next chapter: [Causal and statistical dependence]({{site.baseurl}}/chapters/40-dependence.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/conditioning.html)

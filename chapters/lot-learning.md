@@ -1,20 +1,15 @@
 ---
 layout: chapter
 title: Learning with a language of thought
-description: 
+description: Compositional hypothesis spaces.
 chapter_num: 10
 ---
 
 <!--
-  * **revise learning as induction section:**
-
-    * **infinite hypothesis spaces. poverty of stimulus arguments, inductive bias.**
-
     * **add number game?**
 
     * **more on LoT / RR style models**
 
-    * **conjugate vs length prior**
 -->
 
 
@@ -329,8 +324,6 @@ It has been used to model theory acquisition, learning natural numbers concepts,
 
 * Learning Structured Generative Concepts. A. Stuhlmueller, J. B. Tenenbaum, and N. D. Goodman (2010). Proceedings of the Thirty-Second Annual Conference of the Cognitive Science Society.
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/100-lot-learning.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/lot-learning.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/100-lot-learning.html)
-
-Next chapter: [Learning continuous functions]({{site.baseurl}}/chapters/110-function-learning.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/lot-learning.html)
