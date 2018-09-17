@@ -1,7 +1,8 @@
 ---
 layout: chapter
-title: Inference about inference
-description: Models on models on models
+title: Social cognition
+description: Inference about inference
+chapter_num: 15
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js
@@ -750,8 +751,6 @@ Multi-step, suboptimal planning as inference
 Gergely and Csibra principle of efficiency and equifinality come from Bayes Occam.
 -->
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/6-inference-about-inference.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/social-cognition.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/06-inference-about-inference.html) 
-
-Next chapter: [Algorithms for inference]({{site.baseurl}}/chapters/07-inference-process.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/social-cognition.html) 

@@ -6,7 +6,7 @@ custom_js:
 custom_css:
 - assets/css/index.css
 ---
- 
+
 <div id="header">
   <h1 id='title'>Probabilistic Models of Cognition</h1>
   <hr class='edition' />
