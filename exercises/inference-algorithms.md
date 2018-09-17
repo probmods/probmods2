@@ -1,7 +1,6 @@
 ---
 layout: exercise
 title: Algorithms for Inference - exercises
-description: MCMC, etc.
 ---
 
 ## Exercise 1. Sampling Implicit Curves
@@ -36,11 +35,15 @@ viz.auto(post);
 
 ### a) 
 
-Try using MCMC with the m-h recipe instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
+Try using MCMC with the MH recipe instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
 
 ### b)
 
-How can you change the model (or the inference algorithm) to make MCMC successfully trace the curves? Note that there are multiple ways to approach this problem. Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.
+How can you change the model to make MH successfully trace the curves? Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.
+
+### c)
+
+How can you instead change the the inference algorithm (instead of the model) to successfully trace the curves? Explore different algorithms!
 
 
 ## Exercise 2. Metropolis-Hastings Part 1

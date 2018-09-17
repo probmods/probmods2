@@ -62,7 +62,7 @@
   </head>
   <body>
 
-    {% assign sorted_pages = site.pages | sort:"name" %}
+    {% assign sorted_pages = site.pages | sort:"chapter_num" %}
 
     <div class="container">
       <ul class="nav navbar-nav">
@@ -72,7 +72,7 @@
             <li><a href="{{ site.baseurl }}/">Home</a></li>
             <li role="separator" class="divider"></li>
             {% for p in sorted_pages %}
-            {% if p.layout == 'chapter' %}
+            {% if p.chapter_num != nil %}
             <li><a href="{{ site.baseurl }}{{ p.url }}">{{ p.title }}</a></li>
             {% endif %}
             {% endfor %}
