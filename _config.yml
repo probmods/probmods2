@@ -1,7 +1,7 @@
 # Site settings
 title: Probabilistic Models of Cognition v. 2
-baseurl: ""
-url: "http://probmods.org"
+baseurl: "/probmods2"
+url: "http://marielajennings.github.io/probmods2/"
 
 # Build settings
 markdown: kramdown
