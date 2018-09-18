@@ -59,7 +59,7 @@ cough;
 
 ### a)
 
-For this example, does intervening on the program in this way (e.g. by setting the value of `lungCancer`) have the same effect as *conditioning* on the disease being true? What about the casual dependency makes this case?
+For this example, does intervening on the program in this way (e.g. by setting the value of `lungCancer`) have the same effect as *conditioning* on the disease being true? What about the casual dependency makes this the case?
 
 ### b) 
 
