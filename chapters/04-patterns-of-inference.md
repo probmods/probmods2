@@ -250,7 +250,7 @@ If the same variable gets reused within a model (e.g., because of a memoized fun
 
 ![A Bayes net with plate notation.](../assets/img/plate_notation.png)
 
-In this simple model, `cough` depends on `cold` which depends on some prior $\alpha$. However, the value of `cough` and `cold` is determined independently for each patient `s`, which is what we want. 
+In this simple model, `cough` depends on `cold` which depends on some prior $$\alpha$$. However, the value of `cough` and `cold` is determined independently for each patient `s`, which is what we want. 
 
 # From *A Priori* Dependence to Conditional Dependence
 
