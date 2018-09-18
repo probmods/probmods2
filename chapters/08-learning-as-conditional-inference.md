@@ -36,9 +36,15 @@ This distribution expresses our prior knowledge about how the process we observe
 The function `obsFn` captures the relation between the `hypothesis` and a single `datum`, and will usually contain an `observe` statement.
 Here we have used the special operator [`mapData`](http://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapData) whose meaning is the same as `map`. We use `mapData` both to remind ourselves that we are expressing the special pattern of observing a sequence of observations, and because some inference algorithms can use this hint to do better learning.
 
-When thinking about learning as inference, there are a couple key questions. First, what can be inferred about the hypothesis given a certain subset of the observed data? For example, in most cases, you cannot learn much about the weight of an object based on its color. However, if there is a correlation between weight and color -- as is the case in many children's toys -- observing color does allow you to learn about weight. 
+When thinking about learning as inference, there are several key questions. First, what can be inferred about the hypothesis given a certain subset of the observed data? For example, in most cases, you cannot learn much about the weight of an object based on its color. However, if there is a correlation between weight and color -- as is the case in many children's toys -- observing color does allow you to learn about weight. 
 
-Second, what is the expected relationship between the amount of input (how much data we've observed) and the amount of knowledge gained. In psychology, this relationship is often called the *learning curve*. The code below generates three simple learning curves. In the first, there is a linear relationship between amount of input and amount of knowledge. 
+Second, what is the relationship between the amount of input (how much data we've observed) and the knowledge gained? In psychology, this relationship is often characterized with a *learning curve*, representing a belief as a function of amount of data. 
+In general, getting more data allows us to update our beliefs. But some data, in some models, has a much bigger effect. 
+In addition, while knowledge often changes gradually as data is acucmulated, it sometimes jumps in non-linear ways; these are usually the most psychologically interesting predictions.
+
+<!--
+  NDG: i didn't really lie this discussion...
+The code below generates three simple learning curves. In the first, there is a linear relationship between amount of input and amount of knowledge. 
 
 The second shows an exponential relationship: each additional bit of data results in more knowledge than the last one. This learning curve is common when learning an integrated set of facts (like a theory): learning additional parts of the theory help you understand the parts you've already learned better. 
 
@@ -73,6 +79,8 @@ viz(repeat(100, fn_increase))
 print("Decreasing returns on input as knowledge grows:")
 viz(repeat(100, fn_decrease))
 ~~~~
+
+-->
 
 # Example: Learning About Coins
 
@@ -342,7 +350,7 @@ var estimates = map(function(N) {
 viz.line(observedDataSizes, estimates);
 ~~~~
 
-Once again, it takes us a little while to begin to suspect the coin isn't fair. However, once we make that conclusion, we rapidly shift our beliefs about the coin's weight. Interestingly, the speed at which we reject the 'fair coin' hypothesis is related to how far the coin's atual weight is from 0.5 (Why?):
+Once again, it takes us a little while to begin to suspect the coin isn't fair. However, once we make that conclusion, we rapidly shift our beliefs about the coin's weight. Interestingly, the speed at which we reject the 'fair coin' hypothesis is related to how far the coin's actual weight is from 0.5 (Why?):
 
 ~~~~js
 ///fold:
@@ -381,14 +389,18 @@ var estimates = map(function(N) {
 viz.line(observedDataSizes, estimates);
 ~~~~
 
+This model is a simple example of a *hierarchical prior* which we explore in detail in a later chapter.
+
+
 ## Example: Estimating Causal Power
 
-<!-- Not really the most compelling example. Maybe cut??-->
+<!-- Not really the most compelling example. Maybe cut??
+NDG: it's here to get ready for causal support later... we could explain better why this is interesting, eg connect more explicitly to cheng and RW? Perhaps model some of Cheng's actual data?-->
 
 
 Modeling beliefs about coins makes for clear examples, but it's obviously not a very important cognitive problem. However, many important cognitive problems have a remarkably similar structure.
 
-For instance, a common problem for cognition is *causal learning*: from observed evidence about the co-occurrence of events, attempt to infer the causal structure relating them. An especially simple case that has been studied by psychologists is *elemental causal induction*: causal learning when there are only two events, a potential cause C and a potential effect P. Cheng and colleagues @cheng1997covariation <!--This used to say 'E. Cheng' and had a broken reference. I assume this was actually a reference to Patricia Cheng's work.-->have suggested assuming that C and background effects can both cause E, with a noisy-or interaction. Causal learning then becomes an example of parameter learning,  where the parameter is the "causal power" of C to cause E:
+For instance, a common problem for cognition is *causal learning*: from observed evidence about the co-occurrence of events, attempt to infer the causal structure relating them. An especially simple case that has been studied by psychologists is *elemental causal induction*: causal learning when there are only two events, a potential cause C and a potential effect P. Cheng and colleagues @cheng1997covariation have suggested assuming that C and background effects can both cause E, with a noisy-or interaction. Causal learning then becomes an example of parameter learning,  where the parameter is the "causal power" of C to cause E:
 
 ~~~~
 var observedData = [{C:true, E:true}, {C:true, E:true}, {C:false, E:false}, {C:true, E:true}]
@@ -418,7 +430,7 @@ Experiment with this model: when does it conclude that a causal relation is like
 
 
 
-# Learning with a Probabilistic Language of Thought
+# Learning with a Language of Thought
 
 An important worry about Bayesian models of learning is that the Hypothesis space must either be too simple (as in the models above), specified in a rather ad-hoc way, or both. There is a tension here: human representations of the world are enormously complex and so the space of possible representations must be correspondingly big, and yet we would like to understand the representational resources in simple and uniform terms. How can we construct very large (possibly infinite) hypothesis spaces, and priors over them? One possibility is to use a grammar to specify a *hypothesis language*: a small grammar can generate an infinite array of potential hypotheses. Because grammars are themselves generative processes, a prior is provided for free from this formulation.
 

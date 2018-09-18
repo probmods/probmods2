@@ -69,13 +69,11 @@ From the root directory:
 $ scripts/deploy
 ```
 
-This updates all dependencies and copies them to the assets folder. Note that there are several javascript libraries in `assets` that are NOT maintained through nmp: 
+This updates all dependencies and copies them to the assets folder. Note that there are several custom javascript libraries in `assets` that are NOT maintained through nmp: 
 
 * box2d.js
 * plinko.js
 * parse-bibtex.js
-
-While it may be valuable to have these updated automatically, it is not clear what the original sources are for any of them.
 
 ## Running locally
 
