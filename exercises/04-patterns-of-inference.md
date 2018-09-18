@@ -7,7 +7,7 @@ title: Patterns of inference - exercises
 
 For each of the following programs:
 
-* Draw the dependency diagram (Bayes net). If you don't have software on your computer for doing this, Google Docs has a decent interface for creating drawings.
+* Draw the dependency diagram (Bayes net), including the probability tables (see example in chapter). If you don't have software on your computer for doing this, Google Docs has a decent interface for creating drawings.
 
 * Use informal evaluation order reasoning and the intervention method to determine causal dependency between A and B.
 
@@ -47,6 +47,8 @@ var b = z ? 'foo' : 'bar'
 ~~~~
 
 e)
+
+You do not need to include probability tables for this one. 
 
 ~~~~ 
 var examFairPrior = Bernoulli({p: .8})

@@ -230,7 +230,7 @@ The figure below defines a Bayesian network for the medical diagnosis example.
 The graph contains a node for each `var` statement in our WebPPL program, with links to that node from each variable that appears in the assignment expression.
 There is a probability table ("CPT") for each node, with a column for each value of the variable, and a row for each combination of values for its parents in the graph.
 
-![A Bayes net for the medical diagnosis example.]({{site.baseurl}}/assets/img/Med-diag-bnet1.jpg)
+![A Bayes net for the medical diagnosis example.](../assets/img/Med-diag-bnet1.jpg)
 
 Simple generative models will have a corresponding graphical model that captures all of the dependencies (and *in*dependencies) of the model, without capturing the precise *form* of these functions.
 For example, while the graphical model shown above faithfully represents the probability distribution encoded by the WebPPL program, it captures the *noisy-OR* form of the causal dependencies only implicitly.
@@ -243,6 +243,14 @@ As we will see, this has important implications for the ability to learn the val
 More complicated generative models, which can be expressed as probabilistic programs, often don't have such a graphical model (or rather they have many approximations, none of which captures all independencies).
 Recursive models generally give rise to such ambiguous (or loopy) Bayes nets.
 
+
+## Mem and Plate Notation
+
+If the same variable gets reused within a model (e.g., because of a memoized function), it is often useful to use plate notation. For example:
+
+![A Bayes net with plate notation.](../assets/img/plate_notation.png)
+
+In this simple model, `cough` depends on `cold` which depends on some prior $\alpha$. However, the value of `cough` and `cold` is determined independently for each patient `s`, which is what we want. 
 
 # From *A Priori* Dependence to Conditional Dependence
 
