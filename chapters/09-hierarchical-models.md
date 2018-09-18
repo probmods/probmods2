@@ -13,6 +13,8 @@ Learn about superordinate level from basic.  This is transfer learning, learning
 
 Human knowledge is organized hierarchically into levels of abstraction.  For instance, the most common or *basic-level* categories  (e.g. *dog*, *car*) can be thought of as abstractions across individuals, or more often across subordinate categories (e.g., *poodle*, *Dalmatian*, *Labrador*, and so on).  Multiple basic-level categories in turn can be organized under superordinate categories: e.g., *dog*, *cat*, *horse* are all *animals*; *car*, *truck*, *bus* are all *vehicles*. Some of the deepest questions of cognitive development are: How does abstract knowledge influence learning of specific knowledge?  How can abstract knowledge be learned? In this section we will see how such hierarchical knowledge can be modeled with *hierarchical generative models*: generative models with uncertainty at several levels, where lower levels depend on choices at higher levels.
 
+
+<!-- TODO: move to an appendix? an appendix on different common distributions and how to use them in webppl would be useful for other chapters... -->
 ### Some preliminary notes on the Dirichlet distribution
 
 In this chapter, we will make considerable use of Dirichlet distributions. In many models, we want to sample a category from a set of categories (e.g., a word from a list of words). When we use `categorical()`, we need to provide the probability for each category. This is problematic when we don't know the probabilities in question. 
@@ -694,7 +696,9 @@ The model in the Salakhutdinov et al (2010) paper is not actually given the assi
 
 <center><img src='../assets/img/russ_results_categories.png' width='400' /></center>
 
+<!-- TODO: clean this up before putting back:
 Results are shown for this model when run on the MSR Cambridge dataset which contains images in 24 different basic level categories. Specifically, the model is given a single instance of a cow and asked to retrieve other cow images. Shown are ROC curves for classifying test images belonging to a novel category versus the rest based on observing a single instance of the novel category. The red curve shows model results using a Euclidean metric, the blue curve results from the model described above, and the black curve from an Oracle model which uses the best possible metric. Also shown is a typical partition the model discovers of basic categories into superordinate categories. **TODO: THESE DON'T ACTUALLY APPEAR TO BE SHOWN!**
+-->
 
 <!--
 So far, we've been using the compound Dirichlet-multinomial to do one shot learning, by learning low values for the alpha hyperparameter. This causes the Dirichlet distribution at the second level to have parameters less than 1, and so to be 'spiky'. While such a Dirichlet distribution can lead to one shot learning, we're not explicitly learning about the variance of
