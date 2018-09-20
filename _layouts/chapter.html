@@ -20,6 +20,22 @@ custom_css:
 
 {{ content }}
 
+<!--
+<a href="Further Reading">{{site.baseurl}}/readings/{{page.name}}</a>
+<a href="Exercises">{{site.baseurl}}/exercises/{{page.name}}</a>
+-->
+{% assign sorted_pages = site.pages | sort:"chapter_num" %}
+{% assign thisch = false %}
+{% for p in sorted_pages %}
+	{% if thisch %}
+		Next chapter: <a href="{{site.baseurl}}{{p.url}}">{{ p.chapter_num }}. {{ p.title }}</a>
+		{% break %}
+	{% endif %}
+	{% if p.chapter_num == page.chapter_num %}
+		{% assign thisch = true %}
+	{% endif %}
+{% endfor %}
+
 <!-- put big scripts at end so we don't block page load -->
 <script src="{{ site.baseurl }}/assets/js/webppl.min.js"></script>
 <script src="{{ site.baseurl }}/assets/js/webppl-editor.min.js"></script>

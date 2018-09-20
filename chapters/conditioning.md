@@ -2,6 +2,7 @@
 layout: chapter
 title: Conditioning
 description: Asking questions of models by conditional inference.
+chapter_num: 3
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js
@@ -75,10 +76,6 @@ var dist = Infer({}, model)
 viz(dist)
 ~~~~
 
-<!--
-Predicting the outcome of a generative process is simply a special case of inference, where we condition on no restrictions and ask about the outcome. Try changing the condition in the above program to `condition(true)`; try removing this line altogether.
--->
-
 Going beyond the basic intuition of "hypothetical reasoning", the `Infer` operation in the presence of `condition` can be understood in several, equivalent, ways. We focus on two: the process of *rejection sampling*, and the the mathematical formulation of a *conditional distribution*.
 
 ## Rejection Sampling
@@ -112,23 +109,6 @@ var dist = Infer({method: 'rejection', samples: 100}, model)
 viz(dist)
 ~~~~
 
-<!--
-, schematically defined as:
-
-**TODO: cut? rewrite in js?**
-
-~~~~ norun
-(define (Rejection ..defines.. ..query-expression.. ..conditioner..)
-       ..defines..
-       (define query-value ..query-expression..)
-       (define condition-value ..conditioner..)
-       (if (equal? condition-value true)
-           query-value
-           (rejection-query defines query-expression conditioner)))
-~~~~
-
-While many implementations of `Infer` are possible, and others are discussed later, we can take the `rejection` process to *define* the distribution of values returned by a `Infer` expression.
--->
 
 ## Conditional Distributions
 
@@ -193,11 +173,6 @@ viz(posterior)
 ~~~~
 
 We have generated a value, the *hypothesis*, from some distribution called the *prior*, then used an observation function `likelihood` which generates data given this hypothesis, the probability of such an observation function is usually called the *likelihood*. Finally we have returned the hypothesis, conditioned on the observation being equal to some observed data---this conditional distribution is called the *posterior*. This is a typical setup in which Bayes' rule is used.
-<!--Notice that in this case the conditional distribution $$P(\text{data} \mid \text{hypothesis})$$ is just the probability distribution on return values from the `likelihood` function given an input value.-->
-
-<!--
-If we replace the conditioner with `true`in the code above, that is equivalent to observing no data.  Then query draws samples from the prior distribution, rather than the posterior.
--->
 
 Bayes' rule simply says that, in special situations where the model decomposes nicely into a part "before" the value to be returned (hypothesis) and a part "after" the value to be returned, then the conditional probability can be expressed simply in terms of the prior and likelihood components of the model. This is often a useful way to think about conditional inference in simple settings. However, we will see examples as we go along where Bayes' rule doesn't apply in a simple way, but the conditional distribution is equally well understood in other terms.
 
@@ -208,28 +183,9 @@ We have already seen rejection sampling and enumeration, but the AI literature i
 Many of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
 Switching from one method to another is as simple as changing the options passed to `Infer`. We have already seen two methods: `{method: 'enumerate'}` and `{method: 'rejection', samples: X}`; other methods include `'MCMC'`, `'SMC'`, and `'variational'`. The [Infer documentation](http://docs.webppl.org/en/master/inference/index.html) provides many more usage details.
 
-There is an interesting parallel between the `Infer` abstraction and the engineering challenge of different inference methods and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
+There is an interesting parallel between the `Infer` abstraction, wrapping up the engineering challenge of different inference methods, and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
 In parallel, WebPPL allows us to specify generative knowledge and inference questions, largely abstracting away the methods of inference (they show up only in the options argument to `Infer`).
-We will further explore some of the algorithms used in these implementations, and ask whether they may be useful algorithmic levels models for human thinking, in the section on [Algorithms for inference](07-inference-process.html). For most of this book, however, we work at the computational level, abstracting away from algorithmic details.
-
-<!--
-One implementation that we will often use is based on the *Metropolis Hastings* (MH) algorithm, a member of the class of Markov chain Monte Carlo (MCMC) methods:
-
-~~~~
-var dist = Infer({method: "MCMC", kernel: 'MH', samples: 50000},
-  function () {
-    var A = flip() ? 1 : 0
-    var B = flip() ? 1 : 0
-    var C = flip() ? 1 : 0
-    var D = A + B + C;
-    condition(D >= 2)
-    return A
-});
-viz.auto(dist)
-~~~~
-
-The workings of MH will be explored in a later chapter, but very roughly: The algorithm implements a random walk or diffusion process (a *Markov chain*) in the space of possible program evaluations that lead to the conditioner being true.  Each MH iteration is one step of this random walk, and the process is specially designed to visit each program evaluation with a long-run frequency proportional to its conditional probability.
--->
+We will further explore some of the algorithms used in these implementations in [Algorithms for inference](70-inference-algorithms.html), and ask whether they may be useful algorithmic levels models for human thinking in [Rational process models](80-process-models.html). For most of this book, however, we work at the computational level, abstracting away from algorithmic details.
 
 
 # Conditions and observations
@@ -275,9 +231,6 @@ viz(dist)
 
 This inference has the same meaning as the earlier example, but the formulation is importantly different. We have directly conditioned on the complex assumption that the sum of these random variables is greater than or equal to 2. This involves a new value or "random variable", `A + B + C >= 2` that *did not appear* anywhere in the generative model (the var definitions).
 We could have instead added a definition `var D = (A + B + C >= 2)` to the generative model and conditioned (or observed) its value.
-<!--
-In the traditional presentation of conditional probabilities we usually think of conditioning as *observation*: it explicitly enforces random variables to take on certain values. For example, when we say $$P(A \mid B=b)$$ we explicitly require $$B = b$$. In order to express the above inference in this way, we could add the complex variable to the generative model, then condition on it.
--->
 However this intertwines the hypothetical assumption (condition) with the generative model knowledge (definitions), and this is not what we want: we want a simple model which supports many queries, rather than a complex model in which only a prescribed set of queries is allowed.
 Using `condition` allows the flexibility to build complex random expressions like this as needed, making assumptions that are phrased as complex propositions, rather than simple observations.  Hence the effective number of queries we can construct for most programs will not merely be a large number but countably infinite, much like the sentences in a natural language.  The `Infer` function (in principle, though with variable efficiency) supports correct conditional inference for this infinite array of situations.
 
@@ -624,8 +577,6 @@ viz(dist)
 Under this model, a patient with coughing, chest pain and shortness of breath is likely to have either lung cancer or TB.  Modify the above code to see how these conditional inferences shift if you also know that the patient smokes or works in a hospital (where they could be exposed to various infections, including many worse infections than the typical person encounters).  More generally, the causal structure of knowledge representation in a probabilistic program allows us to model intuitive theories that can grow in complexity continually over a lifetime, adding new knowledge without bound.
 
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/03-conditioning.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/conditioning.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/03-conditioning.html)
-
-Next chapter: [Patterns of inference]({{site.baseurl}}/chapters/04-patterns-of-inference.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/conditioning.html)

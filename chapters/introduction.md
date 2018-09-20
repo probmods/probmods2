@@ -2,6 +2,7 @@
 layout: chapter
 title: Introduction
 description: A brief introduction to the philosophy.
+chapter_num: 1
 ---
 
 What is thought?
@@ -21,7 +22,6 @@ A generative model describes a process, usually one by which observable data is 
 These generative processes are simplified "working models" of a domain.
 Other mental computations operate over these generative models to draw inferences: many different questions can be answered by interrogating the mental model.
 This contrasts to a more procedural or mechanistic approach in which knowledge represents the input-output mapping for a particular question directly.
-<!--mht: I would break the above paragraph up into 2, perhaps at the "A different approach" line-->
 
 It is possible to use deterministic generative models to describe possible ways a process could unfold, but due to sparsity of observations or actual randomness there will often be many ways that our observations could have been generated.
 How can we choose amongst them? Probability theory provides a system for reasoning under exactly this kind of uncertainty.
@@ -41,6 +41,4 @@ Talk about the default library: objects, agents, events...
 While such generative models often describe how we think the "actual world" works, there are many cases where it is useful to have a generative model even if there is no "fact of the matter". A prime example of the latter is in linguistics, where generative models of grammar can usefully describe the possible sentences in a language by describing a process for constructing sentences.
 -->
 
-Reading & Discussion: [Readings]({{site.baseurl}}/readings/01-introduction.html)
-
-Next chapter: [Generative models]({{site.baseurl}}/chapters/02-generative-models.html)
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/10-introduction.html)

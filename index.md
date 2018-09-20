@@ -57,20 +57,19 @@ The first edition of this book used the probabilistic programming language Churc
 
 </div>
 
-{% assign sorted_pages = site.pages | sort:"name" %}
+{% assign sorted_pages = site.pages | sort:"chapter_num" %}
 
 <div id="right">
 
 <h3>Chapters</h3>
-
+ 
 <ol>
 {% for p in sorted_pages %}
-    {% if p.layout == 'chapter' %}
-    <li><a href="{{ site.baseurl }}{{ p.url }}">{{p.title}}</a><br />
-    <em>{{ p.description }}</em>
-    </li>
-
-    {% endif %}
+      {% if p.chapter_num != nil %}
+        <li><a href="{{ site.baseurl }}{{ p.url }}">{{p.title}}</a><br />
+        <em>{{ p.description }}</em>
+        </li>
+      {% endif %}
 {% endfor %}
 </ol>
 

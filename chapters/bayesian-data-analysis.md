@@ -1,7 +1,8 @@
 ---
 layout: chapter
 title: Bayesian data analysis
-description: Making scientific inferences about data and models
+description: Making scientific inferences from data.
+chapter_num: 6
 custom_js:
 - assets/js/towData.js
 - assets/js/towConfigurations.js
@@ -1154,5 +1155,9 @@ viz.table(summaryData)
 ~~~~
 
 An extended analysis of the Tug of War model (using [RWebPPL](https://github.com/mhtess/rwebppl)) can be found [here](http://rpubs.com/mhtess/bda-tow).
+<!--TODO: link to a few BDA textbooks here-->
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/14-bayesian-data-analysis.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/bayesian-data-analysis.html)
+
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/bayesian-data-analysis.html)
+

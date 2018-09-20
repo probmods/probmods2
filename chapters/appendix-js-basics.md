@@ -2,6 +2,7 @@
 layout: chapter
 title: Appendix - JavaScript basics
 description: A very brief primer on JavaScript.
+chapter_num: 20
 ---
 
 # Introduction to JavaScript
@@ -333,7 +334,7 @@ map(function(x){
 ~~~~
 
 The `map` higher-order function can also be used to map a function of more than one argument over multiple lists, element by element.
-For example, here is the MATLAB "dot-star" function (or ".*") written using `map2`, which maps over 2 lists at the same time:
+For example, here is the MATLAB "dot-star" function (or `.*`) written using `map2`, which maps over 2 lists at the same time:
 
 ~~~~
 var dotStar = function(v1, v2){
@@ -352,4 +353,4 @@ var g = function(){ return 8 }
 repeat(100, g)
 ~~~~
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/13-appendix-js-basics.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/appendix-js-basics.html)

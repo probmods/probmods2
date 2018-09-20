@@ -2,6 +2,7 @@
 layout: chapter
 title: Mixture models
 description: Models for inferring the kinds of things.
+chapter_num: 14
 ---
 
 In the chapter on [Hierarchical Models]({{site.baseurl}}/chapters/09-hierarchical-models.html), we saw the power of probabilistic inference in learning about the latent structure underlying different kinds of observations: the mixture of colors in different bags of marbles, or the prototypical features of categories of animals. In that discussion we always assumed that we knew what kind each observation belonged to---the bag that each marble came from, or the subordinate, basic, and superordinate category of each object. Knowing this allowed us to pool the information from each observation for the appropriate latent variables. What if we don't know *a priori* how to divide up our observations? In this chapter we explore the problem of simultaneously discovering kinds and their properties -- this can be done using *mixture models*.
@@ -345,6 +346,4 @@ For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipe
 
 Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. In the next section we describe another method for allowing an unknown number of things: In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an 'infinite model' we construct distributions assuming a truly infinite numbers of objects.
 
-<!-- Test your knowledge: [Exercises]({{site.baseurl}}/exercises/11-mixture-models.html)  -->
-
-Next chapter: [Non-parametric models]({{site.baseurl}}/chapters/12-non-parametric-models.html)
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/mixture-models.html)
