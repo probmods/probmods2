@@ -1,8 +1,9 @@
 ---
 layout: exercise
-title: Observing sequences - exercises
+title: Syntax models - exercises
 ---
 
+<!-- TODO: these are good excercises for MM, HMM, PCFG applied to language. use them later in the book, on a section on langauge? or wherever these sequence moodels move to? -->
 
 ## Exercise 1: What word comes next?
 

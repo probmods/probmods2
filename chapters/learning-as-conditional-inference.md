@@ -262,9 +262,36 @@ Here we have used the special operator [`mapData`](http://webppl.readthedocs.io/
 
 Overall this setup of prior, likelihood, and a sequence of observed data (which implies an exchangeable distribtuion on data!) describes an *ideal learner*.
 
+# Example: Subjective Randomness
+
+What does a random sequence look like? Is 00101 more random than 00000? Is the former a better example of a sequence coming from a fair coin than the latter? Most people say so, but notice that if you flip a fair coin, these two sequences are equally probable. Yet these intuitions about randomness are pervasive and often misunderstood: In 1936 the Zenith corporation attempted to test the hypothesis the people are sensitive to psychic transmissions. During a radio program, a group of psychics would attempt to transmit a randomly drawn sequence of ones and zeros to the listeners. Listeners were asked to write down and then mail in the sequence they perceived. The data thus generated showed no systematic effect of the transmitted sequence---but it did show a strong preference for certain sequences [@Goodfellow1938].
+The preferred sequences included 00101, 00110, 01100, and 01101.
+
+@Griffiths2001 suggested that we can explain this bias if people are considering not the probability of the sequence under a fair-coin process, but the probability that the sequence would have come from a fair process as opposed to a non-uniform (trick) process:
+
+~~~~
+var isFairDist = function(sequence) {
+  return Infer({method: 'enumerate'},
+    function () {
+      var isFair = flip()
+      var realWeight = isFair ? .5 : .2;
+      var coin = function() {return flip(realWeight)};
+      condition(_.isEqual(sequence, repeat(5, coin)))
+      return isFair
+  })
+}
+
+print("00101 is fair?")
+viz(isFairDist([false, false, true, false, true]))
+print("00000 is fair?")
+viz(isFairDist([false, false, false, false, false]))
+~~~~
+
+This model posits that when considering randomness people are more concerned with distinguishing a "truly random" generative process from a trick process. The same presumably holds as well as when imagining random sequences, but we will need a slightly more sophisticated model for that.
+
 # Learning a Continuous Parameter
 
-The previous example represents perhaps the simplest imaginable case of learning.  Typical learning problems in human cognition or AI are more complex in many ways.  For one, learners are almost always confronted with more than two hypotheses about the causal structure that might underlie their observations.  Indeed, hypothesis spaces for learning are often infinite.  Countably infinite hypothesis spaces are encountered in models of learning for domains traditionally considered to depend on "discrete" or "symbolic" knowledge; hypothesis spaces of grammars in language acquisition are a canonical example.  Hypothesis spaces for learning in domains traditionally considered more "continuous", such as perception or motor control, are typically uncountable and parametrized by one or more continuous dimensions.  In causal learning, both discrete and continuous hypothesis spaces typically arise.  (In statistics, making conditional inferences over continuous hypothesis spaces given data is often called *parameter estimation*.)
+The previous examples represent perhaps simple cases of learning.  Typical learning problems in human cognition or AI are more complex in many ways.  For one, learners are almost always confronted with more than two hypotheses about the causal structure that might underlie their observations.  Indeed, hypothesis spaces for learning are often infinite.  Countably infinite hypothesis spaces are encountered in models of learning for domains traditionally considered to depend on "discrete" or "symbolic" knowledge; hypothesis spaces of grammars in language acquisition are a canonical example.  Hypothesis spaces for learning in domains traditionally considered more "continuous", such as perception or motor control, are typically uncountable and parametrized by one or more continuous dimensions.  In causal learning, both discrete and continuous hypothesis spaces typically arise.  (In statistics, making conditional inferences over continuous hypothesis spaces given data is often called *parameter estimation*.)
 
 We can explore a basic case of learning with continuous hypothesis spaces by slightly enriching our coin flipping example.  Suppose that our hypothesis generator `makeCoin`, instead of simply flipping a coin to determine which of two coin weights to use, can choose *any* coin weight between 0 and 1.
 The following program computes conditional inferences about the weight of a coin drawn from a *prior distribution* described by the `Uniform` function, conditioned on a set of observed flips.
