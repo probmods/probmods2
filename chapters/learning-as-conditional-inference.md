@@ -19,23 +19,7 @@ chapter_num: 9
 The line between "reasoning" and "learning" is unclear in cognition.
 Just as reasoning can be seen as a form of conditional inference, so can learning: discovering persistent facts about the world (for example, causal processes or causal properties of objects).
 By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time.
-Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. This will be a special class of [models for sequences of observations]({{site.baseurl}}/chapters/05-observing-sequences.html)---roughly those that fit the pattern of [Bayes rule](03-conditioning.html#bayes-rule):
-
-<!--note that this pattern is exactly the mapData pattern....-->
-
-~~~~ norun
-Infer({...}, function() {
-  var hypothesis = sample(prior)
-  var obsFn = function(datum){...uses hypothesis...}
-  mapData({data: observedData}, obsFn)
-  return hypothesis
-});
-~~~~
-
-The `prior` samples a hypothesis from the *hypothesis space*.
-This distribution expresses our prior knowledge about how the process we observe is likely to work, before we have observed any data.
-The function `obsFn` captures the relation between the `hypothesis` and a single `datum`, and will usually contain an `observe` statement.
-Here we have used the special operator [`mapData`](http://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapData) whose meaning is the same as `map`. We use `mapData` both to remind ourselves that we are expressing the special pattern of observing a sequence of observations, and because some inference algorithms can use this hint to do better learning.
+Thus, we will formulate learning as inference in a model that (1) has a fixed latent value of interest, the *hypothesis*, and (2) has a sequence of observations, the *data points*. 
 
 When thinking about learning as inference, there are several key questions. First, what can be inferred about the hypothesis given a certain subset of the observed data? For example, in most cases, you cannot learn much about the weight of an object based on its color. However, if there is a correlation between weight and color -- as is the case in many children's toys -- observing color does allow you to learn about weight. 
 
@@ -59,7 +43,7 @@ Most people would find this a highly suspicious coincidence and begin to suspect
 
 Regardless of your prior beliefs, it is almost impossible to resist the inference that the coin is a trick coin.
 
-This "learning curve" reflects a highly systematic and rational process of conditional inference.
+This *learning curve* reflects a highly systematic and rational process of conditional inference.
 <!--
 Here's how to describe it using a probabilistic program<ref>following on Griffiths and Tenenbaum, "From mere coincidences to meaningful discoveries", Cognition, 2007, who present a more in-depth rational analysis and empirical study of people's sense of coincidence</ref>.  Recall how earlier we used stochastic functions with no inputs, or *thunks*, to describe coins of different weights.  Each such function now represents a hypothesis about the process generating our observations.  In the program below, the function `coin` represents these hypotheses.  The higher-order function `make-coin` takes one input, `weight`, and returns a `coin` thunk with that weight embedded in its definition.
 -->
@@ -87,13 +71,7 @@ viz(fairnessPosterior)
 
 Try varying the number of flips and the number of heads observed.  You should be able to reproduce the intuitive learning curve described above.  Observing 5 heads in a row is not enough to suggest a trick coin, although it does raise the hint of this possibility: its chances are now a few percent, approximately 30 times the baseline chance of 1 in a 1000.  After observing 10 heads in a row, the odds of trick coin and fair coin are now roughly comparable, although fair coin is still a little more likely.  After seeing 15 or more heads in a row without any tails, the odds are now strongly in favor of the trick coin.
 
-Study how this learning curve depends on the choice of `fairPrior`.   There is certainly a dependence.  If we set `fairPrior` to be 0.5, equal for the two alternative hypotheses, just 5 heads in a row are sufficient to favor the trick coin by a large margin.  If `fairPrior` is 99 in 100, 10 heads in a row are sufficient.  We have to increase `fairPrior` quite a lot, however, before 15 heads in a row is no longer sufficient evidence for a trick coin: even at `fairPrior` = 0.9999, 15 heads without a single tail still weighs in favor of the trick coin.  This is because the evidence in favor of a trick coin accumulates exponentially as the data set increases in size; each successive `h` flip increases the evidence by nearly a factor of 2.
-
-Learning is always about the shift from one state of knowledge to another.  The speed of that shift provides a way to diagnose the strength of a learner's initial beliefs.   Here, the fact that somewhere between 10 and 15 heads in a row is sufficient to convince most people that the coin is a trick coin suggests that for most people, the a priori probability of encountering a trick coin in this situation is somewhere between 1 in a 100 and 1 in 10,000---a reasonable range.  Of course, if you begin with the suspicion that any friend who offers you a coin to flip is liable to have a trick coin in his pocket, then just seeing five heads in a row should already make you very suspicious---as we can see by setting `fairPrior` to a value such as 0.9.
-
-## Learning trajectories
-
-When studying learning as conditional inference, that is when considering an *ideal learner model*, we are particularly interested in the dynamics of how inferred hypotheses change as a function of amount of data (often thought of as time the learner spends acquiring data). We can map out the *trajectory* of learning by plotting a summary of the posterior distribution over hypotheses as a function of the amount of observed data. Here we plot the expectation that the coin is fair in the above example:
+When studying learning as conditional inference, we are particularly interested in the dynamics of how inferred hypotheses change as a function of amount of data (often thought of as time the learner spends acquiring data). We can map out the *trajectory* of learning by plotting a summary of the posterior distribution over hypotheses as a function of the amount of observed data. Here we plot the expectation that the coin is fair in the above example:
 
 ~~~~
 ///fold:
@@ -125,7 +103,164 @@ var estimates = map(function(N) {
 viz.line(observedDataSizes, estimates);
 ~~~~
 
-Notice that different runs of this program can give quite different trajectories, but always end up in the same place in the long run. This is because the data set used for learning is different on each run. This is a feature, not a bug: real learners have idiosyncratic experience, even if they are al drawn from the same distribution. Of course, we are often interested in the average behavior of an ideal learner: we could average this plot over many randomly chosen data sets, simulating many different learners.  
+Notice that different runs of this program can give quite different trajectories, but always end up in the same place in the long run. This is because the data set used for learning is different on each run. This is a feature, not a bug: real learners have idiosyncratic experience, even if they are al drawn from the same distribution. Of course, we are often interested in the average behavior of an ideal learner: we could average this plot over many randomly chosen data sets, simulating many different learners. 
+<!--TODO: make a separate subsection about variance of data and averaged learning curves. make this example use all 'h'. -->
+
+Study how this learning curve depends on the choice of `fairPrior`.   There is certainly a dependence.  If we set `fairPrior` to be 0.5, equal for the two alternative hypotheses, just 5 heads in a row are sufficient to favor the trick coin by a large margin.  If `fairPrior` is 99 in 100, 10 heads in a row are sufficient.  We have to increase `fairPrior` quite a lot, however, before 15 heads in a row is no longer sufficient evidence for a trick coin: even at `fairPrior` = 0.9999, 15 heads without a single tail still weighs in favor of the trick coin.  This is because the evidence in favor of a trick coin accumulates exponentially as the data set increases in size; each successive `h` flip increases the evidence by nearly a factor of 2.
+
+Learning is always about the shift from one state of knowledge to another.  The speed of that shift provides a way to diagnose the strength of a learner's initial beliefs.   Here, the fact that somewhere between 10 and 15 heads in a row is sufficient to convince most people that the coin is a trick coin suggests that for most people, the a priori probability of encountering a trick coin in this situation is somewhere between 1 in a 100 and 1 in 10,000---a reasonable range.  Of course, if you begin with the suspicion that any friend who offers you a coin to flip is liable to have a trick coin in his pocket, then just seeing five heads in a row should already make you very suspicious---as we can see by setting `fairPrior` to a value such as 0.9.
+  
+
+# Independent and Exchangeable Sequences
+
+Now that we have illustrated the kinds of questions we are interested in asking of learning models, let's delve into the mathematical structure of models for sequences of observations.
+
+If the observations have *nothing* to do with each other, except that they have the same distribution, they are called *identically, independently distributed* (usually abbreviated to i.i.d.). For instance the values that come from calling `flip` are i.i.d. To verify this, let's first check whether the distribution of two flips in a sequence look the same (are "identical"):
+
+~~~~
+var genSequence = function() {return repeat(2, flip)}
+var sequenceDist = Infer({method: 'enumerate'}, genSequence)
+viz.marginals(sequenceDist)
+~~~~
+
+Now let's check that the first and second flips are independent, by conditioning on the first and seeing that the distribution of the second is unchanged:
+
+~~~~
+var genSequence = function() {return repeat(2, flip)}
+var sequenceCondDist = function(firstVal) {
+  return Infer({method: 'enumerate'},
+    function() {
+      var s = genSequence()
+      condition(s[0] == firstVal)
+      return {second: s[1]};
+  })
+}
+
+viz(sequenceCondDist(true))
+viz(sequenceCondDist(false))
+~~~~
+
+It is easy to build other i.i.d. sequences in WebPPL; we simply construct a stochastic thunk (a random function with no arguments) and evaluate it repeatedly. For instance, here is an extremely simple model for the words in a sentence:
+
+~~~~
+var words = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop']
+var probs = [0.0032, 0.4863, 0.0789, 0.0675, 0.1974, 0.1387, 0.0277]
+var thunk = function() {return categorical({ps: probs, vs: words})};
+
+repeat(10, thunk)
+~~~~
+
+In this example the different words are indeed independent: you can show as above (by conditioning) that the first word tells you nothing about the second word.
+However, constructing sequences in this way it is easy to accidentally create a sequence that is not entirely independent. For instance:
+
+~~~~
+var words = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop']
+var probs = (flip() ?
+             [0.0032, 0.4863, 0.0789, 0.0675, 0.1974, 0.1387, 0.0277] :
+             [0.3699, 0.1296, 0.0278, 0.4131, 0.0239, 0.0159, 0.0194])
+var thunk = function() {return categorical({ps: probs, vs: words})};
+
+repeat(10, thunk)
+~~~~
+
+While the sequence looks very similar, the words are not independent: learning about the first word tells us something about the `probs`, which in turn tells us about the second word. Let's show this in a slightly simpler example:
+
+~~~~
+var genSequence = function() {
+  var prob = flip() ? 0.2 : 0.7
+  var thunk = function() {return flip(prob)}
+  return repeat(2, thunk)
+}
+var sequenceCondDist = function(firstVal) {
+  return Infer({method: 'enumerate'},
+    function() {
+      var s = genSequence()
+      condition(s[0] == firstVal)
+      return {second: s[1]}
+  });
+};
+
+viz(sequenceCondDist(true))
+viz(sequenceCondDist(false))
+~~~~
+
+Conditioning on the first value tells us something about the second. This model is thus not i.i.d., but it does have a slightly weaker property: it is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), meaning that the probability of a sequence of values remains the same if permuted into any order.
+
+It turns out that exchangeable sequences can always be modeled in the form used for the last example:
+[de Finetti's theorem](https://en.wikipedia.org/wiki/De_Finetti%27s_theorem) says that, under certain technical conditions, any exchangeable sequence can be represented as follows, for some `latentPrior` distribution and `observe` function:
+
+~~~~ norun
+var latent = sample(latentPrior)
+var thunk = function() {return observe(latent)}
+var sequence = repeat(2,thunk)
+~~~~
+
+## Example: Polya's urn
+
+A classic example is Polya's urn: Imagine an urn that contains some number of white and black balls. On each step we draw a random ball from the urn, note its color, and return it to the urn along with *another* ball of that color. Here is this model in WebPPL:
+
+~~~~
+var urnSeq = function(urn, numsamples) {
+  if(numsamples == 0) {
+    return []
+  } else {
+    var ball = uniformDraw(urn)
+    return ball+urnSeq(urn.concat([ball]), numsamples-1)
+  }
+}
+
+var urnDist = Infer({method: 'enumerate'},
+                    function(){return urnSeq(['b', 'w'],3)})
+
+viz(urnDist)
+~~~~
+
+Polya's urn is an examples of a "rich get richer" dynamic, which has many applications for modeling the real world.
+Examining the distribution on sequences, it appears that this model is exchangeable---permutations of a sequence all have the same probability (e.g., `bbw`, `bwb`, `wbb` have the same probability; `bww`, `wbw`, `wwb` do too). (Challenge: Can you prove this mathematically?)
+
+
+Because the distributio is exchangeable, we know that there must be an alterative representation in terms of a latent quantity followed by independent samples. The de Finetti representation of this model is:
+
+~~~~
+var urn_deFinetti = function(urn, numsamples) {
+  var numWhite = sum(map(function(b){return b=='w'},urn))
+  var numBlack = urn.length - numWhite
+  var latentPrior = Beta({a: numWhite, b: numBlack})
+  var latent = sample(latentPrior)
+  return repeat(numsamples, function() {return flip(latent) ? 'b' : 'w'}).join("")
+}
+
+var urnDist = Infer({method: 'forward', samples: 10000},
+                    function(){return urn_deFinetti(['b', 'w'],3)})
+
+viz(urnDist)
+~~~~
+
+We sample a shared latent parameter -- in this case, a sample from a Beta distribution -- generating the sequence samples independently given this parameter. We obtain the same distribution on sequences of draws. (Challenge: show mathematically that these two representations give the same distribution.)
+
+## Ideal learners
+
+Recall that we aimed to formulate learning as inference in a model that has a fixed latent value of interest and a sequence of observations. 
+We now know that this will be possible anytime we are willing to assume the data are exchangeable.
+
+Many Bayesian models of learning are formulated in this way. We often write this in the pattern of Bayes' rule:
+
+~~~~ norun
+Infer({...}, function() {
+  var hypothesis = sample(prior)
+  var obsFn = function(datum){...uses hypothesis...}
+  mapData({data: observedData}, obsFn)
+  return hypothesis
+});
+~~~~
+
+The `prior` samples a hypothesis from the *hypothesis space*.
+This distribution expresses our prior knowledge about how the process we observe is likely to work, before we have observed any data.
+The function `obsFn` captures the relation between the `hypothesis` and a single `datum`, and will usually contain an `observe` statement.
+(The marginal probability function for `obsFn` is called the *likelihood*. Sometimes `obsFn` itself is colloquially called the likelihood, too.)
+Here we have used the special operator [`mapData`](http://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapData) whose meaning is the same as `map`. We use `mapData` both to remind ourselves that we are expressing the special pattern of observing a sequence of observations, and because some inference algorithms can use this hint to do better learning.
+
+Overall this setup of prior, likelihood, and a sequence of observed data (which implies an exchangeable distribtuion on data!) describes an *ideal learner*.
 
 # Learning a Continuous Parameter
 
