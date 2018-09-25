@@ -11,7 +11,7 @@ custom_js:
 # Cognition and conditioning
 
 We have built up a tool set for constructing probabilistic generative models. These can represent knowledge about causal processes in the world: running one of these programs generates a particular outcome by sampling a "history" for that outcome. However, the power of a causal model lies in the flexible ways it can be used to reason about the world. In the
-[last chapter](02-generative-models.html) we ran generative models *forward* to reason about outcomes from initial conditions. Generative models also enable reasoning in other ways.
+[last chapter](generative-models.html) we ran generative models *forward* to reason about outcomes from initial conditions. Generative models also enable reasoning in other ways.
 For instance, if we have a generative model in which X is the output of a process that depends on Y (say `var X = coolFunction(Y)`) we may ask: "assuming I have observed a certain X, what must Y have been?" That is we can reason *backward* from outcomes to initial conditions.
 More generally, we can make hypothetical assumptions and reason about the generative history: "assuming *something*, how did
 the generative model run?"
@@ -27,7 +27,7 @@ When interacting with other people, we observe their actions, which result from 
 
 # Hypothetical Reasoning with `Infer`
 
-Suppose that we know some fixed fact, and we wish to consider hypotheses about how a generative model could have given rise to that fact. In the [last chapter]({{site.baseurl}}/chapters/02-generative-models.html) we met the `Infer` operator for constructing the marginal distribution on return values of a function; with the help of the `condition` operator `Infer` is also able to describe marginal distributions *under some assumption* or condition.
+Suppose that we know some fixed fact, and we wish to consider hypotheses about how a generative model could have given rise to that fact. In the [last chapter]({{site.baseurl}}/chapters/generative-models.html) we met the `Infer` operator for constructing the marginal distribution on return values of a function; with the help of the `condition` operator `Infer` is also able to describe marginal distributions *under some assumption* or condition.
 
 Consider the following simple generative model:
 
@@ -185,7 +185,7 @@ Switching from one method to another is as simple as changing the options passed
 
 There is an interesting parallel between the `Infer` abstraction, wrapping up the engineering challenge of different inference methods, and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
 In parallel, WebPPL allows us to specify generative knowledge and inference questions, largely abstracting away the methods of inference (they show up only in the options argument to `Infer`).
-We will further explore some of the algorithms used in these implementations in [Algorithms for inference](70-inference-algorithms.html), and ask whether they may be useful algorithmic levels models for human thinking in [Rational process models](80-process-models.html). For most of this book, however, we work at the computational level, abstracting away from algorithmic details.
+We will further explore some of the algorithms used in these implementations in [Algorithms for inference](inference-algorithms.html), and ask whether they may be useful algorithmic levels models for human thinking in [Rational process models](process-models.html). For most of this book, however, we work at the computational level, abstracting away from algorithmic details.
 
 
 # Conditions and observations

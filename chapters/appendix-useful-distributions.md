@@ -9,7 +9,7 @@ chapter_num: 21
 
 # Dirichlet
 
-We will make considerable use of Dirichlet distributions in the chapter on [Hierarcical models](). In many models, we want to sample a category from a set of categories (e.g., a word from a list of words). When we use `categorical()`, we need to provide the probability for each category. This is problematic when we don't know the probabilities in question. 
+We will make considerable use of Dirichlet distributions in the chapter on [Hierarcical models](hierarchical-models.html). In many models, we want to sample a category from a set of categories (e.g., a word from a list of words). When we use `categorical()`, we need to provide the probability for each category. This is problematic when we don't know the probabilities in question. 
 
 As usual when we don't know the value of something, we sample it from a prior. The Dirichlet distribution -- which is the higher-dimensional analogue of the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) -- provides a natural prior for those probabilities. For example:
 

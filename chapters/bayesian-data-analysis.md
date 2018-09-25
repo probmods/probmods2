@@ -937,7 +937,7 @@ Instantiating a hypothesis in a cognitive model can answer more than just catego
 
 ## BDA of Tug-of-war model
 
-Recall the Tug-of-war model from the chapter on [conditioning]({{site.baseurl}}/chapters/03-conditioning.html).
+Recall the Tug-of-war model from the chapter on [conditioning]({{site.baseurl}}/chapters/conditioning.html).
 
 ~~~~
 var options = {method: 'rejection', samples: 1000}

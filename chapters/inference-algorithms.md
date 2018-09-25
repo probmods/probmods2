@@ -85,7 +85,7 @@ Luckily, it is often possible to estimate the posterior probability fairly accur
 
 ## Rejection Sampling
 
-Rejection sampling (implemented in `method:"rejection"`), which we introduced in [conditioning]({{site.baseurl}}/chapters/03-conditioning.html), is conceptually the simplest. However, it is not very efficient. Recall that it works by randomly sampling values for the variables and then checking to see if the condition is met, rejecting the sample if it is not. If the condition is *a priori* unlikely, the vast majority of samples will be rejected, and so it will take a very large number of samples to find computations that do so. To see this, try running the following model with progressively smaller values for `baserate`:
+Rejection sampling (implemented in `method:"rejection"`), which we introduced in [conditioning]({{site.baseurl}}/chapters/conditioning.html), is conceptually the simplest. However, it is not very efficient. Recall that it works by randomly sampling values for the variables and then checking to see if the condition is met, rejecting the sample if it is not. If the condition is *a priori* unlikely, the vast majority of samples will be rejected, and so it will take a very large number of samples to find computations that do so. To see this, try running the following model with progressively smaller values for `baserate`:
 
 ~~~~
 var baserate = 0.1
@@ -148,7 +148,7 @@ Next, we provide more intuition on how MCMC works.
 
 <!-- TODO: This discussion hasn't felt that useful to me recently. Revise and shorten? -->
 
-We have already seen [Markov models](05-observing-sequences.html#markov-models) used to describe sequences of observations. A Markov model (or Markov *chain*, as it is often called in the context of inference algorithms) is a discrete dynamical system that unfolds over iterations of the `transition` function.
+A Markov model (or Markov *chain*, as it is often called in the context of inference algorithms) is a discrete dynamical system that unfolds over iterations of the `transition` function.
 Here is a Markov chain:
 
 ~~~~
