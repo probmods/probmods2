@@ -12,21 +12,25 @@ Let's consider a fragment of English consisting of only the words "dogs", "cats"
 
 HINT: In the partial code below, I set the 'onlyMAP' parameter for inference to 'true'. As a result, Infer() only returns the most likely (maximum a posteriori) result. You may find that this simplifies deriving the required distribution. To see what the consequences of 'onlyMAP' are, try setting it to 'false'. 
 
+HINT 2: Think carefully about whether you want to use `condition` or `factor`.
+
 ~~~~
 //Helper function to compare arrays
 var comparray = function(arr1,arr2){
   return (JSON.stringify(arr1) === JSON.stringify(arr2))
 } 
 
+var vocab = //TODO
+
 var mm = Infer({method:'MCMC', burn:10000, samples: 50000, onlyMAP:true}, function() {
   
-  var wordToDistribution = mem(function(word) {
-    return dirichletDrift({alpha:ones([vocab.length,1]), concentration:10})
-  })
+	var wordToDistribution = mem(function(word) {
+  		return dirichlet(ones([vocab.length,1]))
+	})
 
-  var transition = function(word) {
-    return categorical({ps: wordToDistribution(word), vs: vocab})
-  }
+	var transition = function(word) {
+  		return categorical({ps: wordToDistribution(word), vs: vocab})
+	}
 
   //TODO ...
                 
@@ -43,15 +47,17 @@ var comparray = function(arr1,arr2){
   return (JSON.stringify(arr1) === JSON.stringify(arr2))
 } 
 
-var mm = Infer({method:'MCMC', burn:10000, samples: 50000}, function() {
-  
-  var wordToDistribution = mem(function(word) {
-    return dirichletDrift({alpha:ones([vocab.length,1]), concentration:10})
-  })
+var vocab = //TODO
 
-  var transition = function(word) {
-    return categorical({ps: wordToDistribution(word), vs: vocab})
-  }
+var mm = Infer({method:'MCMC', burn:10000, samples: 50000, onlyMAP:true}, function() {
+  
+	var wordToDistribution = mem(function(word) {
+  		return dirichlet(ones([vocab.length,1]))
+	})
+
+	var transition = function(word) {
+  		return categorical({ps: wordToDistribution(word), vs: vocab})
+	}
 
   //TODO ...
                 
@@ -68,21 +74,23 @@ var comparray = function(arr1,arr2){
   return (JSON.stringify(arr1) === JSON.stringify(arr2))
 } 
 
-var mm = Infer({method:'MCMC', burn:10000, samples: 50000}, function() {
-  
-  var wordToDistribution = mem(function(word) {
-    return dirichletDrift({alpha:ones([vocab.length,1]), concentration:10})
-  })
+var vocab = //TODO
 
-  var transition = function(word) {
-    return categorical({ps: wordToDistribution(word), vs: vocab})
-  }
+var mm = Infer({method:'MCMC', burn:10000, samples: 50000, onlyMAP:true}, function() {
+  
+	var wordToDistribution = mem(function(word) {
+  		return dirichlet(ones([vocab.length,1]))
+	})
+
+	var transition = function(word) {
+  		return categorical({ps: wordToDistribution(word), vs: vocab})
+	}
 
   //TODO ...
                 
 })
 
-viz(mm)
+print(mm)
 ~~~~
 
 ## Exercise 2: Hidden Markov Model
@@ -95,15 +103,17 @@ var comparray = function(arr1,arr2){
   return (JSON.stringify(arr1) === JSON.stringify(arr2))
 } 
 
-var mm = Infer({method:'MCMC', burn:10000, samples: 50000}, function() {
-  
-  var wordToDistribution = mem(function(word) {
-    return dirichletDrift({alpha:ones([vocab.length,1]), concentration:10})
-  })
+var vocab = //TODO
 
-  var transition = function(word) {
-    return categorical({ps: wordToDistribution(word), vs: vocab})
-  }
+var mm = Infer({method:'MCMC', burn:10000, samples: 50000, onlyMAP:true}, function() {
+  
+	var wordToDistribution = mem(function(word) {
+  		return dirichlet(ones([vocab.length,1]))
+	})
+
+	var transition = function(word) {
+  		return categorical({ps: wordToDistribution(word), vs: vocab})
+	}
 
   //TODO ...
                 

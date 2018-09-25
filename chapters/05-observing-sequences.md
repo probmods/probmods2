@@ -4,10 +4,6 @@ title: Models for sequences of observations
 description: Generative models of the relations between data points
 ---
 
-### Authors: Noah Goodman; Timothy J. O'Donnell; Josh Tenenbaum
-
-<!-- Josh's HMM switching HW problem for this section? -->
-
 In the last chapter we learned about common [patterns of inference](04-patterns-of-inference.html) that can result from a few observations, given the right model structure.
 There are also many common patterns of *data* that arise from certain model structures.
 It is common, for instance, to have a sequence of observations that we believe was each generated from the same causal process: a sequence of coin flips, a series of temperature readings from a weather station, the words in a sentence.
@@ -160,40 +156,40 @@ Notice that the sequences sampled from this model have "runs" of true or false m
 We can use a Markov model as a better (but still drastically simplified) model for sequences of words in language.
 
 ~~~~
-var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop'];
+var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'STOP'];
 var transition = function(word) {
-  var ps = (word == 'start' ? [0.0032, 0.4863, 0.0789, 0.0675, 0.1974, 0.1387, 0.0277] :
+  var ps = (word == 'START' ? [0.0032, 0.4863, 0.0789, 0.0675, 0.1974, 0.1387, 0.0277] :
             word == 'chef' ? [0.0699, 0.1296, 0.0278, 0.4131, 0.1239, 0.2159, 0.0194] :
             word == 'omelet' ? [0.2301, 0.0571, 0.1884, 0.1393, 0.0977, 0.1040, 0.1831] :
             word == 'soup' ?  [0.1539, 0.0653, 0.0410, 0.1622, 0.2166, 0.2664, 0.0941] :
             word == 'eat' ? [0.0343, 0.0258, 0.6170, 0.0610, 0.0203, 0.2401, 0.0011] :
             word == 'work' ? [0.0602, 0.2479, 0.0034, 0.0095, 0.6363, 0.02908, 0.0133] :
             word == 'bake' ? [0.0602, 0.2479, 0.0034, 0.0095, 0.6363, 0.02908, 0.0133] :
-            console.error("word (" + word + ") not recognized"))
+           console.error("word (" + word + ") not recognized"))
   return categorical({vs: vocab, ps: ps});
 }
 
 var sampleWords = function(lastWord) {
-  if(lastWord == 'stop') {
-    return [];
+  if(lastWord == 'STOP') {
+    return [lastWord];
   } else {
     var nextWord = transition(lastWord);
     return [lastWord].concat(sampleWords(nextWord));
   }
 }
 
-sampleWords('start')
+sampleWords('START')
 ~~~~
 
 Each word is sampled from a categorical distribution whose parameters depend on the previous word, with this dependence specified in the `transition` function.
-Notice that we control the length of the generated list here not with a fixed parameter, but by using the model itself: We start the recursion by sampling given the special symbol `start`.  
-When we sample the symbol `stop` we end the recursion.
+Notice that we control the length of the generated list here not with a fixed parameter, but by using the model itself: We start the recursion by sampling given the special symbol `START`.  
+When we sample the symbol `STOP` we end the recursion.
 Like the geometric distribution, this [stochastic recursion](02-generative-models.html#stochastic-recursion) can produce unbounded structures---in this case lists of words of arbitrary length.
 
 The above code may seem unnecessarily complex because it explicitly lists every transition probability. Suppose that we put a prior distribution on the multinomial transitions instead. Using `mem` this is very straightforward:
 
 ~~~~
-var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'stop']
+var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake', 'STOP']
 
 var wordToDistribution = mem(function(word) {
   return dirichlet(ones([vocab.length,1]))
@@ -204,15 +200,15 @@ var transition = function(word) {
 }
 
 var sampleWords = function(lastWord) {
-  if(lastWord == 'stop') {
-    return []
+  if(lastWord == 'STOP') {
+    return [lastWord]
   } else {
     var nextWord = transition(lastWord)
     return [lastWord].concat(sampleWords(nextWord))
   }
 }
 
-sampleWords('start')
+sampleWords('START')
 ~~~~
 
 This is very much like the way we created an exchangeable model above, except instead of one unknown probability list, we have one for each previous word. Models like this are often called "hierarchical" n-gram models. We consider [hierarchical models](09-hierarchical-models.html) in more detail in a later chapter.
@@ -262,7 +258,7 @@ var isFairDist = function(sequence) {
     function () {
       var isFair = flip()
       var init = flip()
-      condition(_.isEqual(sequence, markov(isFair, init, sequence.length)));
+      factor(_.isEqual(sequence, markov(isFair, init, sequence.length)));
       return isFair
   })
 }
@@ -273,7 +269,9 @@ print("01010 is fair?")
 viz(isFairDist([false, true, false, true, false]))
 ~~~~
 
-This version thinks that alternating sequences are non-random, but there are other non-uniform generative processes (such as all-true) that it doesn't detect. How could we extend this model to detect more non-random sequences?
+(Q: Why did we use `factor` instead of `condition` above?)
+
+This version thinks that alternating sequences are non-random, but there are other non-uniform generative processes (such as all-true) that it doesn't detect. How could we extend this model to detect more non-random sequences? 
 
 
 # Hidden Markov Models
@@ -282,7 +280,7 @@ Another popular model in computational linguistics is the hidden Markov model (H
 
 ~~~~
 var ones = function(n) {return Vector(repeat(n, function() {return 1}))};
-var states = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 'stop'];
+var states = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 'STOP'];
 var vocab = ['chef', 'omelet', 'soup', 'eat', 'work', 'bake']
 
 var stateToObsModel = mem(function(state) {
@@ -290,7 +288,7 @@ var stateToObsModel = mem(function(state) {
 })
 
 var observation = function(state) {
-  return categorical({ps: stateToObsModel(state), vs: vocab})
+  return (state == "START" ? 'START' : categorical({ps: stateToObsModel(state), vs: vocab}))
 }
 
 var stateToTransitionModel = mem(function(state) {
@@ -302,12 +300,12 @@ var transition = function(state) {
 }
 
 var sampleWords = function(lastState) {
-  return (lastState == 'stop' ?
-          [] :
+  return (lastState == 'STOP' ?
+          [lastState] :
           [observation(lastState)].concat(sampleWords(transition(lastState))));
 }
 
-sampleWords('start')
+sampleWords('START')
 ~~~~
 
 
@@ -316,6 +314,8 @@ sampleWords('start')
 The models above generate sequences of words, but lack constituent structure (or "hierarchical structure" in the linguistic sense).
 
 Probabilistic context-free grammars (PCFGs) are a straightforward (and canonical) way to generate sequences of words with constituent structure. There are many ways to write a PCFG in WebPPL. One especially direct way (inspired by Prolog programming) is to let each non-terminal be represented by a WebPPL function; here constituency is embodied by one procedure calling another---that is by causal dependence.
+
+(Notice that we've dispensed with the `START` and `STOP` symbols. Why do they become unnecessary with this formalism?)
 
 ~~~~
 var uniformDraw = function (xs) {return xs[randomInteger(xs.length)]};
