@@ -69,6 +69,8 @@ From the root directory:
 $ scripts/deploy
 ```
 
+Note that you may need to run `$scripts/deploy-to-assets`, depending on what the file is named.
+
 This updates all dependencies and copies them to the assets folder. Note that there are several custom javascript libraries in `assets` that are NOT maintained through nmp: 
 
 * box2d.js

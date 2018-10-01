@@ -27,7 +27,7 @@ custom_css:
 {% assign sorted_pages = site.pages | sort:"chapter_num" %}
 {% assign thisch = false %}
 {% for p in sorted_pages %}
-	{% if thisch %}
+	{% if thisch and page.layout != 'exercise' %}
 		Next chapter: <a href="{{site.baseurl}}{{p.url}}">{{ p.chapter_num }}. {{ p.title }}</a>
 		{% break %}
 	{% endif %}
