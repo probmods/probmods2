@@ -334,7 +334,7 @@ We condition on all the data that we have; bob failed to smile 5 times before, b
 ### a)
 
 > I have a particularly bad model of the sprinkler in my garden.
-> It is supposed to water my grass every morning, but is turns on only half the time (at random, as far as I can tell).
+> It is supposed to water my grass every morning, but it turns on only half the time (at random, as far as I can tell).
 > Fortunately, I live in a city where it also rains 30% of days.
 > 
 > One day I check my lawn and see that it is wet, meaning that either it rained that morning or my sprinkler turned on (or both).
