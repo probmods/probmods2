@@ -23,7 +23,7 @@ To see how the same concepts apply in a domain that is not usually thought of as
 
 Parallel problems of conditional inference arise in visual perception, social cognition, and virtually every other domain of cognition.  In visual perception, we observe an image or image sequence that is the result of rendering a three-dimensional physical scene onto our two-dimensional retinas.  A probabilistic program can model both the physical processes at work in the world that produce natural scenes, and the imaging processes (the "graphics") that generate images from scenes.  *Perception* can then be seen as conditioning this program on some observed output image and inferring the scenes most likely to have given rise to it. 
 
-When interacting with other people, we observe their actions, which result from a planning process, and often want to guess their desires, beliefs, or future actions. Planning can be modeled as a program that takes as input an agent's mental states (beliefs, desires, etc.) and produces action sequences---for a rational agent, these will be actions that are likely to produce the agent's desired states reliably and efficiently.  A rational agent can *plan* their actions by conditional inference to infer what steps would be most likely to achieve their desired state.  *Action understanding*, or interpreting an agent's observed behavior, can be expressed as conditioning a planning program (a "theory of mind") on observed actions to infer the mental states that most likely gave rise to those actions, and to predict how the agent is likely to act in the future.
+When interacting with other people, we observe their actions, which result from a planning process, and often want to guess their desires, beliefs, emotions, or future actions. Planning can be modeled as a program that takes as input an agent's mental states (beliefs, desires, etc.) and produces action sequences---for a rational agent, these will be actions that are likely to produce the agent's desired states reliably and efficiently.  A rational agent can *plan* their actions by conditional inference to infer what steps would be most likely to achieve their desired state.  *Action understanding*, or interpreting an agent's observed behavior, can be expressed as conditioning a planning program (a "theory of mind") on observed actions to infer the mental states that most likely gave rise to those actions, and to predict how the agent is likely to act in the future.
 
 # Hypothetical Reasoning with `Infer`
 
@@ -39,7 +39,7 @@ var model = function() {
   var D = A + B + C
   return {'D': D}
 }
-var dist = Infer({}, model)
+var dist = Infer(model)
 viz(dist)
 ~~~~
 
@@ -54,7 +54,7 @@ var model = function () {
   condition(D == 3)
   return {'A': A}
 };
-var dist = Infer({}, model)
+var dist = Infer(model)
 viz(dist)
 ~~~~
 
@@ -72,7 +72,7 @@ var model = function () {
   condition(D >= 2)
   return {'A': A}
 };
-var dist = Infer({}, model)
+var dist = Infer(model)
 viz(dist)
 ~~~~
 
@@ -139,10 +139,20 @@ viz(dist)
 
 The above notion of conditional distribution in terms of rejection sampling is equivalent to the mathematical definition, when both are well-defined. (There are special cases when only one definition makes sense. For instance, when continuous random choices are used it is possible to find situations where rejection sampling almost never returns a sample but the conditional distribution is still well defined. Why?)
 
-Indeed, we can use the process of rejection sampling to understand this alternative definition of the conditional probability $$P(A=a \mid B=b)$$. We imagine sampling many times, but only keeping those samples in which the condition is true. The frequency of the function returning a particular value $$a$$ (i.e. $$A=a$$) *given* that the condition is true, will be the number of times that $$A=a$$ **and** $$B=True$$ divided by the number of times that $$B=True$$. Since the frequency of the condition returning true will be $$P(B=True)$$ in the long run, and the frequency that the condition returns true *and* the query expression returns a given value $$a$$ will be $$P(A=a, B=True)$$, we get the above formula for the conditional probability.
-<!-- FIXME: clarify this last argument? -->
+Indeed, we can use the process of rejection sampling to understand this alternative definition of the conditional probability $$P(A=a \mid B=b)$$. 
+Imagine that we have sampled $$N_{total}$$ times.
+We only keep those samples in which the condition is true, say there are $$N_{B=True}$$ of them.
+Of these some number $$N_{A=a, B=True}$$ have the returned value $$a$$.
+The ratio 
 
-Try using the above formula for conditional probability to compute the probability of the different return values in the above examples. Check that you get the same probability that you observe when using rejection sampling.
+$$\frac{N_{A=a, B=True}}{N_{B=True}} = \frac{\frac{N_{A=a, B=True}}{N_{total}}}{\frac{N_{B=True}}{N_{total}}}$$ 
+
+is the fraction of times that $$A=a$$ when $$B=True$$. When the number of samples is very large this converges to $$\frac{P(A=a, B=True)}{P(B=True)}$$. Thus the rejection sampling definition of conditional probability implies the above (probability ratio) definition.
+
+
+<!-- FIXME: add a figure with imagined samples to illustrate. -->
+
+Try using the formula for conditional probability to compute the probability of the different return values in the above examples. Check that you get the same probability that you observe when using rejection sampling.
 
 ### Bayes Rule
 
@@ -161,7 +171,7 @@ var observedData = true;
 var prior = function () { flip() }
 var likelihood = function (h) { h ? flip(0.9) : flip(0.1) }
 
-var posterior = Infer({method: "enumerate"},
+var posterior = Infer(
   function () {
     var hypothesis = prior()
     var data = likelihood(hypothesis)
@@ -181,12 +191,15 @@ Bayes' rule simply says that, in special situations where the model decomposes n
 Much of the difficulty of implementing the WebPPL language (or probabilistic models in general) is in finding useful ways to do conditional inference---to implement `Infer`.
 We have already seen rejection sampling and enumeration, but the AI literature is replete with other algorithms and techniques for dealing with conditional probabilistic inference.
 Many of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
-Switching from one method to another is as simple as changing the options passed to `Infer`. We have already seen two methods: `{method: 'enumerate'}` and `{method: 'rejection', samples: X}`; other methods include `'MCMC'`, `'SMC'`, and `'variational'`. The [Infer documentation](http://docs.webppl.org/en/master/inference/index.html) provides many more usage details.
+Switching from one method to another is as simple as changing the options passed to `Infer`. We have already seen two methods: `{method: 'enumerate'}` and `{method: 'rejection', samples: X}`; other methods include `'MCMC'`, `'SMC'`, and `'variational'`.
+Sometimes we even drop the method argument, asking WebPPL to guess the best inference method (which is can often do).
+The [Infer documentation](http://docs.webppl.org/en/master/inference/index.html) provides many more usage details.
 
 There is an interesting parallel between the `Infer` abstraction, wrapping up the engineering challenge of different inference methods, and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
-In parallel, WebPPL allows us to specify generative knowledge and inference questions, largely abstracting away the methods of inference (they show up only in the options argument to `Infer`).
+In parallel, WebPPL allows us to specify generative knowledge and inference questions, largely abstracting away the methods of inference (they show up only in the options argument to `Infer`, when provided).
 We will further explore some of the algorithms used in these implementations in [Algorithms for inference](inference-algorithms.html), and ask whether they may be useful algorithmic levels models for human thinking in [Rational process models](process-models.html). For most of this book, however, we work at the computational level, abstracting away from algorithmic details.
 
+<!--TODO: add more on the levels of analysis analogy. perhaps in the process models section?-->
 
 # Conditions and observations
 
@@ -218,7 +231,7 @@ It is natural and common to condition a generative model on a value for one of t
 Consider the following WebPPL inference:
 
 ~~~~
-var dist = Infer({method: 'enumerate'},
+var dist = Infer(
   function () {
     var A = flip()
     var B = flip()
@@ -236,10 +249,10 @@ Using `condition` allows the flexibility to build complex random expressions lik
 
 # Factors
 
-In WebPPL, `condition` is actually a special case of a more general operator: `factor`. Whereas `condition` is like making an assumption that must be true, then `factor` is like making a *soft* assumption that is merely preferred to be true. For instance, suppose we flip a single coin. If we condition on the outcome being heads, then the outcome must be heads: 
+In WebPPL, `condition` and `observe` are actually special cases of a more general operator: `factor`. Whereas `condition` is like making an assumption that must be true, then `factor` is like making a *soft* assumption that is merely preferred to be true. For instance, suppose we flip a single coin. If we condition on the outcome being heads, then the outcome must be heads: 
 
 ~~~~
-var dist = Infer({method: 'enumerate'},
+var dist = Infer(
   function () {
     var A = flip()
     condition(A)
@@ -251,7 +264,7 @@ viz(dist)
 However, if we swap `condition` for `factor`, we simply make heads more likely:
 
 ~~~~
-var dist = Infer({method: 'enumerate'},
+var dist = Infer(
   function () {
     var A = flip()
     factor(A?1:0)
