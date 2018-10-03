@@ -156,7 +156,7 @@ Infer({method: "enumerate"}, extendedSmilesModel)
 ~~~~
 
 
-Question 5: Sprinklers, Rain and mem
+## Exercise 5: Sprinklers, Rain and mem
 
 ### a)
 
@@ -175,7 +175,7 @@ Answer the following questions, either using the Rules of Probability or by writ
 
 ~~~~
 
-### c)
+### b)
 
 My neighbour Kelsey, who has the same kind of sprinkler, tells me that her lawn was also wet that same morning.
 What is the new posterior probability that it rained?
@@ -184,7 +184,7 @@ What is the new posterior probability that it rained?
 
 ~~~~
 
-### d)
+### c)
 
 To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning.
 Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too.
@@ -195,7 +195,7 @@ Using `mem`, write a model to reason about arbitrary numbers of people, and then
 ~~~~
 
 
-## Exercise 5: Casino game
+## Exercise 6: Casino game
 
 Consider the following game.
 A machine randomly gives Bob a letter of the word "game"; it gives a, e (the vowels) with probability 0.45 each and the remaining letters (the consonants g, m) with probability 0.05 each.
@@ -237,9 +237,10 @@ Use `Categorical` to express this distribution:
 
 ~~~~ 
 var distribution = Categorical(...)
-~~~~ -->
+~~~~ 
+-->
 
-### d)
+### c)
 
 
 Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
@@ -270,7 +271,7 @@ It might be interesting to comment out the `condition` statement so you can comp
 
 Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
-### e)
+### d)
 
 Which is higher, $$p(\text{vowel} \mid \text{win})$$ or $$p(\text{consonant} \mid \text{win})$$?
 Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` function.
@@ -293,22 +294,20 @@ var distribution = Infer({method: 'enumerate'}, function() {
 viz.auto(distribution);
 ~~~~
 
-### f)
+### e)
 
 What difference do you see between your code and the mathematical notation?
 What are the advantages and disadvantages of each?
 Which do you prefer?
 
-<!-- ## Question 1: Preliminaries
-
+<!-- 
+## Question 1: Preliminaries
 ### a)
-
 I show you two identical-looking coins, and tell you that one is fair, i.e. $$P(\text{heads})=0.5$$, while the other is biased with probability $$0.9$$.
 You then toss one coin twice, and observe that it lands tails both times.
 
 What is the probability that you chose the fair coin?
 The code has been written for you, and needs only to be uncommented.
-
 ~~~~
 var modelQuery = function() {
 /*
