@@ -187,11 +187,11 @@ viz(sequenceCondDist(false))
 Conditioning on the first value tells us something about the second. This model is thus not i.i.d., but it does have a slightly weaker property: it is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), meaning that the probability of a sequence of values remains the same if permuted into any order.
 
 It turns out that exchangeable sequences can always be modeled in the form used for the last example:
-[de Finetti's theorem](https://en.wikipedia.org/wiki/De_Finetti%27s_theorem) says that, under certain technical conditions, any exchangeable sequence can be represented as follows, for some `latentPrior` distribution and `observe` function:
+[de Finetti's theorem](https://en.wikipedia.org/wiki/De_Finetti%27s_theorem) says that, under certain technical conditions, any exchangeable sequence can be represented as follows, for some `latentPrior` distribution and observation function `f`:
 
 ~~~~ norun
 var latent = sample(latentPrior)
-var thunk = function() {return observe(latent)}
+var thunk = function() {return f(latent)}
 var sequence = repeat(2,thunk)
 ~~~~
 
@@ -219,7 +219,7 @@ Polya's urn is an examples of a "rich get richer" dynamic, which has many applic
 Examining the distribution on sequences, it appears that this model is exchangeable---permutations of a sequence all have the same probability (e.g., `bbw`, `bwb`, `wbb` have the same probability; `bww`, `wbw`, `wwb` do too). (Challenge: Can you prove this mathematically?)
 
 
-Because the distributio is exchangeable, we know that there must be an alterative representation in terms of a latent quantity followed by independent samples. The de Finetti representation of this model is:
+Because the distribution is exchangeable, we know that there must be an alterative representation in terms of a latent quantity followed by independent samples. The de Finetti representation of this model is:
 
 ~~~~
 var urn_deFinetti = function(urn, numsamples) {
