@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Rational process models
-description: The psycological reality of inference algorithms.
+description: The psychological reality of inference algorithms.
 chapter_num: 8
 custom_js:
 - assets/js/box2d.js
