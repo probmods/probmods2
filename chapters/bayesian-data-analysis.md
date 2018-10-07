@@ -856,8 +856,8 @@ var multipleRegression = function(){
   }
 }
 
-var nSamples = 250
-var opts = { method: "MCMC", kernel: {HMC: {steps: 5, stepSize: 0.01}},
+var nSamples = 1000
+var opts = { method: "MCMC", kernel: 'MH',
             callbacks: [editor.MCMCProgress()],
              samples: nSamples, burn: nSamples/2 }
 
