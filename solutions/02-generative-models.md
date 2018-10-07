@@ -66,7 +66,7 @@ viz(repeat(1000, function() {flip(.4)}))
 > Write another new program with the same marginal distribution on return values that looks different from all of the above programs.
 
 ```
-flip() ? flip(0.2) : true
+flip() ? false : flip(.8)
 ```
 
 ## Exercise 2
