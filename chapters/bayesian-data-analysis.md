@@ -360,13 +360,6 @@ You got your first batch of data back today: For one of your research assistants
 We'll use the `editor.put()` function to save our results so we can look at the them in different code boxes.
 
 ~~~~
-///fold:
-var marginalize = function(dist, key){
-  return Infer({method: "enumerate"}, function(){
-    return sample(dist)[key]
-  })
-}
-///
 // "Kids who help" in 2 experiments
 var k1 = 0;
 var k2 = 10;
@@ -404,11 +397,11 @@ var opts = {
 
 var posterior = Infer(opts, model);
 
-var posteriorPredictive = marginalize(posterior, "predictive")
+var posteriorPredictive = marginalize(posterior, function(x) {return x.predictive})
 // save results for future code boxes
 editor.put("posteriorPredictive", posteriorPredictive)
 
-var parameterPosterior = marginalize(posterior, "parameter")
+var parameterPosterior = marginalize(posterior, function(x) {return x.parameter})
 viz.density(parameterPosterior, {bounds: [0, 1]})
 ~~~~
 
@@ -723,8 +716,8 @@ var levels = function(a, lvl){ return _.uniq(_.map(a, lvl)) }
 var outcomes = levels(towData, "outcome");
 var tournaments = levels(towData, "tournament");
 var patterns = {
-  single: levels(_.where(towData, {tournament: "single"}), "pattern"),
-  double: levels(_.where(towData, {tournament: "double"}), "pattern")
+  single: levels(_.filter(towData, {tournament: "single"}), "pattern"),
+  double: levels(_.filter(towData, {tournament: "double"}), "pattern")
 };
 
 // alternative proposal distribution for metropolis-hastings algorithm
@@ -742,21 +735,21 @@ var singleRegression = function(){
       return map(function(pattern){
 
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
-        var itemData = _.where(towData, itemInfo)
+        var itemData = _.filter(towData, itemInfo)
 
         // linear regression formula
         var predicted_y = b0 + itemData[0]["nWins"]*b1
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ)}, itemData)
 
-        return _.zipObject([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
+        return [pattern + "_" + tournament + "_" + outcome, predicted_y]
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
     }, outcomes)
   }, tournaments)
 
   // nasty data munging
-  return _.zipObject(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+  return _.fromPairs(_.flattenDepth(predictions, 2))
 }
 
 var nSamples = 500
@@ -822,8 +815,8 @@ var levels = function(a, lvl){ return _.uniq(_.map(a, lvl)) }
 var outcomes = levels(towData, "outcome");
 var tournaments = levels(towData, "tournament");
 var patterns = {
-  single: levels(_.where(towData, {tournament: "single"}), "pattern"),
-  double: levels(_.where(towData, {tournament: "double"}), "pattern")
+  single: levels(_.filter(towData, {tournament: "single"}), "pattern"),
+  double: levels(_.filter(towData, {tournament: "double"}), "pattern")
 };
 
 // alternative proposal distribution for metropolis-hastings algorithm
@@ -844,14 +837,14 @@ var multipleRegression = function(){
       return map(function(pattern){
 
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
-        var itemData = _.where(towData, itemInfo)
+        var itemData = _.filter(towData, itemInfo)
 
         // linear equation
         var predicted_y = b0 + itemData[0]["nWins"]*b1 + itemData[0]["nUniqueWins"]*b2
 
         map(function(d){ observe(Gaussian({mu: predicted_y, sigma: sigma}), d.ratingZ) }, itemData)
 
-        return _.zipObject([[pattern + "_" + tournament + "_" + outcome, predicted_y]])
+        return [pattern + "_" + tournament + "_" + outcome, predicted_y]
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
     }, outcomes)
@@ -859,7 +852,7 @@ var multipleRegression = function(){
 
   return {
     parameters: {b0: b0, b1: b1, b2: b2, sigma: sigma},
-    predictives: _.zipObject(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+    predictives: _.fromPairs(_.flattenDepth(predictions, 2))
   }
 }
 
@@ -875,15 +868,8 @@ editor.put('multiRegression', posterior)
 Look at parameters.
 
 ~~~~
-///fold:
-var marginalize = function(dist, key){
-  return Infer({method: "enumerate"}, function(){
-    return sample(dist)[key];
-  })
-}
-///
 var posterior = editor.get('multiRegression');
-var parameterPosterior = marginalize(posterior, "parameters")
+var parameterPosterior = marginalize(posterior, function(x){return x.parameters})
 viz.marginals(parameterPosterior)
 ~~~~
 
@@ -892,11 +878,6 @@ How well does the model fit the data?
 
 ~~~~
 ///fold:
-var marginalize = function(dist, key){
-  return Infer({method: "enumerate"}, function(){
-    return sample(dist)[key];
-  })
-}
 var merge = function(m, d){
   var keys = _.keys(d)
   return map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
@@ -911,7 +892,7 @@ var correlation = function(xs, ys) {
 }
 ///
 var posterior = editor.get('multiRegression');
-var posteriorPredictive = marginalize(posterior, "predictives")
+var posteriorPredictive = marginalize(posterior, function(x){return x.predictives})
 
 var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
 
@@ -997,8 +978,8 @@ var levels = function(a, lvl){ return _.uniq(_.map(a, lvl)) }
 var outcomes = levels(towData, "outcome");
 var tournaments = levels(towData, "tournament");
 var patterns = {
-  single: levels(_.where(towData, {tournament: "single"}), "pattern"),
-  double: levels(_.where(towData, {tournament: "double"}), "pattern")
+  single: levels(_.filter(towData, {tournament: "single"}), "pattern"),
+  double: levels(_.filter(towData, {tournament: "double"}), "pattern")
 };
 
 var round = function(x){
@@ -1068,17 +1049,17 @@ var dataAnalysisModel = function(){
 
         var itemInfo = {pattern: pattern, tournament: tournament, outcome: outcome}
         // participants' ratings
-        var itemData = _.where(towData, itemInfo)
+        var itemData = _.filter(towData, itemInfo)
 
         // information about the winners and losers
-        var matchInformation = _.where(matchConfigurations, itemInfo)[0]
+        var matchInformation = _.filter(matchConfigurations, itemInfo)[0]
 
         var modelPosterior = tugOfWarModel(lazyPulling, lazinessPrior, matchInformation)
         var smoothedPredictions = smoothToBins(modelPosterior, 0.05, bins)
 
         map(function(d){ observe(smoothedPredictions, d.roundedRating) }, itemData)
 
-        return _.zipObject([[pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]])
+        return [pattern + "_" + tournament + "_" + outcome, expectation(modelPosterior)]
 
       }, patterns[tournament]) // singles tournaments don't have all patterns
     }, outcomes)
@@ -1086,7 +1067,7 @@ var dataAnalysisModel = function(){
 
   return {
     parameters: {lazinessPrior: lazinessPrior, lazyPulling: lazyPulling},
-    predictives: _.zipObject(_.flatten(map(function(i){ _.pairs(i) }, _.flatten(predictions)), true))
+    predictives: _.fromPairs(_.flattenDepth(predictions, 2))
   }
 }
 
@@ -1102,15 +1083,8 @@ editor.put("bda_bcm", posterior)
 Look at parameters.
 
 ~~~~
-///fold:
-var marginalize = function(dist, key){
-  return Infer({method: "enumerate"}, function(){
-    return sample(dist)[key];
-  })
-}
-///
 var posterior = editor.get('bda_bcm');
-var parameterPosterior = marginalize(posterior, "parameters")
+var parameterPosterior = marginalize(posterior, function(x) {return x.parameters})
 viz.marginals(parameterPosterior)
 ~~~~
 
@@ -1118,11 +1092,6 @@ Critique posterior predictive
 
 ~~~~
 ///fold:
-var marginalize = function(dist, key){
-  return Infer({method: "enumerate"}, function(){
-    return sample(dist)[key];
-  })
-}
 var merge = function(m, d){
   var keys = _.keys(d)
   return map(function(k){return {model: m[k], data: d[k], item:k} }, keys)
@@ -1137,7 +1106,7 @@ var correlation = function(xs, ys) {
 }
 ///
 var posterior = editor.get('bda_bcm');
-var posteriorPredictive = marginalize(posterior, "predictives")
+var posteriorPredictive = marginalize(posterior, function(x) {return x.predictives})
 
 var modelDataDF = merge(posteriorPredictive.MAP().val, towMeans)
 
