@@ -164,7 +164,7 @@ D. How does WebPPL expose commonalities between these two models?
 
 Let's continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values. This posterior can give you an idea of whether or not your model is well-behaved. In other words, do the predictions of your model depend heavily on the exact parameter value?
 
-To help us understand how to examine posteriors over parameter settings, we're going to revisit the example of the blicket detector from chapter on Conditional Dependence.
+To help us understand how to examine posteriors over parameter settings, we're going to revisit the example of the blicket detector from the chapter on `Conditional Dependence`.
 
 Here is the model, with slightly different names than the original example, and written in a parameter-friendly way. It is set up to display the "backwards blocking" phenomenon.
 
