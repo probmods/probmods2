@@ -150,21 +150,21 @@ One that applies to the data collection situation above, and one that applies to
 
 We saw in this chapter how to analyze our models of cognition by using Bayesian statistical techniques.
 Compare and contrast the results of our cognitive model of tug-of-war with our regression models.
-Some questions to ponder:
+Please consider each question and provide a couple sentences describing your answer.
 
-* What phenomena in the data was it better able to capture?
+A. Was there a phenomena in the data that either model was better able to capture?
 
-* What, if anything, did it fail to capture?
+B. What, if anything did the models in part A fail to capture?
 
-* Are there other aspects of the model you could 'lift' into the Bayesian Data Analysis (i.e. fixed parameters that you could put a prior on and include in your joint inference)?
+C. Are there other aspects of the model you could 'lift' into the Bayesian Data Analysis (i.e. fixed parameters that you could put a prior on and include in your joint inference)?
 
-* How does WebPPL expose commonalities between these two models?
+D. How does WebPPL expose commonalities between these two models?
 
 ## Exercise 4
 
-Let's continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values. This posterior can give you an idea of whether or not your model is well-behaved. In other words, do the predictoins of your model depend heavily on the exact parameter value?
+Let's continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values. This posterior can give you an idea of whether or not your model is well-behaved. In other words, do the predictions of your model depend heavily on the exact parameter value?
 
-To help us understand how to examine posteriors over parameter settings, we're going to revisit the example of the blicket detector from Chapter 4.
+To help us understand how to examine posteriors over parameter settings, we're going to revisit the example of the blicket detector from chapter on Conditional Dependence.
 
 Here is the model, with slightly different names than the original example, and written in a parameter-friendly way. It is set up to display the "backwards blocking" phenomenon.
 
@@ -209,7 +209,7 @@ var uniformKernel = function(prevVal) {
 };
 
 var toProbs = function(predictions) {
-  return _.object(map(function(i) {return "predictive: cond" + i + " P(true)";}, _.range(1, predictions.length + 1)),
+  return _.zipObject(map(function(i) {return "predictive: cond" + i + " P(true)";}, _.range(1, predictions.length + 1)),
                   map(function(model) {return Math.exp(model.score(true))}, predictions))
 }
 
