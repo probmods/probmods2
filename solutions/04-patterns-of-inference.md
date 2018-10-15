@@ -86,7 +86,7 @@ viz.table(Infer({method: 'enumerate'}, function() {
   var cancer = flip(0.00001);
   var cold = flip(0.2);
   var death_by_cancer = cancer ? flip(0.9) : false;
-  var death_by_cold = cold ? flip(0.2) : false;
+  var death_by_cold = cold ? flip(0.00006) : false;
   var other_death = flip(0.000000001);
   var death = death_by_cancer || death_by_cold || other_death;
   return {cancer: cancer, cold: cold, death: death};
@@ -97,10 +97,12 @@ viz.table(Infer({method: 'enumerate'}, function() {
 
 > Compute $$p( \text{cancer} \mid \text{death} , \text{cold} )$$ and $$p( \text{cancer} \mid \text{death} , \text{no cold} )$$. How do these probabilities compare to $$p( \text{cancer} \mid \text{death} )$$ and $$p( \text{cancer} )$$? Using these probabilities, give an example of explaining away.
 
-Prior                   | 0.00001
-Given death             | 0.42855
-Given death and cold    | 0.13043
-Given death and no cold | 0.99989
+| Event                     | Prob |
+| ------------------------- | ---- |
+| Prior                   | 0.00001|
+| Given death             | 0.42855| 
+| Given death and cold    | 0.13043|
+| Given death and no cold | 0.99989| 
 
 Having a cold explains away the death.
 Given only the information that a person died, cancer is relatively likely.
@@ -161,10 +163,12 @@ viz.table(Infer({method: 'enumerate'}, function() {
 
 > Compute $$p( \text{cold} \mid \text{death} , \text{cancer} )$$ and $$p( \text{cold} \mid \text{death} , \text{no cancer} )$$. How do these probabilities compare to $$p( \text{cold} \mid \text{death} )$$ and $$p( \text{cold} )$$? Using these probabilities, give an example of explaining away.
 
-Prior                     | 0.20
-Given death               | 0.66
-Given death and cancer    | 0.20
-Given death and no cancer | 0.99
+| Event                     | Prob |
+| ------------------------- | ---- |
+| Prior                     | 0.20 |
+| Given death               | 0.66 |
+| Given death and cancer    | 0.20 |
+| Given death and no cancer | 0.99 |
 
 Having cancer *really* explains away the death.
 Given only the information that a person died, a cold is very likely.
