@@ -21,6 +21,8 @@ var b = flip()
 var c = flip(a && b ? .8 : .5)
 ~~~~
 
+neither causally dependent nor statistically dependent
+
 ![](../assets/img/04_01_a.png)
 
 ### b)
@@ -31,6 +33,8 @@ var b = flip(a ? .9 : .2)
 var c = flip(b ? .7 : .1)
 ~~~~
 
+both causally dependent *and* statistically dependent
+
 ![](../assets/img/04_01_b.png)
 
 ### c)
@@ -40,6 +44,8 @@ var a = flip()
 var b = flip(a ? .9 : .2)
 var c = flip(a ? .7 : .1)
 ~~~~
+
+both causally dependent *and* statistically dependent
 
 ![](../assets/img/04_01_c.png)
 
@@ -52,9 +58,13 @@ var z = flip() ? a : c;
 var b = z ? 'foo' : 'bar'
 ~~~~
 
+both causally dependent *and* statistically dependent
+
 ![](../assets/img/04_01_d.png)
 
 e)
+
+statistically dependent but *not* causally dependent
 
 ~~~~ 
 var examFairPrior = Bernoulli({p: .8})
