@@ -345,6 +345,8 @@ Do these changes agree with your intuitions? Can you modify this example to make
 
 A model very similar to this was used in @Gerstenberg2012 to predict human judgements about the strength of players in ping-pong tournaments. It achieved very accurate quantitative predictions without many free parameters.
 
+<!--TODO: add actual conditions from expt. add actual data here and/or in bda chapter.-->
+
 We can form many complex queries from this simple model. We could ask how likely a team of Bob and Mary is to beat a team of Jim and Sue, given that Mary is at least as strong as sue, and Bob beat Jim in a previous direct match up:
 
 ~~~~

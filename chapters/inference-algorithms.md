@@ -13,10 +13,125 @@ custom_css:
 - /assets/css/draw.css
 ---
 
-Portions of the examples here were adapted from "[Notes of the PPAML Summer School 2016](http://probmods.github.io/ppaml2016/)".
+
+# Prologue: The performance characteristics of different algorithms
+
+When we introduced [conditioning]({{site.baseurl}}/chapters/conditioning.html) we pointed out that the rejection sampling and enumeration (or mathematical) definitions are equivalent---we could take either one as the definition of how `Infer` should behave with `condition`.
+There are many different ways to compute the same distribution, it is thus useful to separately think about the distributions we are building (including conditional distributions) and how we will compute them.
+Indeed, in the last few chapters we have explored the dynamics of inference without worrying about the details of inference algorithms.
+The efficiency characteristics of different implementations of `Infer` can be very different, however, and this is important both practically and for motivating cognitive hypotheses at the level of algorithms (or psychological processes).
+
+The "guess and check" method of rejection sampling (implemented in `method:"rejection"`) is conceptually useful but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very large number of samples to find computations that do so. To see this, let us explore the impact of `baserate` in our simple warm-up example:
+
+~~~~
+var infModel = function(baserate){
+  Infer({method: 'rejection', samples: 100}, function(){
+    var A = flip(baserate)
+    var B = flip(baserate)
+    var C = flip(baserate)
+    condition(A+B+C >= 2)
+    return A})
+}
+
+//a timing utility: run 'foo' 'trials' times, report average time.
+var time = function(foo, trials) {
+  var start = _.now()
+  var ret = repeat(trials, foo)
+  var end = _.now()
+  return (end-start)/trials
+}
+
+var baserate = 0.1
+time(function(){infModel(baserate)}, 10)
+~~~~
+
+Even for this simple program, lowering the baserate by just one order of magnitude, to $$0.01$$, will make rejection sampling impractical.
+
+Another option that we've seen before is to enumerate all of the possible executions of the model, using the rules of probability to calculate the conditional distribution:
+
+~~~~
+var infModel = function(baserate){
+  Infer({method: 'enumerate'}, function(){
+    var A = flip(baserate)
+    var B = flip(baserate)
+    var C = flip(baserate)
+    condition(A+B+C >= 2)
+    return A})
+}
+
+//a timing utility: run 'foo' 'trials' times, report average time.
+var time = function(foo, trials) {
+  var start = _.now()
+  var ret = repeat(trials, foo)
+  var end = _.now()
+  return (end-start)/trials
+}
+
+var baserate = 0.1
+time(function(){infModel(baserate)}, 10)
+~~~~
+
+Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this we modify the model to allow a flexible number of `flip` choices:
+
+~~~~
+var infModel = function(baserate, numFlips){
+  Infer({method: 'enumerate'}, function(){
+    var choices = repeat(numFlips, function(){flip(baserate)})
+    condition(sum(choices) >= 2)
+    return choices[0]})
+}
+
+//a timing utility: run 'foo' 'trials' times, report average time.
+var time = function(foo, trials) {
+  var start = _.now()
+  var ret = repeat(trials, foo)
+  var end = _.now()
+  return (end-start)/trials
+}
+
+var baserate = 0.1
+var numFlips = 3
+time(function(){infModel(baserate,numFlips)}, 10)
+~~~~
+
+The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated).
+
+There are many other algorithms and techniques for probabilistic inference, reviewed below. They each have their own performance characteristics. For instance, *Markov chain Monte Carlo* inference approximates the posterior distribution via a random walk.
+
+~~~~
+var infModel = function(baserate, numFlips){
+  Infer({method: 'MCMC', lag: 100}, function(){
+    var choices = repeat(numFlips, function(){flip(baserate)})
+    condition(sum(choices) >= 2)
+    return choices[0]})
+}
+
+//a timing utility: run 'foo' 'trials' times, report average time.
+var time = function(foo, trials) {
+  var start = _.now()
+  var ret = repeat(trials, foo)
+  var end = _.now()
+  return (end-start)/trials
+}
+
+var baserate = 0.1
+var numFlips = 3
+time(function(){infModel(baserate,numFlips)}, 10)
+~~~~
+
+See what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably (but results will become less stable). Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
+This is an example of the kind of tradeoffs that are common between different inference algorithms.
+
+
+
+# The landscape of inference algorithms
+
+Portions of the following were adapted from "[Notes of the PPAML Summer School 2016](http://probmods.github.io/ppaml2016/)".
 <!--TODO get permission? -->
 
-# Analytic Solutions
+## Analytic Solutions
+
+
 
 Conceptually, the simplest way to determine the probability of some variable under Bayesian inference is simply to apply Bayes' Rule and then carry out all the necessary multiplication, etc. However, this is not always possible. 
 
@@ -79,11 +194,11 @@ viz.table(lineDist);
 
 Running this program, we can see that enumeration starts by growing a line from the bottom-right corner of the image, and then proceeds to methodically plot out every possible line length that could be generated. These are all fairly terrible at matching the target image, and there are billions more states like them that enumeration would have to wade through in order to find those few that have high probability.
 
-# Approximate Inference
+## Approximate Inference
 
 Luckily, it is often possible to estimate the posterior probability fairly accurately, even though we cannot calculate it exactly. There are a number of different algorithms, each of which has different properties.
 
-## Rejection Sampling
+### Rejection Sampling
 
 Rejection sampling (implemented in `method:"rejection"`), which we introduced in [conditioning]({{site.baseurl}}/chapters/conditioning.html), is conceptually the simplest. However, it is not very efficient. Recall that it works by randomly sampling values for the variables and then checking to see if the condition is met, rejecting the sample if it is not. If the condition is *a priori* unlikely, the vast majority of samples will be rejected, and so it will take a very large number of samples to find computations that do so. To see this, try running the following model with progressively smaller values for `baserate`:
 
@@ -119,7 +234,7 @@ var model = function(){
 viz(Infer({method: 'enumerate'}, model))
 ~~~~
 
-## Markov chain Monte Carlo (MCMC)
+### Markov chain Monte Carlo (MCMC)
 
 With rejection sampling, each sample is an independent draw from the model's prior. Markov chain Monte Carlo, in contrast involves a random walk through the posterior. Each sample depends on the prior sample -- but ony the prior sample (it is a *Markov* chain). We describe this in more detail below.
 
@@ -444,7 +559,7 @@ There are a couple of caveats to keep in mind when using HMC:
  - Its parameters can be extremely sensitive. Try increasing the `stepSize` option to `0.004` and seeing how the output samples degenerate. 
  - It is only applicable to continuous random choices, due to its gradient-based nature. You can still use HMC with models that include discrete choices, though: under the hood, this will alternate between HMC for the continuous choices and MH for the discrete choices.
 
-## Particle Filters
+### Particle Filters
 
 Particle filters -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintain a collection of samples (particles) that are resampled upon encountering new evidence. They are particularly useful for models that incrementally update beliefs as new observations come in. Before considering such models, though, let's get a sense of how particle filters work. Below, we apply a particle filter to our 2D image rendering model, using `method: 'SMC'`.
 

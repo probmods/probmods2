@@ -12,10 +12,28 @@ custom_js:
 
 <!--
 mht: some similar ideas (and examples) are presented in occams razor chapter. make sure the division of labor is good.
+
+ndg: after moving earlier in the book, some major revisions are in order:
+  -remove or move+shorten the spinning coin stuff, which is mostly about cogitive models and then bda of cognitive models.
+  -start with the existing simple models illustrating the kinds of questions one asks with BDA and the metrics for answers (BF, CI, etc)
+  -then do a slightly more complex model: regression analysis.
+  -then do BDA of cognitive models.
+  -then do full tug-of-war example. needs to be cleaned up for clarity.
+
+  -consider splitting into two chapters, with model selection stuff in part 2 occurring after occam's razor chapter. LMER models also make more sense there....
+  -need to add some discussion of CIs.
+  -Include illustrations of each point with regression models, as wel as simpler models that are there now.
+  -include some discussion of contamination models and other stadard BDA model idioms.
+  -most of the editor.put and .get things are unecessary?
+  -the data munging is pretty crazy. use more standard DF library?
+  -dist.MAP() seems suspect....
+  -posterior predictive checks are not very well explained -- need to show an example of a good result, not just the bad one. (also having only two data points makes it hard to understand the scatter plot...)
+
+  -a bit of advanced discussion? eg time varrying data, optional stopping?
 -->
 
 
-Inference by conditioning a generative model is also a basic building block of Bayesian statistics.
+Inference by conditioning a generative model is a basic building block of Bayesian statistics.
 In cognitive science this tool can be used in two ways.
 If the generative model is a hypothesis about a person's model of the world, then we have a Bayesian *cognitive model* -- the main topic of this book.
 If the generative model is instead the scientist's model of how the data are generated, then we have *Bayesian data analysis*.
@@ -23,7 +41,7 @@ Bayesian data analysis can be an extremely useful tool to us as scientists, when
 This can become confusing: a particular modeling assumption can be something we hypothesize that people assume about the world, or can be something that we as scientists want to assume (but don't assume that people assume).
 A pithy way of saying this is that we can make assumptions about "Bayes in the head" (Bayesian cognitive models) or about "Bayes in the notebook" (Bayesian data analysis).
 
-# Prologue: Spinning coins
+## Asside: Spinning coins
 
 
 Coins, in their production, have a number of physical dimensions along which they vary.
