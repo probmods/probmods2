@@ -85,50 +85,17 @@ var mcmc = function(state, iterations){
 
 var chain = mcmc(3, 10000) // mcmc for conditioned geometric
 viz.table(chain)
+
+// Infer(...)
 ~~~~
 
 Notice that `chain` is a list of samples, *not* a WebPPL probability distribution object. `viz.table` helpfully compiles a probability distribution for us. However, other functions such as `viz.marginals` will not work, because they require a WebPPL probability distribution object. 
 
 To see the difference, try running `print(chain)` and compare that to the output of running `print(post)` at the end of the code block for Exercise 1.
 
-Edit the code below to derive a WebPPL probability distribution object from `chain`. HINT: The WebPPL function `Infer()` returns a probability distribution object. Can you find a way to use `Infer()` to sample from `chain`, thus returning a probability distribution object?
+Complete the Infer statement above to derive a WebPPL probability distribution object from `chain`. 
 
-~~~~
-var p = 0.7
-
-//the target distribution (not normalized):
-//prob = 0 if x condition is violated, otherwise proportional to geometric distribution
-var target_dist = function(x){
-  return (x < 3 ? 0 : (p * Math.pow((1-p),(x-1))))
-}
-
-// the proposal function and distribution,
-// here we're equally likely to propose x+1 or x-1.
-var proposal_fn = function(x){
-  return (flip() ? x - 1 : x + 1)
-}
-var proposal_dist = function (x1, x2){
-  return 0.5
-}
-
-// the MH recipe:
-var accept = function (x1, x2){
-  let p = Math.min(1, (target_dist(x2) * proposal_dist(x2, x1)) / (target_dist(x1) * proposal_dist(x1,x2)))
-  return flip(p)
-}
-var transition = function(x){
-  let proposed_x = proposal_fn(x)
-  return (accept(x, proposed_x) ? proposed_x : x)
-}
-
-//the MCMC loop:
-var mcmc = function(state, iterations){
-  return ((iterations == 1) ? [state] : mcmc(transition(state), iterations-1).concat(state))
-}
-
-var chain = mcmc(3, 10000) // mcmc for conditioned geometric
-viz.table(chain)
-~~~~
+HINT: Can you find a way to use `Infer()` to sample from `chain`, thus returning a probability distribution object?
 
 ## Exercise 3. Metropolis-Hastings Part 2
 
