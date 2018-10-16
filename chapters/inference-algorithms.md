@@ -878,7 +878,7 @@ var trueSigma = 0.8;
 var data = repeat(100, function() { return gaussian(trueMu, trueSigma); });
 
 var gaussianModel = function() {
-  var mu = gaussian(0, 1);
+  var mu = gaussian(0, 20);
   var sigma = Math.exp(gaussian(0, 1)); // ensure sigma > 0
   map(function(d) {
     observe(Gaussian({mu: mu, sigma: sigma}), d);
@@ -888,22 +888,20 @@ var gaussianModel = function() {
 
 var post = Infer({
   method: 'optimize',
-  optMethod: 'adam',
-  steps: 500,
-  // Also try using MCMC and seeing how long it takes to converge
-  // method: 'MCMC',
-  // onlyMAP: true,
-  // samples: 5000
+  optMethod: {adam: {stepSize: .25}}  ,
+  steps: 250,
+// Also try using MCMC and seeing how many samples it takes to converge
+//   method: 'MCMC',
+//   onlyMAP: true,
+//   samples: 5000
 }, gaussianModel);
 
 sample(post);
 ~~~~
 
-Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly longer to converge.
+Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to converge.
 
-How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 1)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). There are other methods for variational inference in addition to *mean-field*.
-
-<!-- //The following is copied and partly edited from summer school. However, significant changes in how optimization works in WebPPL means that a lot of this code no longer runs. I partly updated some of this, but ran into multiple problems and gave up.
+How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 20)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). There are other methods for variational inference in addition to *mean-field*.
 
 #### Example: Topic models
 
