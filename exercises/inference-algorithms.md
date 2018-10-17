@@ -54,29 +54,37 @@ HINT: you may want to explore HMC! start with the default parameters specified i
 
 ## Exercise 2. Properties and pitfalls of Metropolis-Hastings
 
-Consider this very simple model that chooses `y` and `w` such that `-10 * w + y * (1 - w)` is as close as possible to `0`:
+Consider a very simple function that interpolates between two endpoints. 
+
+Suppose one endpoint is fixed at `-10`, but we have uncertainty over the value of the other endpoint and the interpolation weight between them. By conditioning on the resulting value being close to 0, we can infer what the free variables must have been:
 
 ~~~~
+
+var interpolate = function(point1, point2, weight) {
+  return (point1 * interpolationWeight +
+          point2 * (1 - interpolationWeight))
+}
+
 var mymodel = function(){
-  var point1 = -10
-  var point2 = uniform(-100,100)
-  var interpolationWeight = uniform(0,1)
-  var pointInMiddle = (point1 * interpolationWeight +
-                       point2 * (1 - interpolationWeight))
+  var point1 = -10;
+  var point2 = uniform(-100,100);
+  var interpolationWeight = uniform(0,1);
+  var pointInMiddle = interpolate(point1, point2, weight);
   observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle)
   return {point2, interpolationWeight, pointInMiddle}
 }
 
-var posteriorSamples = Infer({
+var posterior = Infer({
   method: 'MCMC',
   samples: 5000,
   lag: 100,
-}, mymodel).samples;
+}, mymodel)
 
+var samples = posterior.samples;
 viz(marginalize(post, function(x) {return x.pointInMiddle}))
 ~~~~
 
-By looking at the marginal distribution of `pointInMiddle`, we can see that `Infer()` successfully finds values of `y` and `w` that satisfy our condition. 
+By looking at the marginal distribution of `pointInMiddle`, we can see that `Infer()` successfully finds values of `point2` and `interpolationWeight` that satisfy our condition. 
 
 ### a)
 
