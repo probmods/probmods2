@@ -8,10 +8,13 @@ title: Algorithms for Inference - exercises
 In the code box below, the `curve` function defines a vaguely heart-shaped curve. Below, we use rejection sampling to sample points along the boundary of the curve.
 
 ~~~~
-var curve = function(x, y) {
+// takes z = 0 cross section of heart surface to some tolerance
+// see http://mathworld.wolfram.com/HeartSurface.html
+var onCurve = function(x, y) {
   var x2 = x*x;
   var term1 = y - Math.pow(x2, 1/3);
-  return x2 + term1*term1 - 1;
+  var crossSection = x2 + term1*term1 - 1;
+  return Math.abs(crossSection) < 0.01;
 };
 var xbounds = [-1, 1];
 var ybounds = [-1, 1.6];
@@ -24,8 +27,7 @@ var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
 var model = function() {
   var x = gaussian(xmu, xsigma);
   var y = gaussian(ymu, ysigma);
-  var c_xy = curve(x, y);
-  condition(Math.abs(c_xy) < 0.01);
+  condition(onCurve(x, y));
   return {x: x, y: y};
 };
 
