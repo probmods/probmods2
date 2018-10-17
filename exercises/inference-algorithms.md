@@ -147,6 +147,7 @@ var post = // your code here (use answer from Exercise #2)
 viz.marginals(post)
 ~~~~
 
+<!--
 
 ## Exercise 4. Topic models
 
@@ -249,3 +250,5 @@ If we ran MCMC on the model in (a) for an infinite amount of time, we would no l
 Given the answer to that question, why does our model in (a) seem to work?
 
 HINT: We do not need to run our initial mixture model example above nearly as long to get the same effect. This is why we printed samples from the distribution. 
+
+--> 
