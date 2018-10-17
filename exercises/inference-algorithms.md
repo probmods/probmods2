@@ -102,7 +102,7 @@ HINT: this will require some 'data munging' on the array of samples. Some useful
 
 ### c) 
 
-Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `factor` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
+Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `observe` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
 
 ### d)
 
