@@ -57,37 +57,52 @@ HINT: you may want to explore HMC! start with the default parameters specified i
 Consider this very simple model that chooses `y` and `w` such that `-10 * w + y * (1 - w)` is as close as possible to `0`:
 
 ~~~~
-var p = function(x,y,w){
-  return Gaussian({mu: 0, sigma:0.1}).score(x*w + y*(1-w))
-}
-
 var mymodel = function(){
-  var x = -10
-  var y = uniform(-100,100)
-  var w = dirichlet(Vector([1,1])).data[0]
-  factor(p(x,y,w))
-  return {y: y, w: w, s: x*w + y*(1-w)}
+  var point1 = -10
+  var point2 = uniform(-100,100)
+  var interpolationWeight = uniform(0,1)
+  var pointInMiddle = (point1 * interpolationWeight +
+                       point2 * (1 - interpolationWeight))
+  observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle)
+  return {point2, interpolationWeight, pointInMiddle}
 }
 
-var post = Infer({
+var posteriorSamples = Infer({
   method: 'MCMC',
   samples: 5000,
   lag: 100,
-}, mymodel);
+}, mymodel).samples;
 
-viz.marginals(post)
+viz(marginalize(post, function(x) {return x.pointInMiddle}))
 ~~~~
 
-By looking at the marginal distribution of `s`, we can see that `Infer()` tends to choose values of `y` and `w` that satisfy our condition. 
+By looking at the marginal distribution of `pointInMiddle`, we can see that `Infer()` successfully finds values of `y` and `w` that satisfy our condition. 
 
 ### a)
 
-Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `factor` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
+Visualize the separate marginal distributions of `point2` and `interpolationWeight`. How would you describe their shapes, compared to the marginal distribution of `pointInMiddle`? 
+
+Now visualize the *joint* marginal distribution of point2 and interpolationWeight. What does this tell you about their dependence?
+
+HINT: use the [marginalize](http://docs.webppl.org/en/master/functions/other.html#marginalize) helper to elegantly construct these marginal distributions
 
 ### b)
 
-Describe a proposal distribution that you could use for Metropolis-Hastings inference for this model. Show that it satisfies the necessary conditions. 
+WebPPL also exposes the list of MCMC samples that the density plots above are built from. This is saved in the `samples` variable. Decrease the number of samples to `50` (and the `lag` to 0) and plot `pointInMiddle` as a function of the sample number. Run this several times to get a feel for the shape of this curve. What do you notice? What property of MCMC are you observing?
 
+HINT: this will require some 'data munging' on the array of samples. Some useful functions will be [`map`](http://docs.webppl.org/en/master/functions/arrays.html#map), `_.range()`, and `viz.line` which takes arrays `x` and `y`.
+
+### c) 
+
+Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `factor` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
+
+### d)
+
+Add `verbose: true` to the list of options. What is the acceptance rate over time (i.e. what proportion of proposals are actually accepted in the chain?). What about the model puts it at this level? 
+
+Consider the list of built-in drift kernels [here](https://webppl.readthedocs.io/en/master/driftkernels.html?highlight=drift%20kernel#helpers). Which of these would be appropriate to use in your model in place of the current uniform prior from which `point2` is sampled? After using that kernel in your model, what effect do you observe on the acceptence rate, and why?
+
+<!--
 ### c)
 
 Edit the code below to implement your Metropolis-Hastings recipe. Use `viz.marginals` to show that it reliably chooses values of `y` and `w` that satisfy the condition.
@@ -98,56 +113,7 @@ Hint 2: Many WebPPL distributions require vectors as input. Turn an array into a
 
 Hint 3: Remember that `dist.score(x)` returns the log probability (density) of `x` given distribution `dist`. To turn that into a a probability, use `Math.exp()`. 
 
-~~~~
-var x = -10 // Fix this variable.
 
-// target distribution
-var target_dist = function(state){
-  var y = state[0]
-  var w = state[1]
-  return // your code here.
-         // remember if y or w are outside their bounds, probability = 0
-}
-
-// the proposal function and distribution,
-var proposal_fn = function(state){
-  var y = state[0]
-  var w = state[1]
-  var aprop = // your code here
-  return [aprop.data[0], aprop.data[1]]
-}
-var proposal_dist = function (state1, state2){
-  return // your code here
-}
-
-// the MH recipe:
-var accept = function (state1, state2){
-  let p = Math.min(1, (target_dist(state2) * proposal_dist(state2, state1)) 
-                   / (target_dist(state1) * proposal_dist(state1,state2)))
-  return flip(p)
-}
-var transition = function(state){
-  let proposed_state = proposal_fn(state)
-  return (accept(state, proposed_state) ? proposed_state : state)
-}
-
-//the MCMC loop:
-var mcmc = function(state, iterations){
-  var y = state[0]
-  var w = state[1]
-  var s = x*w + y*(1-w)
-  var stateobj = {y: y, w: w, s: s}
-  return ((iterations == 1) ? [stateobj] : mcmc(transition(state), iterations-1).concat(stateobj))
-}
-
-
-var chain = mcmc([0,.5], 5000) // go ahead and use this starting value
-
-var post = // your code here (use answer from Exercise #2)
-viz.marginals(post)
-~~~~
-
-<!--
 ## Exercise 4. Topic models
 
 [Topic models](https://en.wikipedia.org/wiki/Topic_model) are a popular method for classifying texts. A "topic" is a probability distribution over a vocabulary. Importantly, different topics have different distributions: a topic pertaining to animals will have higher probability on "wolf" than a topic pertaining to programming. Crucially, different documents are assumed to be generated by drawing words from one or more topics. The job of the model is to, based on some set of documents, infer the latent topics, their probability distributions, and which topics are implicated in which documents. 
