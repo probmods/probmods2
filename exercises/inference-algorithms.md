@@ -35,69 +35,22 @@ viz.auto(post);
 
 ### a) 
 
-Try using MCMC with the MH recipe instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
+Try using MCMC with Metropolis-Hastings instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
 
 ### b)
 
-How can you change the model to make MH successfully trace the curves? Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.
+Change the *model* to make MH successfully trace the curves. Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling. Why does this work better?
+
+HINT: is there a way you can sample a single (x,y) pair instead of separately sampling x and then y? You might want to check out the distribution [DiagCovGaussian()](https://webppl.readthedocs.io/en/master/distributions.html#DiagCovGaussian) in the docs. Note that it expects parameters to be [Vectors](https://webppl.readthedocs.io/en/master/functions/tensors.html#Vector) and you can extract elements from vectors with `T.get` (`T` is webppl shorthand for `ad.tensor`: for more information on tensor functions, see [adnn docs](https://github.com/dritchie/adnn/blob/master/ad/README.md#available-ad-primitive-functions)).
 
 ### c)
 
-How can you instead change the the inference algorithm (instead of the model) to successfully trace the curves? Explore different algorithms!
+Now change the the inference *algorithm* (with the original model) to successfully trace the curves. What parameters did you try, and what worked best?
+
+HINT: you may want to explore HMC! start with the default parameters specified in the HMC [docs](https://webppl.readthedocs.io/en/master/inference/methods.html#mcmc) and play with different values.
 
 
-## Exercise 2. Metropolis-Hastings Part 1
-
-Recall our code from the chapter that implements an Metropolis-Hastings markov chain:
-
-~~~~
-var p = 0.7
-
-//the target distribution (not normalized):
-//prob = 0 if x condition is violated, otherwise proportional to geometric distribution
-var target_dist = function(x){
-  return (x < 3 ? 0 : (p * Math.pow((1-p),(x-1))))
-}
-
-// the proposal function and distribution,
-// here we're equally likely to propose x+1 or x-1.
-var proposal_fn = function(x){
-  return (flip() ? x - 1 : x + 1)
-}
-var proposal_dist = function (x1, x2){
-  return 0.5
-}
-
-// the MH recipe:
-var accept = function (x1, x2){
-  let p = Math.min(1, (target_dist(x2) * proposal_dist(x2, x1)) / (target_dist(x1) * proposal_dist(x1,x2)))
-  return flip(p)
-}
-var transition = function(x){
-  let proposed_x = proposal_fn(x)
-  return (accept(x, proposed_x) ? proposed_x : x)
-}
-
-//the MCMC loop:
-var mcmc = function(state, iterations){
-  return ((iterations == 1) ? [state] : mcmc(transition(state), iterations-1).concat(state))
-}
-
-var chain = mcmc(3, 10000) // mcmc for conditioned geometric
-viz.table(chain)
-
-// Infer(...)
-~~~~
-
-Notice that `chain` is a list of samples, *not* a WebPPL probability distribution object. `viz.table` helpfully compiles a probability distribution for us. However, other functions such as `viz.marginals` will not work, because they require a WebPPL probability distribution object. 
-
-To see the difference, try running `print(chain)` and compare that to the output of running `print(post)` at the end of the code block for Exercise 1.
-
-Complete the Infer statement above to derive a WebPPL probability distribution object from `chain`. 
-
-HINT: Can you find a way to use `Infer()` to sample from `chain`, thus returning a probability distribution object?
-
-## Exercise 3. Metropolis-Hastings Part 2
+## Exercise 2. Properties and pitfalls of Metropolis-Hastings
 
 Consider this very simple model that chooses `y` and `w` such that `-10 * w + y * (1 - w)` is as close as possible to `0`:
 
