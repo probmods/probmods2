@@ -873,31 +873,32 @@ Thus, if we believe we can fit the distribution of interest reasonably well para
 Below, we use `optimize` to fit the hyperparameters of a Gaussian distribution from data:
 
 ~~~~
-var trueMu = 3.5;
-var trueSigma = 0.8;
+var trueMu = 3.5
+var trueSigma = 0.8
 
-var data = repeat(100, function() { return gaussian(trueMu, trueSigma); });
+var data = repeat(100, function() { return gaussian(trueMu, trueSigma)})
 
 var gaussianModel = function() {
-  var mu = gaussian(0, 20);
-  var sigma = Math.exp(gaussian(0, 1)); // ensure sigma > 0
+  var mu = gaussian(0, 20)
+  var sigma = Math.exp(gaussian(0, 1)) // ensure sigma > 0
   map(function(d) {
-    observe(Gaussian({mu: mu, sigma: sigma}), d);
-  }, data);
-  return {mu: mu, sigma: sigma};
+    observe(Gaussian({mu: mu, sigma: sigma}), d)
+  }, data)
+  return {mu: mu, sigma: sigma}
 };
 
 var post = Infer({
   method: 'optimize',
-  optMethod: {adam: {stepSize: .25}}  ,
+  optMethod: {adam: {stepSize: .25}},
   steps: 250,
+  samples: 1000
 // Also try using MCMC and seeing how many samples it takes to converge
 //   method: 'MCMC',
 //   onlyMAP: true,
 //   samples: 5000
-}, gaussianModel);
+}, gaussianModel)
 
-sample(post);
+viz.marginals(post)
 ~~~~
 
 Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to converge.
