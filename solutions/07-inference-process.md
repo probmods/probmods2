@@ -9,10 +9,13 @@ description: MCMC, etc.
 In the code box below, the `curve` function defines a vaguely heart-shaped curve. Below, we use rejection sampling to sample points along the boundary of the curve.
 
 ~~~~
-var curve = function(x, y) {
+// takes z = 0 cross section of heart surface to some tolerance
+// see http://mathworld.wolfram.com/HeartSurface.html
+var onCurve = function(x, y) {
   var x2 = x*x;
   var term1 = y - Math.pow(x2, 1/3);
-  return x2 + term1*term1 - 1;
+  var crossSection = x2 + term1*term1 - 1;
+  return Math.abs(crossSection) < 0.01;
 };
 var xbounds = [-1, 1];
 var ybounds = [-1, 1.6];
@@ -25,8 +28,7 @@ var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
 var model = function() {
   var x = gaussian(xmu, xsigma);
   var y = gaussian(ymu, ysigma);
-  var c_xy = curve(x, y);
-  condition(Math.abs(c_xy) < 0.01);
+  condition(onCurve(x, y));
   return {x: x, y: y};
 };
 
@@ -36,16 +38,20 @@ viz.auto(post);
 
 ### a) 
 
-*Try using MCMC with the m-h recipe instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?*
+Try using MCMC with Metropolis-Hastings instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
 
+
+### Solution
 Once M-H finds a state with reasonable probability, its proposals are generally going to be states with much lower probability (since almost every state it very low probability in this model). Thus, it is going to tend to get stuck in place and rarely sample new states. In contrast, every accepted sample in rejection sampling is likely to be unique. This can be demonstrated with the following code
 
 ~~~~
-///fold:
-var curve = function(x, y) {
+// takes z = 0 cross section of heart surface to some tolerance
+// see http://mathworld.wolfram.com/HeartSurface.html
+var onCurve = function(x, y) {
   var x2 = x*x;
   var term1 = y - Math.pow(x2, 1/3);
-  return x2 + term1*term1 - 1;
+  var crossSection = x2 + term1*term1 - 1;
+  return Math.abs(crossSection) < 0.01;
 };
 var xbounds = [-1, 1];
 var ybounds = [-1, 1.6];
@@ -58,11 +64,9 @@ var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
 var model = function() {
   var x = gaussian(xmu, xsigma);
   var y = gaussian(ymu, ysigma);
-  var c_xy = curve(x, y);
-  condition(Math.abs(c_xy) < 0.01);
+  condition(onCurve(x, y));
   return {x: x, y: y};
 };
-///
 
 var postr = Infer({method: 'rejection', samples: 1000}, model);
 var postm = Infer({method: 'MCMC', samples: 1000}, model);
@@ -83,7 +87,9 @@ Metropolis-Hastings sampling:
  
 ### b)
 
-*How can you change the model (or the inference algorithm) to make MCMC successfully trace the curves? Note that there are multiple ways to approach this problem. Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.*
+Change the *model* to make MH successfully trace the curves. Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling. Why does this work better?
+
+HINT: is there a way you can sample a single (x,y) pair instead of separately sampling x and then y? You might want to check out the distribution [DiagCovGaussian()](https://webppl.readthedocs.io/en/master/distributions.html#DiagCovGaussian) in the docs. Note that it expects parameters to be [Vectors](https://webppl.readthedocs.io/en/master/functions/tensors.html#Vector) and you can extract elements from vectors with `T.get` (`T` is webppl shorthand for `ad.tensor`: for more information on tensor functions, see [adnn docs](https://github.com/dritchie/adnn/blob/master/ad/README.md#available-ad-primitive-functions)).
 
 #### Solution #1: Find a better proposal distribution
 
@@ -118,11 +124,13 @@ var post = Infer({method: 'MCMC', samples: 30000}, model);
 viz.auto(post);
 ~~~~
 
+This model *jointly* samples x and y which allows us to better model their dependence. Note that this still requires many, many more samples than does rejection sampling, and provides less accurate results.
+
 ![](Figures/inference-process-3.PNG)
 
-Notice that this still requires many, many more samples than does rejection sampling, and provides less accurate results.
+Now change the the inference *algorithm* (with the original model) to successfully trace the curves. What parameters did you try, and what worked best?
 
-#### Solution #2: Use Hamiltonian MCMC
+#### Solution: Use Hamiltonian MCMC
 
 ~~~~
 // Solution 2: Using HMC
@@ -157,8 +165,160 @@ viz.auto(post);
 
 ![](Figures/inference-process-4.PNG)
 
-Notice that this still requires many, many more samples than does rejection sampling, and provides less accurate results.
+A `stepSize=1` and `steps=10` for HMC gave good results.
 
+
+## Exercise 2. Properties and pitfalls of Metropolis-Hastings
+
+Consider a very simple function that interpolates between two endpoints. 
+
+Suppose one endpoint is fixed at `-10`, but we have uncertainty over the value of the other endpoint and the interpolation weight between them. By conditioning on the resulting value being close to 0, we can infer what the free variables must have been:
+
+~~~~
+var interpolate = function(point1, point2, interpolationWeight) {
+  return (point1 * interpolationWeight +
+          point2 * (1 - interpolationWeight))
+}
+
+var model = function(){
+  var point1 = -10;
+  var point2 = uniform(-100,100);
+  var interpolationWeight = uniform(0,1);
+  var pointInMiddle = interpolate(point1, point2, interpolationWeight);
+  observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle)
+  return {point2, interpolationWeight, pointInMiddle}
+}
+
+var posterior = Infer({
+  method: 'MCMC',
+  samples: 5000,
+  lag: 100,
+}, model)
+
+var samples = posterior.samples;
+viz(marginalize(posterior, function(x) {return x.pointInMiddle}))
+
+// Store these for future use
+editor.put("posterior", posterior)
+editor.put("samples", samples)
+~~~~
+
+By looking at the marginal distribution of `pointInMiddle`, we can see that `Infer()` successfully finds values of `point2` and `interpolationWeight` that satisfy our condition. 
+
+### a)
+
+Visualize the separate marginal distributions of `point2` and `interpolationWeight`. How would you describe their shapes, compared to the marginal distribution of `pointInMiddle`? 
+
+#### Solution
+~~~~
+var posterior = editor.get("posterior")
+viz(marginalize(posterior, function(x) {return x.point2}))
+viz(marginalize(posterior, function(x) {return x.interpolationWeight}))
+~~~~
+
+Whereas `pointInMiddle` is peakd around 0. `point2` and `interpolationWeight` appear to be bimodal.
+
+Now visualize the *joint* marginal distribution of point2 and interpolationWeight. What does this tell you about their dependence?
+
+HINT: use the [marginalize](http://docs.webppl.org/en/master/functions/other.html#marginalize) helper to elegantly construct these marginal distributions
+
+#### Solution
+~~~~
+var posterior = editor.get("posterior")
+viz(marginalize(posterior, function(x) {
+  return {'point2': x.point2, 'inter': x.interpolationWeight }
+  }))
+~~~~
+Both variables have a close dependence. When `point2` is large then `interploation` weight also needs to increase if we want our model to be close to 0.
+
+### b)
+
+WebPPL also exposes the list of MCMC samples that the density plots above are built from. This is saved in the `samples` variable. Decrease the number of samples to `50` (and the `lag` to 0) and plot `pointInMiddle` as a function of the sample number. Run this several times to get a feel for the shape of this curve. What do you notice? What property of MCMC are you observing?
+
+HINT: this will require some 'data munging' on the array of samples. Some useful functions will be [`map`](http://docs.webppl.org/en/master/functions/arrays.html#map), `_.range()`, and `viz.line` which takes arrays `x` and `y`.
+
+#### Solution
+~~~~
+var samples = editor.get("samples")
+var getPointInMiddleSamples = function(d) {
+  return d["value"]["pointInMiddle"]
+} 
+var samples2 = map(getPointInMiddleSamples, samples)
+viz.line(_.range(samples2.length), 
+         samples2)
+~~~~
+The starting point of our chain varies a lot in for the first few example, but then converges. This is because our MCMC chain is initialized randomly.
+
+### c) 
+
+Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `observe` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
+
+### Solution
+~~~~
+var interpolate = function(point1, point2, interpolationWeight) {
+  return (point1 * interpolationWeight +
+          point2 * (1 - interpolationWeight))
+}
+
+var model = function(){
+  var point1 = -10;
+  var point2 = uniform(-100,100);
+  var interpolationWeight = uniform(0,1);
+  var pointInMiddle = interpolate(point1, point2, interpolationWeight);
+
+  condition(Math.abs(pointInMiddle) < 0.01)
+  return {point2, interpolationWeight, pointInMiddle}
+}
+
+var posterior = Infer({
+  method: 'rejection',
+  samples: 1000
+}, model)
+viz(posterior)
+~~~~
+
+Rejection sampling doesn't work well here in part because the range of `point2` is very wide [-100, 100]. Since our prior is uniform we are sampling points that are almost always rejected.
+
+### d)
+
+Add `verbose: true` to the list of options when you run `MH`. What is the acceptance rate over time (i.e. what proportion of proposals are actually accepted in the chain?). What about the model puts it at this level? 
+
+### Solution
+The acceptance overall is quite low -- on average less than `0.05`. Since MH is generating proposals by sampling from the prior and our prior over `point2` is Uniform over a large range, we are rejecting most of the proposals.
+
+Consider the list of built-in drift kernels [here](https://webppl.readthedocs.io/en/master/driftkernels.html?highlight=drift%20kernel#helpers). Which of these would be appropriate to use in your model in place of the current uniform prior from which `point2` is sampled? After using that kernel in your model, what effect do you observe on the acceptence rate, and why?
+
+## Solution
+~~~~
+var interpolate = function(point1, point2, interpolationWeight) {
+  return (point1 * interpolationWeight +
+          point2 * (1 - interpolationWeight))
+}
+
+var model = function(){
+  var point1 = -10;
+  var point2 = uniformDrift({a: -100, b: 100, w: 20});
+  var interpolationWeight = uniform(0,1);
+  var pointInMiddle = interpolate(point1, point2, interpolationWeight);
+  observe(Gaussian({mu: 0, sigma: 0.1}), pointInMiddle)
+  return {point2, interpolationWeight, pointInMiddle}
+}
+
+var params = {
+  method: 'MCMC',
+  kernel: 'MH',
+  samples: 500,
+  verbose: true
+}
+
+var posterior = Infer(params, model)
+~~~~
+
+Using a drift kernel like uniformDrift means that we will sample proposals from distributions centered at the previous value of our random choice. This produces a random walk that allows MH to more efficiently explore areas of high probability. We notice that the acceptance on average is about an order of magnitude larger!
+
+<!-- ===============
+===============
+===============
 
 ## Exercise 2. Metropolis-Hastings Part 1
 
@@ -468,4 +628,4 @@ Although any given high-probability sapmle should result in the two topics split
 
 The probability distribution for this model has two modes (high-probability regions of parameter space): One in which Topic 1 is the "biology" topic and Topic 2 is in the "linguistics" topic, and one in which these are reversed.
 
-Getting from one mode to the other requires a very large change in the parameters. If Metropolis-Hastings is implemented correctly, it is *possible* for the chain to move from one mode to the other, but it is pretty unlikely. Our chain was probably not run long enough to have a reasonable chance of exploring both modes. Instead, it finds one and stays there for the duration. *Which* one it finds is random, which explains (b) above. a
+Getting from one mode to the other requires a very large change in the parameters. If Metropolis-Hastings is implemented correctly, it is *possible* for the chain to move from one mode to the other, but it is pretty unlikely. Our chain was probably not run long enough to have a reasonable chance of exploring both modes. Instead, it finds one and stays there for the duration. *Which* one it finds is random, which explains (b) above. a -->

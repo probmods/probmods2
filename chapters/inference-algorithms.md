@@ -16,7 +16,7 @@ custom_css:
 
 # Prologue: The performance characteristics of different algorithms
 
-When we introduced [conditioning]({{site.baseurl}}/chapters/conditioning.html) we pointed out that the rejection sampling and enumeration (or mathematical) definitions are equivalent---we could take either one as the definition of how `Infer` should behave with `condition`.
+When we introduced [conditioning]({{site.baseurl}}/chapters/conditioning.html) we pointed out that the rejection sampling and enumeration (or mathematical) definitions are equivalent---we could take either one as the definition of how `Infer` should behave with `condition` statements.
 There are many different ways to compute the same distribution, it is thus useful to separately think about the distributions we are building (including conditional distributions) and how we will compute them.
 Indeed, in the last few chapters we have explored the dynamics of inference without worrying about the details of inference algorithms.
 The efficiency characteristics of different implementations of `Infer` can be very different, however, and this is important both practically and for motivating cognitive hypotheses at the level of algorithms (or psychological processes).
@@ -504,7 +504,7 @@ var constrainedSumModel = function() {
     return uniform(0, 1);
   });
   var targetSum = xs.length / 2;
-  factor(Gaussian({mu: targetSum, sigma: 0.005}).score(sum(xs)));
+  observe(Gaussian({mu: targetSum, sigma: 0.005}), sum(xs));
   return map(bin, xs);
 };
 
@@ -534,7 +534,7 @@ var constrainedSumModel = function() {
     return uniform(0, 1);
   });
   var targetSum = xs.length / 2;
-  factor(Gaussian({mu: targetSum, sigma: 0.005}).score(sum(xs)));
+  observe(Gaussian({mu: targetSum, sigma: 0.005}), sum(xs));
   return map(bin, xs);
 };
 ///
@@ -627,14 +627,15 @@ var drawPoints = function(canvas, positions, strokeColor){
 };
 ///
 
-var observe = function(pos, obs) {
-  factor(Gaussian({mu: pos[0], sigma: 5}).score(obs[0]));
-  factor(Gaussian({mu: pos[1], sigma: 5}).score(obs[1]));
+// condition on x and y coords
+var observePoint = function(pos, obs) {
+  observe(Gaussian({mu: pos[0], sigma: 5}), obs[0]);
+  observe(Gaussian({mu: pos[1], sigma: 5}), obs[1]);
 };
 
 var radarStaticObject = function(observations) {
   var pos = [gaussian(200, 100), gaussian(200, 100)];
-  map(function(obs) { observe(pos, obs); }, observations);
+  map(function(obs) { observePoint(pos, obs); }, observations);
   return pos;
 };
 
@@ -660,10 +661,9 @@ posEstimate;
 
 We display the true location (`trueLoc`) in green, the observations in grey, and the inferred location (`posEstimate`) in blue. Again, try adjusting the number of particles (`numParticles`) and number of observations (`numObservations`) to see how these affect accuracy. 
 
-#### Interlude on `factor` vs. `condition`
+#### Interlude on `factor`/`observe` vs. `condition`
 
-Although we initially introduced conditioning using the function `condition`, we have often used `factor` instead of `condition`. While the notion of conditioning on an observation is conceptually straight-forward, it has a number of computational drawbacks. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` provides a much softer constraint: parameter values that do not give rise to our observations are low-probability, but not impossible. 
-<!-- TODO: rewrite models above in terms of observe keyword, and adjust this discussion accordingly. Se the discussion of observe that's already in the learning chapter? -->
+In earlier chapters we introduced the `factor` and `observe` keywords as soft alternatives to the hard `condition` statement in WebPPL.  While the notion of `condition`ing on an observation being true is conceptually straight-forward, it should now be clearer from the details of algorithms what its computational drawbacks might be. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on exactly the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` and `observe` provide a much softer constraint: parameter values that do not give rise to our observations are lower-probability, but not impossible. 
 
 #### Incremental inference based on incremental evidence
 
@@ -802,10 +802,10 @@ var trajectory = function(n) {
 };
 ///
 
-var observe = function(pos, trueObs){
+var observeSeq = function(pos, trueObs){
   return map2(
     function(x, trueObs) {
-    	return factor(Gaussian({mu: x, sigma: 5}).score(trueObs));
+    	return observe(Gaussian({mu: x, sigma: 5}), trueObs);
     },    
 	pos,
     trueObs
@@ -815,8 +815,8 @@ var observe = function(pos, trueObs){
 var initWithObs = function(trueObs){
 	var state1 = [gaussian(250, 1), gaussian(250, 1)];
 	var state2 = [gaussian(250, 1), gaussian(250, 1)];
-  	var obs1 = observe(state1, trueObs[0]);
-  	var obs2 = observe(state2, trueObs[1]);
+  	var obs1 = observeSeq(state1, trueObs[0]);
+  	var obs2 = observeSeq(state2, trueObs[1]);
 	return {
 		states: [state1, state2],
 		observations: [obs1, obs2]
@@ -830,7 +830,7 @@ var trajectoryWithObs = function(n, trueObservations) {
   var prevStates = prevData.states;
   var prevObservations = prevData.observations;
   var newState = transition(last(prevStates), secondLast(prevStates));
-  var newObservation = observe(newState, trueObservations[n-1]);
+  var newObservation = observeSeq(newState, trueObservations[n-1]);
   return {
     states: prevStates.concat([newState]),
     observations: prevObservations.concat([newObservation])
@@ -879,33 +879,32 @@ var trueSigma = 0.8;
 var data = repeat(100, function() { return gaussian(trueMu, trueSigma); });
 
 var gaussianModel = function() {
-  var mu = gaussian(0, 1);
-  var sigma = Math.exp(gaussian(0, 1));
-  var G = Gaussian({mu: mu, sigma: sigma});
+  var mu = gaussian(0, 20);
+  var sigma = Math.exp(gaussian(0, 1)); // ensure sigma > 0
   map(function(d) {
-    factor(G.score(d));
+    observe(Gaussian({mu: mu, sigma: sigma}), d);
   }, data);
   return {mu: mu, sigma: sigma};
 };
 
 var post = Infer({
   method: 'optimize',
-  optMethod: 'adam',
-  steps: 500,
-  // Also try using MCMC and seeing how long it takes to converge
-  // method: 'MCMC',
-  // onlyMAP: true,
-  // samples: 5000
+  optMethod: {adam: {stepSize: .25}}  ,
+  steps: 250,
+// Also try using MCMC and seeing how many samples it takes to converge
+//   method: 'MCMC',
+//   onlyMAP: true,
+//   samples: 5000
 }, gaussianModel);
 
 sample(post);
 ~~~~
 
-Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly longer to converge.
+Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to converge.
 
-How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 1)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). There are other methods for variational inference in addition to *mean-field*.
+How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 20)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). There are other methods for variational inference in addition to *mean-field*.
 
-<!-- //The following is copied and partly edited from summer school. However, significant changes in how optimization works in WebPPL means that a lot of this code no longer runs. I partly updated some of this, but ran into multiple problems and gave up.
+<!-- The following is copied and partly edited from summer school. However, changes in how optimization works in WebPPL means that a lot of this code no longer runs and needs some tlc.
 
 #### Example: Topic models
 
@@ -943,7 +942,7 @@ var model = function() {
       var topic = topicDistForDoc(docname);
       var wordDist = wordDistForTopic[discrete(topic)];
       var wordID = vocabulary.indexOf(word);
-      factor(Discrete({ps: wordDist}).score(wordID));
+      observe(Discrete({ps: wordDist}), wordID);
     }, words);
   }, docs);
 
@@ -1005,7 +1004,7 @@ var model = function() {
         return discrete(wordDistForTopic[z]);
       });
       var wordID = vocabulary.indexOf(word);
-      factor(wordMarginal.score(wordID));
+      observe(wordMarginal, wordID);
     }, words);
   }, docs);
 
@@ -1045,7 +1044,7 @@ var constrainedSum = function() {
     var num = sampleNumber();
     globalStore.nums = cons(num, globalStore.nums);
   });
-  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  observe(Gaussian({mu: targetSum, sigma: 0.01}), sum(globalStore.nums));
   return globalStore.nums;
 };
 
@@ -1098,7 +1097,7 @@ var constrainedSum = function() {
     var num = sampleNumber();
     globalStore.nums = cons(num, globalStore.nums);
   });
-  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  observe(Gaussian({mu: targetSum, sigma: 0.01}), sum(globalStore.nums));
   return globalStore.nums;
 };
 
@@ -1167,7 +1166,7 @@ var constrainedSum = function() {
     var num = sampleNumber();
     globalStore.nums = cons(num, globalStore.nums);
   });
-  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  observe(Gaussian({mu: targetSum, sigma: 0.01}), sum(globalStore.nums));
   return globalStore.nums;
 };
 ///
@@ -1211,7 +1210,7 @@ var constrainedSum = function() {
     var num = sampleNumber();
     globalStore.nums = cons(num, globalStore.nums);
   });
-  factor(Gaussian({mu: targetSum, sigma: 0.01}).score(sum(globalStore.nums)));
+  observe(Gaussian({mu: targetSum, sigma: 0.01}), sum(globalStore.nums));
   return globalStore.nums;
 };
 ///

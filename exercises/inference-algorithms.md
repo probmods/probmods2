@@ -8,10 +8,13 @@ title: Algorithms for Inference - exercises
 In the code box below, the `curve` function defines a vaguely heart-shaped curve. Below, we use rejection sampling to sample points along the boundary of the curve.
 
 ~~~~
-var curve = function(x, y) {
+// takes z = 0 cross section of heart surface to some tolerance
+// see http://mathworld.wolfram.com/HeartSurface.html
+var onCurve = function(x, y) {
   var x2 = x*x;
   var term1 = y - Math.pow(x2, 1/3);
-  return x2 + term1*term1 - 1;
+  var crossSection = x2 + term1*term1 - 1;
+  return Math.abs(crossSection) < 0.01;
 };
 var xbounds = [-1, 1];
 var ybounds = [-1, 1.6];
@@ -24,8 +27,7 @@ var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
 var model = function() {
   var x = gaussian(xmu, xsigma);
   var y = gaussian(ymu, ysigma);
-  var c_xy = curve(x, y);
-  condition(Math.abs(c_xy) < 0.01);
+  condition(onCurve(x, y));
   return {x: x, y: y};
 };
 
@@ -35,137 +37,83 @@ viz.auto(post);
 
 ### a) 
 
-Try using MCMC with the MH recipe instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
+Try using MCMC with Metropolis-Hastings instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
 
 ### b)
 
-How can you change the model to make MH successfully trace the curves? Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.
+Change the *model* to make MH successfully trace the curves. Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling. Why does this work better?
+
+HINT: is there a way you can sample a single (x,y) pair instead of separately sampling x and then y? You might want to check out the distribution [DiagCovGaussian()](https://webppl.readthedocs.io/en/master/distributions.html#DiagCovGaussian) in the docs. Note that it expects parameters to be [Vectors](https://webppl.readthedocs.io/en/master/functions/tensors.html#Vector) and you can extract elements from vectors with `T.get` (`T` is webppl shorthand for `ad.tensor`: for more information on tensor functions, see [adnn docs](https://github.com/dritchie/adnn/blob/master/ad/README.md#available-ad-primitive-functions)).
 
 ### c)
 
-How can you instead change the the inference algorithm (instead of the model) to successfully trace the curves? Explore different algorithms!
+Now change the the inference *algorithm* (with the original model) to successfully trace the curves. What parameters did you try, and what worked best?
+
+HINT: you may want to explore HMC! start with the default parameters specified in the HMC [docs](https://webppl.readthedocs.io/en/master/inference/methods.html#mcmc) and play with different values.
 
 
-## Exercise 2. Metropolis-Hastings Part 1
+## Exercise 2. Properties and pitfalls of Metropolis-Hastings
 
-Recall our code from the chapter that implements an Metropolis-Hastings markov chain:
+Consider a very simple function that interpolates between two endpoints. 
 
-~~~~
-var p = 0.7
-
-//the target distribution (not normalized):
-//prob = 0 if x condition is violated, otherwise proportional to geometric distribution
-var target_dist = function(x){
-  return (x < 3 ? 0 : (p * Math.pow((1-p),(x-1))))
-}
-
-// the proposal function and distribution,
-// here we're equally likely to propose x+1 or x-1.
-var proposal_fn = function(x){
-  return (flip() ? x - 1 : x + 1)
-}
-var proposal_dist = function (x1, x2){
-  return 0.5
-}
-
-// the MH recipe:
-var accept = function (x1, x2){
-  let p = Math.min(1, (target_dist(x2) * proposal_dist(x2, x1)) / (target_dist(x1) * proposal_dist(x1,x2)))
-  return flip(p)
-}
-var transition = function(x){
-  let proposed_x = proposal_fn(x)
-  return (accept(x, proposed_x) ? proposed_x : x)
-}
-
-//the MCMC loop:
-var mcmc = function(state, iterations){
-  return ((iterations == 1) ? [state] : mcmc(transition(state), iterations-1).concat(state))
-}
-
-var chain = mcmc(3, 10000) // mcmc for conditioned geometric
-viz.table(chain)
-~~~~
-
-Notice that `chain` is a list of samples, *not* a WebPPL probability distribution object. `viz.table` helpfully compiles a probability distribution for us. However, other functions such as `viz.marginals` will not work, because they require a WebPPL probability distribution object. 
-
-To see the difference, try running `print(chain)` and compare that to the output of running `print(post)` at the end of the code block for Exercise 1.
-
-Edit the code below to derive a WebPPL probability distribution object from `chain`. HINT: The WebPPL function `Infer()` returns a probability distribution object. Can you find a way to use `Infer()` to sample from `chain`, thus returning a probability distribution object?
+Suppose one endpoint is fixed at `-10`, but we have uncertainty over the value of the other endpoint and the interpolation weight between them. By conditioning on the resulting value being close to 0, we can infer what the free variables must have been:
 
 ~~~~
-var p = 0.7
-
-//the target distribution (not normalized):
-//prob = 0 if x condition is violated, otherwise proportional to geometric distribution
-var target_dist = function(x){
-  return (x < 3 ? 0 : (p * Math.pow((1-p),(x-1))))
+var interpolate = function(point1, point2, interpolationWeight) {
+  return (point1 * interpolationWeight +
+          point2 * (1 - interpolationWeight))
 }
 
-// the proposal function and distribution,
-// here we're equally likely to propose x+1 or x-1.
-var proposal_fn = function(x){
-  return (flip() ? x - 1 : x + 1)
-}
-var proposal_dist = function (x1, x2){
-  return 0.5
-}
-
-// the MH recipe:
-var accept = function (x1, x2){
-  let p = Math.min(1, (target_dist(x2) * proposal_dist(x2, x1)) / (target_dist(x1) * proposal_dist(x1,x2)))
-  return flip(p)
-}
-var transition = function(x){
-  let proposed_x = proposal_fn(x)
-  return (accept(x, proposed_x) ? proposed_x : x)
+var model = function(){
+  var point1 = -10;
+  var point2 = uniform(-100,100);
+  var interpolationWeight = uniform(0,1);
+  var pointInMiddle = interpolate(point1, point2, interpolationWeight);
+  observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle)
+  return {point2, interpolationWeight, pointInMiddle}
 }
 
-//the MCMC loop:
-var mcmc = function(state, iterations){
-  return ((iterations == 1) ? [state] : mcmc(transition(state), iterations-1).concat(state))
-}
-
-var chain = mcmc(3, 10000) // mcmc for conditioned geometric
-viz.table(chain)
-~~~~
-
-## Exercise 3. Metropolis-Hastings Part 2
-
-Consider this very simple model that chooses `y` and `w` such that `-10 * w + y * (1 - w)` is as close as possible to `0`:
-
-~~~~
-var p = function(x,y,w){
-  return Gaussian({mu: 0, sigma:0.1}).score(x*w + y*(1-w))
-}
-
-var mymodel = function(){
-  var x = -10
-  var y = uniform(-100,100)
-  var w = dirichlet(Vector([1,1])).data[0]
-  factor(p(x,y,w))
-  return {y: y, w: w, s: x*w + y*(1-w)}
-}
-
-var post = Infer({
+var posterior = Infer({
   method: 'MCMC',
   samples: 5000,
   lag: 100,
-}, mymodel);
+}, model)
 
-viz.marginals(post)
+var samples = posterior.samples;
+viz(marginalize(posterior, function(x) {return x.pointInMiddle}))
+
+// Store these for future use
+editor.put("posterior", posterior)
+editor.put("samples", samples)
 ~~~~
 
-By looking at the marginal distribution of `s`, we can see that `Infer()` tends to choose values of `y` and `w` that satisfy our condition. 
+By looking at the marginal distribution of `pointInMiddle`, we can see that `Infer()` successfully finds values of `point2` and `interpolationWeight` that satisfy our condition. 
 
 ### a)
 
-Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `factor` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
+Visualize the separate marginal distributions of `point2` and `interpolationWeight`. How would you describe their shapes, compared to the marginal distribution of `pointInMiddle`? 
+
+Now visualize the *joint* marginal distribution of point2 and interpolationWeight. What does this tell you about their dependence?
+
+HINT: use the [marginalize](http://docs.webppl.org/en/master/functions/other.html#marginalize) helper to elegantly construct these marginal distributions
 
 ### b)
 
-Describe a proposal distribution that you could use for Metropolis-Hastings inference for this model. Show that it satisfies the necessary conditions. 
+WebPPL also exposes the list of MCMC samples that the density plots above are built from. This is saved in the `samples` variable. Decrease the number of samples to `50` (and the `lag` to 0) and plot `pointInMiddle` as a function of the sample number. Run this several times to get a feel for the shape of this curve. What do you notice? What property of MCMC are you observing?
 
+HINT: this will require some 'data munging' on the array of samples. Some useful functions will be [`map`](http://docs.webppl.org/en/master/functions/arrays.html#map), `_.range()`, and `viz.line` which takes arrays `x` and `y`.
+
+### c) 
+
+Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `observe` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
+
+### d)
+
+Add `verbose: true` to the list of options and run `MH` again. What is the acceptance rate over time (i.e. what proportion of proposals are actually accepted in the chain?). What about the model puts it at this level? 
+
+Consider the list of built-in drift kernels [here](https://webppl.readthedocs.io/en/master/driftkernels.html?highlight=drift%20kernel#helpers). Which of these would be appropriate to use in your model in place of the current uniform prior from which `point2` is sampled? After using that kernel in your model, what effect do you observe on the acceptence rate, and why?
+
+<!--
 ### c)
 
 Edit the code below to implement your Metropolis-Hastings recipe. Use `viz.marginals` to show that it reliably chooses values of `y` and `w` that satisfy the condition.
@@ -175,55 +123,6 @@ Hint 1: Check out possible [WebPPL distributions](https://webppl.readthedocs.io/
 Hint 2: Many WebPPL distributions require vectors as input. Turn an array into a vector with the function `Vector()` (e.g., `Vector([x, y])`).
 
 Hint 3: Remember that `dist.score(x)` returns the log probability (density) of `x` given distribution `dist`. To turn that into a a probability, use `Math.exp()`. 
-
-~~~~
-var x = -10 // Fix this variable.
-
-// target distribution
-var target_dist = function(state){
-  var y = state[0]
-  var w = state[1]
-  return // your code here.
-         // remember if y or w are outside their bounds, probability = 0
-}
-
-// the proposal function and distribution,
-var proposal_fn = function(state){
-  var y = state[0]
-  var w = state[1]
-  var aprop = // your code here
-  return [aprop.data[0], aprop.data[1]]
-}
-var proposal_dist = function (state1, state2){
-  return // your code here
-}
-
-// the MH recipe:
-var accept = function (state1, state2){
-  let p = Math.min(1, (target_dist(state2) * proposal_dist(state2, state1)) 
-                   / (target_dist(state1) * proposal_dist(state1,state2)))
-  return flip(p)
-}
-var transition = function(state){
-  let proposed_state = proposal_fn(state)
-  return (accept(state, proposed_state) ? proposed_state : state)
-}
-
-//the MCMC loop:
-var mcmc = function(state, iterations){
-  var y = state[0]
-  var w = state[1]
-  var s = x*w + y*(1-w)
-  var stateobj = {y: y, w: w, s: s}
-  return ((iterations == 1) ? [stateobj] : mcmc(transition(state), iterations-1).concat(stateobj))
-}
-
-
-var chain = mcmc([0,.5], 5000) // go ahead and use this starting value
-
-var post = // your code here (use answer from Exercise #2)
-viz.marginals(post)
-~~~~
 
 
 ## Exercise 4. Topic models
@@ -327,3 +226,4 @@ If we ran MCMC on the model in (a) for an infinite amount of time, we would no l
 Given the answer to that question, why does our model in (a) seem to work?
 
 HINT: We do not need to run our initial mixture model example above nearly as long to get the same effect. This is why we printed samples from the distribution. 
+--> 
