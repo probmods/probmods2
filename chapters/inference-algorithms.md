@@ -268,16 +268,17 @@ Here is a Markov chain:
 
 ~~~~
 var states = ['a', 'b', 'c', 'd'];
+var transitionProbs = {a: [.48, .48, .02, .02],
+                       b: [.48, .48, .02, .02],
+                       c: [.02, .02, .48, .48],
+                       d: [.02, .02, .48, .48]}
+
 var transition = function(state){
-	return (state == 'a' ? sample(Categorical({vs: states, ps: [.48, .48, .02, .02]})) :
-			  state == 'b' ? sample(Categorical({vs: states, ps: [.48, .48, .02, .02]})) :
-			  state == 'c' ? sample(Categorical({vs: states, ps: [.02, .02, .48, .48]})) :
-			  state == 'd' ? sample(Categorical({vs: states, ps: [.02, .02, .48, .48]})) :
-			  false)
+  return categorical({vs: states, ps: transitionProbs[state]})
 }
 
 var chain = function(state, n){
-	return (n == 0 ? state : chain(transition(state), n-1))
+  return (n == 0 ? state : chain(transition(state), n-1))
 }
 
 
@@ -303,7 +304,7 @@ For the chain above, the stable distribution is uniform---we have another (fairl
 ~~~~
 var states = ['a', 'b', 'c', 'd'];
 var transition = function(state){
-	return sample(Categorical({vs: states, ps: [.25, .25, .25, .25]}))
+	return categorical({vs: states, ps: [.25, .25, .25, .25]})
 	}
 
 var chain = function(state, n){
