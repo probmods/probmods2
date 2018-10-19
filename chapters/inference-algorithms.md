@@ -903,7 +903,91 @@ viz.marginals(post)
 
 Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to converge.
 
-How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 20)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). There are other methods for variational inference in addition to *mean-field*.
+How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 20)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). 
+
+However, though it can be very useful, the mean-field approximation necessarily fails to capture correlation between variables. To see this, return to the model we used to explain the checkershaddow illusion:
+
+~~~~
+var observedLuminance = 3;
+                            
+var model = function() {
+  var reflectance = gaussian({mu: 1, sigma: 1})
+  var illumination = gaussian({mu: 3, sigma: 1})
+  var luminance = reflectance * illumination
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance)
+  return {reflectance: reflectance, illumination: illumination}
+}
+
+var post = Infer({
+  // First use MCMC (with a lot of samples) to see what the posterior should look like
+  method: 'MCMC',
+  samples: 15000,
+  lag: 100
+  //then try optimization (VI):
+//     method: 'optimize',
+//     optMethod: {adam: {stepSize: .25}},
+//     steps: 250,
+//     samples: 5000
+}, model)
+
+viz.heatMap(post)
+~~~~
+
+Try the above model with both 'optimize' and 'MCMC', do you see how 'optimize' fails to capture the correlation? Think about why this is!
+
+There are other methods for variational inference in addition to *mean-field*. We can instead approximate the posterior with a more complex family of distributions; for instance one that directly captures the (potential) correlation in the above example. To do so in WebPPL we need to explicitly describe the approximating family, or *guide*. First let's look at the above mean field approach, written with explicit guides:
+
+~~~~
+var observedLuminance = 3;
+                            
+var model = function() {
+  var reflectance = sample(Gaussian({mu: 1, sigma: 1}),
+                           {guide: function(){Gaussian({mu: param(), sigma:Math.exp(param())})}})
+  var illumination = sample(Gaussian({mu: 3, sigma: 1}),
+                            {guide: function(){Gaussian({mu: param(), sigma:Math.exp(param())})}})
+  var luminance = reflectance * illumination
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance)
+  return {reflectance: reflectance, illumination: illumination}
+}
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: {adam: {stepSize: .01}},
+  steps: 10000,
+  samples: 1000
+}, model)
+
+viz.heatMap(post)
+~~~~
+
+Now, we can alter the code in the guide functions to make the `illumination` posterior depend on the `reflectance`:
+
+~~~~
+var observedLuminance = 3;
+                            
+var model = function() {
+  var reflectance = sample(Gaussian({mu: 1, sigma: 1}),
+                           {guide: function(){Gaussian({mu: param(), sigma:Math.exp(param())})}})
+  var illumination = sample(Gaussian({mu: 3, sigma: 1}),
+                            {guide: function(){Gaussian({mu: param()+reflectance*param(), sigma:Math.exp(param())})}})
+  var luminance = reflectance * illumination
+  observe(Gaussian({mu: luminance, sigma: 1}), observedLuminance)
+  return {reflectance: reflectance, illumination: illumination}
+}
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: {adam: {stepSize: .01}},
+  steps: 10000,
+  samples: 1000
+}, model)
+
+viz.heatMap(post)
+~~~~
+
+Here we have explicitly described a linear dependence of the mean of `illumination` on `reflectance`. Can you think of ways to adjust the guide functions to even better capture the true posterior?
+
+
 
 <!-- The following is copied and partly edited from summer school. However, changes in how optimization works in WebPPL means that a lot of this code no longer runs and needs some tlc.
 
