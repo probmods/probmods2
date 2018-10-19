@@ -25,7 +25,7 @@ When thinking about learning as inference, there are several key questions. Firs
 
 Second, what is the relationship between the amount of input (how much data we've observed) and the knowledge gained? In psychology, this relationship is often characterized with a *learning curve*, representing a belief as a function of amount of data. 
 In general, getting more data allows us to update our beliefs. But some data, in some models, has a much bigger effect. 
-In addition, while knowledge often changes gradually as data is acucmulated, it sometimes jumps in non-linear ways; these are usually the most psychologically interesting predictions.
+In addition, while knowledge often changes gradually as data is accumulated, it sometimes jumps in non-linear ways; these are usually the most psychologically interesting predictions.
 
 # Example: Learning About Coins
 
