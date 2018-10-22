@@ -59,6 +59,6 @@ map(function(dataPoint) {
 }, data)
 ~~~~
 
-B) instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA. 
+B) instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method and parameters the participant is using. Examine the posteriors: which algorithm are they most likely using?
 
 C) Do you think any of these algorithms are a good description of how you intuitively solve this problem? 
