@@ -1,0 +1,62 @@
+///fold:
+var time = function(foo, trials) {
+  var start = _.now()
+  var ret = repeat(trials, foo)
+  var end = _.now()
+  return (end-start)/trials
+}
+///
+
+var detectingBlickets = function(evidence, params) {
+  return Infer({method: params.algorithm, samples: params.samples}, function() {
+    var blicket = mem(function(block) {return flip(params.baseRate)})
+    var power = function(block) {return blicket(block) ? .95 : .05}
+    var machine = function(blocks) {
+      return (blocks.length == 0 ? flip(0.05) :
+              flip(power(first(blocks))) || machine(rest(blocks)))
+    }
+    condition(machine(evidence))
+    return blicket('A')
+  })
+};
+
+var data = [
+  {baserate: 0.5, evidence: ['A'], response: true, RT: .9},
+  {baserate: 0.5, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 4},
+  {baserate: 0.5, evidence: ['A', 'B', 'C'], response: true, RT: 2},
+  {baserate: 0.01, evidence: ['A'], response: true, RT: 1.5},
+  {baserate: 0.01, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 5},
+  {baserate: 0.01, evidence:['A', 'B', 'C'], response: true, RT: 2.2},
+]
+      
+var rtOutput = function(evidence, params) {
+  var meanTime = time(function() { detectingBlickets(evidence, params)}, 10)
+  return Gaussian({mu: meanTime, sigma: 1})
+}
+
+var responseOutput = function(evidence, params) {
+  return detectingBlickets(evidence, params)
+} 
+
+var dataAnalysis = function() {
+  var parameters = {
+    algorithm: flip() ? 'rejection' : 'enumerate',
+    samples: randomInteger(100) + 1
+  }
+  
+  map(function(dataPoint) {
+    var parameters = extend(parameters, {baserate : dataPoint.baserate});
+    observe(responseOutput(dataPoint.evidence, parameters), dataPoint.response);
+    observe(rtOutput(dataPoint.evidence, parameters), dataPoint.RT);
+  }, data)
+
+  return parameters
+}
+
+
+var nSamples = 500
+
+// Do not change below
+var opts = {method: 'MCMC', callbacks: [editor.MCMCProgress()], samples: nSamples}
+var posterior = Infer(opts, dataAnalysis)
+viz.marginals(posterior)
