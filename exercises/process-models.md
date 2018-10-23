@@ -60,9 +60,10 @@ var rtOutput = function(...) {
 }
 
 var dataAnalysis = function() {
-  var parameters = {...}
+  var params = {...}
 
   map(function(dataPoint) {
+    var subjectParams = extend(params, {...})
     observe(responseOutput(...), dataPoint.response);
     observe(rtOutput(...), dataPoint.RT);
   }, data)
@@ -73,18 +74,17 @@ var dataAnalysis = function() {
 
 var nSamples = 500
 // Do not change below
-var opts = {method: 'MCMC', callbacks: [editor.MCMCProgress()], samples: nSamples}
+var opts = {method: 'MCMC', callbacks: [editor.MCMCProgress()], 
+            samples: nSamples, burn: 100}
 var posterior = Infer(opts, dataAnalysis)
 viz.marginals(posterior)
 ~~~~
 
-B) Note that there is some subject variability in RT. Modify your model to allow the two subjects to have different base rates, and examine the posteriors over these two subject-level parameter. 
+B) Note that there is some subject variability in RT. Modify your model to allow the two subjects to have different base rates in mind, and examine the posteriors over these two subject-level parameters. 
 
-HINT: make a `baseRatePrior` function that uses `mem`
+C) Try removing the observe statement for RT from your model so that you're just conditioning on 'response'. Then try removing the observe statement for 'response' so that you're just conditioning on RT. How does your inference about the baserates differ? What does this say about the information provided about the base rate from each source?
 
-C) Try removing the observe statement for RT from your model so that you're just conditioning on 'response'. Then try removing the observe statement for 'response' so that you're just conditioning on RT. How does your inference about the baserates change or not change? What does this say about the information provided about the base rate from each source?
-
-D) Now suppose we went to survey another group of aliens on Venus and collected the following data set. Run your BDA on these subjects. Do you conclude the same thing?
+D) Now suppose we went to survey another group of aliens on Venus and collected the following data set. Run this same BDA on these subjects. Do you conclude the same thing?
 
 ~~~~
 var venusData = [
@@ -92,7 +92,7 @@ var venusData = [
   {subjectID: 1, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 4},
   {subjectID: 1, evidence: ['A', 'B', 'C'], response: true, RT: 2},
   {subjectID: 2, evidence: ['A'], response: true, RT: 1.5},
-  {subjectID: 2, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 5},
+  {subjectID: 2, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 5},
   {subjectID: 2, evidence: ['A', 'B', 'C'], response: true, RT: 2.2},
 ];
 ~~~~
