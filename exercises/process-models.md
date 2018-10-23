@@ -22,27 +22,24 @@ var detectingBlickets = function(evidence, params) {
 }
 ~~~~
 
-In addition to collecting judgements about whether 'A' was a blicket, suppose that we collected response times (RTs). Response time is measured in behavioral experiments by calculating the time elapsed between presentation of the stimulus and the participant's response. Here is the data:
+In addition to collecting judgements about whether 'A' was a blicket, suppose that we collected response times (RTs). Response time is measured in behavioral experiments by calculating the time elapsed between presentation of the stimulus and the participant's response. Here is the (totally fake) data:
 
 ~~~~
 var data = [
-  {baserate: 0.5, evidence: ['A'], response: true, RT: 10},
-  {baserate: 0.5, evidence: ['A', 'B', 'C', 'D', 'E'], response: true, RT: 20},
-  {baserate: 0.5, evidence: ['A', 'B', 'C'], response: true, RT: 15},
-  {baserate: 0.01, evidence: ['A'], response: true, RT: 8},
-  {baserate: 0.01, evidence: ['A', 'B', 'C', 'D', 'E'], response: false, RT: 24},
-  {baserate: 0.01, evidence:['A', 'B', 'C'], response: true, RT: 14},
-  {baserate: 0.1, evidence: ['A'], response: true, RT: 10},
-  {baserate: 0.1, evidence:['A', 'B', 'C', 'D', 'E'], response: false, RT: 22},
-  {baserate: 0.1, evidence: ['A', 'B', 'C'], response: true, RT: 16}
+  {baserate: 0.5, evidence: ['A'], response: true, RT: .9},
+  {baserate: 0.5, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 4},
+  {baserate: 0.5, evidence: ['A', 'B', 'C'], response: true, RT: 2},
+  {baserate: 0.01, evidence: ['A'], response: true, RT: 1.5},
+  {baserate: 0.01, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 5},
+  {baserate: 0.01, evidence:['A', 'B', 'C'], response: true, RT: 2.2},
 ]
 ~~~~
 
-In this exercise, you will extend your model from the Bayesian Data Analysis exercises to evaluate different process models on this new data set.
+In this exercise, you will extend your model from the Bayesian Data Analysis exercises to evaluate different process models on this new data set. 
 
 A) Write a linking function from your model to the observed response and RT.
 
-HINT: use the `time` function we defined in class. there should be one `observe` function for the response and one for the RT:
+HINT: use the `time` function we defined in class. there should be one `observe` function for the response and one for the RT. Remember that the first argument to `observe` must be a *distribution* object. 
 
 ~~~~ norun
 var time = function(foo, trials) {
@@ -52,32 +49,37 @@ var time = function(foo, trials) {
   return (end-start)/trials
 }
 
-var decisionTime = function(evidence) {
-  Infer({...})
+var responseOutput = function(...) {
+  ...
+}
+
+var rtOutput = function(...) {
+  ...
 }
 
 var dataAnalysis = function() {
-  parameters = {...}
+  var parameters = {...}
 
   map(function(dataPoint) {
-    var modelOutput = detectingBlickets(...)
-    observe(..., dataPoint.response);
-    observe(decisionTime(...)) dataPoint.RT);
+    observe(responseOutput(...), dataPoint.response);
+    observe(rtOutput(...)) dataPoint.RT);
   }, data)
 
   return parameters
 }
 
 
-var nSamples = 20
+var nSamples = 500
 // Do not change below
 var opts = {method: 'MCMC', callbacks: [editor.MCMCProgress()], samples: nSamples}
 var posterior = Infer(opts, dataAnalysis)
 viz.marginals(posterior)
 ~~~~
 
-B) Instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method and parameters the participant is using. Examine the posteriors: which algorithm are they most likely using?
+B) Instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method ('enumerate' vs. 'rejection') and parameters of inference (e.g. number of samples) the participant is using. Examine the posteriors: which algorithm are they most likely using?
 
 Hint: When we `lift` variables instead of using fixed estimates, we express uncertainty over their values using priors. We can then compute posterior probabilities for those variables (conditioning on data). For an example, see `lazinessPrior` in the `dataAnalysisModel` in the BDA reading.
+
+Hint: you may want to consider the [`randomInteger` distribution](http://docs.webppl.org/en/master/distributions.html#RandomInteger) as a prior on number of samples. And you may find the [`extend` helper function](http://docs.webppl.org/en/master/functions/other.html#extend) useful when manipulating the parameter object.
 
 C) Do you think any of these algorithms are a good description of how you intuitively solve this problem? Explain what aspects of the inference may or may not be be analogous to what people do.
