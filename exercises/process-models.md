@@ -33,9 +33,9 @@ var marsData = [
   {subjectID: 1, evidence: ['A'], response: true, RT: .9},
   {subjectID: 1, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 1.1},
   {subjectID: 1, evidence: ['A', 'B', 'C'], response: true, RT: 1.2},
-  {subjectID: 2, evidence: ['A'], response: true, RT: 4.5},
-  {subjectID: 2, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 5},
-  {subjectID: 2, evidence: ['A', 'B', 'C'], response: true, RT: 4},
+  {subjectID: 2, evidence: ['A'], response: true, RT: 3.5},
+  {subjectID: 2, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 4},
+  {subjectID: 2, evidence: ['A', 'B', 'C'], response: true, RT: 3.4},
 ]
 ~~~~
 
