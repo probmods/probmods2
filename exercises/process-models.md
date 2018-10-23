@@ -97,7 +97,7 @@ var venusData = [
 ];
 ~~~~
 
-E) Instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method ('enumerate' vs. 'rejection') and parameters of inference (e.g. number of samples) the participant is using. Examine the posteriors: which algorithm are they most likely using?
+E) Instead of fixing 'rejection' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method ('enumerate' vs. 'rejection') and parameters of inference (e.g. number of samples) the participant is using. Run this on the mars and venus datasets and examine the posteriors: which algorithm is each kind of alient most likely using?
 
 Hint: When we `lift` variables instead of using fixed estimates, we express uncertainty over their values using priors. We can then compute posterior probabilities for those variables (conditioning on data). For an example, see `lazinessPrior` in the `dataAnalysisModel` in the BDA reading.
 
