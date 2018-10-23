@@ -41,14 +41,14 @@ var marsData = [
 
 A) Write a linking function from your model to the observed response and RT, and infer the *baseRate* subjects likely have in mind.
 
-HINT: use the `time` function we defined in class. there should be one `observe` function for the response and one for the RT. Remember that the first argument to `observe` must be a *distribution* object. 
+HINT: use the `time` function we defined in class (using 1 or 2 for `numTrials` seems to work okay; bumping this number up will make timing estimation more stable but will make inference run slower). Remember that the first argument to `observe` must be a *distribution* object.
 
 ~~~~ norun
-var time = function(foo, trials) {
+var time = function(foo, numTrials) {
   var start = _.now()
-  var ret = repeat(trials, foo)
+  var ret = repeat(numTrials, foo)
   var end = _.now()
-  return (end-start)/trials
+  return (end-start)/numTrials
 }
 
 var responseOutput = function(...) {
@@ -75,7 +75,7 @@ var dataAnalysis = function() {
 var nSamples = 500
 // Do not change below
 var opts = {method: 'MCMC', callbacks: [editor.MCMCProgress()], 
-            samples: nSamples, burn: 100}
+            samples: nSamples, burn: 500, lag: 1}
 var posterior = Infer(opts, dataAnalysis)
 viz.marginals(posterior)
 ~~~~
