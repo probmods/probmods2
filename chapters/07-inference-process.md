@@ -287,7 +287,7 @@ var makeLines = function(n, lines, prevScore){
 };
 
 var lineDist = Infer(
-  { method: 'MCMC', samples=50},
+  { method: 'MCMC', samples:50},
   function(){
     var lines = makeLines(4, [], 0);
     var finalGeneratedImage = Draw(50, 50, true);
