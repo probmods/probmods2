@@ -7,7 +7,7 @@ title: Rational process models - exercises
 
 Consider once again the simple blicket detector experiment from the Conditional Dependence chapter and Bayesian Data Analysis exercises. Here, we have simplified the model such that the only free parameter is the base rate of being a blicket, and the participant only sees one data point of evidence at a time (i.e. one set of blocks that makes the machine beep).
 
-~~~~
+~~~~ norun
 var detectingBlickets = function(evidence, params) {
   return Infer({method: 'rejection', samples: 50}, function() {
     var blicket = mem(function(block) {return flip(params.baseRate)})
@@ -28,7 +28,7 @@ Specifically, we went to Mars to study the cognition of the aliens that live the
 
 Here is the (totally fake) data, where each row represents a particular subject's response and RT for a particular set of evidence.
 
-~~~~
+~~~~ norun
 var marsData = [
   {subjectID: 1, evidence: ['A'], response: true, RT: .9},
   {subjectID: 1, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 1.1},
@@ -86,7 +86,7 @@ C) Try removing the observe statement for RT from your model so that you're just
 
 D) Now suppose we went to survey another group of aliens on Venus and collected the following data set. Run this same BDA on these subjects. Do you conclude the same thing?
 
-~~~~
+~~~~ norun
 var venusData = [
   {subjectID: 1, evidence: ['A'], response: true, RT: .9},
   {subjectID: 1, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 4},
