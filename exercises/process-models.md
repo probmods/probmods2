@@ -52,13 +52,32 @@ var time = function(foo, trials) {
   return (end-start)/trials
 }
 
-map(function(dataPoint) {
-  var modelOutput = detectingBlickets(...)
-  observe(..., dataPoint.response);
-  observe(..., dataPoint.RT);
-}, data)
+var decisionTime = function(evidence) {
+  Infer({...})
+}
+
+var dataAnalysis = function() {
+  parameters = {...}
+
+  map(function(dataPoint) {
+    var modelOutput = detectingBlickets(...)
+    observe(..., dataPoint.response);
+    observe(decisionTime(...)) dataPoint.RT);
+  }, data)
+
+  return parameters
+}
+
+
+var nSamples = 20
+// Do not change below
+var opts = {method: 'MCMC', callbacks: [editor.MCMCProgress()], samples: nSamples}
+var posterior = Infer(opts, dataAnalysis)
+viz.marginals(posterior)
 ~~~~
 
-B) instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method and parameters the participant is using. Examine the posteriors: which algorithm are they most likely using?
+B) Instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method and parameters the participant is using. Examine the posteriors: which algorithm are they most likely using?
 
-C) Do you think any of these algorithms are a good description of how you intuitively solve this problem? 
+Hint: When we `lift` variables instead of using fixed estimates, we express uncertainty over their values using priors. We can then compute posterior probabilities for those variables (conditioning on data). For an example, see `lazinessPrior` in the `dataAnalysisModel` in the BDA reading.
+
+C) Do you think any of these algorithms are a good description of how you intuitively solve this problem? Explain what aspects of the inference may or may not be be analogous to what people do.
