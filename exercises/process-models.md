@@ -5,18 +5,18 @@ title: Rational process models - exercises
 
 ## Exercise 1. 
 
-Consider once again the simple blicket detector model from the Conditional Dependence chapter and Bayesian Data Analysis exercises. Here, we have simplified the model such that the only free parameter is the base rate of being a blicket, and the participant only sees one data point (i.e. only one set of blocks that make it go off).
+Consider once again the simple blicket detector model from the Conditional Dependence chapter and Bayesian Data Analysis exercises. Here, we have simplified the model such that the only free parameter is the base rate of being a blicket, and the participant only sees one data point (i.e. one set of blocks that makes the machine beep).
 
 ~~~~
 var detectingBlickets = function(evidence, params) {
   return Infer({method: 'enumerate'}, function() {
     var blicket = mem(function(block) {return flip(params.baseRate)})
     var power = function(block) {return blicket(block) ? .95 : .05}
-    var machine = function(blocks) {
+    var machineBeeps = function(blocks) {
       return (blocks.length == 0 ? flip(0.05) :
               flip(power(first(blocks))) || machine(rest(blocks)))
     }
-    condition(machine(evidence))
+    condition(machineBeeps(evidence))
     return blicket('A')
   })
 }
@@ -62,7 +62,7 @@ var dataAnalysis = function() {
 
   map(function(dataPoint) {
     observe(responseOutput(...), dataPoint.response);
-    observe(rtOutput(...)) dataPoint.RT);
+    observe(rtOutput(...), dataPoint.RT);
   }, data)
 
   return parameters
