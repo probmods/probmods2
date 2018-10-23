@@ -5,16 +5,16 @@ title: Rational process models - exercises
 
 ## Exercise 1. 
 
-Consider once again the simple blicket detector model from the Conditional Dependence chapter and Bayesian Data Analysis exercises. Here, we have simplified the model such that the only free parameter is the base rate of being a blicket, and the participant only sees one data point (i.e. one set of blocks that makes the machine beep).
+Consider once again the simple blicket detector experiment from the Conditional Dependence chapter and Bayesian Data Analysis exercises. Here, we have simplified the model such that the only free parameter is the base rate of being a blicket, and the participant only sees one data point of evidence at a time (i.e. one set of blocks that makes the machine beep).
 
 ~~~~
 var detectingBlickets = function(evidence, params) {
-  return Infer({method: 'enumerate'}, function() {
+  return Infer({method: 'rejection', samples: 100}, function() {
     var blicket = mem(function(block) {return flip(params.baseRate)})
     var power = function(block) {return blicket(block) ? .95 : .05}
     var machineBeeps = function(blocks) {
       return (blocks.length == 0 ? flip(0.05) :
-              flip(power(first(blocks))) || machine(rest(blocks)))
+              flip(power(first(blocks))) || machineBeeps(rest(blocks)))
     }
     condition(machineBeeps(evidence))
     return blicket('A')
@@ -22,22 +22,24 @@ var detectingBlickets = function(evidence, params) {
 }
 ~~~~
 
-In addition to collecting judgements about whether 'A' was a blicket, suppose that we collected response times (RTs). Response time is measured in behavioral experiments by calculating the time elapsed between presentation of the stimulus and the participant's response. Here is the (totally fake) data:
+In this exercise, you will extend your model from the Bayesian Data Analysis exercises to evaluate different process models on new data sets. 
+
+Specifically, we went to Mars to study the cognition of the aliens that live there, and in addition to collecting judgements about whether 'A' was a blicket, we collected response times (RTs) to get better resolution into their cognitive processes. Response time is measured in behavioral experiments by calculating the time elapsed between presentation of the stimulus and the participant's response. 
+
+Here is the (totally fake) data, where each row represents a particular subject's response and RT for a particular set of evidence.
 
 ~~~~
-var data = [
-  {baserate: 0.5, evidence: ['A'], response: true, RT: .9},
-  {baserate: 0.5, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 4},
-  {baserate: 0.5, evidence: ['A', 'B', 'C'], response: true, RT: 2},
-  {baserate: 0.01, evidence: ['A'], response: true, RT: 1.5},
-  {baserate: 0.01, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 5},
-  {baserate: 0.01, evidence:['A', 'B', 'C'], response: true, RT: 2.2},
+var marsData = [
+  {subjectID: 1, evidence: ['A'], response: true, RT: .9},
+  {subjectID: 1, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 1.1},
+  {subjectID: 1, evidence: ['A', 'B', 'C'], response: true, RT: 1.2},
+  {subjectID: 2, evidence: ['A'], response: true, RT: 4.5},
+  {subjectID: 2, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 5},
+  {subjectID: 2, evidence: ['A', 'B', 'C'], response: true, RT: 4},
 ]
 ~~~~
 
-In this exercise, you will extend your model from the Bayesian Data Analysis exercises to evaluate different process models on this new data set. 
-
-A) Write a linking function from your model to the observed response and RT.
+A) Write a linking function from your model to the observed response and RT, and infer what *base rate* each subject was likely to have in mind.
 
 HINT: use the `time` function we defined in class. there should be one `observe` function for the response and one for the RT. Remember that the first argument to `observe` must be a *distribution* object. 
 
@@ -76,10 +78,25 @@ var posterior = Infer(opts, dataAnalysis)
 viz.marginals(posterior)
 ~~~~
 
-B) Instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method ('enumerate' vs. 'rejection') and parameters of inference (e.g. number of samples) the participant is using. Examine the posteriors: which algorithm are they most likely using?
+B) Remove the observe statement for RT from your model: how does your inference change? What does this say about the information provided about the base rate?
+
+C) Now suppose we went to survey another group of aliens on Venus and collected the following data set. Run your BDA on these subjects. Do you conclude the same thing?
+
+~~~~
+var venusData = [
+  {subjectID: 1, evidence: ['A'], response: true, RT: .9},
+  {subjectID: 1, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: true, RT: 4},
+  {subjectID: 1, evidence: ['A', 'B', 'C'], response: true, RT: 2},
+  {subjectID: 2, evidence: ['A'], response: true, RT: 1.5},
+  {subjectID: 2, evidence: ['A', 'B', 'C', 'D', 'E', 'F'], response: false, RT: 5},
+  {subjectID: 2, evidence: ['A', 'B', 'C'], response: true, RT: 2.2},
+];
+~~~~
+
+D) Instead of fixing 'enumerate' in the `Infer` statement, lift the inference method and number of samples passed to Infer into your BDA, so that you as the scientist are inferring the inference method ('enumerate' vs. 'rejection') and parameters of inference (e.g. number of samples) the participant is using. Examine the posteriors: which algorithm are they most likely using?
 
 Hint: When we `lift` variables instead of using fixed estimates, we express uncertainty over their values using priors. We can then compute posterior probabilities for those variables (conditioning on data). For an example, see `lazinessPrior` in the `dataAnalysisModel` in the BDA reading.
 
 Hint: you may want to consider the [`randomInteger` distribution](http://docs.webppl.org/en/master/distributions.html#RandomInteger) as a prior on number of samples. And you may find the [`extend` helper function](http://docs.webppl.org/en/master/functions/other.html#extend) useful when manipulating the parameter object.
 
-C) Do you think any of these algorithms are a good description of how you intuitively solve this problem? Explain what aspects of the inference may or may not be be analogous to what people do.
+E) Do you think any of these algorithms are a good description of how you intuitively solve this problem? Explain what aspects of the inference may or may not be be analogous to what people do.
