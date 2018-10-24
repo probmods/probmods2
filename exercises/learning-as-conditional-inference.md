@@ -5,11 +5,13 @@ title: learning - exercises
 
 ## 1. Calculating learning curves
 
-#### a)
 
+<!--
+  NDG: i removed this for now, because it's not explained in chapter. is it a real distiction?
 How does a *learning curve* differ from a *learning trajectory*?
+-->
 
-#### b)
+#### a)
 
 In the chapter, we graphed *learning trajectories* for a number of models. Below is one of these models (the one with the Beta(10,10) prior). In the chapter, we observed how the model's best guess as to the weight of the coin changed across a sequence of sucessive heads. See what happens if instead we see heads and tails in alternation:
 
@@ -82,7 +84,7 @@ viz(post); //should graph the posterior distribution on weights
 
 You should see a much sharper peak in the posterior. (Note that the bounds on the x-axis are likely to be different in the two graphs, which could obscure this. The `viz` package doesn't easily to allow you to adjust the bounds on the axes.)
 
-#### c)
+#### b)
 
 Ideally, we'd like to see how our belief distribution shifts as more data comes in. A particularly good measure would be entropy. Unfortunately, calculating entropy for a Beta distribution is [somewhat involved](https://en.wikipedia.org/wiki/Beta_distribution#Quantities_of_information_(entropy)). 
 
