@@ -2,7 +2,7 @@
 layout: chapter
 title: Hierarchical models
 description: The power of statistical abstraction.
-chapter_num: 12
+chapter_num: 11
 ---
 
 <!-- NEED TO BREAK THIS DOWN INTO TWO KINDS OF POINTS:

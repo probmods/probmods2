@@ -2,7 +2,7 @@
 layout: chapter
 title: Occam's Razor
 description: How inference penalizes extra model flexibility.
-chapter_num: 13
+chapter_num: 12
 custom_js:
 - assets/js/draw.js
 ---
