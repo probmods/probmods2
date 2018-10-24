@@ -13,9 +13,7 @@ How does a *learning curve* differ from a *learning trajectory*?
 
 In the chapter, we graphed *learning trajectories* for a number of models. Below is one of these models (the one with the Beta(10,10) prior). In the chapter, we observed how the model's best guess as to the weight of the coin changed across a sequence of sucessive heads. See what happens if instead we see heads and tails in alternation:
 
-(Notice that we make use of [globalStore](https://webppl.readthedocs.io/en/master/globalstore.html) to create our data set.)
-
-~~~~js
+~~~~
 ///fold:
 var makeCoin = function(weight) {
   return function() {
@@ -37,23 +35,21 @@ var weightPosterior = function(observedData){
 }
 
 //creating 50 pairs of 'h' and 't' alternating
-globalStore.fullDataSet = ['h', 't']
-var ignore = repeat(49, function(){
-  globalStore.fullDataSet = globalStore.fullDataSet.concat(['h','t'])
-});
+var fullDataSet = repeat(50,function(){['h', 't']}).flat()
 
-var observedDataSizes = [0,2,4,6,8,10,20,30,40,50,70,100];
+
+var observedDataSizes = [0,2,4,6,8,10,20,30,40,50,70,100]
 var estimates = map(function(N) {
-  return expectation(weightPosterior(globalStore.fullDataSet.slice(0,N)))
-}, observedDataSizes);
+  return expectation(weightPosterior(fullDataSet.slice(0,N)))
+}, observedDataSizes)
 viz.line(observedDataSizes, estimates);
 ~~~~
 
 It looks like we haven't learned anything! Indeed, since our best estimate for the coin's weight was 0.5 *prior* to observing anything, our best estimate is hardly going to change when we get data consistent with that prior.
 
-The problem is that we've been looking at the MAP (maximum a posteriori) estimate. Edit the code below to see whether our posterior *distribution* is at all changed by observing this data set. (You only need to compare the prior and the posterior after all 100 observations):
+The problem is that we've been looking at average (or expected) estimate. Edit the code below to see whether our posterior *distribution* is at all changed by observing this data set. (You only need to compare the prior and the posterior after all 100 observations):
 
-~~~~js
+~~~~
 ///fold:
 var makeCoin = function(weight) {
   return function() {
@@ -64,10 +60,7 @@ var makeCoin = function(weight) {
 var pseudoCounts = {a: 10, b: 10};
 
 //creating 50 pairs of 'h' and 't' alternating
-globalStore.fullDataSet = ['h', 't']
-var ignore = repeat(49, function(){
-  globalStore.fullDataSet = globalStore.fullDataSet.concat(['h','t'])
-});
+var fullDataSet = repeat(50,function(){['h', 't']}).flat()
 ///
 
 var weightPosterior = function(observedData){
@@ -87,17 +80,17 @@ viz(prior); //should graph the prior distribution on weights
 viz(post); //should graph the posterior distribution on weights
 ~~~~
 
-You should see a much sharper peak in the posterior. Note that the bounds on the x-axis are likely to be different in the two graphs, which could obscure this. (The `viz` package doesn't appear to allow you to adjust the bounds on the axes.)
+You should see a much sharper peak in the posterior. (Note that the bounds on the x-axis are likely to be different in the two graphs, which could obscure this. The `viz` package doesn't easily to allow you to adjust the bounds on the axes.)
 
 #### c)
 
 Ideally, we'd like to see how our belief distribution shifts as more data comes in. A particularly good measure would be entropy. Unfortunately, calculating entropy for a Beta distribution is [somewhat involved](https://en.wikipedia.org/wiki/Beta_distribution#Quantities_of_information_(entropy)). 
 
-A somewhat hacky alternative we can use is variance: the expected squared difference between a sample from the distribution and the distribution mean. This is hacky because it doesn't take into account the shape of the distribution, and so won't give us quite what we want if the distribution is non-symmetric. 
+An alternative we can use is variance: the expected squared difference between a sample from the distribution and the distribution mean. This doesn't take into account the shape of the distribution, and so won't give us quite what we want if the distribution is non-symmetric; but it is a reasonable first try. 
 
 Edit the code below to see how variance changes as more data is observed. 
 
-~~~~js
+~~~~
 ///fold:
 var makeCoin = function(weight) {
   return function() {
@@ -118,10 +111,7 @@ var weightPosterior = function(observedData){
 }
 
 //creating 256 pairs of 'h' and 't' alternating
-globalStore.fullDataSet = ['h', 't']
-var ignore = repeat(499, function(){
-  globalStore.fullDataSet = globalStore.fullDataSet.concat(['h','t'])
-});
+var fullDataSet = repeat(256,function(){['h', 't']}).flat()
 ///
 
 
@@ -131,14 +121,12 @@ var posts = map(function(N) {
 }, observedDataSizes); 
 // returns an array of posteriors of length observedDataSizes.length
 
-var variances = mapN(function(i){
-	// your code here
-}, observedDataSizes.length)
+var variances = map(function(p){
+  // your code here
+}, posts)
 
 viz.line(observedDataSizes, variances);
 ~~~~
-
-You may need to look up how to use [mapN()](https://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapN).
 
 HINT: notice how the variable `posts` differs from `estimates` in the code above.
 

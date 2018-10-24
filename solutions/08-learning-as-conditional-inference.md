@@ -120,10 +120,7 @@ var weightPosterior = function(observedData){
 }
 
 //creating 256 pairs of 'h' and 't' alternating
-globalStore.fullDataSet = ['h', 't']
-var ignore = repeat(499, function(){
-  globalStore.fullDataSet = globalStore.fullDataSet.concat(['h','t'])
-});
+var fullDataSet = repeat(256,function(){['h', 't']}).flat()
 ///
 
 var observedDataSizes = [0,2,4,8,16,32,64,128,256,512];
@@ -132,15 +129,11 @@ var posts = map(function(N) {
 }, observedDataSizes); 
 // returns an array of posteriors of length observedDataSizes.length
 
-var variances = mapN(function(i){
-  var mymean = expectation(Infer({method: 'forward', samples:1000}, function(){
-    return sample(posts[i])
-  }))
-  var variance = expectation(Infer({method: 'forward', samples:1000}, function(){
-    return Math.pow(sample(posts[i]) - mymean,2)
-  }))
-  return(variance)
-}, observedDataSizes.length)
+var variances = map(function(p){
+  var m = expectation(p)
+    var v = expectation(p, function(x){return (x-m)*(x-m)})
+    return v
+}, posts)
 
 viz.line(observedDataSizes, variances);
 ~~~~
