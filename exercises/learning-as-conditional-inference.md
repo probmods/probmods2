@@ -13,7 +13,7 @@ How does a *learning curve* differ from a *learning trajectory*?
 
 #### a)
 
-In the chapter, we graphed *learning trajectories* for a number of models. Below is one of these models (the one with the Beta(10,10) prior). In the chapter, we observed how the model's best guess as to the weight of the coin changed across a sequence of sucessive heads. See what happens if instead we see heads and tails in alternation:
+In the chapter, we graphed *learning trajectories* for a number of models. Below is one of these models (the one with the `Beta(10,10)` prior). In the chapter, we observed how the model's best guess about the weight of the coin changed across a sequence of sucessive heads. See what happens if instead we see heads and tails in alternation:
 
 ~~~~
 ///fold:
@@ -29,9 +29,9 @@ var pseudoCounts = {a: 10, b: 10};
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', burn:1000, samples: 1000}, function() {
     var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
-    var coinDist = Bernoulli({p: coinWeight})
-    var obsFn = function(datum){observe(coinDist, datum=='h')}
-    mapData({data: observedData}, obsFn)
+    mapData({data: observedData}, function(datum) {
+      observe(Bernoulli({p: coinWeight}), datum == 'h')
+    })
     return coinWeight
   })
 }
@@ -59,18 +59,17 @@ var makeCoin = function(weight) {
   }
 };
 
-var pseudoCounts = {a: 10, b: 10};
-
 //creating 50 pairs of 'h' and 't' alternating
 var fullDataSet = repeat(50,function(){['h', 't']}).flat()
 ///
+var pseudoCounts = {a: 10, b: 10};
 
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', burn:1000, samples: 1000}, function() {
     var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
-    var coinDist = Bernoulli({p: coinWeight})
-    var obsFn = function(datum){observe(coinDist, datum=='h')}
-    mapData({data: observedData}, obsFn)
+    mapData({data: observedData}, function(datum) {
+      observe(Bernoulli({p: coinWeight}), datum == 'h')
+    })
     return coinWeight
   })
 }
@@ -105,9 +104,9 @@ var pseudoCounts = {a: 10, b: 10};
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', burn:1000, samples: 1000}, function() {
     var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
-    var coinDist = Bernoulli({p: coinWeight})
-    var obsFn = function(datum){observe(coinDist, datum=='h')}
-    mapData({data: observedData}, obsFn)
+    mapData({data: observedData}, function(datum) {
+      observe(Bernoulli({p: coinWeight}), datum == 'h')
+    })
     return coinWeight
   })
 }
@@ -119,7 +118,7 @@ var fullDataSet = repeat(256,function(){['h', 't']}).flat()
 
 var observedDataSizes = [0,2,4,8,16,32,64,128,256,512];
 var posts = map(function(N) {
-  return weightPosterior(globalStore.fullDataSet.slice(0,N))
+  return weightPosterior(fullDataSet.slice(0,N))
 }, observedDataSizes); 
 // returns an array of posteriors of length observedDataSizes.length
 
@@ -146,13 +145,11 @@ var causalPowerPost = Infer({method: 'MCMC', samples: 10000, lag:2}, function() 
   // Background probability of E
   var b = uniform(0, 1)
 
-  var obsFn = function(datum) {
+  mapData({data: observedData}, function(datum) {
     // The noisy causal relation to get E given C
     var E = (datum.C && flip(cp)) || flip(b)
-    condition( E == datum.E)
-  }
-
-  mapData({data: observedData}, obsFn)
+    condition(E == datum.E)
+  })
 
   return {causal_power: cp, background: b}
 });
