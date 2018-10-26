@@ -10,6 +10,8 @@ chapter_num: 10
 
     * **more on LoT / RR style models**
 
+    * **conjugate vs length prior?**
+
 -->
 
 

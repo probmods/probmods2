@@ -5,17 +5,7 @@ description: How inferences change as data accumulate.
 chapter_num: 9
 ---
 
-<!--
-  * **revise learning as induction section:**
 
-    * **infinite hypothesis spaces. poverty of stimulus arguments, inductive bias.**
-
-    * **add number game?**
-
-    * **more on LoT / RR style models**
-
-    * **conjugate vs length prior**
--->
 The line between "reasoning" and "learning" is unclear in cognition.
 Just as reasoning can be seen as a form of conditional inference, so can learning: discovering persistent facts about the world (for example, causal processes or causal properties of objects).
 By saying that we are learning "persistent" facts we are indicating that there is something to infer which we expect to be relevant to many observations over time.
@@ -47,21 +37,17 @@ This *learning curve* reflects a highly systematic and rational process of condi
 <!--
 Here's how to describe it using a probabilistic program<ref>following on Griffiths and Tenenbaum, "From mere coincidences to meaningful discoveries", Cognition, 2007, who present a more in-depth rational analysis and empirical study of people's sense of coincidence</ref>.  Recall how earlier we used stochastic functions with no inputs, or *thunks*, to describe coins of different weights.  Each such function now represents a hypothesis about the process generating our observations.  In the program below, the function `coin` represents these hypotheses.  The higher-order function `make-coin` takes one input, `weight`, and returns a `coin` thunk with that weight embedded in its definition.
 -->
-For simplicity let's consider only two hypotheses, two possible definitions of `coin`, representing a fair coin and a trick coin that produces heads 95% of the time. A priori, how likely is any coin offered up by a friend to be a trick coin?  Of course there is no objective or universal answer to that question, but for the sake of illustration let's assume that the *prior probability* of seeing a trick coin is 1 in a 1000, versus 999 in 1000 for a fair coin.  These probabilities determine the weight passed to `makeCoin`.  Now to inference:
+For simplicity let's consider only two hypotheses, two possible definitions of `coin`, representing a fair coin and a trick coin that produces heads 95% of the time. A priori, how likely is any coin offered up by a friend to be a trick coin?  Of course there is no objective or universal answer to that question, but for the sake of illustration let's assume that the *prior probability* of seeing a trick coin is 1 in a 1000, versus 999 in 1000 for a fair coin.
 
 ~~~~
 var observedData = ['h', 'h', 'h', 'h', 'h']
+
 var fairPrior = 0.999
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't'
-  }
-}
 
 var fairnessPosterior = Infer({method: 'enumerate'}, function() {
   var fair = flip(fairPrior)
-  var coin = makeCoin(fair ? 0.5 : 0.95)
-  var obsFn = function(datum){condition(datum == coin())}
+  var coin = Bernoulli({p: fair ? 0.5 : 0.95})
+  var obsFn = function(datum){observe(coin, datum == 'h')}
   mapData({data: observedData}, obsFn)
   return {fair: fair}
 })
@@ -71,40 +57,30 @@ viz(fairnessPosterior)
 
 Try varying the number of flips and the number of heads observed.  You should be able to reproduce the intuitive learning curve described above.  Observing 5 heads in a row is not enough to suggest a trick coin, although it does raise the hint of this possibility: its chances are now a few percent, approximately 30 times the baseline chance of 1 in a 1000.  After observing 10 heads in a row, the odds of trick coin and fair coin are now roughly comparable, although fair coin is still a little more likely.  After seeing 15 or more heads in a row without any tails, the odds are now strongly in favor of the trick coin.
 
-When studying learning as conditional inference, we are particularly interested in the dynamics of how inferred hypotheses change as a function of amount of data (often thought of as time the learner spends acquiring data). We can map out the *trajectory* of learning by plotting a summary of the posterior distribution over hypotheses as a function of the amount of observed data. Here we plot the expectation that the coin is fair in the above example:
+When exploring learning as a conditional inference, we are particularly interested in the dynamics of how inferred hypotheses change as a function of amount of data (often thought of as time the learner spends acquiring data). We can map out the *trajectory* of learning by plotting a summary of the posterior distribution as a function of the amount of observed data. Here we plot the expectation that the coin is fair in the above example:
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't'
-  }
-};
-///
-
 var fairnessPosterior = function(observedData) {
   return Infer({method: 'enumerate'}, function() {
     var fair = flip(0.999)
-    var coin = makeCoin(fair ? 0.5 : 0.95)
-    var obsFn = function(datum){condition(datum == coin())}
+    var coin = Bernoulli({p: fair ? 0.5 : 0.95})
+    var obsFn = function(datum){observe(coin, datum == 'h')}
     mapData({data: observedData}, obsFn)
-    return {fair: fair}
+    return fair
   })
 }
 
 
-var trueWeight = .9;
-var trueCoin = makeCoin(trueWeight);
-var fullDataSet = repeat(100, trueCoin);
-var observedDataSizes = [1,3,6,10,20,30,50,70,100];
+var trueWeight = 0.9
+var fullDataSet = repeat(100, function(){flip(trueWeight)?'h':'t'})
+var observedDataSizes = [1,3,6,10,20,30,50,70,100]
 var estimates = map(function(N) {
-  return expectation(fairnessPosterior(fullDataSet.slice(0,N)), function(x){return x.fair})
-}, observedDataSizes);
-viz.line(observedDataSizes, estimates);
+  return expectation(fairnessPosterior(fullDataSet.slice(0,N)))
+}, observedDataSizes)
+viz.line(observedDataSizes, estimates)
 ~~~~
 
-Notice that different runs of this program can give quite different trajectories, but always end up in the same place in the long run. This is because the data set used for learning is different on each run. This is a feature, not a bug: real learners have idiosyncratic experience, even if they are al drawn from the same distribution. Of course, we are often interested in the average behavior of an ideal learner: we could average this plot over many randomly chosen data sets, simulating many different learners. 
-<!--TODO: make a separate subsection about variance of data and averaged learning curves. make this example use all 'h'. -->
+Notice that different runs of this program can give quite different trajectories, but always end up in the same place in the long run. This is because the data set used for learning is different on each run. This is a feature, not a bug: real learners have idiosyncratic experience, even if they are all drawn from the same distribution. Of course, we are often interested in the average behavior of an ideal learner: we could average this plot over many randomly chosen data sets, simulating many different learners. 
 
 Study how this learning curve depends on the choice of `fairPrior`.   There is certainly a dependence.  If we set `fairPrior` to be 0.5, equal for the two alternative hypotheses, just 5 heads in a row are sufficient to favor the trick coin by a large margin.  If `fairPrior` is 99 in 100, 10 heads in a row are sufficient.  We have to increase `fairPrior` quite a lot, however, before 15 heads in a row is no longer sufficient evidence for a trick coin: even at `fairPrior` = 0.9999, 15 heads without a single tail still weighs in favor of the trick coin.  This is because the evidence in favor of a trick coin accumulates exponentially as the data set increases in size; each successive `h` flip increases the evidence by nearly a factor of 2.
 
@@ -184,7 +160,7 @@ viz(sequenceCondDist(true))
 viz(sequenceCondDist(false))
 ~~~~
 
-Conditioning on the first value tells us something about the second. This model is thus not i.i.d., but it does have a slightly weaker property: it is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), meaning that the probability of a sequence of values remains the same if permuted into any order.
+Conditioning on the first value tells us something about the second. This model is thus not i.i.d., but it does have a slightly weaker property: it is [exchangeable](https://en.wikipedia.org/wiki/Exchangeable_random_variables), meaning that the probability of a sequence of values remains the same if permuted into any order. When modeling learning it is often reasonable that the order of observations doesn't matter---and hence that the distribution is exchangeable.
 
 It turns out that exchangeable sequences can always be modeled in the form used for the last example:
 [de Finetti's theorem](https://en.wikipedia.org/wiki/De_Finetti%27s_theorem) says that, under certain technical conditions, any exchangeable sequence can be represented as follows, for some `latentPrior` distribution and observation function `f`:
@@ -274,9 +250,9 @@ var isFairDist = function(sequence) {
   return Infer({method: 'enumerate'},
     function () {
       var isFair = flip()
-      var realWeight = isFair ? .5 : .2;
-      var coin = function() {return flip(realWeight)};
-      condition(_.isEqual(sequence, repeat(5, coin)))
+      var realWeight = isFair ? 0.5 : 0.2
+      var coin = Bernoulli({p: realWeight})
+      mapData({data: sequence},function(d){observe(coin, d)})
       return isFair
   })
 }
@@ -287,29 +263,22 @@ print("00000 is fair?")
 viz(isFairDist([false, false, false, false, false]))
 ~~~~
 
-This model posits that when considering randomness people are more concerned with distinguishing a "truly random" generative process from a trick process. The same presumably holds as well as when imagining random sequences, but we will need a slightly more sophisticated model for that.
+This model posits that when considering randomness people are more concerned with distinguishing a "truly random" generative process from a trick process. How do these inferences depend on the amount of data? Explore the learning trajectories of this model.
 
 # Learning a Continuous Parameter
 
 The previous examples represent perhaps simple cases of learning.  Typical learning problems in human cognition or AI are more complex in many ways.  For one, learners are almost always confronted with more than two hypotheses about the causal structure that might underlie their observations.  Indeed, hypothesis spaces for learning are often infinite.  Countably infinite hypothesis spaces are encountered in models of learning for domains traditionally considered to depend on "discrete" or "symbolic" knowledge; hypothesis spaces of grammars in language acquisition are a canonical example.  Hypothesis spaces for learning in domains traditionally considered more "continuous", such as perception or motor control, are typically uncountable and parametrized by one or more continuous dimensions.  In causal learning, both discrete and continuous hypothesis spaces typically arise.  (In statistics, making conditional inferences over continuous hypothesis spaces given data is often called *parameter estimation*.)
 
-We can explore a basic case of learning with continuous hypothesis spaces by slightly enriching our coin flipping example.  Suppose that our hypothesis generator `makeCoin`, instead of simply flipping a coin to determine which of two coin weights to use, can choose *any* coin weight between 0 and 1.
+We can explore a basic case of learning with continuous hypothesis spaces by slightly enriching our coin flipping example.  Suppose instead of simply flipping a coin to determine which of two coin weights to use, we can choose *any* coin weight between 0 and 1.
 The following program computes conditional inferences about the weight of a coin drawn from a *prior distribution* described by the `Uniform` function, conditioned on a set of observed flips.
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't';
-  }
-};
-///
 var observedData = ['h', 'h', 'h', 'h', 'h']
 
 var weightPosterior = Infer({method: 'rejection', samples: 1000}, function() {
   var coinWeight = sample(Uniform({a: 0, b: 1}))
-  var coin = makeCoin(coinWeight)
-  var obsFn = function(datum){condition(datum == coin())}
+  var coin = Bernoulli({p: coinWeight})
+  var obsFn = function(datum){observe(coin, datum == 'h')}
   mapData({data: observedData}, obsFn)
   return coinWeight
 })
@@ -326,57 +295,37 @@ Experiment with different data sets, varying both the number of flips and the re
  We can again look at the learning trajectory in this example:
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't';
-  }
-};
-///
-
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', samples: 1000}, function() {
     var coinWeight = sample(Uniform({a: 0, b: 1}))
-    var coinDist = Bernoulli({p: coinWeight})
-    var obsFn = function(datum){observe(coinDist, datum=='h')}
+    var coin = Bernoulli({p: coinWeight})
+    var obsFn = function(datum){observe(coin, datum=='h')}
     mapData({data: observedData}, obsFn)
     return coinWeight
   })
 }
 
-var fullDataSet = repeat(100, function(){return 'h'});
-var observedDataSizes = [0,1,2,4,8,16,25,30,50,70,100];
+var fullDataSet = repeat(100, function(){return 'h'})
+var observedDataSizes = [0,1,2,4,8,16,25,30,50,70,100]
 var estimates = map(function(N) {
   return expectation(weightPosterior(fullDataSet.slice(0,N)))
-}, observedDataSizes);
-viz.line(observedDataSizes, estimates);
+}, observedDataSizes)
+viz.line(observedDataSizes, estimates)
 ~~~~
 
-(Note that we have made two changes for algorithmic efficiency: we have re-written `obsFn` to use `observe` instead of `condition`, and we have switched to method `MCMC`. Think about why this helps!)
-You can explore what is learned by plotting different kinds of statistics by passing a function to the `expectation`. For example, the absolute difference between the true mean and the estimated mean, or a confidence measure like the standard error of the mean.
 
-# A Structured Hypothesis Space
+It is easy to see that this model doesn't really capture our intuitions about coins, or at least not in everyday scenarios.  Imagine that you have just received a quarter in change from a store -- or even better, taken it from a nicely wrapped-up roll of quarters that you have just picked up from a bank.  Your prior expectation at this point is that the coin is almost surely fair.  If you flip it 10 times and get 7 heads out of 10, you'll think nothing of it; that could easily happen with a fair coin and there is no reason to suspect the weight of this particular coin is anything other than 0.5.  But running the above query with uniform prior beliefs on the coin weight, you'll guess the weight in this case is around 0.7. Our hypothesis generating function needs to be able to draw `coinWeight` not from a uniform distribution, but from some other function that can encode various expectations about how likely the coin is to be fair, skewed towards heads or tails, and so on. 
 
-It is easy to see that the previous WebPPL program doesn't really capture our intuitions about coins, or at least not in the most familiar everyday scenarios.  Imagine that you have just received a quarter in change from a store -- or even better, taken it from a nicely wrapped-up roll of quarters that you have just picked up from a bank.  Your prior expectation at this point is that the coin is almost surely fair.  If you flip it 10 times and get 7 heads out of 10, you'll think nothing of it; that could easily happen with a fair coin and there is no reason to suspect the weight of this particular coin is anything other than 0.5.  But running the above query with uniform prior beliefs on the coin weight, you'll guess the weight in this case is around 0.7. Our hypothesis generating function needs to be able to draw `coinWeight` not from a uniform distribution, but from some other function that can encode various expectations about how likely the coin is to be fair, skewed towards heads or tails, and so on. 
-
-One option is the Beta distribution. The Beta distribution takes parameters `a` and `b`, which can be thought of as the number of *prior* observations of `h` and `t`, respectively.
+One option is the Beta distribution. The Beta distribution takes parameters `a` and `b`, which describe the prior toward `true` and `false`. (When `a` and `b` are integers they can be can be thought of as *prior* observations.)
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't';
-  }
-};
-///
-
 var pseudoCounts = {a: 10, b: 10};
 
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', burn:1000, samples: 1000}, function() {
-    var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
-    var coinDist = Bernoulli({p: coinWeight})
-    var obsFn = function(datum){observe(coinDist, datum=='h')}
+    var coinWeight = beta(pseudoCounts))
+    var coin = Bernoulli({p: coinWeight})
+    var obsFn = function(datum){observe(coin, datum=='h')}
     mapData({data: observedData}, obsFn)
     return coinWeight
   })
@@ -392,35 +341,22 @@ viz.line(observedDataSizes, estimates);
 
 We are getting closer, in that learning is far more conservative. In fact, it is too conservative: after getting heads 100 times in a row, most humans will conclude the coin can *only* come up heads. The model, in contrast, still expects the coin to come up tails around 10% of the time. 
 
-We can of course decrease our priors `a` and `b` to get faster learning, but then we will just go back to our earlier problem. The problem is that our Beta is putting much less prior probability on a coin with weight 1.0 than a coin with weight 0.9, whereas most humans probably have the opposite prior. While we can address this by using fractional values for `a` and `b`, this results in a model that strongly disfavors fair coins. What we really want is a prior that puts high probability on weights of 0.0, 0.5, and 1.0, with low probability on everything else.
+We can of course decrease our priors `a` and `b` to get faster learning, but then we will just go back to our earlier problem. We would like instead to encode in our prior the idea that fair coins (probability 0.5) are much more likely than even moderately unfair coins.
 
-The following model expects coins to come in one of four categories: fair, always heads, always tails, and 'bent' -- where a 'bent' coint can have any weight from 0 to 1:
+
+## A More Structured Hypothesis Space
+
+The following model explicitly builds in the prior belief that fair coins are likely, and that all unfair coins are equally likely as each other:
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't';
-  }
-};
-///
-
-var priors = {fair:.999, allHeads:.0005, allTails:.00025, bent:.00025}
-var drawWeight = function(priors){
-  var type = sample(Categorical({vs: ['fair', 'allHeads', 'allTails', 'bent'], ps:[priors.fair, priors.allHeads, priors.allTails, priors.bent]}))
-  return (type == 'fair') ? 0.5 : 
-         (type == 'allHeads') ? 1.0 :
-         (type == 'allTails') ? 0.0 :
-         sample(Uniform({a:0, b:1}))
-}
-
 var weightPosterior = function(observedData){
-  return Infer({method: 'MCMC', burn:2500, samples: 500, lag:100}, function() {
-    var coinWeight = drawWeight(priors)
-    var coinDist = Bernoulli({p: coinWeight})
-    var obsFn = function(datum){observe(coinDist, datum=='h')}
+  return Infer({method: 'MCMC', burn:1000, samples: 10000}, function() {
+    var isFair = flip(0.999)
+    var realWeight = isFair ? 0.5 : uniform({a:0, b:1})
+    var coin = Bernoulli({p: realWeight})
+    var obsFn = function(datum){observe(coin, datum=='h')}
     mapData({data: observedData}, obsFn)
-    return coinWeight
+    return realWeight
   })
 }
 
@@ -433,7 +369,9 @@ viz.line(observedDataSizes, estimates);
 ~~~~
  
 This model stubbornly believes the coin is fair until around 10 successive heads have been observed. After that, it rapidly concludes that the coin can only come up heads. The shape of this learning trajectory is much closer to what we would expect for humans. 
+This model is a simple example of a *hierarchical prior* which we explore in detail in a later chapter.
 
+<!--
 Importantly, the model *can* infer an intermediate weight such as 0.85, albeit with some reluctance:
 
 ~~~~
@@ -511,8 +449,10 @@ var estimates = map(function(N) {
 }, observedDataSizes);
 viz.line(observedDataSizes, estimates);
 ~~~~
+-->
 
-This model is a simple example of a *hierarchical prior* which we explore in detail in a later chapter.
+<!--TODO: add above explorations as HW problem? here or in heirarchical section?-->
+
 
 
 ## Example: Estimating Causal Power

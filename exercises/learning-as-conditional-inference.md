@@ -3,8 +3,38 @@ layout: exercise
 title: learning - exercises
 ---
 
-## 1. Calculating learning curves
+## 1. Our prior beliefs about coins
 
+#### a)
+
+Recall our final coin weight model, in which the coin weight was either 0.5 with high probability or drawn from a uniform distribution otherwise. This implies that a two-faced coin (always heads) is equally likely as a 70% heads coin. Intuitively you might be inclined to think that a two-faced coin is easier to make, and thus more likely. Adjust the model to express this prior.
+
+~~~~
+var weightPosterior = function(observedData){
+  return Infer({method: 'MCMC', burn:1000, samples: 10000}, function() {
+    //
+    var realWeight = //..your code here
+    var coin = Bernoulli({p: realWeight})
+    var obsFn = function(datum){observe(coin, datum=='h')}
+    mapData({data: observedData}, obsFn)
+    return realWeight
+  })
+}
+
+var fullDataSet = repeat(50, function(){return 'h'});
+var observedDataSizes = [0,1,2,4,6,8,10,12,15,20,25,30,40,50];
+var estimates = map(function(N) {
+  return expectation(weightPosterior(fullDataSet.slice(0,N)))
+}, observedDataSizes);
+viz.line(observedDataSizes, estimates);
+~~~~
+
+#### b)
+
+How does your solution behave differently than the previous model? Find a data set such that the learning curves are qualitatively different.
+
+
+## 2. The strength of beliefs
 
 <!--
   NDG: i removed this for now, because it's not explained in chapter. is it a real distiction?
@@ -16,29 +46,20 @@ How does a *learning curve* differ from a *learning trajectory*?
 In the chapter, we graphed *learning trajectories* for a number of models. Below is one of these models (the one with the `Beta(10,10)` prior). In the chapter, we observed how the model's best guess about the weight of the coin changed across a sequence of sucessive heads. See what happens if instead we see heads and tails in alternation:
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't';
-  }
-};
-///
-
 var pseudoCounts = {a: 10, b: 10};
 
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', burn:1000, samples: 1000}, function() {
-    var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
-    mapData({data: observedData}, function(datum) {
-      observe(Bernoulli({p: coinWeight}), datum == 'h')
-    })
+    var coinWeight = beta(pseudoCounts))
+    var coin = Bernoulli({p: coinWeight})
+    var obsFn = function(datum){observe(coin, datum=='h')}
+    mapData({data: observedData}, obsFn)
     return coinWeight
   })
 }
 
 //creating 50 pairs of 'h' and 't' alternating
 var fullDataSet = repeat(50,function(){['h', 't']}).flat()
-
 
 var observedDataSizes = [0,2,4,6,8,10,20,30,40,50,70,100]
 var estimates = map(function(N) {
@@ -49,39 +70,32 @@ viz.line(observedDataSizes, estimates);
 
 It looks like we haven't learned anything! Indeed, since our best estimate for the coin's weight was 0.5 *prior* to observing anything, our best estimate is hardly going to change when we get data consistent with that prior.
 
-The problem is that we've been looking at average (or expected) estimate. Edit the code below to see whether our posterior *distribution* is at all changed by observing this data set. (You only need to compare the prior and the posterior after all 100 observations):
+However, we've been looking at the average (or expected) estimate. Edit the code below to see whether our posterior *distribution* is at all changed by observing this data set. (You only need to compare the prior and the posterior after all 100 observations):
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't';
-  }
-};
-
-//creating 50 pairs of 'h' and 't' alternating
-var fullDataSet = repeat(50,function(){['h', 't']}).flat()
-///
 var pseudoCounts = {a: 10, b: 10};
 
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', burn:1000, samples: 1000}, function() {
-    var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
-    mapData({data: observedData}, function(datum) {
-      observe(Bernoulli({p: coinWeight}), datum == 'h')
-    })
+    var coinWeight = beta(pseudoCounts))
+    var coin = Bernoulli({p: coinWeight})
+    var obsFn = function(datum){observe(coin, datum=='h')}
+    mapData({data: observedData}, obsFn)
     return coinWeight
   })
 }
 
+//creating 50 pairs of 'h' and 't' alternating
+var fullDataSet = repeat(50,function(){['h', 't']}).flat()
+
 var prior = //your code here
 var post = //your code here
 
-viz(prior); //should graph the prior distribution on weights
-viz(post); //should graph the posterior distribution on weights
+viz(prior) //should graph the prior distribution on weights
+viz(post) //should graph the posterior distribution on weights
 ~~~~
 
-You should see a much sharper peak in the posterior. (Note that the bounds on the x-axis are likely to be different in the two graphs, which could obscure this. The `viz` package doesn't easily to allow you to adjust the bounds on the axes.)
+Based on your results, is anything learned? (Note that the bounds on the x-axis are likely to be different in the two graphs, which could obscure this. The `viz` package doesn't easily to allow you to adjust the bounds on the axes.)
 
 #### b)
 
@@ -92,28 +106,20 @@ An alternative we can use is variance: the expected squared difference between a
 Edit the code below to see how variance changes as more data is observed. 
 
 ~~~~
-///fold:
-var makeCoin = function(weight) {
-  return function() {
-    return flip(weight) ? 'h' : 't';
-  }
-};
-
 var pseudoCounts = {a: 10, b: 10};
 
 var weightPosterior = function(observedData){
   return Infer({method: 'MCMC', burn:1000, samples: 1000}, function() {
-    var coinWeight = sample(Beta({a: pseudoCounts.a, b: pseudoCounts.b}))
-    mapData({data: observedData}, function(datum) {
-      observe(Bernoulli({p: coinWeight}), datum == 'h')
-    })
+    var coinWeight = beta(pseudoCounts))
+    var coin = Bernoulli({p: coinWeight})
+    var obsFn = function(datum){observe(coin, datum=='h')}
+    mapData({data: observedData}, obsFn)
     return coinWeight
   })
 }
 
-//creating 256 pairs of 'h' and 't' alternating
-var fullDataSet = repeat(256,function(){['h', 't']}).flat()
-///
+//creating 50 pairs of 'h' and 't' alternating
+var fullDataSet = repeat(50,function(){['h', 't']}).flat()
 
 
 var observedDataSizes = [0,2,4,8,16,32,64,128,256,512];
@@ -135,7 +141,7 @@ HINT: notice how the variable `posts` differs from `estimates` in the code above
 
 Consider our model of causal power from the chapter:
 
-~~~~js
+~~~~
 var observedData = [{C:true, E:false}]
 
 var causalPowerPost = Infer({method: 'MCMC', samples: 10000, lag:2}, function() {
