@@ -104,7 +104,7 @@ HINT: Think about the probability assigned to `x ^ 2`.
 
 #### b)
 
-Let's reconceptualize of our program as a sequence-generator. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
+Let's reconceptualize our program as a sequence-generator. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
 
 ~~~~
 ///fold:
@@ -205,3 +205,10 @@ Many people find the high probability assignmed by our model in (b) to `27` to b
 
 ## 2. The Number Game
 
+<!--
+
+  Ok, the goal here is to introduce josh's number game paradigm, and use it to illustrate and explore the ability of bayesian models to move between graded generalization and rule-like generalization.
+
+  To do this it's important that the data are sets of numbers, not sequences as above. (Otherwise you don't get the range concepts with graded falloff...) I think it's still feasible to do this via enumeration, but might need to keep the range small.
+
+  -->

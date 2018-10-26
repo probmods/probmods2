@@ -30,7 +30,7 @@ var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var makeBag = mem(function(bagName){
   return Categorical({
-    ps: T.toScalars(dirichlet(ones([colors.length, 1]))),
+    ps: dirichlet(ones([colors.length, 1])),
     vs: colors
   })
 })
@@ -77,7 +77,7 @@ var observedData = [
 
 var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
   var makeBag = mem(function(bag){
-    var colorProbs = T.toScalars(dirichlet(ones([colors.length, 1])))
+    var colorProbs = dirichlet(ones([colors.length, 1]))
     return Categorical({vs: colors, ps: colorProbs})
   })
 
@@ -132,7 +132,7 @@ var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
   // T.mul(d,x) multiplies the probabilities in `d` by x
 
   var makeBag = mem(function(bag){
-    var colorProbs = T.toScalars(dirichlet(prototype))
+    var colorProbs = dirichlet(prototype)
     return Categorical({vs: colors, ps: colorProbs})
   })
 
@@ -236,7 +236,7 @@ var bagPosterior = function(observedData) {
     var prototype = T.mul(phi, colors.length)
 
     var makeBag = mem(function(bag){
-      var colorProbs = T.toScalars(dirichlet(prototype))
+      var colorProbs = dirichlet(prototype)
       return Categorical({vs: colors, ps: colorProbs})
     })
 
@@ -295,7 +295,7 @@ var bagPosterior = function(observedData) {
     var prototype = T.mul(phi, colors.length)
 
     var makeBag = mem(function(bag){
-      var colorProbs = T.toScalars(dirichlet(prototype))
+      var colorProbs = dirichlet(prototype)
       return Categorical({vs: colors, ps: colorProbs})
     })
 
@@ -390,7 +390,7 @@ var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   var prototype = T.mul(phi, alpha)
 
   var makeBag = mem(function(bag){
-    var colorProbs = T.toScalars(dirichlet(prototype))
+    var colorProbs = dirichlet(prototype)
     return Categorical({vs: colors, ps: colorProbs})
   })
 
@@ -459,7 +459,7 @@ var categoryPosterior = Infer({method: 'MCMC', samples: 10000}, function(){
   })
 
   var makeAttrDist = mem(function(cat, attr){
-    var probs = T.toScalars(dirichlet(prototype(attr)))
+    var probs = dirichlet(prototype(attr))
     return Categorical({vs: values[attr], ps: probs})
   })
 

@@ -10,7 +10,7 @@ The main text states that you can think of the Dirichlet parameter $$\alpha = [\
 
 Complete the code below to prove that setting $$\alpha = [2, 3, 1, 1, 1]$$ is equivalent to setting $$\alpha = [1, 1, 1, 1, 1]$$ and then observing the first category once and the second category twice:
 
-~~~~js
+~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var observedData = [
