@@ -7,7 +7,7 @@ title: Learning with a language of thought - exercises
 
 Consider our model of function inference from the chapter:
 
-~~~~js
+~~~~
 ///fold:
 // make expressions easier to look at
 var prettify = function(e) {
@@ -106,7 +106,7 @@ HINT: Think about the probability assigned to `x ^ 2`.
 
 Let's reconceptualize of our program as a sequence-generator. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
 
-~~~~js
+~~~~
 ///fold:
 // make expressions easier to look at
 var prettify = function(e) {
@@ -202,3 +202,6 @@ Not surprisingly, the model predicts `9` as the most likely next number. However
 #### c)
 
 Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive. This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
+
+## 2. The Number Game
+

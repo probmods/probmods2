@@ -15,38 +15,61 @@ chapter_num: 10
 -->
 
 
-An important worry about Bayesian models of learning is that the Hypothesis space must either be too simple (as in the models above), specified in a rather ad-hoc way, or both. There is a tension here: human representations of the world are enormously complex and so the space of possible representations must be correspondingly big, and yet we would like to understand the representational resources in simple and uniform terms. How can we construct very large (possibly infinite) hypothesis spaces, and priors over them? One possibility is to use a grammar to specify a *hypothesis language*: a small grammar can generate an infinite array of potential hypotheses. Because grammars are themselves generative processes, a prior is provided for free from this formulation.
+An important worry about Bayesian models of learning is that the Hypothesis space must either be too simple (e.g. a single coin weight!), specified in a rather ad-hoc way, or both. There is a tension here: human representations of the world are enormously complex and so the space of possible representations must be correspondingly big, and yet we would like to understand the representational resources in simple and uniform terms. How can we construct very large (possibly infinite) hypothesis spaces and priors over them? One possibility is to build the hypotheses themselves via *stochastic recursion*. That is, we build hypotheses by a combination of primitives and combination operations, randomly deciding which to use.
+
+For instance, imagine that we want a model that generates strings, but we want the strings to be valid arithmetic expressions. Since we know that arithmetic has as primitives numbers and combines them with operations, we can define a simple generator:
+
+~~~~
+var randomConstant = function() {
+  return uniformDraw(_.range(10))
+}
+
+var randomCombination = function(f,g) {
+  var op = uniformDraw(['+','-','*','/','^']);
+  return '('+f+op+g+')'
+}
+
+// sample an arithmetic expression
+var randomArithmeticExpression = function() {
+  flip() ? 
+    randomCombination(randomArithmeticExpression(), randomArithmeticExpression()) : 
+    randomConstant()
+}
+
+randomArithmeticExpression()
+~~~~
+
+Notice that `randomArithmeticExpression` can generate an infinite set of different strings, but that more complex strings are less likely. That is, the process we use to build strings also (implicitly) defines a prior over strings that penalizes complexity. To see this more  let's use Infer to reveal the first 100 strings:
+
+~~~~
+var randomConstant = function() {
+  return uniformDraw(_.range(10))
+}
+
+var randomCombination = function(f,g) {
+  var op = uniformDraw(['+','-','*','/','^']);
+  return '('+f+op+g+')'
+}
+
+// sample an arithmetic expression
+var randomArithmeticExpression = function() {
+  flip() ? 
+    randomCombination(randomArithmeticExpression(), randomArithmeticExpression()) : 
+    randomConstant()
+}
+
+randomArithmeticExpression()
+viz.table(Infer({method: 'enumerate', maxExecutions: 100}, function() {
+  return randomArithmeticExpression()
+}))
+~~~~
+
+If we now interpret our strings as *hypotheses*, we have compactly defined an infinite hypothesis space and its prior.
 
 ## Example: Inferring an Arithmetic Expression
 
-<!--
-We generate an expression as a list, and then turn it into a value (in this case a procedure) by using `apply`---a function that invokes evaluation.
-
-~~~~
-var randomArithmeticExpression = function() {
-  return (flip(.7) ?
-          (flip() ? 'x' : randomInteger({n: 10})) :
-	  (randomArithmeticExpression()
-	  + categorical({vs: ['+', '-'], ps: [.5, .5]})
-	  + randomArithmeticExpression()));
-};
-
-var funcFromExpression = function(expression) {
-  return _top.eval('(function(x) { ' + expression + '})');
-};
-
-var expressionPosterior = Infer({method: 'enumerate', maxExecutions: 100}, function() {
-  var fExpression = randomArithmeticExpression();
-  var f = funcFromExpression(fExpression);
-  condition(f(1) == 3);
-  return fExpression;
-});
-
-viz.table(expressionPosterior);
-~~~~
--->
-
-Consider the following WebPPL program, which induces an arithmetic function from examples. This model can learn any function consisting of the integers 0 to 9 and the operations add, subtract, multiply, divide, and raise to a power. (The helper functions `prettify` and `runify`, above the fold, make the expression pretty to look at and a runnable function, respectively.)
+Consider the following WebPPL program, which induces an arithmetic function from examples. It is much as above, except that we include a variable among the primitives (to make it a function). We also construct a nested array, instead of a simple string, and include a function `runify` that converts the array into a javascript function.
+(The helper function `prettify`, above the fold, makes the nested array pretty to look at.)
 
 ~~~~
 ///fold:
@@ -61,126 +84,22 @@ var prettify = function(e) {
     var arg2 = prettify(e[2])
     var prettyarg2 = (!_.isArray(e[2]) ? arg2 : '(' + arg2 + ')')
     return prettyarg1 + ' ' + op + ' ' + prettyarg2
-  }
-}
-
-// make expressions runnable
-var runify = function(e) {
-  if (e == 'x') {
-    return function(z) { return z }
-  } else if (_.isNumber(e)) {
-    return function(z) { return e }
-  } else {
-    var op = (e[0] == '+') ? plus : 
-             (e[0] == '-') ? minus :
-             (e[0] == '*') ? multiply :
-             (e[0] == '/') ? divide :
-              power;
-    var arg1Fn = runify(e[1])
-    var arg2Fn = runify(e[2])
-    return function(z) {
-      return op(arg1Fn(z),arg2Fn(z))
-    }
   }
 }
 ///
 
-var plus = function(a,b) {
-  return a + b;
-}
-
-var multiply = function(a,b) {
-  return Math.round(a * b,0);
-}
-
-var divide = function(a,b) {
-  return Math.round(a/b,0);
-}
-
-var minus = function(a,b) {
-  return a - b;
-}
-
-var power = function(a,b) {
-  return Math.pow(a,b);
-}
-
-var randomConstantFunction = function() {
-  return uniformDraw(_.range(10))
-}
-
-var randomCombination = function(f,g) {
-  var op = uniformDraw(['+','-','*','/','^']);
-  return [op, f, g];
-}
-
-// sample an arithmetic expression
-var randomArithmeticExpression = function() {
-  if (flip()) {
-    return randomCombination(randomArithmeticExpression(), randomArithmeticExpression())
-  } else {
-    if (flip()) {
-      return 'x'
-    } else {
-      return randomConstantFunction()
-    }
-  }
-}
-
-viz.table(Infer({method: 'enumerate', maxExecutions: 100}, function() {
-  var e = randomArithmeticExpression();
-  var s = prettify(e);
-  var f = runify(e);
-  condition(f(1) == 3);
-
-  return {s: s};
-}))
-~~~~
-
-The query asks for an arithmetic expression on variable `x` such that it evaluates to `3` when `x` is `1`. In this example there are many extensionally equivalent ways to satisfy the condition, for instance the expressions `3`, `1 + 2`, and `x + 2`, but because the more complex expressions require more choices to generate, they are chosen less often. What happens if we observe more data? For instance, try changing the condition in the above query to `f(1) == 3 && f(2) == 4`. This model learns from an infinite hypothesis space---all expressions made from 'x', '+', '-', and constant integers---but specifies both the hypothesis space and its prior using the simple generative process `randomArithmeticExpression`.
-
-Notice that the model puts the most probability on a function that always returns `3` ($$f(x) = 3$$). This is the simplest hypothesis consistent with the data. Let's see what happens if we have more data:
-
-~~~~
-///fold:
-// make expressions easier to look at
-var prettify = function(e) {
-  if (e == 'x' || _.isNumber(e)) {
-    return e
-  } else {
-    var op = e[0]
-    var arg1 = prettify(e[1])
-    var prettyarg1 = (!_.isArray(e[1]) ? arg1 : '(' + arg1 + ')')
-    var arg2 = prettify(e[2])
-    var prettyarg2 = (!_.isArray(e[2]) ? arg2 : '(' + arg2 + ')')
-    return prettyarg1 + ' ' + op + ' ' + prettyarg2
-  }
-}
-
-var plus = function(a,b) {
-  return a + b;
-}
-
-var multiply = function(a,b) {
-  return Math.round(a * b,0);
-}
-
-var divide = function(a,b) {
-  return Math.round(a/b,0);
-}
-
-var minus = function(a,b) {
-  return a - b;
-}
-
-var power = function(a,b) {
-  return Math.pow(a,b);
-}
-
 // make expressions runnable
 var runify = function(e) {
+  //helper functions:
+  var plus = function(a,b) {return a + b}
+  var multiply = function(a,b) {return Math.round(a * b,0)}
+  var divide = function(a,b) {return Math.round(a/b,0)}
+  var minus = function(a,b) {return a - b}
+  var power = function(a,b) {return Math.pow(a,b)}
+  var identity = function(a) {return a}
+  
   if (e == 'x') {
-    return function(z) { return z }
+    return identity
   } else if (_.isNumber(e)) {
     return function(z) { return e }
   } else {
@@ -188,7 +107,7 @@ var runify = function(e) {
              (e[0] == '-') ? minus :
              (e[0] == '*') ? multiply :
              (e[0] == '/') ? divide :
-              power;
+              power
     var arg1Fn = runify(e[1])
     var arg2Fn = runify(e[2])
     return function(z) {
@@ -218,18 +137,23 @@ var randomArithmeticExpression = function() {
     }
   }
 }
-///
 
-viz.table(Infer({method: 'enumerate', maxExecutions: 100}, function() {
+viz.table(Infer({method: 'enumerate', maxExecutions: 1000}, function() {
   var e = randomArithmeticExpression();
   var s = prettify(e);
   var f = runify(e);
   condition(f(1) == 3);
-  condition(f(2) == 6);
 
   return {s: s};
 }))
 ~~~~
+
+This model can learn any function consisting of the integers 0 to 9 and the operations add, subtract, multiply, divide, and raise to a power. 
+The condition in this case asks for an arithmetic expression on variable `x` such that it evaluates to `3` when `x` is `1`. There are many extensionally equivalent ways to satisfy the condition, for instance the expressions `3`, `1 + 2`, and `x + 2`, but because the more complex expressions require more choices to generate, they are chosen less often. 
+
+Notice that the model puts the most probability on a function that always returns `3` ($$f(x) = 3$$). This is the simplest hypothesis consistent with the data. Let's see what happens if we have more data -- try changing the condition in the above query to `condition(f(1) == 3 && f(2) == 4)`, then to `condition(f(1) == 3 && f(2) == 6)`.
+
+This model learns from an infinite hypothesis space---all expressions made from 'x', '+', '-', and constant integers---but specifies both the hypothesis space and its prior using the simple generative process `randomArithmeticExpression`.
 
 
 ## Example: Rational Rules
@@ -291,7 +215,7 @@ var getFormula = function() {
   }
 }
 
-var rulePosterior = Infer({method: 'MCMC', samples: 20000}, function() {
+var rulePosterior = Infer({method: 'enumerate', maxExecutions: 1000}, function() {
   // sample a classification formula
   var rule = getFormula();
   // condition on correctly (up to noise) accounting for A & B categories
@@ -310,11 +234,21 @@ var predictives = map(function(item){return expectation(rulePosterior,function(x
 var humanData = humanT.concat(humanA).concat(humanB)
 viz.scatter(predictives, humanData)
 ~~~~
-<!--note: this also works fine with enumerate.. switch?-->
 
-Goodman, et al, have used to this model to capture a variety of classic categorization effects [@Goodman2008b]. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
+In addition to achieving a good overall correlation with the data, this model captures the three qualitative effects described above: graded generalization, typicality, and prototype enhancement. Make sure you see how to read each of these effects from the above plot!
+Goodman, et al, have used to this model to capture a variety of other classic categorization effects [@Goodman2008b], as well. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
 
-This style of compositional concept induction model, can be naturally extended to more complex hypothesis spaces. For examples, see:
+# Grammar-based induction
+
+What is the general principle in the two above examples? We can think of it as the following recipe: we build hypotheses by stochastically choosing between primitives and combination operations, this specifies an infinite "language of thought"; each expression in this language in turn specifies the likelihood of observations.
+Formally, the stochastic combination process specifies a probabilistic grammar; which yields terms compositionally interpreted into a likelihood over data. 
+A small grammar can generate an infinite array of potential hypotheses; because grammars are themselves generative processes, a prior is provided for free from this formulation.
+
+<!--
+TODO: what's a grammar?
+-->
+
+This style of compositional concept induction model, can be naturally extended to complex hypothesis spaces, each defined by a grammar. For instance to model theory acquisition, learning natural numbers concepts, and many others. See:
 
 * Compositionality in rational analysis: Grammar-based induction for concept learning. N. D. Goodman, J. B. Tenenbaum, T. L. Griffiths, and J. Feldman (2008). In M. Oaksford and N. Chater (Eds.). The probabilistic mind: Prospects for Bayesian cognitive science.
 
@@ -322,7 +256,7 @@ This style of compositional concept induction model, can be naturally extended t
 
 * Piantadosi, S. T., & Jacobs, R. A. (2016). Four Problems Solved by the Probabilistic Language of Thought. Current Directions in Psychological Science, 25(1).
 
-It has been used to model theory acquisition, learning natural numbers concepts, etc. Further, there is no reason that the concepts need to be deterministic; in WebPPL stochastic functions can be constructed compositionally and learned by induction:
+There is also no reason that the concepts need to be deterministic; in WebPPL stochastic functions can be constructed compositionally and learned by induction:
 
 * Learning Structured Generative Concepts. A. Stuhlmueller, J. B. Tenenbaum, and N. D. Goodman (2010). Proceedings of the Thirty-Second Annual Conference of the Cognitive Science Society.
 
