@@ -47,7 +47,7 @@ HINT: is there a way you can sample a single (x,y) pair instead of separately sa
 
 ### c)
 
-Now change the the inference *algorithm* (with the original model) to successfully trace the curves. What parameters did you try, and what worked best?
+Now change the the inference *algorithm* (with the original model) to successfully trace the curves. What parameters worked best? *Why* does this inference algorithm work better than MH?
 
 HINT: you may want to explore HMC! start with the default parameters specified in the HMC [docs](https://webppl.readthedocs.io/en/master/inference/methods.html#mcmc) and play with different values.
 
