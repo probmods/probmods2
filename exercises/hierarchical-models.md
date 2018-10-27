@@ -21,7 +21,7 @@ var observedData = [
 // first model: set alpha = [1, 1, 1, 1, 1] and observe `observedData`
 var observed = Infer({method: 'MCMC', samples: 20000}, function(){
   var makeBag = mem(function(bag){
-    var colorProbs = T.toScalars(dirichlet(ones([colors.length, 1])))
+    var colorProbs = dirichlet(ones([colors.length, 1]))
     return Categorical({vs: colors, ps: colorProbs})
   })
 

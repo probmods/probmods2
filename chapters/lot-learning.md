@@ -5,16 +5,6 @@ description: Compositional hypothesis spaces.
 chapter_num: 10
 ---
 
-<!--
-    * **add number game?**
-
-    * **more on LoT / RR style models**
-
-    * **conjugate vs length prior?**
-
--->
-
-
 An important worry about Bayesian models of learning is that the Hypothesis space must either be too simple (e.g. a single coin weight!), specified in a rather ad-hoc way, or both. There is a tension here: human representations of the world are enormously complex and so the space of possible representations must be correspondingly big, and yet we would like to understand the representational resources in simple and uniform terms. How can we construct very large (possibly infinite) hypothesis spaces and priors over them? One possibility is to build the hypotheses themselves via *stochastic recursion*. That is, we build hypotheses by a combination of primitives and combination operations, randomly deciding which to use.
 
 For instance, imagine that we want a model that generates strings, but we want the strings to be valid arithmetic expressions. Since we know that arithmetic has as primitives numbers and combines them with operations, we can define a simple generator:
@@ -245,7 +235,9 @@ Formally, the stochastic combination process specifies a probabilistic grammar; 
 A small grammar can generate an infinite array of potential hypotheses; because grammars are themselves generative processes, a prior is provided for free from this formulation.
 
 <!--
-TODO: what's a grammar?
+TODO: 
+what's a grammar?
+compositionality and frege's principle
 -->
 
 This style of compositional concept induction model, can be naturally extended to complex hypothesis spaces, each defined by a grammar. For instance to model theory acquisition, learning natural numbers concepts, and many others. See:
