@@ -160,187 +160,115 @@ Learning about shared structure at a higher level of abstraction also supports i
 
 # The Blessing of Abstraction
 
-Now let's investigate the relative learning speeds at different levels of abstraction.  Suppose that we have a number of bags that all have identical prototypes: they mix red and blue in proportion 2:1.  But the learner doesn't know this.  She observes only one ball from each of N bags.  What can she learn about an individual bag versus the population as a whole as the number of bags changes?
-
-<!-- older version:
-~~~~
-///fold:
-var getProbs = function(vector) {
-  return map(function(i) {return T.get(vector,i)}, _.range(vector.length))
-}
-
-var observeBag = function(bag, values) {
-  return sum(map(function(v) {return bag.score(v)}, values));
-}
-
-var meanDev = function(dist, param, truth) {
-  return expectation(dist, function(val) {return Math.pow(truth - val[param], 2)});
-};
-///
-var colors = ['red', 'blue'];
-var bagPosterior = function(observedDraws) {
-  return Infer({method: 'MCMC', samples: 5000}, function() {
-    // we make a global prototype which is a dirichlet sample scaled to total 2:
-    var phi = dirichlet(ones([colors.length,1]))
-    var globalPrototype = T.mul(phi, colors.length);
-
-    // the prototype for each bag uses the global prototype as parameters.
-    var makeBag = mem(function(bag){
-      var colorProbs = getProbs(dirichlet(globalPrototype));
-      return Categorical({vs: colors, ps: colorProbs});
-    })
-
-    var bagScores = map(function(bagName) {
-      return observeBag(makeBag(bagName), observedDraws[bagName])
-    }, _.keys(observedDraws))
-
-    factor(sum(bagScores))
-
-    return {bag1: Math.exp(makeBag('bag1').score('red')),
-            global: getProbs(phi)[0]}
-  })
-};
-
-// now we generate learning curves! we take a single sample from each bag.
-// plot the mean-squared error normalized by the no-observations error.
-var initialPosterior = bagPosterior({'bag1': []})
-var initialSpec = meanDev(initialPosterior, 'bag1', .66);
-var initialGlob = meanDev(initialPosterior, 'global', .66);
-
-var obs = {'bag1': ['red'], 'bag2': ['red'], 'bag3': ['blue'], 'bag4': ['red'], 'bag5': ['red'],
-           'bag6': ['blue'], 'bag7': ['red'], 'bag8': ['red'], 'bag9': ['blue'], 'bag10': ['red'],
-           'bag11': ['red'], 'bag12': ['blue']};
-var numObs = [1,3,6,9, 12]
-
-var allSamples = map(function(maxBagNumber) {
-  var dataSubset = _.pick(obs, map(function(num){return 'bag' + num}, _.range(1,maxBagNumber + 1)))
-  var bagPost = bagPosterior(dataSubset)
-
-  return {mseSpec: meanDev(bagPost, 'bag1', .66) / initialSpec,
-          mseGlob: meanDev(bagPost, 'global', .66) / initialGlob};
-}, numObs);
-
-print("bag1 beliefs")
-viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseSpec')))
-print("global beliefs")
-viz.line([0].concat(numObs), [1].concat(_.pluck(allSamples, 'mseGlob')))
-~~~~
--->
+Now let's investigate the relative learning speeds at different levels of abstraction.  Suppose that we have a number of bags that all have identical prototypes: they mix red and blue in proportion 2:1.  But the learner doesn't know this.  She observes only one ball from each of N bags.  What can she learn about an individual bag versus the population as a whole as the number of bags changes? We plot learning curves: the mean squared error (MSE) of the prototype from the true prototype for the specific level (the first bag) and the general level (global prototype) as a function of the number of observed data points. We normalize by the MSE of the first observation (from the first bag), to focus on the effects of diverse data.
+(Note that these MSE quantities are directly comparable because they are each derived from a Dirichlet distribution of the same size -- this is often not the case in hierarchical models.)
 
 ~~~~
 var colors = ['red', 'blue'];
-var bagPosterior = function(observedData) {
-  return Infer({method: 'MCMC', samples: 5000}, function() {
+var posterior = function(observedData) {
+  return Infer({method: 'MCMC', samples: 50000}, function() {
 
     var phi = dirichlet(ones([colors.length, 1]))
     var prototype = T.mul(phi, colors.length)
 
-    var makeBag = mem(function(bag){
-      var colorProbs = dirichlet(prototype)
-      return Categorical({vs: colors, ps: colorProbs})
+    var bagProbs = mem(function(bag){
+      return dirichlet(prototype)
     })
 
     var obsFn = function(datum){
-      observe(makeBag(datum.bag), datum.draw)
+      observe(Categorical({vs: colors, ps: bagProbs(datum.bag)}), datum.draw)
     }
 
     mapData({data: observedData}, obsFn)
 
-    return {bag1: Math.exp(makeBag('bag1').score('red')),
+    return {bag1: T.get(bagProbs('bag1'),0),
             global: T.get(phi,0)}
   })
-};
+}
 
-// now we generate learning curves! data include a single sample from each bag.
+// data include a single sample from each bag.
 var data = [{bag:'bag1', draw:'red'}, {bag:'bag2', draw:'red'}, {bag:'bag3', draw:'blue'},
             {bag:'bag4', draw:'red'}, {bag:'bag5', draw:'red'}, {bag:'bag6', draw:'blue'},
             {bag:'bag7', draw:'red'}, {bag:'bag8', draw:'red'}, {bag:'bag9', draw:'blue'},
             {bag:'bag10', draw:'red'}, {bag:'bag11', draw:'red'}, {bag:'bag12', draw:'blue'}]
 
-// plot the mean-squared error of the posterior, normalized by the no-observations error.
+//compute the posteriors for different amounts of observations
+var numObs = [1,3,6,9, 12]
+var posteriors = map(function(N){posterior(data.slice(0,N))}, numObs)
+
+//Helper fn to compute the mean-squared error of a posterior
 var meanDev = function(dist, param, truth) {
-  return expectation(dist, function(val) {return Math.pow(truth - val[param], 2)});
+  return expectation(dist, function(val) {return Math.pow(truth - val[param], 2)})
 }
 
-var initialPosterior = bagPosterior([])
-var initialSpec = meanDev(initialPosterior, 'bag1', .66);
-var initialGlob = meanDev(initialPosterior, 'global', .66);
+//MSE curves normalized by the one-observations error
+var initialSpec = meanDev(posteriors[0], 'bag1', 0.66)
+var specErrors = map(function(d){meanDev(d,'bag1',0.66)/initialSpec}, posteriors)
 
-var numObs = [1,3,6,9, 12]
+var initialGlob = meanDev(posteriors[0], 'global', 0.66)
+var globErrors = map(function(d){meanDev(d,'global',0.66)/initialGlob}, posteriors)
 
-var learningCurves = map(function(N) {
-  var dataSubset = data.slice(0,N)
-  var bagPost = bagPosterior(dataSubset)
-  return {mseSpec: meanDev(bagPost, 'bag1', .66) / initialSpec,
-          mseGlob: meanDev(bagPost, 'global', .66) / initialGlob}
-}, numObs)
-
-print("bag1 beliefs")
-viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseSpec')))
-print("global beliefs")
-viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseGlob')))
+//now we generate learning curves! 
+print("bag1 error")
+viz.line(numObs, specErrors)
+print("global error")
+viz.line(numObs, globErrors)
 ~~~~
 
-We are plotting learning curves: the mean squared error of the prototype from the true prototype for the specific level (the first bag) and the general (global prototype) level as a function of the number of observed data points. Note that these quantities are directly comparable because they are each samples from a Dirichlet distribution of the same size (this is often not the case in hierarchical models). What we see is that learning is faster at the general level than the specific level&mdash;that is that the error in the estimated prototype drops faster in the general than the specific plots. We also see that there is continued learning at the specific level, even though we see no additional samples from the first bag after the first; this is because the evolving knowledge at the general level further constrains the inferences at the specific level. Going back to our familiar categorization example, this suggests that a child could be quite confident in the prototype of "dog" while having little idea of the prototype for any specific kind of dog&mdash;learning more quickly at the abstract level than the specific level, but then using this abstract knowledge to constrain expectations about the specific level.  
-
+What we see is that learning is faster at the general level than the specific level&mdash;that is that the error in the estimated prototype drops faster in the general than the specific plots. We also see that there is continued learning at the specific level, even though we see no additional samples from the first bag after the first; this is because the evolving knowledge at the general level further constrains the inferences at the specific level. Going back to our familiar categorization example, this suggests that a child could be quite confident in the prototype of "dog" while having little idea of the prototype for any specific kind of dog&mdash;learning more quickly at the abstract level than the specific level, but then using this abstract knowledge to constrain expectations about specific dogs.  
 This dynamic depends crucially on the fact that we get very diverse evidence: let's change the above example to observe the same N examples, but coming from a single bag (instead of N bags).
 
 ~~~~
-///fold:
-var colors = ['red', 'blue'];
-var bagPosterior = function(observedData) {
-  return Infer({method: 'MCMC', samples: 5000}, function() {
-
-    var phi = dirichlet(ones([colors.length, 1]))
-    var prototype = T.mul(phi, colors.length)
-
-    var makeBag = mem(function(bag){
-      var colorProbs = dirichlet(prototype)
-      return Categorical({vs: colors, ps: colorProbs})
-    })
-
-    var obsFn = function(datum){
-      observe(makeBag(datum.bag), datum.draw)
-    }
-
-    mapData({data: observedData}, obsFn)
-
-    return {bag1: Math.exp(makeBag('bag1').score('red')),
-            global: T.get(phi,0)}
-  })
-};
-
-// now we generate learning curves! data include a single sample from each bag.
-// plot the mean-squared error of the posterior, normalized by the no-observations error.
-var meanDev = function(dist, param, truth) {
-  return expectation(dist, function(val) {return Math.pow(truth - val[param], 2)});
-}
-
-var initialPosterior = bagPosterior([])
-var initialSpec = meanDev(initialPosterior, 'bag1', .66);
-var initialGlob = meanDev(initialPosterior, 'global', .66);
-
-var numObs = [1,3,6,9, 12]
-///
-
 var data = [{bag:'bag1', draw:'red'}, {bag:'bag1', draw:'red'}, {bag:'bag1', draw:'blue'},
             {bag:'bag1', draw:'red'}, {bag:'bag1', draw:'red'}, {bag:'bag1', draw:'blue'},
             {bag:'bag1', draw:'red'}, {bag:'bag1', draw:'red'}, {bag:'bag1', draw:'blue'},
             {bag:'bag1', draw:'red'}, {bag:'bag1', draw:'red'}, {bag:'bag1', draw:'blue'}]
 
 ///fold:
-var learningCurves = map(function(N) {
-  var dataSubset = data.slice(0,N)
-  var bagPost = bagPosterior(dataSubset)
-  return {mseSpec: meanDev(bagPost, 'bag1', .66) / initialSpec,
-          mseGlob: meanDev(bagPost, 'global', .66) / initialGlob}
-}, numObs)
+var colors = ['red', 'blue'];
+var posterior = function(observedData) {
+  return Infer({method: 'MCMC', samples: 50000}, function() {
+
+    var phi = dirichlet(ones([colors.length, 1]))
+    var prototype = T.mul(phi, colors.length)
+
+    var bagProbs = mem(function(bag){
+      return dirichlet(prototype)
+    })
+
+    var obsFn = function(datum){
+      observe(Categorical({vs: colors, ps: bagProbs(datum.bag)}), datum.draw)
+    }
+
+    mapData({data: observedData}, obsFn)
+
+    return {bag1: T.get(bagProbs('bag1'),0),
+            global: T.get(phi,0)}
+  })
+}
+
+//compute the posteriors for different amounts of observations
+var numObs = [1,3,6,9, 12]
+var posteriors = map(function(N){posterior(data.slice(0,N))}, numObs)
+
+//Helper fn to compute the mean-squared error of a posterior
+var meanDev = function(dist, param, truth) {
+  return expectation(dist, function(val) {return Math.pow(truth - val[param], 2)})
+}
+
+//MSE curves normalized by the one-observation error
+var initialSpec = meanDev(posteriors[0], 'bag1', 0.66)
+var specErrors = map(function(d){meanDev(d,'bag1',0.66)/initialSpec}, posteriors)
+
+var initialGlob = meanDev(posteriors[0], 'global', 0.66)
+var globErrors = map(function(d){meanDev(d,'global',0.66)/initialGlob}, posteriors)
 ///
 
-print("bag1 beliefs")
-viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseSpec')))
-print("global beliefs")
-viz.line([0].concat(numObs), [1].concat(_.map(learningCurves, 'mseGlob')))
+//now we generate learning curves! 
+print("bag1 error")
+viz.line(numObs, specErrors)
+print("global error")
+viz.line(numObs, globErrors)
 ~~~~
 
 We now see that learning for this bag is quick, while global learning (and transfer) is slow.
