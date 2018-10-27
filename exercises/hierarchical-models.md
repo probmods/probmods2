@@ -188,3 +188,14 @@ Suppose you go to a store in a city. The store has a barrel of 10 apples, 7 of w
 // your code here
 
 ~~~~
+
+## Exercise 3: Hierarchical models for BDA
+
+<!--
+  this one should start to introduce the idea of hierarchical models for data analysis. we haven't done regresion yet, so no full LMER model. but we can do a simple BDA with item-wise random effects. 
+
+  eg say i have two classes of words (vowel first and consonant first?) and i do an experiment to measure reading times. i want to know if one type takes longer. first analysis is a standard flat BDA. but what if the effect is driven by a few strange words and it's not initial sound at all? have students build a hierarchical model that accounts for the possibility that some items may have their own outllier effect, and examines the shared effect. (note: introduce here the idea of a "random effect"?)
+
+  then, as a final part, what if some people just happen to read really slow? if you got one of these people in one condition (but not the other) they could skew the effects! extend your BDA model to include random effects for people, too.
+
+--> 
