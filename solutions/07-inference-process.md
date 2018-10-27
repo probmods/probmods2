@@ -38,36 +38,11 @@ viz.auto(post);
 
 ### a) 
 
-Try using MCMC with Metropolis-Hastings instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
+> Try using MCMC with Metropolis-Hastings instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
 
-
-### Solution
-Once M-H finds a state with reasonable probability, its proposals are generally going to be states with much lower probability (since almost every state it very low probability in this model). Thus, it is going to tend to get stuck in place and rarely sample new states. In contrast, every accepted sample in rejection sampling is likely to be unique. This can be demonstrated with the following code
+Once M-H finds a state with reasonable probability, its proposals will fix one variable and try to change the other. since any proposals along straight vertical or horizontal lines are going to be states with much lower probability (almost every state is very low probability in this model), it is going to tend to get stuck in place and rarely sample new states. In contrast, every accepted sample in rejection sampling is likely to be unique. This can be demonstrated with the following code
 
 ~~~~
-// takes z = 0 cross section of heart surface to some tolerance
-// see http://mathworld.wolfram.com/HeartSurface.html
-var onCurve = function(x, y) {
-  var x2 = x*x;
-  var term1 = y - Math.pow(x2, 1/3);
-  var crossSection = x2 + term1*term1 - 1;
-  return Math.abs(crossSection) < 0.01;
-};
-var xbounds = [-1, 1];
-var ybounds = [-1, 1.6];
-
-var xmu = 0.5 * (xbounds[0] + xbounds[1]);
-var ymu = 0.5 * (ybounds[0] + ybounds[1]);
-var xsigma = 0.5 * (xbounds[1] - xbounds[0]);
-var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
-
-var model = function() {
-  var x = gaussian(xmu, xsigma);
-  var y = gaussian(ymu, ysigma);
-  condition(onCurve(x, y));
-  return {x: x, y: y};
-};
-
 var postr = Infer({method: 'rejection', samples: 1000}, model);
 var postm = Infer({method: 'MCMC', samples: 1000}, model);
 print("Rejection sampling:")
