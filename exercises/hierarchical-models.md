@@ -191,6 +191,50 @@ Suppose you go to a store in a city. The store has a barrel of 10 apples, 7 of w
 
 ## Exercise 3: Hierarchical models for BDA
 
+Imagine that you have done an experiment on word reading times to test the hypothesis that words starting with vowels take longer to read. Each data point include the condition group ("vowel" vs. "consonant"), the word, the participant id, and the response time ("rt"). A simple data anlysis model would explore the mean reading time for each word group:
+
+~~~~
+var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
+            {group: "vowel", word: "abacus", id: 2, rt: 202},
+            {group: "vowel", word: "abacus", id: 3, rt: 199},
+            {group: "vowel", word: "aardvark", id: 1, rt: 219},
+            {group: "vowel", word: "aardvark", id: 2, rt: 222},
+            {group: "vowel", word: "aardvark", id: 3, rt: 220},
+            {group: "vowel", word: "ellipse", id: 1, rt: 204},
+            {group: "vowel", word: "ellipse", id: 2, rt: 204},
+            {group: "vowel", word: "ellipse", id: 3, rt: 200},
+
+            {group: "consonant", word: "proton", id: 1, rt: 180},
+            {group: "consonant", word: "proton", id: 2, rt: 182},
+            {group: "consonant", word: "proton", id: 3, rt: 179},
+            {group: "consonant", word: "folder", id: 1, rt: 190},
+            {group: "consonant", word: "folder", id: 2, rt: 194},
+            {group: "consonant", word: "folder", id: 3, rt: 191},
+            {group: "consonant", word: "fedora", id: 1, rt: 330},
+            {group: "consonant", word: "fedora", id: 2, rt: 331},
+            {group: "consonant", word: "fedora", id: 3, rt: 329}]
+
+var post = Infer({method: "MCMC", samples: 10000}, function(){
+  var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
+  
+  var obsFn = function(d){
+    //assume response times (rt) depend on group means with a small fixed noise:
+    observe(Gaussian({mu: groupMeans[d.group], sigma: 10}), d.rt)
+  }
+  
+  mapData({data: data}, obsFn)
+  
+  //explore the difference in means:
+  return groupMeans['vowel']-groupMeans['consonant']
+})
+
+print("vowel - consonant reading time:")
+viz(post)
+print(expectation(post))
+~~~~
+
+
+
 <!--
   this one should start to introduce the idea of hierarchical models for data analysis. we haven't done regresion yet, so no full LMER model. but we can do a simple BDA with item-wise random effects. 
 

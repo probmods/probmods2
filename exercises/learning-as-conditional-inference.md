@@ -7,7 +7,7 @@ title: learning - exercises
 
 #### a)
 
-Recall our final coin weight model, in which the coin weight was either 0.5 with high probability or drawn from a uniform distribution otherwise. This implies that a two-faced coin (always heads) is equally likely as a 70% heads coin. Intuitively you might be inclined to think that a two-faced coin is easier to make, and thus more likely. Adjust the model to express this prior.
+Recall our final coin weight model, "fair-vs-uniform", in which the coin weight was either 0.5 with high probability or drawn from a uniform distribution otherwise. This implies that a two-faced coin (always heads) is equally likely as a 70% heads coin. Intuitively you might be inclined to think that a two-faced coin is easier to make, and thus more likely. Adjust the model to express this prior.
 
 ~~~~
 var weightPosterior = function(observedData){
@@ -31,7 +31,7 @@ viz.line(observedDataSizes, estimates);
 
 #### b)
 
-How does your solution behave differently than the previous model? Find a data set such that the learning curves are qualitatively different.
+How does your solution behave differently than the fair-vs-uniform model from the chapter? Find a data set such that the learning curves are qualitatively different.
 
 
 ## 2. The strength of beliefs
@@ -137,7 +137,7 @@ viz.line(observedDataSizes, variances);
 
 HINT: notice how the variable `posts` differs from `estimates` in the code above.
 
-## 2. Causal Power
+## 3. Causal Power
 
 Consider our model of causal power from the chapter:
 
