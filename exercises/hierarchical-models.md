@@ -233,13 +233,59 @@ viz(post)
 print(expectation(post))
 ~~~~
 
+As you see, this model concludes that consonants actually take significantly longer to read! But if you look at the data carefully you may not trust this conclusion: it seems to be driven by a single outlier, the word "fedora"!
 
+#### a)
 
-<!--
-  this one should start to introduce the idea of hierarchical models for data analysis. we haven't done regresion yet, so no full LMER model. but we can do a simple BDA with item-wise random effects. 
+Adjust the model to allow each word to have its own mean reading time, that depends on the `groupMean` but needn't be the same. This is called a hierachical data analysis model.
 
-  eg say i have two classes of words (vowel first and consonant first?) and i do an experiment to measure reading times. i want to know if one type takes longer. first analysis is a standard flat BDA. but what if the effect is driven by a few strange words and it's not initial sound at all? have students build a hierarchical model that accounts for the possibility that some items may have their own outllier effect, and examines the shared effect. (note: introduce here the idea of a "random effect"?)
+~~~~
+var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
+            {group: "vowel", word: "abacus", id: 2, rt: 202},
+            {group: "vowel", word: "abacus", id: 3, rt: 199},
+            {group: "vowel", word: "aardvark", id: 1, rt: 220},
+            {group: "vowel", word: "aardvark", id: 2, rt: 222},
+            {group: "vowel", word: "aardvark", id: 3, rt: 218},
+            {group: "vowel", word: "ellipse", id: 1, rt: 205},
+            {group: "vowel", word: "ellipse", id: 2, rt: 206},
+            {group: "vowel", word: "ellipse", id: 3, rt: 201},
 
-  then, as a final part, what if some people just happen to read really slow? if you got one of these people in one condition (but not the other) they could skew the effects! extend your BDA model to include random effects for people, too.
+            {group: "consonant", word: "proton", id: 1, rt: 180},
+            {group: "consonant", word: "proton", id: 2, rt: 182},
+            {group: "consonant", word: "proton", id: 3, rt: 179},
+            {group: "consonant", word: "folder", id: 1, rt: 190},
+            {group: "consonant", word: "folder", id: 2, rt: 194},
+            {group: "consonant", word: "folder", id: 3, rt: 190},
+            {group: "consonant", word: "fedora", id: 1, rt: 330},
+            {group: "consonant", word: "fedora", id: 2, rt: 334},
+            {group: "consonant", word: "fedora", id: 3, rt: 328}]
 
---> 
+var post = Infer({method: "MCMC", samples: 10000}, function(){
+  var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
+
+  //...your code here
+  
+  var obsFn = function(d){
+    //assume response times (rt) depend on group means with a small fixed noise:
+    observe(Gaussian({mu: //..your code here , 
+      sigma: 10}), d.rt)
+  }
+  
+  mapData({data: data}, obsFn)
+  
+  //explore the difference in means:
+  return groupMeans['vowel']-groupMeans['consonant']
+})
+
+print("vowel - consonant reading time:")
+viz(post)
+print(expectation(post))
+~~~~
+
+What do you conclude about vowel words vs. consonant words now?
+
+The individual word means that you have introduced are called *random effects* -- in a BDA they are random variables (usually at the individual item or person level) that are not of interest by themselves.
+
+#### b) 
+
+If you stare at the data further, you might notice that some of the participants in your experiment read slightly faster overall. Extend your model to include an additional random effect of participant id, that is, an unknown (and not of interest) influence on reading time of the particular person. Does this make your conclusion stronger, weaker, or different?
