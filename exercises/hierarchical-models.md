@@ -4,9 +4,11 @@ title: Hierarchical models
 description: The power of abstraction.
 ---
 
-## Exercise 1: Pseudocounts
+## Exercise 1: Pseudocounts and the Dirichlet distribution
 
-The main text states that you can think of the Dirichlet parameter $$\alpha = [\alpha_1, \alpha_2, ..., \alpha_n]$$ "as a kind of prior" over categories $$[A_1, A_2, ..., A_n]$$. α is not a prior in the usual sense, since it is not a probability distribution. What α represents instead is a virtual observation. Thus if $$\alpha = [2, 2, 1]$$, that is the equivalent of having already observed  the first category and second category twice each, and the third category one time only.
+In the Bayesian Data Analysis exercises, we explored the Beta distribution by varying its parameters. The Dirichlet is a generalization of the Beta distribution to more than two categories (see [Appendix](http://probmods.org/chapters/appendix-useful-distributions.html)). Instead of Beta parameters $(a, b)$ governing the probabilities of two categories $(false/true)$, the Dirichlet parameter $$\alpha = [\alpha_1, \alpha_2, ..., \alpha_n]$$ controls the probabilities over categories $$[A_1, A_2, ..., A_n]$$. In other words, different choices of $\alpha$ correspond to different ways of distributing the prior probability mass over the $N-1$ simplex. 
+
+In this exercise, we will explore a particularly intuitive way of understanding the $alpha$ parameter as pseudocounts, or virtual observations. That is, if $$\alpha = [2, 2, 1]$$, that is the equivalent of having already observed the first category and second category twice each, and the third category one time only.
 
 Complete the code below to prove that setting $$\alpha = [2, 3, 1, 1, 1]$$ is equivalent to setting $$\alpha = [1, 1, 1, 1, 1]$$ and then observing the first category once and the second category twice:
 
@@ -91,8 +93,10 @@ viz.marginals(usealpha)
 
 On any given day, a given grocery store has some number of apples for sale. Some of these apples may be mushy or even rotten. The probability that each apple is rotten is not independent: a ripening fruit emits chemicals that encourages other fruit to ripen as well. As they say, [one rotten apple spoils the whole barrel](https://idiomation.wordpress.com/2013/03/27/one-bad-apple-spoils-the-whole-barrel/). 
 
-For each apple in a barrel, assume the probability that the apple is rotten is `flip(p)` where `p` is drawn from some prior. An appropriate prior distribution is Beta. Recall that the Beta distribution is just a Dirichlet that returns a vector of length one. So it, too, is defined based on pseudocounts `[a, b]`. Thus `Beta({a: 10, b: 2})` returns the equivalent of a Beta distribution conditioned on having previously seen 10 heads and 2 tails. 
+For each apple in a barrel, assume the probability that the apple is rotten is `flip(p)` where `p` is drawn from some prior. An appropriate prior distribution is Beta. Recall that the Beta distribution is just a Dirichlet that returns a vector of length one. So it, too, is defined based on pseudocounts `[a, b]`. `Beta({a: 10, b: 2})` returns the equivalent of a Beta distribution conditioned on having previously seen 10 heads and 2 tails, while `[a,b]` values less than 1 concentrate mass at the endpoints. A `Beta({a: .1, b: .2})` prior nicely captures our expectations about rotten apples: most of the time, the probability of a rotten apple is quite low. The rest of the time, the probability is very high. Middling probabilities are rare. 
 
+
+<!-- note that this is redundant with BDA chapter exercise.
 To get a sense of the Beta distribution, run the following code:
 
 ~~~~js
@@ -103,6 +107,7 @@ viz(Beta({a: .1, b: .2})
 ~~~~
 
 Note that the final example gives a very nice prior for our apples: most of the time, the probability of a rotten apple is quite low. The rest of the time, the probability is very high. Middling probabilities are rare. 
+-->
 
 #### a)
 
@@ -117,27 +122,27 @@ should return something like `[true, true, true, false, true]`.
 
 Complete the following codebox:
 
-~~~~js
+~~~~
 
 // your code here
 
+// Do not edit this function: it tests your code
 var post = Infer({method: 'forward'}, function(){
-	//helper function to inspect your code. Do not edit.
-	var abarrel = makeBarrel('b')
-	return Math.sum(abarrel(10))
+  var abarrel = makeBarrel('b')
+  return Math.sum(abarrel(10))
 })
 viz(post)
 ~~~~
 
 #### b)
 
-Some grocery stores have fresher produce than others. So let's create a function `makeStore` that returns a makeBarrel function, which works as it did in (a). Importantly, each store has its own Beta parameters `[a, b]` drawn from some prior. 
+Some grocery stores have fresher produce than others. So let's create a function `makeStore` that returns a `makeBarrel` function, which works as it did in part (a). Importantly, each store has its own Beta parameters `[a, b]` drawn from some prior. 
 
 HINT: In order to maintain the likelihood that in a given barrel, either most of the apples are rotten or few are, you need to ensure that `a < 1` and `b < 1`. However, if `a` is much larger than `b` (or vice versa), you will get extreme results with *every* apple being rotten or *every* apple being good. 
 
 NOTE: No need to be overly fancy with this prior. Pick something simple that you know will give you what you want: stores that tend to have bad barrels and stores that tend to have good barrels.
 
-~~~~js
+~~~~
 var makeStore = // your code here
 
 // Following code inspects your functions
@@ -191,7 +196,7 @@ Suppose you go to a store in a city. The store has a barrel of 10 apples, 7 of w
 
 ## Exercise 3: Hierarchical models for BDA
 
-Imagine that you have done an experiment on word reading times to test the hypothesis that words starting with vowels take longer to read. Each data point include the condition group ("vowel" vs. "consonant"), the word, the participant id, and the response time ("rt"). A simple data anlysis model would explore the mean reading time for each word group:
+Imagine that you have done an experiment on word reading times to test the hypothesis that words starting with vowels take longer to read. Each data point includes which condition the word is from ("vowel" vs. "consonant"), the word itself, the participant id, and the response time you measured ("rt"). A simple data anlysis model attempts to infer the mean reading time for each word group, and returns the difference between the groups (a sort of Bayesian version of a t-test). Note that there is no cognitive model inside this BDA; it is directly modeling the data.
 
 ~~~~
 var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
