@@ -41,7 +41,7 @@ Bayesian data analysis can be an extremely useful tool to us as scientists, when
 This can become confusing: a particular modeling assumption can be something we hypothesize that people assume about the world, or can be something that we as scientists want to assume (but don't assume that people assume).
 A pithy way of saying this is that we can make assumptions about "Bayes in the head" (Bayesian cognitive models) or about "Bayes in the notebook" (Bayesian data analysis).
 
-## Asside: Spinning coins
+## Aside: Spinning coins
 
 
 Coins, in their production, have a number of physical dimensions along which they vary.
