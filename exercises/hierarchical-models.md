@@ -96,10 +96,10 @@ For each apple in a barrel, assume the probability that the apple is rotten is `
 To get a sense of the Beta distribution, run the following code:
 
 ~~~~js
-viz(Beta({a: 1, b: 1})
-viz(Beta({a: 10, b: 1})
-viz(Beta({a: 1, b: 10})
-viz(Beta({a: .1, b: .2})
+viz(Beta({a: 1, b: 1}))
+viz(Beta({a: 10, b: 1}))
+viz(Beta({a: 1, b: 10}))
+viz(Beta({a: .1, b: .2}))
 ~~~~
 
 Note that the final example gives a very nice prior for our apples: most of the time, the probability of a rotten apple is quite low. The rest of the time, the probability is very high. Middling probabilities are rare. 
