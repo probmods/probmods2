@@ -203,6 +203,9 @@ var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
             {group: "vowel", word: "ellipse", id: 1, rt: 204},
             {group: "vowel", word: "ellipse", id: 2, rt: 204},
             {group: "vowel", word: "ellipse", id: 3, rt: 200},
+            {group: "vowel", word: "increment", id: 1, rt: 205},
+            {group: "vowel", word: "increment", id: 2, rt: 202},
+            {group: "vowel", word: "increment", id: 3, rt: 199},
 
             {group: "consonant", word: "proton", id: 1, rt: 180},
             {group: "consonant", word: "proton", id: 2, rt: 182},
@@ -212,7 +215,10 @@ var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
             {group: "consonant", word: "folder", id: 3, rt: 191},
             {group: "consonant", word: "fedora", id: 1, rt: 330},
             {group: "consonant", word: "fedora", id: 2, rt: 331},
-            {group: "consonant", word: "fedora", id: 3, rt: 329}]
+            {group: "consonant", word: "fedora", id: 3, rt: 329},
+            {group: "consonant", word: "manual", id: 1, rt: 188},
+            {group: "consonant", word: "manual", id: 2, rt: 180},
+            {group: "consonant", word: "manual", id: 3, rt: 178}]
 
 var post = Infer({method: "MCMC", samples: 10000}, function(){
   var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
@@ -240,25 +246,32 @@ As you see, this model concludes that consonants actually take significantly lon
 Adjust the model to allow each word to have its own mean reading time, that depends on the `groupMean` but needn't be the same. This is called a hierachical data analysis model.
 
 ~~~~
-var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
-            {group: "vowel", word: "abacus", id: 2, rt: 202},
-            {group: "vowel", word: "abacus", id: 3, rt: 199},
-            {group: "vowel", word: "aardvark", id: 1, rt: 220},
-            {group: "vowel", word: "aardvark", id: 2, rt: 222},
-            {group: "vowel", word: "aardvark", id: 3, rt: 218},
-            {group: "vowel", word: "ellipse", id: 1, rt: 205},
-            {group: "vowel", word: "ellipse", id: 2, rt: 206},
-            {group: "vowel", word: "ellipse", id: 3, rt: 201},
 
-            {group: "consonant", word: "proton", id: 1, rt: 180},
-            {group: "consonant", word: "proton", id: 2, rt: 182},
-            {group: "consonant", word: "proton", id: 3, rt: 179},
-            {group: "consonant", word: "folder", id: 1, rt: 190},
-            {group: "consonant", word: "folder", id: 2, rt: 194},
-            {group: "consonant", word: "folder", id: 3, rt: 190},
-            {group: "consonant", word: "fedora", id: 1, rt: 330},
-            {group: "consonant", word: "fedora", id: 2, rt: 334},
-            {group: "consonant", word: "fedora", id: 3, rt: 328}]
+var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
+              {group: "vowel", word: "abacus", id: 2, rt: 202},
+              {group: "vowel", word: "abacus", id: 3, rt: 199},
+              {group: "vowel", word: "aardvark", id: 1, rt: 219},
+              {group: "vowel", word: "aardvark", id: 2, rt: 222},
+              {group: "vowel", word: "aardvark", id: 3, rt: 220},
+              {group: "vowel", word: "ellipse", id: 1, rt: 204},
+              {group: "vowel", word: "ellipse", id: 2, rt: 204},
+              {group: "vowel", word: "ellipse", id: 3, rt: 200},
+              {group: "vowel", word: "increment", id: 1, rt: 205},
+              {group: "vowel", word: "increment", id: 2, rt: 202},
+              {group: "vowel", word: "increment", id: 3, rt: 199},
+
+              {group: "consonant", word: "proton", id: 1, rt: 180},
+              {group: "consonant", word: "proton", id: 2, rt: 182},
+              {group: "consonant", word: "proton", id: 3, rt: 179},
+              {group: "consonant", word: "folder", id: 1, rt: 190},
+              {group: "consonant", word: "folder", id: 2, rt: 194},
+              {group: "consonant", word: "folder", id: 3, rt: 191},
+              {group: "consonant", word: "fedora", id: 1, rt: 330},
+              {group: "consonant", word: "fedora", id: 2, rt: 331},
+              {group: "consonant", word: "fedora", id: 3, rt: 329},
+              {group: "consonant", word: "manual", id: 1, rt: 188},
+              {group: "consonant", word: "manual", id: 2, rt: 180},
+              {group: "consonant", word: "manual", id: 3, rt: 178}]
 
 var post = Infer({method: "MCMC", samples: 10000}, function(){
   var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
@@ -284,6 +297,8 @@ print(expectation(post))
 
 What do you conclude about vowel words vs. consonant words now?
 
+*Hint* Consider how the model is sensitive to the different assumed variances (e.g. the fixed noise in the observe function we assume sigma=10). In particular, how does this effect how you choose a sigma for your word-level effects?
+
 The individual word means that you have introduced are called *random effects* -- in a BDA they are random variables (usually at the individual item or person level) that are not of interest by themselves.
 
 <!--
@@ -292,7 +307,7 @@ The individual word means that you have introduced are called *random effects* -
 var post = Infer({method: "MCMC", samples: 10000}, function(){
   var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
 
-  var wordMean = mem(function(word, group) {return gaussian(groupMeans[group],10)})
+  var wordMean = mem(function(word, group) {return gaussian(groupMeans[group], 20)})
   
   var obsFn = function(d){
     //assume response times (rt) depend on group means with a small fixed noise:
