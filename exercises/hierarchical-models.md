@@ -286,6 +286,28 @@ What do you conclude about vowel words vs. consonant words now?
 
 The individual word means that you have introduced are called *random effects* -- in a BDA they are random variables (usually at the individual item or person level) that are not of interest by themselves.
 
+<!--
+~~~~
+//NDG solution
+var post = Infer({method: "MCMC", samples: 10000}, function(){
+  var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
+
+  var wordMean = mem(function(word, group) {return gaussian(groupMeans[group],10)})
+  
+  var obsFn = function(d){
+    //assume response times (rt) depend on group means with a small fixed noise:
+    observe(Gaussian({mu: wordMean(d.word, d.group), //..your code here , 
+                      sigma: 10}), d.rt)
+  }
+  
+  mapData({data: data}, obsFn)
+  
+  //explore the difference in means:
+  return groupMeans['vowel']-groupMeans['consonant']
+})
+~~~~
+-->
+
 #### b) 
 
 If you stare at the data further, you might notice that some of the participants in your experiment read slightly faster overall. Extend your model to include an additional random effect of participant id, that is, an unknown (and not of interest) influence on reading time of the particular person. Does this make your conclusion stronger, weaker, or different?
