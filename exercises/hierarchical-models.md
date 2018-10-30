@@ -6,7 +6,7 @@ description: The power of abstraction.
 
 ## Exercise 1: Pseudocounts and the Dirichlet distribution
 
-In the Bayesian Data Analysis exercises, we explored the Beta distribution by varying its parameters. The Dirichlet is a generalization of the Beta distribution to more than two categories (see [Appendix](http://probmods.org/chapters/appendix-useful-distributions.html)). Instead of Beta parameters $(a, b)$ governing the probabilities of two categories $(false/true)$, the Dirichlet parameter $$\alpha = [\alpha_1, \alpha_2, ..., \alpha_n]$$ controls the probabilities over categories $$[A_1, A_2, ..., A_n]$$. In other words, different choices of $\alpha$ correspond to different ways of distributing the prior probability mass over the $N-1$ simplex. 
+In the Bayesian Data Analysis exercises, we explored the Beta distribution by varying its parameters. The Dirichlet is a generalization of the Beta distribution to more than two categories (see [Appendix](http://probmods.org/chapters/appendix-useful-distributions.html)). Instead of Beta parameters $(a, b)$ governing the probabilities of two categories $$(false/true)$$, the Dirichlet parameter $$\alpha = [\alpha_1, \alpha_2, ..., \alpha_n]$$ controls the probabilities over categories $$[A_1, A_2, ..., A_n]$$. In other words, different choices of $$\alpha$$ correspond to different ways of distributing the prior probability mass over the $$N-1$$ simplex. 
 
 In this exercise, we will explore a particularly intuitive way of understanding the $alpha$ parameter as pseudocounts, or virtual observations. That is, if $$\alpha = [2, 2, 1]$$, that is the equivalent of having already observed the first category and second category twice each, and the third category one time only.
 
@@ -302,7 +302,7 @@ print(expectation(post))
 
 What do you conclude about vowel words vs. consonant words now?
 
-*Hint* Consider how the model is sensitive to the different assumed variances (e.g. the fixed noise in the observe function we assume sigma=10). In particular, how does this effect how you choose a sigma for your word-level effects?
+*Hint* Consider how the model is sensitive to the different assumed variances (e.g. the fixed noise in the observe function we assume sigma=10). In particular, think about how this should affect how you choose a sigma for your word-level effects.
 
 The individual word means that you have introduced are called *random effects* -- in a BDA they are random variables (usually at the individual item or person level) that are not of interest by themselves.
 
