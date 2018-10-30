@@ -23,7 +23,7 @@ The task is challenging because real-world categories are not homogeneous.  A ba
 *car* actually spans many different subtypes: e.g., *poodle*, *Dalmatian*, *Labrador*, and such, or
 *sedan*, *coupe*, *convertible*, *wagon*, and so on.  The child observes examples of these sub-kinds or *subordinate*-level categories: a few poodles, one Dalmatian, three Labradors, etc. From this data she must infer what it means to be a dog in general, in addition to what each of these different kinds of dog is like.  Knowledge about the prototype level includes understanding what it means to be a prototypical dog and what it means to be non-prototypical, but still a dog. This will involve understanding that dogs come in different breeds which share features between them, but also differ systematically as well.
 
-As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following WebPPL example.
+As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following WebPPL example (for a refresher on the Dirichlet distribution, see the [Appendix]({{site.baseurl}}/chapters/appendix-useful-distributions.html)).
 
 ~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
