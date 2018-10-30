@@ -98,13 +98,15 @@ viz.table(Infer({method: 'enumerate', maxExecutions: 100}, function() {
 }))
 ~~~~
 
+#### a)
+
 Why does this think the probability of `x * 2` is so much lower than `x * x`?
 
 HINT: Think about the probability assigned to `x ^ 2`.
 
 #### b)
 
-Let's reconceptualize our program as a sequence-generator. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
+Let's reconceptualize our program as a sequence-generator by making the input arguments $$1,2,3,\dots$$. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
 
 ~~~~
 ///fold:
@@ -204,6 +206,18 @@ Not surprisingly, the model predicts `9` as the most likely next number. However
 Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive. This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
 
 ## 2. The Number Game
+
+When we used our model above to reason about continuations of sequences (e.g. $$1,4,...$$), our hypothesis space was defined over *rules*: abstract arithmetic functions.
+
+In a related task called the *number game*, proposed by Josh Tenenbaum, participants were presented with sets of numbers and asked how well different numbers completed them.  While a rule-based generative model accurately capture responses for some stimuli (e.g. for $$16, 8, 2, 64$$ or $$60, 80, 10, 30$$, participants assigned high fit to powers of two and multiples of ten, respectively), it fails to capture others. For instance, what numbers seem like good completions of the set $$16, 23, 19, 20$$? How good is 18, relative to 13, relative to 99? 
+
+#### a)
+
+Why don't 
+
+#### b) 
+
+Supplement your model above to 
 
 <!--
 
