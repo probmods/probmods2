@@ -203,7 +203,7 @@ Not surprisingly, the model predicts `9` as the most likely next number. However
 
 #### c)
 
-Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive (i.e. if we ran this as an experiment, 27 would be a very infrequnt response). This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
+Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive (i.e. if we ran this as an experiment, 27 would be a very infrequent response). This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
 
 ## 2. The Number Game
 
@@ -320,19 +320,22 @@ var inSet = function(val, set) {
 // TODO: add a condition to this function that
 // calls genInterval with the parameters extracted from
 // your hypothesis string
+// *Hint*: If you're having trouble converting fron strings to integgers try the lodash function _.parseInt().
 var getSetFromHypothesis = function(rule) {
   var parts = rule.split('_')
   return (parts[0] == 'multiples' ? genMultiples(parts[2]) : 
           parts[0] == 'powers' ? genPowers(parts[2]) :
           parts[0] == 'evens' ? genEvens() :
           parts[0] == 'odds' ? genOdds() :
+          parts[0] == 'between' ? genSetFromInterval(_.parseInt(parts[1]), _.parseInt(parts[3])) :
           console.error('unknown rule' + rule))
 };
 
 // TODO: this function should construct the interval
 // of integers between the endpoints a and b
+// *Hint*: Don't forget that `rage(a, b)` generates numbers from a up to (but not including) b.
 var genSetFromInterval = function(a, b) {
-// ...
+  return _.range(a, b+1)
 } 
 
 var makeRuleHypothesisSpace = function() {
@@ -341,11 +344,20 @@ var makeRuleHypothesisSpace = function() {
   return multipleRules.concat(powerRules).concat(['evens', 'odds'])
 } 
 
-// TODO: build a list of all possible hypothesis intervals
+// TODO: build a list of all possible hypothesis intervals between 1 and 100
 var makeIntervalHypothesisSpace = function() {
-  var a = //
-  var b = //
-  return 'between_' + a + '_and_' + b
+  var start = 1
+  var end = 100
+  var allIntervals = _.flatten(map(function(s) {
+    return map(function(e) {
+      return [s, e];
+    }, genSetFromInterval(s+1, end))
+  }, genSetFromInterval(start, end)))
+  var createIntervalName = function(a, b) {
+    return 'between_' + a + '_and_' + b
+  }
+  var intervalNames = map(function(x) {createIntervalName(x[0], x[1])}, allIntervals)
+  return intervalNames
 }
 
 
@@ -355,10 +367,10 @@ var learnConcept = function(examples, testQuery) {
  Infer({method: 'enumerate'}, function() {
    var rules = makeRuleHypothesisSpace()
    // TODO: build space of intervals
-   var intervals = //
+   var intervals = makeIntervalHypothesisSpace()
    // TODO: implement a hypothesis prior that first assigns probability *lambda* to rules
    // and (1- lambda) to intervals, then samples uniformly within each class
-   var hypothesis = //
+   var hypothesis = flip(0.5) ? uniformDraw(rules) : uniformDraw(intervals)
    var set = getSetFromHypothesis(hypothesis)
    mapData({data: examples}, function(example) {
      // note: this likelihood corresponds to size principle
