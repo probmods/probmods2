@@ -209,7 +209,7 @@ Many people find the high probability assignmed by our model in (b) to `27` to b
 
 When we used our model above to reason about continuations of sequences (e.g. $$1,4,...$$), our hypothesis space was defined over *rules*: abstract arithmetic functions.
 
-In a related task called the *number game*, proposed in a [2001 paper by Josh Tenenbaum](https://web.mit.edu/cocosci/Papers/nips99preprint.ps), participants were presented with *sets* of numbers and asked how well different numbers completed them.  A rule-based generative model accurately captured responses for some stimuli (e.g. for $$16, 8, 2, 64$$ or $$60, 80, 10, 30$$, participants assigned high fit to powers of two and multiples of ten, respectively). But it failed to capture others. For instance, what numbers seem like good completions of the set $$16, 23, 19, 20$$? How good is 18, relative to 13, relative to 99? 
+In a related task called the [*number game*](https://web.mit.edu/cocosci/Papers/nips99preprint.ps), participants were presented with *sets* of numbers and asked how well different numbers completed them.  A rule-based generative model accurately captured responses for some stimuli (e.g. for $$16, 8, 2, 64$$ or $$60, 80, 10, 30$$, participants assigned high fit to powers of two and multiples of ten, respectively). But it failed to capture others. For instance, what numbers seem like good completions of the set $$16, 23, 19, 20$$? How good is 18, relative to 13, relative to 99? 
 
 #### a)
 
