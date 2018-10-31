@@ -346,8 +346,11 @@ var makeRuleHypothesisSpace = function() {
 
 // TODO: build a list of all possible hypothesis intervals between 1 and 100
 var makeIntervalHypothesisSpace = function() {
+  // Don't change start and end
   var start = 1
   var end = 100
+
+  // Your code here...
   var allIntervals = _.flatten(map(function(s) {
     return map(function(e) {
       return [s, e];
@@ -357,6 +360,10 @@ var makeIntervalHypothesisSpace = function() {
     return 'between_' + a + '_and_' + b
   }
   var intervalNames = map(function(x) {createIntervalName(x[0], x[1])}, allIntervals)
+  
+  // Note what is returned in makeRuleHypothesisSpace --> a list of strings that are
+  // parsed in getSetFromHypothesis. Make sure you are returning a list of strings that can
+  // be parsed into intervals. Think of a format like 'between_a_and_b'
   return intervalNames
 }
 
