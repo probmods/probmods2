@@ -1,8 +1,3 @@
----
-layout: exercise
-title: Learning with a language of thought - exercises
----
-
 ## 1. Inferring Functions
 
 Consider our model of function inference from the chapter:
@@ -104,11 +99,13 @@ Why does this think the probability of `x * 2` is so much lower than `x * x`?
 
 HINT: Think about the probability assigned to `x ^ 2`.
 
+*The two expressions differ in the final draw from the recursive function `randomArithmeticExpression`. On each step through the function, there is a 0.3 * 0.5 = 0.15 chance of returning `x`, but only a 0.3 * 0.5 * 0.1 = 0.015 chance of drawing `2`.*
+
 #### b)
 
-Let's reconceptualize our program as a sequence-generator by making the input arguments $$1,2,3,\dots$$. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
+Let's reconceptualize of our program as a sequence-generator. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
 
-~~~~
+~~~~js
 ///fold:
 // make expressions easier to look at
 var prettify = function(e) {
@@ -201,9 +198,13 @@ viz.table(Infer({method: 'enumerate', maxExecutions: 10000}, function() {
 
 Not surprisingly, the model predicts `9` as the most likely next number. However, it also puts significant probability on `27`. Why does this happen? 
 
+*These results are largely due to the high probability of the functions `x * x` and `x ^ x`, which return give `9` and `27` for `f(3)`, respectively.*
+
 #### c)
 
 Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive (i.e. if we ran this as an experiment, 27 would be a very infrequent response). This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
+
+*Currently, each function (`*`, `^`, `+`) is equally likely (they are drawn from a uniform distriution). We could decrease the probability of the latter function by decreasing the probability of drawing `^`. It seems reasonable that people are less likely to consider sequences made from powers, though this would need to be tested.*
 
 ## 2. The Number Game
 
@@ -282,6 +283,8 @@ var posterior = learnConcept(examples, testQuery)
 marginalize(posterior, function(x) {return x.hypothesis})
 ~~~~
 
+*While our prior over the hypotheses is uniform, the likelihood given each of the hypotheses is not! The more "general" rules such as "odd-numbers" cover a much larger space than "multiples of three" or "powers of three". The size principle makes use of the fact that observing a particular set of values under the hypotheses with smaller domains is greater.*
+
 #### b) 
 
 Now supplement this model to include similarity-based hypotheses (represented most simply as intervals). 
@@ -319,7 +322,7 @@ var inSet = function(val, set) {
 
 // TODO: add a condition to this function that
 // calls genInterval with the parameters extracted from
-// your hypothesis string.
+// your hypothesis string
 // *Hint*: If you're having trouble converting fron strings to integers try the lodash function _.parseInt().
 var getSetFromHypothesis = function(rule) {
   var parts = rule.split('_')
@@ -327,13 +330,14 @@ var getSetFromHypothesis = function(rule) {
           parts[0] == 'powers' ? genPowers(parts[2]) :
           parts[0] == 'evens' ? genEvens() :
           parts[0] == 'odds' ? genOdds() :
+          parts[0] == 'between' ? genSetFromInterval(_.parseInt(parts[1]), _.parseInt(parts[3])) :
           console.error('unknown rule' + rule))
 };
 
 // TODO: this function should construct the interval
 // of integers between the endpoints a and b
 var genSetFromInterval = function(a, b) {
-  // Your code here
+  return _.range(a, b+1)
 } 
 
 var makeRuleHypothesisSpace = function() {
@@ -342,17 +346,26 @@ var makeRuleHypothesisSpace = function() {
   return multipleRules.concat(powerRules).concat(['evens', 'odds'])
 } 
 
-// TODO: build a list of all possible hypothesis intervals between 1 and 100.
+// TODO: build a list of all possible hypothesis intervals between 1 and 100
 var makeIntervalHypothesisSpace = function() {
   // Note: Don't change start and end.
   var start = 1
   var end = 100
 
   // Your code here...
+  var allIntervals = _.flatten(map(function(s) {
+    return map(function(e) {
+      return [s, e];
+    }, genSetFromInterval(s+1, end))
+  }, genSetFromInterval(start, end)))
+  var createIntervalName = function(a, b) {
+    return 'between_' + a + '_and_' + b
+  }
+  var intervalNames = map(function(x) {createIntervalName(x[0], x[1])}, allIntervals)
   
   // *Hint* Make sure to model this after makeRuleHypothesisSpace, which returns a list of strings that are
   // parsed in getSetFromHypothesis. E.g. Think of a format like 'between_a_and_b'.
-  return ...
+  return intervalNames
 }
 
 
@@ -362,10 +375,10 @@ var learnConcept = function(examples, testQuery) {
  Infer({method: 'enumerate'}, function() {
    var rules = makeRuleHypothesisSpace()
    // TODO: build space of intervals
-   var intervals = ...
+   var intervals = makeIntervalHypothesisSpace()
    // TODO: implement a hypothesis prior that first assigns probability *lambda* to rules
    // and (1- lambda) to intervals, then samples uniformly within each class
-   var hypothesis = ...
+   var hypothesis = flip(0.5) ? uniformDraw(rules) : uniformDraw(intervals)
    var set = getSetFromHypothesis(hypothesis)
    mapData({data: examples}, function(example) {
      // note: this likelihood corresponds to size principle
@@ -381,10 +394,16 @@ var posterior = learnConcept(examples, testQuery)
 marginalize(posterior, function(x) {return x.hypothesis})
 ~~~~
 
+*See code above.*
+
 #### c)
 
 Now examine the sets $$3$$, $$3, 6, 9$$, and $$3, 5,6,7,9$$. Sweep across all integers as testQueries to see the 'hotspots' of the model predictions. What do you observe?
 
+*At first we prefer the rule based hypotheses for $$3$$, $$3, 6, 9$$, but shift to the interval hypotheses once we have $$3, 5, 6, 7, 9$$*
+
 #### d)
 
 Look at some of the data in the large-scale replication of the number game [here](https://openpsychologydata.metajnl.com/articles/10.5334/jopd.19/). Can you think of an additional concept people might be using that we did not include in our model?
+
+*This is fairly subjective, we're just looking for creative, thoughtful responses. E.g. notice that the authors mention that a common hypothesis are rules such as "numbers [ending/starting] in 3".*
