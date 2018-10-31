@@ -98,13 +98,15 @@ viz.table(Infer({method: 'enumerate', maxExecutions: 100}, function() {
 }))
 ~~~~
 
+#### a)
+
 Why does this think the probability of `x * 2` is so much lower than `x * x`?
 
 HINT: Think about the probability assigned to `x ^ 2`.
 
 #### b)
 
-Let's reconceptualize our program as a sequence-generator. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
+Let's reconceptualize our program as a sequence-generator by making the input arguments $$1,2,3,\dots$$. Suppose that the first number in the sequence ($$f(1)$$) is `1` and the second number ($$f(2)$$) is `4`. What number comes next?
 
 ~~~~
 ///fold:
@@ -201,14 +203,14 @@ Not surprisingly, the model predicts `9` as the most likely next number. However
 
 #### c)
 
-Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive. This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
+Many people find the high probability assignmed by our model in (b) to `27` to be unintuitive (i.e. if we ran this as an experiment, 27 would be a very infrequent response). This suggests our model is an imperfect model of human intuitions. How could we decrease the probability of inferring `27`? (HINT: Consider the priors). 
 
-## 2. The Number Game
+## 2. Role-governed concepts (challenge!)
 
-<!--
+In the Rational Rules model we saw in the chapter, concepts were defined in terms of the features of single objects (e.g. "it's a raven if it has black wings"). Psychologists have suggested that many concepts are not defined by the features of a single objects, but instead by the relations the object has to other objects. For instance, "a key is something that opens a lock". These are called *role-governed* concepts.
 
-  Ok, the goal here is to introduce josh's number game paradigm, and use it to illustrate and explore the ability of bayesian models to move between graded generalization and rule-like generalization.
+Extend the Rational Rules model to capture role-governed concepts.
 
-  To do this it's important that the data are sets of numbers, not sequences as above. (Otherwise you don't get the range concepts with graded falloff...) I think it's still feasible to do this via enumeration, but might need to keep the range small.
+Hint: You will need primitive relations in your langauge of thought.
 
-  -->
+Hint: Consider adding quantifiers (e.g. *there exists*) to your language of thought.
