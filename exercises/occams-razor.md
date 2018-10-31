@@ -212,4 +212,4 @@ Look at some of the data in the large-scale replication of the number game [here
 
 Can you replicate the results from the paper (reproduced in figure below) by adding in the other hypotheses from the paper?
 
-<img src="{{site.base}}/assets/img/tenenbaum_number_game.png" width="300"/>
+<img src="{{site.base}}/assets/img/tenenbaum_number_game.png" width="600"/>
