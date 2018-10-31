@@ -388,3 +388,13 @@ Now examine the sets $$3$$, $$3, 6, 9$$, and $$3, 5,6,7,9$$. Sweep across all in
 #### d)
 
 Look at some of the data in the large-scale replication of the number game [here](https://openpsychologydata.metajnl.com/articles/10.5334/jopd.19/). Can you think of an additional concept people might be using that we did not include in our model?
+
+## 3. Role-governed concepts (challenge!)
+
+In the Rational Rules model we saw in the chapter, concepts were defined in terms of the features of single objects (e.g. "it's a raven if it has black wings"). Psychologists have suggested that many concepts are not defined by the features of a single objects, but instead by the relations the object has to other objects. For instance, "a key is something that opens a lock". These are called *role-governed* concepts.
+
+Extend the Rational Rules model to capture role-governed concepts.
+
+Hint: You will need primitive relations in your langauge of thought.
+
+Hint: Consider adding quantifiers (e.g. *there exists*) to your language of thought.
