@@ -5,13 +5,6 @@ description: The power of statistical abstraction.
 chapter_num: 11
 ---
 
-<!-- NEED TO BREAK THIS DOWN INTO TWO KINDS OF POINTS:
-
-Learn about basic level from subordinates.  Extract the common prototype.  This isn't transfer learning.
-
-Learn about superordinate level from basic.  This is transfer learning, learning to learn
--->
-
 Human knowledge is organized hierarchically into levels of abstraction.  For instance, the most common or *basic-level* categories  (e.g. *dog*, *car*) can be thought of as abstractions across individuals, or more often across subordinate categories (e.g., *poodle*, *Dalmatian*, *Labrador*, and so on).  Multiple basic-level categories in turn can be organized under superordinate categories: e.g., *dog*, *cat*, *horse* are all *animals*; *car*, *truck*, *bus* are all *vehicles*. Some of the deepest questions of cognitive development are: How does abstract knowledge influence learning of specific knowledge?  How can abstract knowledge be learned? In this section we will see how such hierarchical knowledge can be modeled with *hierarchical generative models*: generative models with uncertainty at several levels, where lower levels depend on choices at higher levels.
 
 
@@ -49,7 +42,7 @@ viz(drawMarbles('bagB', 100))
 
 As this examples shows, `mem` is particularly useful when writing hierarchical models because it allows us to associate arbitrary random draws with categories across entire runs of the program. In this case it allows us to associate a particular mixture of marble colors with each bag. The mixture is drawn once, and then remains the same thereafter for that bag. Intuitively, you can see how each sample is sufficient to learn a lot about what that bag is like; there is typically a fair amount of similarity between the empirical color distributions in each of the four samples from `bagA`.  In contrast, you should see a different distribution of samples from `bagB`.
 
-Now let's add a few twists: we will generate three different bags, and try to learn about their respective color prototypes by conditioning on observations. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
+Now let's explore how this model *learns* about the contents of different bags. We represent the results of learning in terms of the *posterior predictive* distribution for each bag: a single hypothetical draw from the bag.  We will also draw a sample from the posterior predictive distribution on a new bag, for which we have had no observations.
 
 ~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
@@ -67,10 +60,6 @@ var observedData = [
 {bag: 'bag2', draw: 'blue'},
 {bag: 'bag2', draw: 'blue'},
 {bag: 'bag2', draw: 'red'},
-{bag: 'bag3', draw: 'blue'},
-{bag: 'bag3', draw: 'blue'},
-{bag: 'bag3', draw: 'blue'},
-{bag: 'bag3', draw: 'blue'},
 {bag: 'bag3', draw: 'blue'},
 {bag: 'bag3', draw: 'orange'}
 ]
@@ -96,9 +85,10 @@ var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
 viz.marginals(predictives)
 ~~~~
 
-This generative model describes the prototype mixtures in each bag, but it does not attempt learn a common higher-order prototype. It is like learning separate prototypes for subordinate classes *poodle*, *Dalmatian*, and *Labrador*, without learning a prototype for the higher-level kind *dog*.  Specifically, inference suggests that each bag is predominantly blue, but with a fair amount of residual uncertainty about what other colors might be seen. There is no information shared across bags, and nothing significant is learned about `bagN` as it has no observations and no structure shared with the bags that have been observed.
+Inference suggests that the first two bags are predominantly blue, and the third is probably blue and organge. In all cases there is a fair amount of residual uncertainty about what other colors might be seen. Nothing significant is learned about `bagN` as it has no observations.
+This generative model describes the prototypical mixture in each bag, but it does not attempt learn a common higher-order prototype. It is like learning separate prototypes for subordinate classes *poodle*, *Dalmatian*, and *Labrador*, without learning a prototype for the higher-level kind *dog*. Yet your intuition may suggest that all the bags are predominantly blue, allowing you to make stronger inferences, especially about `bag3` and `bagN`.
 
-Now let us introduce another level of abstraction: a global prototype that provides a prior on the specific prototype mixtures of each bag.
+Let us introduce another level of abstraction: a global prototype that provides a prior on the specific prototype mixtures of each bag.
 
 ~~~~
 ///fold:
@@ -117,10 +107,6 @@ var observedData = [
 {bag: 'bag2', draw: 'blue'},
 {bag: 'bag2', draw: 'blue'},
 {bag: 'bag2', draw: 'red'},
-{bag: 'bag3', draw: 'blue'},
-{bag: 'bag3', draw: 'blue'},
-{bag: 'bag3', draw: 'blue'},
-{bag: 'bag3', draw: 'blue'},
 {bag: 'bag3', draw: 'blue'},
 {bag: 'bag3', draw: 'orange'}
 ]
@@ -151,11 +137,11 @@ var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
 viz.marginals(predictives)
 ~~~~
 
-Compared with inferences in the previous example, this extra level of abstraction enables faster learning: more confidence in what each bag is like based on the same observed sample.  This is because all of the observed samples suggest a common prototype structure, with most of its weight on `blue` and the rest of the weight spread uniformly among the remaining colors.  Statisticians sometimes refer to this phenomenon of inference in hierarchical models as "sharing of statistical strength": it is as if the sample we observe for each bag also provides a weaker indirect sample relevant to the other bags.  In machine learning and cognitive science this phenomenon is often called *learning to learn* or *transfer learning.* Intuitively, knowing something about bags in general allows the learner to transfer knowledge gained from draws from one bag to other bags.  This example is analogous to seeing several examples of different subtypes of dogs and learning what features are in common to the more abstract basic-level dog prototype, independent of the more idiosyncratic features of particular dog subtypes.
+Compared with inferences in the previous example, this extra level of abstraction enables faster learning: more confidence in what each bag is like based on the same observed sample.  This is because all of the observed samples suggest a common prototype structure, with most of its weight on `blue` and the rest of the weight spread uniformly among the remaining colors. In particular, we now make strong inferences for `bag3` that blue is likely but orange isn't -- quite different from the earlier case without a shared global prototype.
 
-A particularly striking example of "sharing statistical strength" or "learning to learn" can be seen if we change the observed sample for bag 3 to have only two examples, one blue and one orange.  (Remove all but one `{bag: 'bag3', draw: 'blue'}` from `observedData` in program above.) In a situation where we have no shared higher-order prototype structure, inference for bag3 from these observations suggests that `blue` and `orange` are equally likely.  However, when we have inferred a shared higher-order prototype, then the inferences we make for bag 3 look much more like those we made before (with six observations: five blue, one orange), because the learned higher-order prototype tells us that blue is most likely to be highly represented in any bag regardless of which other colors (here, orange) may be seen with lower probability.
+Statisticians sometimes refer to this phenomenon of inference in hierarchical models as "sharing of statistical strength": it is as if the sample we observe for each bag also provides a weaker indirect sample relevant to the other bags.  In machine learning and cognitive science this phenomenon is often called *transfer learning.* Intuitively, knowing something about bags in general allows the learner to transfer knowledge gained from draws from one bag to other bags.  This example is analogous to seeing several examples of different subtypes of dogs and learning what features are in common to the more abstract basic-level dog prototype, independent of the more idiosyncratic features of particular dog subtypes.
 
-Learning about shared structure at a higher level of abstraction also supports inferences about new bags without observing *any* examples from that bag: a hypothetical new bag could produce any color, but is likely to have more blue marbles than any other color. We can imagine hypothetical, previously unseen, new subtypes of dogs that share the basic features of dogs with more familiar kinds but may differ in some idiosyncratic ways.
+Learning about shared structure at a higher level of abstraction also supports inferences about new bags without observing *any* examples from that bag: a hypothetical new bag could produce any color, but is likely to have more blue marbles than any other color (see the `bagN` result above!). We can imagine hypothetical, previously unseen, new subtypes of dogs that share the basic features of dogs with more familiar kinds but may differ in some idiosyncratic ways.
 
 
 # The Blessing of Abstraction
