@@ -5,7 +5,7 @@ title: Occam's razor - exercises
 
 ## Exercise 1: Causal induction
 
-Write the causal support model from Griffiths and Tenenbaum's [-@Griffiths2005], "Structure and strength in causal induction" (GT05) in Church.  You don't need to compute the log likelihood ratio for $$P(\text{data} \mid \text{Graph 1})/P(\text{data} \mid \text{Graph 0})$$ but can simply estimate the posterior probability $$P(\text{Graph 1} \mid \text{data})$$.
+Write the causal support model from Griffiths and Tenenbaum's [-@Griffiths2005], "Structure and strength in causal induction" (GT05) in WebPPL.  You don't need to compute the log likelihood ratio for $$P(\text{data} \mid \text{Graph 1})/P(\text{data} \mid \text{Graph 0})$$ but can simply estimate the posterior probability $$P(\text{Graph 1} \mid \text{data})$$.
 
 a) Replicate the model predictions from Fig. 1 of GT05.
 
@@ -18,31 +18,198 @@ c) Try using different parameterizations of the function that relates the cause 
 
 Try an informal behavioral experiment with several friends as experimental subjects to see whether the Bayesian approach to curve fitting given on the wiki page corresponds with how people actually find functional patterns in sparse noisy data.  Your experiment should consist of showing each of 4-6 people 8-10 data sets (sets of x-y values, illustrated graphically as points on a plane with x and y axes), and asking them to draw a continuous function that interpolates between the data points and extrapolates at least a short distance beyond them (as far as people feel comfortable extrapolating).  Explain to people that the data were produced by measuring y as some function of x, with the possibility of noise in the measurements.
 
-The challenge of this exercise comes in choosing the data sets you will show people, interpreting the results and thinking about how to modify or improve a probabilistic program for curve fitting to better explain what people do. Of the 8-10 data sets you use, devise several ("type A") for which you believe the church program for polynomial curve fitting will match the functions people draw, at least qualitatively.  Come up with several other data sets ("type B") for which you expect people to draw qualitatively different functions than the church polynomial fitting program does. Does your experiment bear out your guesses about type A and type B?  If yes, why do you think people found different functions to best explain the type B data sets?  If not, why did you think they would?  There are a number of factors to consider, but two important ones are the noise model you use, and the choice of basis functions: not all functions that people can learn or that describe natural processes in the world can be well described in terms of polynomials; other types of functions may need to be considered.
+The challenge of this exercise comes in choosing the data sets you will show people, interpreting the results and thinking about how to modify or improve a probabilistic program for curve fitting to better explain what people do. Of the 8-10 data sets you use, devise several ("type A") for which you believe the WebPPL program for polynomial curve fitting will match the functions people draw, at least qualitatively.  Come up with several other data sets ("type B") for which you expect people to draw qualitatively different functions than the WebPPL polynomial fitting program does. Does your experiment bear out your guesses about type A and type B?  If yes, why do you think people found different functions to best explain the type B data sets?  If not, why did you think they would?  There are a number of factors to consider, but two important ones are the noise model you use, and the choice of basis functions: not all functions that people can learn or that describe natural processes in the world can be well described in terms of polynomials; other types of functions may need to be considered.
 
-Can you modify the church program to fit curves of qualitatively different forms besides polynomials, but of roughly equal complexity in terms of numbers of free parameters?  Even if you can't get inference to work well for these cases, show some samples from the generative model that suggest how the program might capture classes of human-learnable functions other than polynomials.
+Can you modify the WebPPL program to fit curves of qualitatively different forms besides polynomials, but of roughly equal complexity in terms of numbers of free parameters?  Even if you can't get inference to work well for these cases, show some samples from the generative model that suggest how the program might capture classes of human-learnable functions other than polynomials.
 
-You should hand in the data sets you used for the informal experiment, discussion of the experimental results, and a modified church program for fitting qualitatively different forms from polynomials plus samples from running the program forward.
+You should hand in the data sets you used for the informal experiment, discussion of the experimental results, and a modified WebPPL program for fitting qualitatively different forms from polynomials plus samples from running the program forward.
 
-## Exercise 3: Number game
+## Exercise 3. The Number Game
 
-Write the *number game* model from Tenenbaum's [-@Tenenbaum2000] "Rules and similarity in concept learning" in Church.
+When we used our model above to reason about continuations of sequences (e.g. $$1,4,...$$), our hypothesis space was defined over *rules*: abstract arithmetic functions.
 
-Replicate the model predictions in Fig. 1b. You may want to start by writing out the hypotheses by hand.
+In a related task called the [*number game*](https://web.mit.edu/cocosci/Papers/nips99preprint.ps), participants were presented with *sets* of numbers and asked how well different numbers completed them.  A rule-based generative model accurately captured responses for some stimuli (e.g. for $$16, 8, 2, 64$$ or $$60, 80, 10, 30$$, participants assigned high fit to powers of two and multiples of ten, respectively). But it failed to capture others. For instance, what numbers seem like good completions of the set $$16, 23, 19, 20$$? How good is 18, relative to 13, relative to 99? 
 
-How might you generate the hypothesis space more compactly?
+#### a)
 
-How would you change the model if the numbers were sequences instead of sets?
-
-Hint: to draw from a set of integers, you may want to use this `noisy-draw` function:
+We've implemented a rule-only model of this task for you below. Examine the posterior over rules for the following inputs: $$3$$, $$3, 9$$, $$3, 5, 9$$. For the example of just feeding in $$3$$, why are some rules so strongly preferred over others, even though they are assigned equal probability under the prior? (HINT: think about the likelihood; read the section of the linked number game paper on the *size principle* if you're stuck).
 
 ~~~~
-;;the total possible range is 0 to  total-range - 1
-(define total-range 10)
+///fold:
+var filterByInRange =  function(set) {
+  var inRange = function(v) {v <= 100 && v >= 0};
+  return _.uniq(filter(inRange, set))
+}
 
-;;draw from a set of integers with some chance of drawing a different integer in the possible range:
-(define (noisy-draw set) (sample-discrete (map (lambda (x) (if (member x set) 1.0 0.01)) (iota total-range))))
+var genEvens = function() {
+  return filter(function(v) {return v % 2 == 0}, _.range(1, 101))
+}
 
-;;for example:
-(noisy-draw '(1 3 5))
+var genOdds = function() {
+  return filter(function(v) {return (v + 1) % 2 == 0}, _.range(1, 101))
+}
+
+var genMultiples = function(base) {
+  var multiples = map(function(v) {return base * v}, _.range(100))
+  return filterByInRange(multiples)
+}
+
+var genPowers = function(base) {
+  var powers = map(function(v) {return Math.pow(base, v)}, _.range(100))
+  return filterByInRange(powers)
+}
+
+var inSet = function(val, set) {
+  return _.includes(set, val)
+}
+
+var getSetFromHypothesis = function(rule) {
+  var parts = rule.split('_')
+  return (parts[0] == 'multiples' ? genMultiples(parts[2]) : 
+          parts[0] == 'powers' ? genPowers(parts[2]) :
+          parts[0] == 'evens' ? genEvens() :
+          parts[0] == 'odds' ? genOdds() :
+          console.error('unknown rule' + rule))
+};
+///
+
+// Considers 4 kinds of rules: evens, odds, and multiples and powers of small numbers <12
+var makeRuleHypothesisSpace = function() {
+  var multipleRules = map(function(base) {return 'multiples_of_' + base}, _.range(1, 12))
+  var powerRules = map(function(base) {return 'powers_of_' + base}, _.range(1, 12))   
+  return multipleRules.concat(powerRules).concat(['evens', 'odds'])
+} 
+
+// Takes an undordered array of examples of a concept in the number game
+// and also a test query (i.e. a new number that the experimenter is asking about)
+var learnConcept = function(examples, testQuery) {
+ Infer({method: 'enumerate'}, function() {
+   var rules = makeRuleHypothesisSpace()
+   var hypothesis = uniformDraw(rules)
+   var set = getSetFromHypothesis(hypothesis)
+   mapData({data: examples}, function(example) {
+     // note: this likelihood corresponds to size principle
+     observe(Categorical({vs: set}), example)
+   })
+   return {hypothesis, testQueryResponse : inSet(set, testQuery)}
+ }); 
+}
+
+var examples = [3]
+var testQuery = 12
+var posterior = learnConcept(examples, testQuery)
+marginalize(posterior, function(x) {return x.hypothesis})
 ~~~~
+
+#### b) 
+
+Now supplement this model to include similarity-based hypotheses (represented most simply as intervals). 
+
+~~~~
+///fold:
+var filterByInRange =  function(set) {
+  var inRange = function(v) {v <= 100 && v >= 0};
+  return _.uniq(filter(inRange, set))
+}
+
+var genEvens = function() {
+  return filter(function(v) {return v % 2 == 0}, _.range(1, 101))
+}
+
+var genOdds = function() {
+  return filter(function(v) {return (v + 1) % 2 == 0}, _.range(1, 101))
+}
+
+var genMultiples = function(base) {
+  var multiples = map(function(v) {return base * v}, _.range(100))
+  return filterByInRange(multiples)
+}
+
+var genPowers = function(base) {
+  var powers = map(function(v) {return Math.pow(base, v)}, _.range(100))
+  return filterByInRange(powers)
+}
+
+var inSet = function(val, set) {
+  return _.includes(set, val)
+}
+
+///
+
+// TODO: add a condition to this function that
+// calls genInterval with the parameters extracted from
+// your hypothesis string.
+// *Hint*: If you're having trouble converting fron strings to integers try the lodash function _.parseInt().
+var getSetFromHypothesis = function(rule) {
+  var parts = rule.split('_')
+  return (parts[0] == 'multiples' ? genMultiples(parts[2]) : 
+          parts[0] == 'powers' ? genPowers(parts[2]) :
+          parts[0] == 'evens' ? genEvens() :
+          parts[0] == 'odds' ? genOdds() :
+          console.error('unknown rule' + rule))
+};
+
+// TODO: this function should construct the interval
+// of integers between the endpoints a and b
+var genSetFromInterval = function(a, b) {
+  // Your code here
+} 
+
+var makeRuleHypothesisSpace = function() {
+  var multipleRules = map(function(base) {return 'multiples_of_' + base}, _.range(1, 12))
+  var powerRules = map(function(base) {return 'powers_of_' + base}, _.range(1, 12))   
+  return multipleRules.concat(powerRules).concat(['evens', 'odds'])
+} 
+
+// TODO: build a list of all possible hypothesis intervals between 1 and 100.
+var makeIntervalHypothesisSpace = function() {
+  // Note: Don't change start and end.
+  var start = 1
+  var end = 100
+
+  // Your code here...
+  
+  // *Hint* Make sure to model this after makeRuleHypothesisSpace, which returns a list of strings that are
+  // parsed in getSetFromHypothesis. E.g. Think of a format like 'between_a_and_b'.
+  return ...
+}
+
+
+// Takes an undordered array of examples of a concept in the number game
+// and also a test query (i.e. a new number that the experimenter is asking about)
+var learnConcept = function(examples, testQuery) {
+ Infer({method: 'enumerate'}, function() {
+   var rules = makeRuleHypothesisSpace()
+   // TODO: build space of intervals
+   var intervals = ...
+   // TODO: implement a hypothesis prior that first assigns probability *lambda* to rules
+   // and (1- lambda) to intervals, then samples uniformly within each class
+   var hypothesis = ...
+   var set = getSetFromHypothesis(hypothesis)
+   mapData({data: examples}, function(example) {
+     // note: this likelihood corresponds to size principle
+     observe(Categorical({vs: set}), example)
+   })
+   return {hypothesis, testQueryResponse : inSet(set, testQuery)}
+ }); 
+}
+
+var examples = [3]
+var testQuery = 12
+var posterior = learnConcept(examples, testQuery)
+marginalize(posterior, function(x) {return x.hypothesis})
+~~~~
+
+#### c)
+
+Now examine the sets $$3$$, $$3, 6, 9$$, and $$3, 5,6,7,9$$. Sweep across all integers as testQueries to see the 'hotspots' of the model predictions. What do you observe? 
+
+#### d)
+
+Look at some of the data in the large-scale replication of the number game [here](https://openpsychologydata.metajnl.com/articles/10.5334/jopd.19/). Can you think of an additional concept people might be using that we did not include in our model?
+
+#### e) Challenge!
+
+Can you replicate the results from the paper (reproduced in figure below) by adding in the other hypotheses from the paper?
+
+<img src="{{site.base}}/assets/img/tenenbaum_number_game.png" width="600"/>

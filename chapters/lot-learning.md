@@ -159,71 +159,72 @@ Notice three effects: there is a gradient of generalization (rather than all-or-
 Is it possible to get graded effects from rule-based concepts? Perhaps these effects are driven by uncertainty in *learning* rather than uncertainty in the representations themselves? To explore these questions Goodman, Tenenbaum, Feldman, and Griffiths (2008) introduced the Rational Rules model, which learns deterministic rules by probabilistic inference. This model has an infinite hypothesis space of rules (represented in propositional logic), which are generated compositionally. Here is a slightly simplified version of the model, applied to the above experiment:
 
 ~~~~
-// first set up the training (cat A/B) and test objects:
+// first set up the training and test data:
 var numFeatures = 4;
 
-var makeObj = function(l) {return _.zipObject(['trait1', 'trait2', 'trait3', 'trait4'], l)}
-var AObjects = map(makeObj, [[0,0,0,1], [0,1,0,1], [0,1,0,0], [0,0,1,0], [1,0,0,0]])
-var BObjects = map(makeObj, [[0,0,1,1], [1,0,0,1], [1,1,1,0], [1,1,1,1]])
-var TObjects = map(makeObj, [[0,1,1,0], [0,1,1,1], [0,0,0,0], [1,1,0,1], [1,0,1,0], [1,1,0,0], [1,0,1,1]])
+var makeObj = function(l) {return _.zipObject(['trait1', 'trait2', 'trait3', 'trait4', 'fep'], l)}
+var feps = map(makeObj, [[0,0,0,1, 1], [0,1,0,1, 1], [0,1,0,0, 1], [0,0,1,0, 1], [1,0,0,0, 1]])
+var nonFeps = map(makeObj, [[0,0,1,1, 0], [1,0,0,1, 0], [1,1,1,0, 0], [1,1,1,1, 0]])
+var others = map(makeObj, [[0,1,1,0], [0,1,1,1], [0,0,0,0], [1,1,0,1], [1,0,1,0], [1,1,0,0], [1,0,1,1]])
+var data = feps.concat(nonFeps)
+var allObjs = others.concat(feps).concat(nonFeps)
 
 //here are the human results from Nosofsky et al, for comparison:
-var humanA = [.77, .78, .83, .64, .61]
-var humanB = [.39, .41, .21, .15]
-var humanT = [.56, .41, .82, .40, .32, .53, .20]
+var humanFeps = [.77, .78, .83, .64, .61]
+var humanNonFeps = [.39, .41, .21, .15]
+var humanOther = [.56, .41, .82, .40, .32, .53, .20]
+var humanData = humanOther.concat(humanFeps).concat(humanNonFeps)
 
 // two parameters: stopping probability of the grammar, and noise probability:
 var tau = 0.3;
 var noiseParam = Math.exp(-1.5)
 
 // a generative process for disjunctive normal form propositional equations:
-var traitPrior = Categorical({vs: ['trait1', 'trait2', 'trait3', 'trait4'],
-                              ps: [.25, .25, .25, .25]});
 var samplePred = function() {
-  var trait = sample(traitPrior);
+  var trait = uniformDraw(['trait1', 'trait2', 'trait3', 'trait4'])
   var value = flip()
-  return function(x) {return x[trait] == value};
+  return function(x) {return x[trait] == value}
 }
 
 var sampleConj = function() {
   if(flip(tau)) {
-    var c = sampleConj();
-    var p = samplePred();
-    return function(x) {return c(x) && p(x)};
+    var c = sampleConj()
+    var p = samplePred()
+    return function(x) {return c(x) && p(x)}
   } else {
-    return samplePred();
+    return samplePred()
   }
 }
 
 var getFormula = function() {
   if(flip(tau)) {
-    var c = sampleConj();
-    var f = getFormula();
+    var c = sampleConj()
+    var f = getFormula()
     return function(x) {return c(x) || f(x)};
   } else {
-    return sampleConj();
+    return sampleConj()
   }
 }
 
 var rulePosterior = Infer({method: 'enumerate', maxExecutions: 1000}, function() {
   // sample a classification formula
-  var rule = getFormula();
-  // condition on correctly (up to noise) accounting for A & B categories
-  var obsFnA = function(datum){observe(Bernoulli({p: rule(datum) ? 0.999999999 : noiseParam}), true)}
-  mapData({data:AObjects}, obsFnA)
-  var obsFnB = function(datum){observe(Bernoulli({p: !rule(datum) ? 0.999999999 : noiseParam}), true)}
-  mapData({data:BObjects}, obsFnB)
+  var rule = getFormula()
+  
+  // condition on correctly (up to noise) accounting for observations
+  var obsFn = function(datum){observe(Bernoulli({p: rule(datum) ? (1-noiseParam) : noiseParam}), datum.fep == 1)}
+  mapData({data: data}, obsFn) 
+  
   // return posterior predictive
-  var allObjs = TObjects.concat(AObjects).concat(BObjects);
-  return _.zipObject(_.range(allObjs.length), map(rule, allObjs));
+  return map(rule, allObjs)
 })
 
 //build predictive distribution for each item
-var predictives = map(function(item){return expectation(rulePosterior,function(x){x[item]})}, _.range(15))
+var predictives = map(function(i){expectation(rulePosterior,function(x){x[i]})}, _.range(15))
 
-var humanData = humanT.concat(humanA).concat(humanB)
 viz.scatter(predictives, humanData)
 ~~~~
+
+<!-- TODO: try fullboolean language. switch to that in main text or show both? or maybe as an exercise? -->
 
 In addition to achieving a good overall correlation with the data, this model captures the three qualitative effects described above: graded generalization, typicality, and prototype enhancement. Make sure you see how to read each of these effects from the above plot!
 Goodman, et al, have used to this model to capture a variety of other classic categorization effects [@Goodman2008b], as well. Thus probabilistic induction of (deterministic) rules can capture many of the graded effects previously taken as evidence against rule-based models.
