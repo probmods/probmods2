@@ -3,28 +3,7 @@ layout: exercise
 title: Occam's razor - exercises
 ---
 
-## Exercise 1: Causal induction
-
-Write the causal support model from Griffiths and Tenenbaum's [-@Griffiths2005], "Structure and strength in causal induction" (GT05) in WebPPL.  You don't need to compute the log likelihood ratio for $$P(\text{data} \mid \text{Graph 1})/P(\text{data} \mid \text{Graph 0})$$ but can simply estimate the posterior probability $$P(\text{Graph 1} \mid \text{data})$$.
-
-a) Replicate the model predictions from Fig. 1 of GT05.
-
-b) Show samples from the posteriors over the causal strength and background rate
-parameters, as in Fig 4 of GT05.
-
-c) Try using different parameterizations of the function that relates the cause and the background to the effect, as described in a later 2009 paper [@Griffiths2009]: noisy-or for generative causes, noisy-and-not for preventive causes, generic multinomial parameterization for causes that have an unknown effect.  Show their predictions for a few different data sets, including the Delta-P = 0 cases.
-
-## Exercise 2
-
-Try an informal behavioral experiment with several friends as experimental subjects to see whether the Bayesian approach to curve fitting given on the wiki page corresponds with how people actually find functional patterns in sparse noisy data.  Your experiment should consist of showing each of 4-6 people 8-10 data sets (sets of x-y values, illustrated graphically as points on a plane with x and y axes), and asking them to draw a continuous function that interpolates between the data points and extrapolates at least a short distance beyond them (as far as people feel comfortable extrapolating).  Explain to people that the data were produced by measuring y as some function of x, with the possibility of noise in the measurements.
-
-The challenge of this exercise comes in choosing the data sets you will show people, interpreting the results and thinking about how to modify or improve a probabilistic program for curve fitting to better explain what people do. Of the 8-10 data sets you use, devise several ("type A") for which you believe the WebPPL program for polynomial curve fitting will match the functions people draw, at least qualitatively.  Come up with several other data sets ("type B") for which you expect people to draw qualitatively different functions than the WebPPL polynomial fitting program does. Does your experiment bear out your guesses about type A and type B?  If yes, why do you think people found different functions to best explain the type B data sets?  If not, why did you think they would?  There are a number of factors to consider, but two important ones are the noise model you use, and the choice of basis functions: not all functions that people can learn or that describe natural processes in the world can be well described in terms of polynomials; other types of functions may need to be considered.
-
-Can you modify the WebPPL program to fit curves of qualitatively different forms besides polynomials, but of roughly equal complexity in terms of numbers of free parameters?  Even if you can't get inference to work well for these cases, show some samples from the generative model that suggest how the program might capture classes of human-learnable functions other than polynomials.
-
-You should hand in the data sets you used for the informal experiment, discussion of the experimental results, and a modified WebPPL program for fitting qualitatively different forms from polynomials plus samples from running the program forward.
-
-## Exercise 3. The Number Game
+## Exercise 1. The Number Game
 
 When we used our model above to reason about continuations of sequences (e.g. $$1,4,...$$), our hypothesis space was defined over *rules*: abstract arithmetic functions.
 
@@ -213,3 +192,104 @@ Look at some of the data in the large-scale replication of the number game [here
 Can you replicate the results from the paper (reproduced in figure below) by adding in the other hypotheses from the paper?
 
 <img src="{{site.base}}/assets/img/tenenbaum_number_game.png" width="600"/>
+
+
+## Exercise 2: Causal induction revisited
+
+In a previous exercise we explore the Causal Power (CP) model of causal learning. Griffiths and Tenenbaum [-@Griffiths2005], "Structure and strength in causal induction", hypothesized that when people do causal induction they are not estimating a power parameter (as in CP) but instead they are deciding whether there is a causal relation at all -- they called this model Causal Support (CS).
+
+#### a)
+
+Implement the CS model by modifying the CP model:
+
+~~~~
+var observedData = [{C:true, E:false}]
+
+var causalPost = Infer({method: 'MCMC', samples: 10000, lag:2}, function() {
+
+  // Is there a causal relation between C and E?
+  // ...your code here
+
+  // Causal power of C to cause E
+  var cp = uniform(0, 1)
+
+  // Background probability of E
+  var b = uniform(0, 1)
+
+  mapData({data: observedData}, function(datum) {
+    // The noisy causal relation to get E given C
+    var E = // ...your code here
+    condition(E == datum.E)
+  })
+
+  return // ...your code here
+})
+
+viz.marginals(causalPost)
+~~~~
+
+Hint: In the CP model the effect was generated from `var E = (datum.C && flip(cp)) || flip(b)`. You will need to extend this to capture the idea that the cause can only make the effect happen if there is a causal relation at all.
+
+#### b)
+
+Inference with the MCMC method will not be very efficient for the model you wrote above because the MCMC algroithm is using the Metropolis-Hastings procedure, changing only one random choice at a time. (To see why this is a problem, think about what happens when you try to change the choice about whether there is a causal relation.)
+
+To make this more efficient, construct the marginal probability of the effect directly and use it in an `observe` statement:
+
+~~~~
+var observedData = [{C:true, E:false}]
+
+var causalPost = Infer({method: 'MCMC', samples: 10000, lag:2}, function() {
+
+  // Is there a causal relation between C and E?
+  // ...your code here
+
+  // Causal power of C to cause E
+  var cp = uniform(0, 1)
+
+  // Background probability of E
+  var b = uniform(0, 1)
+
+  var noisyOrMarginal = //..your code here
+
+  mapData({data: observedData}, function(datum) {
+              observe(noisyOrMarginal(...yourcodehere),datum.effect)
+  })
+
+  return // ...your code here
+})
+
+viz.marginals(causalPost)
+~~~~
+
+Hint: You can do this either by figuring out the noisy-or marginal probabilities using math, or by asking WebPPL to do so using `Infer`.
+
+#### c)
+
+Fig. 1 of [-@Griffiths2005] shows a critical difference between CP and CS: when the effect happens just as many times with the cause absent as whith the cause present. Show by running simulations the difference between CP and CS in these cases.
+
+#### d)
+
+Explain why CS shows this effect. You explanation should involve the Bayesian Occam's razor. 
+
+Hint: Recall that CS is selecting between two models (one where there is a causal relation and one where there isn't).
+
+
+<!--
+a) Replicate the model predictions from Fig. 1 of GT05.
+
+b) Show samples from the posteriors over the causal strength and background rate
+parameters, as in Fig 4 of GT05.
+
+c) Try using different parameterizations of the function that relates the cause and the background to the effect, as described in a later 2009 paper [@Griffiths2009]: noisy-or for generative causes, noisy-and-not for preventive causes, generic multinomial parameterization for causes that have an unknown effect.  Show their predictions for a few different data sets, including the Delta-P = 0 cases.
+-->
+
+## Exercise 3 (Challenge!)
+
+Try an informal behavioral experiment with several friends as experimental subjects to see whether the Bayesian approach to curve fitting given on the wiki page corresponds with how people actually find functional patterns in sparse noisy data.  Your experiment should consist of showing each of 4-6 people 8-10 data sets (sets of x-y values, illustrated graphically as points on a plane with x and y axes), and asking them to draw a continuous function that interpolates between the data points and extrapolates at least a short distance beyond them (as far as people feel comfortable extrapolating).  Explain to people that the data were produced by measuring y as some function of x, with the possibility of noise in the measurements.
+
+The challenge of this exercise comes in choosing the data sets you will show people, interpreting the results and thinking about how to modify or improve a probabilistic program for curve fitting to better explain what people do. Of the 8-10 data sets you use, devise several ("type A") for which you believe the WebPPL program for polynomial curve fitting will match the functions people draw, at least qualitatively.  Come up with several other data sets ("type B") for which you expect people to draw qualitatively different functions than the WebPPL polynomial fitting program does. Does your experiment bear out your guesses about type A and type B?  If yes, why do you think people found different functions to best explain the type B data sets?  If not, why did you think they would?  There are a number of factors to consider, but two important ones are the noise model you use, and the choice of basis functions: not all functions that people can learn or that describe natural processes in the world can be well described in terms of polynomials; other types of functions may need to be considered.
+
+Can you modify the WebPPL program to fit curves of qualitatively different forms besides polynomials, but of roughly equal complexity in terms of numbers of free parameters?  Even if you can't get inference to work well for these cases, show some samples from the generative model that suggest how the program might capture classes of human-learnable functions other than polynomials.
+
+You should hand in the data sets you used for the informal experiment, discussion of the experimental results, and a modified WebPPL program for fitting qualitatively different forms from polynomials plus samples from running the program forward.
