@@ -86,6 +86,7 @@ marginalize(posterior, function(x) {return x.hypothesis})
 
 Now supplement this model to include similarity-based hypotheses (represented most simply as intervals). 
 
+~~~~
 ///fold:
 var filterByInRange =  function(set) {
   var inRange = function(v) {v <= 100 && v >= 0};
