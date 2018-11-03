@@ -111,7 +111,7 @@ Note that the final example gives a very nice prior for our apples: most of the 
 
 #### a)
 
-Write a function `makeBarrel` that returns a function (a 'barrel') that takes a single argument *N* and returns a vector representing the rottenness of *N* apples from that barrel (where `true` is rotten and `false` is not rotten). That is, the following code:
+Write a function `makeBarrel` that returns a function (a 'barrel') that takes a single argument *N* and returns an array representing the rottenness of *N* apples from that barrel (where `true` is rotten and `false` is not rotten). That is, the following code:
 
 ```norun
 var abarrel = makeBarrel('b')
