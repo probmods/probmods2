@@ -199,33 +199,33 @@ Suppose you go to a store in a city. The store has a barrel of 10 apples, 7 of w
 Imagine that you have done an experiment on word reading times to test the hypothesis that words starting with vowels take longer to read. Each data point includes which condition the word is from ("vowel" vs. "consonant"), the word itself, the participant id, and the response time you measured ("rt"). A simple data anlysis model attempts to infer the mean reading time for each word group, and returns the difference between the groups (a sort of Bayesian version of a t-test). Note that there is no cognitive model inside this BDA; it is directly modeling the data.
 
 ~~~~
-var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
-            {group: "vowel", word: "abacus", id: 2, rt: 202},
-            {group: "vowel", word: "abacus", id: 3, rt: 199},
-            {group: "vowel", word: "aardvark", id: 1, rt: 219},
-            {group: "vowel", word: "aardvark", id: 2, rt: 222},
-            {group: "vowel", word: "aardvark", id: 3, rt: 220},
-            {group: "vowel", word: "ellipse", id: 1, rt: 204},
-            {group: "vowel", word: "ellipse", id: 2, rt: 204},
-            {group: "vowel", word: "ellipse", id: 3, rt: 200},
-            {group: "vowel", word: "increment", id: 1, rt: 205},
-            {group: "vowel", word: "increment", id: 2, rt: 202},
-            {group: "vowel", word: "increment", id: 3, rt: 199},
+var data = [{group: "vowel", word: "abacus", id: 1, rt: 210},
+            {group: "vowel", word: "abacus", id: 2, rt: 212},
+            {group: "vowel", word: "abacus", id: 3, rt: 209},
+            {group: "vowel", word: "aardvark", id: 1, rt: 200},
+            {group: "vowel", word: "aardvark", id: 2, rt: 201},
+            {group: "vowel", word: "aardvark", id: 3, rt: 198},
+            {group: "vowel", word: "ellipse", id: 1, rt: 220},
+            {group: "vowel", word: "ellipse", id: 2, rt: 222},
+            {group: "vowel", word: "ellipse", id: 3, rt: 219},
+            
+            {group: "consonant", word: "proton", id: 1, rt: 190},
+            {group: "consonant", word: "proton", id: 2, rt: 191},
+            {group: "consonant", word: "proton", id: 3, rt: 189},
+            {group: "consonant", word: "folder", id: 1, rt: 180},
+            {group: "consonant", word: "folder", id: 2, rt: 182},
+            {group: "consonant", word: "folder", id: 3, rt: 178},
+            {group: "consonant", word: "fedora", id: 1, rt: 230},
+            {group: "consonant", word: "fedora", id: 2, rt: 231},
+            {group: "consonant", word: "fedora", id: 3, rt: 228},
+            {group: "consonant", word: "fedora", id: 1, rt: 231},
+            {group: "consonant", word: "fedora", id: 2, rt: 233},
+            {group: "consonant", word: "fedora", id: 3, rt: 230},
+            {group: "consonant", word: "fedora", id: 1, rt: 230},
+            {group: "consonant", word: "fedora", id: 2, rt: 232},
+            {group: "consonant", word: "fedora", id: 3, rt: 228}]
 
-            {group: "consonant", word: "proton", id: 1, rt: 180},
-            {group: "consonant", word: "proton", id: 2, rt: 182},
-            {group: "consonant", word: "proton", id: 3, rt: 179},
-            {group: "consonant", word: "folder", id: 1, rt: 190},
-            {group: "consonant", word: "folder", id: 2, rt: 194},
-            {group: "consonant", word: "folder", id: 3, rt: 191},
-            {group: "consonant", word: "fedora", id: 1, rt: 330},
-            {group: "consonant", word: "fedora", id: 2, rt: 331},
-            {group: "consonant", word: "fedora", id: 3, rt: 329},
-            {group: "consonant", word: "manual", id: 1, rt: 188},
-            {group: "consonant", word: "manual", id: 2, rt: 180},
-            {group: "consonant", word: "manual", id: 3, rt: 178}]
-
-var post = Infer({method: "MCMC", samples: 10000}, function(){
+var post = Infer({method: "MCMC",  kernel: {HMC: {steps: 10, stepSize: 1}}, samples: 1000}, function(){
   var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
   
   var obsFn = function(d){
@@ -252,33 +252,33 @@ Adjust the model to allow each word to have its own mean reading time, that depe
 
 ~~~~
 
-var data = [{group: "vowel", word: "abacus", id: 1, rt: 200},
-              {group: "vowel", word: "abacus", id: 2, rt: 202},
-              {group: "vowel", word: "abacus", id: 3, rt: 199},
-              {group: "vowel", word: "aardvark", id: 1, rt: 219},
-              {group: "vowel", word: "aardvark", id: 2, rt: 222},
-              {group: "vowel", word: "aardvark", id: 3, rt: 220},
-              {group: "vowel", word: "ellipse", id: 1, rt: 204},
-              {group: "vowel", word: "ellipse", id: 2, rt: 204},
-              {group: "vowel", word: "ellipse", id: 3, rt: 200},
-              {group: "vowel", word: "increment", id: 1, rt: 205},
-              {group: "vowel", word: "increment", id: 2, rt: 202},
-              {group: "vowel", word: "increment", id: 3, rt: 199},
+var data = [{group: "vowel", word: "abacus", id: 1, rt: 210},
+            {group: "vowel", word: "abacus", id: 2, rt: 212},
+            {group: "vowel", word: "abacus", id: 3, rt: 209},
+            {group: "vowel", word: "aardvark", id: 1, rt: 200},
+            {group: "vowel", word: "aardvark", id: 2, rt: 201},
+            {group: "vowel", word: "aardvark", id: 3, rt: 198},
+            {group: "vowel", word: "ellipse", id: 1, rt: 220},
+            {group: "vowel", word: "ellipse", id: 2, rt: 222},
+            {group: "vowel", word: "ellipse", id: 3, rt: 219},
+            
+            {group: "consonant", word: "proton", id: 1, rt: 190},
+            {group: "consonant", word: "proton", id: 2, rt: 191},
+            {group: "consonant", word: "proton", id: 3, rt: 189},
+            {group: "consonant", word: "folder", id: 1, rt: 180},
+            {group: "consonant", word: "folder", id: 2, rt: 182},
+            {group: "consonant", word: "folder", id: 3, rt: 178},
+            {group: "consonant", word: "fedora", id: 1, rt: 230},
+            {group: "consonant", word: "fedora", id: 2, rt: 231},
+            {group: "consonant", word: "fedora", id: 3, rt: 228},
+            {group: "consonant", word: "fedora", id: 1, rt: 231},
+            {group: "consonant", word: "fedora", id: 2, rt: 233},
+            {group: "consonant", word: "fedora", id: 3, rt: 230},
+            {group: "consonant", word: "fedora", id: 1, rt: 230},
+            {group: "consonant", word: "fedora", id: 2, rt: 232},
+            {group: "consonant", word: "fedora", id: 3, rt: 228}]
 
-              {group: "consonant", word: "proton", id: 1, rt: 180},
-              {group: "consonant", word: "proton", id: 2, rt: 182},
-              {group: "consonant", word: "proton", id: 3, rt: 179},
-              {group: "consonant", word: "folder", id: 1, rt: 190},
-              {group: "consonant", word: "folder", id: 2, rt: 194},
-              {group: "consonant", word: "folder", id: 3, rt: 191},
-              {group: "consonant", word: "fedora", id: 1, rt: 330},
-              {group: "consonant", word: "fedora", id: 2, rt: 331},
-              {group: "consonant", word: "fedora", id: 3, rt: 329},
-              {group: "consonant", word: "manual", id: 1, rt: 188},
-              {group: "consonant", word: "manual", id: 2, rt: 180},
-              {group: "consonant", word: "manual", id: 3, rt: 178}]
-
-var post = Infer({method: "MCMC", samples: 10000}, function(){
+var post = Infer({method: "MCMC",  kernel: {HMC: {steps: 10, stepSize: 1}}, samples: 1000}, function(){
   var groupMeans = {vowel: gaussian(200, 100), consonant: gaussian(200, 100)}
 
   //...your code here
@@ -316,7 +316,7 @@ var post = Infer({method: "MCMC", samples: 10000}, function(){
   
   var obsFn = function(d){
     //assume response times (rt) depend on group means with a small fixed noise:
-    observe(Gaussian({mu: wordMean(d.word, d.group), //..your code here , 
+    observe(Gaussian({mu: wordMean(d.word, d.group),  
                       sigma: 10}), d.rt)
   }
   
@@ -330,4 +330,4 @@ var post = Infer({method: "MCMC", samples: 10000}, function(){
 
 #### b) 
 
-If you stare at the data further, you might notice that some of the participants in your experiment read slightly faster overall. Extend your model to include an additional random effect of participant id, that is, an unknown (and not of interest) influence on reading time of the particular person. Does this make your conclusion stronger, weaker, or different?
+If you stare at the data further, you might notice that some of the participants in your experiment read slightly faster overall. Extend your model to include an additional random effect of participant id, that is, an unknown (and not of interest) influence on reading time of the particular person. Does this make your conclusion different? Stronger or weaker?
