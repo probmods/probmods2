@@ -232,7 +232,7 @@ Hint: In the CP model the effect was generated from `var E = (datum.C && flip(cp
 
 #### b)
 
-Inference with the MCMC method will not be very efficient for the model you wrote above because the MCMC algroithm is using the Metropolis-Hastings procedure, changing only one random choice at a time. (To see why this is a problem, think about what happens when you try to change the choice about whether there is a causal relation.)
+Inference with the MCMC method will not be very efficient for the model you wrote above because the MCMC algorithm is using the single-site Metropolis-Hastings procedure, changing only one random choice at a time. (To see why this is a problem, think about what happens when you try to change the choice about whether there is a causal relation.)
 
 To make this more efficient, construct the marginal probability of the effect directly and use it in an `observe` statement:
 
@@ -266,13 +266,13 @@ Hint: You can do this either by figuring out the noisy-or marginal probabilities
 
 #### c)
 
-Fig. 1 of [-@Griffiths2005] shows a critical difference between CP and CS: when the effect happens just as many times with the cause absent as whith the cause present. Show by running simulations the difference between CP and CS in these cases.
+Fig. 1 of [-@Griffiths2005] shows a critical difference in the predictions of CP and CS: when the effect happens just as many times with the cause absent as whith the cause present. Show by running simulations the difference between CP and CS in these cases.
 
 #### d)
 
 Explain why CS shows this effect. You explanation should involve the Bayesian Occam's razor. 
 
-Hint: Recall that CS is selecting between two models (one where there is a causal relation and one where there isn't).
+Hint: Recall that CS is selecting between two models (one where there is a causal relation and one where there isn't). 
 
 
 <!--
