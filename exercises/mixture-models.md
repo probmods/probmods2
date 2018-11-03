@@ -1,6 +1,6 @@
 ---
 layout: exercise
-title: Occam's razor - exercises
+title: Mixture models - exercises
 ---
 
 ## Exercise 1. Social group reasoning
