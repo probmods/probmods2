@@ -30,7 +30,7 @@ var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   var prototype = T.mul(phi, alpha)
 
   var makeBag = mem(function(bag){
-    var colorProbs = T.toScalars(dirichlet(prototype))
+    var colorProbs = dirichlet(prototype)
     return Categorical({vs: colors, ps: colorProbs})
   })
 
@@ -70,14 +70,14 @@ var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   var prototype = T.mul(phi, alpha)
 
   var makeBag = mem(function(bag){
-    var colorProbs = T.toScalars(dirichlet(prototype))
+    var colorProbs = dirichlet(prototype)
     return Categorical({vs: colors, ps: colorProbs})
   })
 
   // the probability that an observation will come from each bag:
   var bagMixture = dirichlet(ones([3, 1]))
   var obsToBag = mem(function(obsName) {
-    return categorical({vs: ['bag1', 'bag2', 'bag3'], ps: T.toScalars(bagMixture)});
+    return categorical({vs: ['bag1', 'bag2', 'bag3'], ps: bagMixture});
   })
 
   var obsFn = function(datum){
@@ -103,7 +103,7 @@ var observedData = [{"name":"a0","x":1.5343898902525506,"y":2.3460878867298494},
 var predictives = Infer({method: 'MCMC', samples: 200, lag: 100}, function(){
   var catMixture = dirichlet(ones([2, 1]))
   var obsToCat = mem(function(obsName) {
-    return categorical({vs: ['cat1', 'cat2'], ps: T.toScalars(catMixture)});
+    return categorical({vs: ['cat1', 'cat2'], ps: catMixture});
   })
   var catToMean = mem(function(cat) {
     return {xMean: gaussian(0,1), yMean: gaussian(0,1)}
@@ -163,7 +163,7 @@ var corpus = [
 var model = function() {
 
   var topics = repeat(numTopics, function() {
-    return T.toScalars(dirichlet({alpha: eta}))
+    return dirichlet({alpha: eta})
   })
 
   mapData({data: corpus}, function(doc) {
@@ -325,7 +325,8 @@ var results = Infer({method: 'rejection', samples: 100}, function() {
   var prototype = T.mul(phi, alpha);
 
   var makeBag = mem(function(bag){
-    return Categorical({vs: colors, ps: T.toScalars(dirichlet(prototype))});
+    var colorProbs = dirichlet(prototype);
+    return Categorical({vs: colors, ps: colorProbs});
   })
 
   // unknown number of categories (created with placeholder names):
