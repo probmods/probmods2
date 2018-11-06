@@ -187,7 +187,7 @@ Now examine the sets $$3$$, $$3, 6, 9$$, and $$3, 5,6,7,9$$. Sweep across all in
 
 Look at some of the data in the large-scale replication of the number game [here](https://openpsychologydata.metajnl.com/articles/10.5334/jopd.19/). Can you think of an additional concept people might be using that we did not include in our model?
 
-#### e) Challenge!
+#### e) Challenge! [Extra credit problem]
 
 Can you replicate the results from the paper (reproduced in figure below) by adding in the other hypotheses from the paper?
 
@@ -284,7 +284,7 @@ parameters, as in Fig 4 of GT05.
 c) Try using different parameterizations of the function that relates the cause and the background to the effect, as described in a later 2009 paper [@Griffiths2009]: noisy-or for generative causes, noisy-and-not for preventive causes, generic multinomial parameterization for causes that have an unknown effect.  Show their predictions for a few different data sets, including the Delta-P = 0 cases.
 -->
 
-## Exercise 3 (Challenge!)
+## Exercise 3 (Challenge! [Extra credit problem])
 
 Try an informal behavioral experiment with several friends as experimental subjects to see whether the Bayesian approach to curve fitting given on the wiki page corresponds with how people actually find functional patterns in sparse noisy data.  Your experiment should consist of showing each of 4-6 people 8-10 data sets (sets of x-y values, illustrated graphically as points on a plane with x and y axes), and asking them to draw a continuous function that interpolates between the data points and extrapolates at least a short distance beyond them (as far as people feel comfortable extrapolating).  Explain to people that the data were produced by measuring y as some function of x, with the possibility of noise in the measurements.
 
