@@ -145,6 +145,13 @@ drawn for the document, a word is sampled from the corresponding
 multinomial distribution. This is shown in the WebPPL code below.
 
 ~~~~
+///fold:
+var expectationOver = function(topicID, results) {
+  return function(i) {
+    return expectation(results, function(v) {return T.get(v[topicID], i)})
+  }
+}
+///
 var vocabulary = ['DNA', 'evolution', 'parsing', 'phonology'];
 var eta = ones([vocabulary.length, 1])
 
@@ -181,8 +188,11 @@ var model = function() {
 var results = Infer({method: 'MCMC', samples: 20000}, model)
 
 //plot expected probability of each word, for each topic:
-viz.bar(vocabulary, map(function(i) {return expectation(results, function(v) {return v[0][i]})}, _.range(vocabulary.length)))
-viz.bar(vocabulary, map(function(i) {return expectation(results, function(v) {return v[1][i]})}, _.range(vocabulary.length)))
+var vocabRange = _.range(vocabulary.length)
+print('topic 0 distribution')
+viz.bar(vocabulary, map(expectationOver(0, results), vocabRange))
+print('topic 1 distribution')
+viz.bar(vocabulary, map(expectationOver(1, results), vocabRange))
 ~~~~
 
 In this simple example, there are two topics `topic1` and
