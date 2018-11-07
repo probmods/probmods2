@@ -36,8 +36,8 @@ var data = [
   {antennae : false, green: false, blarghNoise: false}
 ]
 
-// Todo: sampleGroupPrototype takes a group and returns a list (or dict)
-// of property / probability pairs. E.g. {antannae: 0.2, green: 0.3, blarghNoise: 0.9}
+// Todo: sampleGroupPrototype takes a group and returns an object
+// with property / probability pairs. E.g. {antannae: 0.2, green: 0.3, blarghNoise: 0.9}
 // *Hint* lodash _.zipObject is useful for building dictionaries!
 var sampleGroupPrototype = mem(function(groupName) {
   // Your code here...
@@ -85,8 +85,7 @@ var scores = [45, 45, 44, 45, 44, 45, 45, 45, 45, 45, 30, 20, 6, 44, 44, 27, 25,
 var subjIDs = _.range(scores.length)
 var data = map(function(datum) {return _.zipObject(['subjID', 'score'], datum)}, _.zip(subjIDs, scores));
 
-var inferOpts = {method: 'MCMC', kernel: {HMC: {steps: 10, stepSize: .01}},
-                 samples: 1000}
+var inferOpts = {method: 'MCMC', samples: 10000}
 var results = Infer(inferOpts, function() {
   // Your code here...
   
