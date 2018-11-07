@@ -322,7 +322,7 @@ var results = Infer({method: 'rejection', samples: 100}, function(){
 
 viz(results)
 ~~~~
-How does the inferred number of coins change as the amount of data grows? Why?
+How does the inferred number of coins change as the amount of data grows? Why? (Note that we have used the `rejection` inference method. Inference in unbounded mixture models can be very tricky because a different choice of dimensionality leads to different options for the category of each observation. For instance, in the case of Metropolis-Hastings this means that proposals to reduce the number of categories are almost always rejected -- mixing is impossibly slow.)
 
 We could extend this model by allowing it to infer that there are more than two coins. However, no evidence requires us to posit three or more coins (we can always explain the data as "a heads coin and a tails coin"). Instead, let us apply the same idea to the marbles examples above:
 
@@ -355,6 +355,45 @@ Vary the amount of evidence and see how the inferred number of bags changes.
 
 For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipedia.org/wiki/Poisson_distribution) which is a distribution on  non-negative integers. It is convenient, though implies strong prior knowledge (perhaps too strong for this example).
 
-Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. In the next section we describe another method for allowing an unknown number of things: In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an 'infinite model' we construct distributions assuming a truly infinite numbers of objects.
+## Infinite mixtures
+
+Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. An alternative is to use *infinite* mixture models. In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an infinite model we construct assume a truly infinite numbers of categories.
+
+To understand how we can work with an infinite set of categories in a finite computer, let's first revisit the Discrete distribution.
+
+In WebPPL the discrete distribution is a primitive, e.g. `Discrete({ps: [0.2, 0.3, 0.1, 0.4]})`. If it wasn't built-in and the only random primitive you could use was `flip`, how could you sample from it? One solution is to recursively walk down the list of probabilities, deciding whether to stop on each step. For instance, in `Discrete({ps: [0.2, 0.3, 0.1, 0.4]})` there is a 0.2 probability of stopping on the first flip, a 0.3/0.8 probability of stopping on the second flip (given that we didn't stop on the first), and so on. We can start by turning the list of probabilities into a list of *residual* probabilities---the probability we will stop on each step, given that we haven't stopped yet:
+
+~~~~
+var residuals = function(probs) {
+  if(probs.length == 0) {
+    return [];
+  } else {
+    return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
+  }
+};
+
+residuals([0.2, 0.3, 0.1, 0.4])
+~~~~
+
+Now to sample from the discrete distribution we simply walk down this list, deciding when to stop:
+
+~~~~
+var residuals = function(probs) {
+  if(probs.length == 0) {
+    return [];
+  } else {
+    return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
+  }
+};
+
+var mySampleDiscrete = function(resid) {
+  flip(first(resid)) ? 1 : 1 + mySampleDiscrete(rest(resid))
+}
+
+viz(repeat(5000, function(){
+  return mySampleDiscrete(residuals([0.2, 0.3, 0.1, 0.4]))
+}))
+~~~~
+
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/mixture-models.html)

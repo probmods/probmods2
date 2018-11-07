@@ -84,7 +84,7 @@ We can put these ideas together in a procedure called `makeSticks` which takes t
 ~~~~
 var pickStick = function(sticks, J) {
   return flip(sticks(J)) ? J : pickStick(sticks, J+1);  
-};
+}
 
 var makeSticks = function(alpha) {
   var sticks = mem(function(index) {return beta(1, alpha)});

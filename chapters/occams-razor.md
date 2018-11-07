@@ -82,16 +82,14 @@ var hypothesisPosterior = function(data) {
   return Infer({method: 'enumerate'}, function(){
     var hypothesis = flip() ? 'Big' : 'Small'
     mapData({data: data}, function(d){observe(hypothesisToDist(hypothesis),d)})
-    return hypothesis
+    return hypothesis=='Big'
   })
 };
 
 var fullData = ['a', 'b', 'a', 'b', 'b', 'a', 'b']
 var dataSizes = [0,1,3,5,7]
-var probBig = map(function(size) {
-  var post = hypothesisPosterior(fullData.slice(0,size))
-  return Math.exp(post.score('Big'))},
-  dataSizes)
+var probBig = map(function(size) {expectation(hypothesisPosterior(fullData.slice(0,size)))},
+                  dataSizes)
 viz.line(dataSizes, probBig, {xLabel: 'numDataPoints', yLabel: 'P(Big | data)'})
 ~~~~
 
