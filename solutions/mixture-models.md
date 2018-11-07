@@ -36,21 +36,18 @@ var data = [
   {antennae : false, green: false, blarghNoise: false}
 ]
 
-// Todo: sampleGroupPrototype takes a group and returns a list (or dict)
-// of property / probability pairs. E.g. {antannae: 0.2, green: 0.3, blarghNoise: 0.9}
-// *Hint* lodash _.zipObject is useful for building dictionaries!
 var sampleGroupPrototype = mem(function(groupName) {
-  // Your code here...
+  var probs = repeat(3, function(){ beta(.5, .5)})
+  return _.zipObject(properties, probs)
 })
 
 var results = Infer({method: 'MCMC', kernel: {HMC: {steps: 10, stepSize: .01}}, 
                      samples: 3000}, function(){
   mapData({data: data}, function(datum) {
-
-    // Your code here...
-
+    var group = flip() ? 'group1' : 'group2';
+    var prototype = sampleGroupPrototype(group)
     mapData({data: properties}, function(property) {
-      observe( // Your code here... )
+      observe(Bernoulli({p: prototype[property]}), datum[property])
     })
   })
   return {group1: sampleGroupPrototype('group1'), 
@@ -64,9 +61,35 @@ viz.bar(properties, map(expectationOver(results, 'group2'), properties))
 
 Now imagine you hear a noise from inside a crater but you cannot see the alien that emitted it; this is a noisy observation. How can you use the model you learned above to make an educated guess about their other features?
 
+~~~~
+var results = Infer({method: 'MCMC', kernel: {HMC: {steps: 10, stepSize: .01}}, 
+                     samples: 3000}, function(){
+  mapData({data: data}, function(datum) {
+    var group = flip() ? 'group1' : 'group2';
+    var prototype = sampleGroupPrototype(group)
+    mapData({data: properties}, function(property) {
+      observe(Bernoulli({p: prototype[property]}), datum[property])
+    })
+  })
+  var mysteryGroup = flip() ? 'group1' : 'group2'
+  var mysteryPrototype = sampleGroupPrototype(mysteryGroup)
+  observe(Bernoulli({p: mysteryPrototype['blarghNoise']}), true)
+  
+  return {group1: sampleGroupPrototype('group1'), 
+          group2: sampleGroupPrototype('group2'),
+          mysteryGroup: mysteryGroup }
+})
+viz.bar(properties, map(expectationOver(results, 'group1'), properties))
+viz.bar(properties, map(expectationOver(results, 'group2'), properties))
+marginalize(results, function(x) {
+  x.mysteryGroup
+})
+~~~~
+
+
 ## Exercise 2: Detecting cheating
 
-This problem is adapted from Section 6.5 of [Lee \& Wagenmakers (2013)](https://faculty.washington.edu/jmiyamot/p548/leemd%20bayesian%20cog%20modeling%20-%20practical%20crs.pdf).
+This problem is adapted from Section 6.5 of Lee \& Wagenmakers (2013).
 
 Consider the practical challenge of detecting if people cheat on a test. For example, people who have been in a car accident may seek financial compensation from insurance companies by feigning cognitive impairment such as pronounced memory loss. When these people are confronted with a memory test that is intended to measure the extent of their impairment, they may deliberately under-perform. This behavior is called malingering, and it may be accompanied by performance much worse than that displayed by real amnesiacs. Sometimes, for example, malingerers may perform substantially below chance.
 
@@ -77,8 +100,7 @@ We consider an experimental study on malingering, in which each of p = 22 partic
 
 Implement a simple mixture model inferring which group each participant belongs to. Examine the posteriors over group-level parameters.
 
-*HINT:* the group-level variables you are trying to infer are the error rates; it probably makes sense to assume that the malingerers are worse than bonafide participants, but have uncertainty over how much.
-
+HINT: the group-level variables you are trying to infer are the error rates; it probably makes sense to assume that the malingerers are worse than bonafide participants, but have uncertainty over how much.
 
 ~~~~
 var scores = [45, 45, 44, 45, 44, 45, 45, 45, 45, 45, 30, 20, 6, 44, 44, 27, 25, 17, 14, 27, 35, 30]
@@ -87,22 +109,34 @@ var data = _.zip(_.range(scores.length), scores)
 var inferOpts = {method: 'MCMC', kernel: {HMC: {steps: 10, stepSize: .01}},
                  samples: 1000}
 var results = Infer(inferOpts, function() {
-  // Your code here...
+  var group_1_p = uniform({a: 0.5, b: 1})
+  var group_2_p = uniform({a: 0, b: group_1_p})
+  var participant2Group = mem(function(participantID) {
+    return flip() ? 'group1' : 'group2'
+  })
+  var group2Prob = mem(function(group) {
+    return group == 'group1' ? group_1_p : group_2_p
+  })
   
   var obsFn = function(datum){
-    observe(// Your code here...)
+    observe(Binomial({p: group2Prob(participant2Group(datum[0])), n: 50}), datum[1])
   }
   mapData({data: data}, obsFn)
-
-  // Your code here...
   
-  return // Your code here...
+  // Get participant group membership posteriors
+  var participantResults_ = mapData({data: data}, function(datum) {return participant2Group(datum[0])})
+  var participantResults = _.zipObject(_.range(participantResults_.length), participantResults_)
+  // Merge overall group success probs
+  return _.merge(participantResults, {group_1_p: group_1_p, group_2_p: group_2_p})
 })
 
 viz.marginals(results)
 ~~~~
 
+
 ### b)
 
 Examine the posteriors over group membership for each participant. Did all of the participants follow the instructions? (i.e. are the first 10 inferred to be in one group and the next 12 in the other?)
+
+*According to our run we infer that all the bonafides (10/10) followed the instructions, however 3/12 malingerers we're included with the bonafides! (Take a look at participants scores for 13 , 14, 21.)*
 
