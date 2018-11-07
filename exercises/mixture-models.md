@@ -64,6 +64,9 @@ viz.bar(properties, map(expectationOver(results, 'group2'), properties))
 
 Now imagine you hear a noise from inside a crater but you cannot see the alien that emitted it; this is a noisy observation. How can you use the model you learned above to make an educated guess about their other features?
 
+<!-- TODO: extend this with another part or two to get at perceptual regularization to the group mean (basically the perceptual magnet example from the chapter applied to stereotypes), and the effect of noisy vs clear traits on group assignment.
+  -->
+
 ## Exercise 2: Detecting cheating
 
 This problem is adapted from Section 6.5 of [Lee \& Wagenmakers (2013)](https://faculty.washington.edu/jmiyamot/p548/leemd%20bayesian%20cog%20modeling%20-%20practical%20crs.pdf).
