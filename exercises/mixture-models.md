@@ -77,12 +77,13 @@ We consider an experimental study on malingering, in which each of p = 22 partic
 
 Implement a simple mixture model inferring which group each participant belongs to. Examine the posteriors over group-level parameters.
 
-*HINT:* the group-level variables you are trying to infer are the error rates; it probably makes sense to assume that the malingerers are worse than bonafide participants, but have uncertainty over how much.
+*HINT:* the group-level variables you are trying to infer are the error rates; it probably makes sense to assume that the malingerers are worse than bonafide participants, but have uncertainty over each value.
 
 
 ~~~~
 var scores = [45, 45, 44, 45, 44, 45, 45, 45, 45, 45, 30, 20, 6, 44, 44, 27, 25, 17, 14, 27, 35, 30]
-var data = _.zip(_.range(scores.length), scores)
+var subjIDs = _.range(scores.length)
+var data = map(function(datum) {return _.zipObject(['subjID', 'score'], datum)}, _.zip(subjIDs, scores));
 
 var inferOpts = {method: 'MCMC', kernel: {HMC: {steps: 10, stepSize: .01}},
                  samples: 1000}
