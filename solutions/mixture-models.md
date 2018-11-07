@@ -100,17 +100,18 @@ We consider an experimental study on malingering, in which each of p = 22 partic
 
 Implement a simple mixture model inferring which group each participant belongs to. Examine the posteriors over group-level parameters.
 
-HINT: the group-level variables you are trying to infer are the error rates; it probably makes sense to assume that the malingerers are worse than bonafide participants, but have uncertainty over how much.
+HINT: the group-level variables you are trying to infer are the error rates; it probably makes sense to assume that the malingerers are worse than bonafide participants, but have uncertainty over the values of each.
 
 ~~~~
 var scores = [45, 45, 44, 45, 44, 45, 45, 45, 45, 45, 30, 20, 6, 44, 44, 27, 25, 17, 14, 27, 35, 30]
-var data = _.zip(_.range(scores.length), scores)
+var subjIDs = _.range(scores.length)
+var data = map(function(datum) {return _.zipObject(['subjID', 'score'], datum)}, _.zip(subjIDs, scores));
 
-var inferOpts = {method: 'MCMC', kernel: {HMC: {steps: 10, stepSize: .01}},
-                 samples: 1000}
+var inferOpts = {method: 'MCMC', //kernel: {HMC: {steps: 10, stepSize: .01}},
+                 samples: 10000}
 var results = Infer(inferOpts, function() {
-  var group_1_p = uniform({a: 0.5, b: 1})
-  var group_2_p = uniform({a: 0, b: group_1_p})
+  var group_1_p = uniform(0.5, 1)
+  var group_2_p = uniform(0, group_1_p)
   var participant2Group = mem(function(participantID) {
     return flip() ? 'group1' : 'group2'
   })
@@ -119,12 +120,13 @@ var results = Infer(inferOpts, function() {
   })
   
   var obsFn = function(datum){
-    observe(Binomial({p: group2Prob(participant2Group(datum[0])), n: 50}), datum[1])
+    var p = group2Prob(participant2Group(datum.subjID))
+    observe(Binomial({p: p, n: 45}), datum.score)
   }
   mapData({data: data}, obsFn)
   
   // Get participant group membership posteriors
-  var participantResults_ = mapData({data: data}, function(datum) {return participant2Group(datum[0])})
+  var participantResults_ = map(function(datum) {return participant2Group(datum.subjID)}, data)
   var participantResults = _.zipObject(_.range(participantResults_.length), participantResults_)
   // Merge overall group success probs
   return _.merge(participantResults, {group_1_p: group_1_p, group_2_p: group_2_p})
