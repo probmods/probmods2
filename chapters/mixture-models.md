@@ -351,6 +351,7 @@ var results = Infer({method: 'rejection', samples: 100}, function() {
 
 viz(results)
 ~~~~
+
 Vary the amount of evidence and see how the inferred number of bags changes.
 
 For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipedia.org/wiki/Poisson_distribution) which is a distribution on  non-negative integers. It is convenient, though implies strong prior knowledge (perhaps too strong for this example).
@@ -365,12 +366,8 @@ In WebPPL the discrete distribution is a primitive, e.g. `Discrete({ps: [0.2, 0.
 
 ~~~~
 var residuals = function(probs) {
-  if(probs.length == 0) {
-    return [];
-  } else {
-    return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
-  }
-};
+  return probs.length==0 ? [] : [first(probs) / sum(probs)].concat(residuals(rest(probs)))
+}
 
 residuals([0.2, 0.3, 0.1, 0.4])
 ~~~~
@@ -379,21 +376,112 @@ Now to sample from the discrete distribution we simply walk down this list, deci
 
 ~~~~
 var residuals = function(probs) {
-  if(probs.length == 0) {
-    return [];
-  } else {
-    return [first(probs) / sum(probs)].concat(residuals(rest(probs)));
-  }
-};
+  return probs.length==0 ? [] : [first(probs) / sum(probs)].concat(residuals(rest(probs)))
+}
 
-var mySampleDiscrete = function(resid) {
-  flip(first(resid)) ? 1 : 1 + mySampleDiscrete(rest(resid))
+var mySampleDiscrete = function(resid, i) {
+  return flip(resid[i]) ? i : mySampleDiscrete(resid, i+1)
 }
 
 viz(repeat(5000, function(){
-  return mySampleDiscrete(residuals([0.2, 0.3, 0.1, 0.4]))
+  return mySampleDiscrete(residuals([0.2, 0.3, 0.1, 0.4]), 0)
 }))
 ~~~~
+
+In the above mixture model examples, we generally expressed uncertainty about the probability pf each category by putting a Dirichlet prior on the probabilities passed to a Discrete distribution:
+
+~~~~
+var probs = T.toScalars(dirichlet(ones([4, 1])))
+
+var residuals = function(probs) {
+  return probs.length==0 ? [] : [first(probs) / sum(probs)].concat(residuals(rest(probs)))
+}
+
+var mySampleDiscrete = function(resid, i) {
+  return flip(resid[i]) ? i : mySampleDiscrete(resid, i+1)
+}
+
+viz(repeat(5000, function(){
+  return mySampleDiscrete(residuals(probs), 0)
+}))
+~~~~
+
+However `residuals(probs)` returns the same, random, residuals each time. It makes sense to sample it only once -- and why not sample the residuals directly? Since we know that the residual probability is simply a number between 0 and 1, we could do something like:
+
+~~~~
+var residuals = repeat(3, function(){beta(1,1)}).concat([1.0])
+
+var mySampleDiscrete = function(resid, i) {
+  return flip(resid[i]) ? i : mySampleDiscrete(resid, i+1)
+}
+
+viz(repeat(5000, function(){
+  return mySampleDiscrete(residuals, 0)
+}))
+~~~~
+
+Notice that we have added a final residual probability of 1.0 to the array of residuals. This is to make sure we stop at the end! It is kind of ugly, though, and breaks the prior symmetry between the final number and the ones before. 
+After staring at the above code you might have an idea: why bother stopping? If we had an infinite set of residual probs we could still call `mySampleDiscrete`, and we would eventually stop each time. We can get the effect of an infinite set by using `mem` to only construct a particular value when we need it:
+
+~~~~
+var residuals = mem(function(){beta(1,1)})
+
+var mySampleDiscrete = function(resid,i) {
+  return flip(resid(i)) ? i : mySampleDiscrete(resid, i+1)
+}
+
+viz(repeat(5000, function(){
+  return mySampleDiscrete(residuals, 0)
+}))
+~~~~
+
+We've just constructed an infinite analog of the Dirichlet-Discrete pattern, it is called a *Dirichlet Process* or DP (more technically this is a GEM: a DP over integers).
+
+(Notice that we have derived the DP by generalizing the Discrete distribution, but we've arrived at something that also looks like a Geometric distribution with heterogenous stopping probabilities.)
+
+We can use the DP to construct an *infinite mixture model*:
+
+~~~~
+var colors = ['blue', 'green', 'red']
+var observedMarbles = [{name:'obs1', draw: 'red'},
+{name:'obs2', draw: 'blue'},
+{name:'obs3', draw: 'red'},
+{name:'obs4', draw: 'blue'},
+{name:'obs5', draw: 'red'},
+{name:'obs6', draw: 'blue'}]
+var results = Infer({method: 'MCMC', samples: 200, lag: 100}, function() {
+  var phi = dirichlet(ones([3,1]));
+  var alpha = 0.1
+  var prototype = T.mul(phi, alpha);
+  var makeBag = mem(function(bag){
+    var colorProbs = dirichlet(prototype);
+    return Categorical({vs: colors, ps: colorProbs});
+  })
+
+  //a prior over an infinite set of bags:
+  var residuals = mem(function(){beta(1,1)})
+  var mySampleDiscrete = function(resid,i) {
+    return flip(resid(i)) ? i : mySampleDiscrete(resid, i+1)
+  }
+  var getBag = mem(function(obs){
+    return mySampleDiscrete(residuals,0)
+  })
+
+  mapData({data: observedMarbles},
+          function(d){observe(makeBag(getBag(d.name)), d.draw)})
+
+  return {samebag12: getBag('obs1')==getBag('obs2'),
+          samebag13: getBag('obs1')==getBag('obs3')}
+})
+
+viz.marginals(results)
+~~~~
+
+Like the unbounded mixture above, there are an infinite set of possible catgories (here, bags). Unlike the unbounded mixture model the number of bags is never explicitly constructed. Instead, the set of categories is thought of as always an infinite set, though because they are constructed as needed only a finite number will ever be explicitly constructed. (Technically, these models are called infinite because the expected number of categories used goes to infinity as the number of observations goes to infinity.)
+
+Notice that unlike the unbounded mixture model case above, we were able to use MCMC for inference here. Slightly easier inference approaches, as well as certain pleasant mathematical properties, are the primary reason that many researchers have explored infinite micture models.
+
+<!--TODO: DPmem? Mention other non-parametrics? Include any examples?-->
 
 
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/mixture-models.html)
