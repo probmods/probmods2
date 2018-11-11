@@ -12,7 +12,7 @@ Furst recall curve fitting with polynomials:
 ~~~~
 var observedData = [{"x":-4,"y":69.76636938284166},{"x":-3,"y":36.63586217969598},{"x":-2,"y":19.95244368751754},{"x":-1,"y":4.819485497724985},{"x":0,"y":4.027631414787425},{"x":1,"y":3.755022418210824},{"x":2,"y":6.557548104903805},{"x":3,"y":23.922485493795072},{"x":4,"y":50.69924692420815}]
 
-var inferOptions = {method: 'optimize', samples: 100, steps: 2000, optMethod: {adam: {stepSize: .01}}}
+var inferOptions = {method: 'optimize', samples: 100, steps: 2000, optMethod: {adam: {stepSize: 0.1}}}
 
 // a0 + a1*x + a2*x^2 + ...
 var makePoly = function(as) {
@@ -28,7 +28,7 @@ var post = Infer(inferOptions,
     var f = makePoly(coeffs.slice(0,order+1))
 
     var obsFn = function(datum){
-      observe(Gaussian({mu: f(datum.x), sigma: 30}), datum.y)
+      observe(Gaussian({mu: f(datum.x), sigma: 0.1}), datum.y)
     }
     mapData({data: observedData}, obsFn)
 
@@ -40,13 +40,13 @@ var post = Infer(inferOptions,
 print("observed data:")
 viz.scatter(observedData)
 
-// viz.marginals(post)
 
-var xs = [-4,-3,-2,-1,0,1,2,3,4]
 var postFnSample = function(){
   var p = sample(post)
   return makePoly(p.coeffs.slice(0,p.order+1))
 }
+print("infered curves:")
+var xs = _.range(-5,5,0.1)
 viz.line(xs, map(postFnSample(), xs))
 viz.line(xs, map(postFnSample(), xs))
 viz.line(xs, map(postFnSample(), xs))
@@ -70,7 +70,7 @@ var makeFn = function(M1,M2,B1){
 
 var observedData = [{"x":-4,"y":69.76636938284166},{"x":-3,"y":36.63586217969598},{"x":-2,"y":19.95244368751754},{"x":-1,"y":4.819485497724985},{"x":0,"y":4.027631414787425},{"x":1,"y":3.755022418210824},{"x":2,"y":6.557548104903805},{"x":3,"y":23.922485493795072},{"x":4,"y":50.69924692420815}]
 
-var inferOptions = {method: 'optimize', samples: 100, steps: 2000, optMethod: {adam: {stepSize: .01}}}
+var inferOptions = {method: 'optimize', samples: 100, steps: 3000, optMethod: {adam: {stepSize: 0.1}}}
 
 var post = Infer(inferOptions,
   function() {  
@@ -81,7 +81,7 @@ var post = Infer(inferOptions,
     var f = makeFn(M1,M2,B1)
     
     var obsFn = function(datum){
-      observe(Gaussian({mu: f(datum.x), sigma: 2}), datum.y)
+      observe(Gaussian({mu: f(datum.x), sigma: 0.1}), datum.y)
     }
     mapData({data: observedData}, obsFn)
 
@@ -92,22 +92,25 @@ var post = Infer(inferOptions,
 print("observed data:")
 viz.scatter(observedData)
 
-var xs = [-4,-3,-2,-1,0,1,2,3,4]
 var postFnSample = function(){
   var p = sample(post)
   return makeFn(p.M1,p.M2,p.B1) 
 }
+print("infered curves")
+var xs = _.range(-5,5,0.1)
 viz.line(xs, map(postFnSample(), xs))
 viz.line(xs, map(postFnSample(), xs))
 viz.line(xs, map(postFnSample(), xs))
 ~~~~
 
-Just as the order of a polynomial effects the complexity of functions that can result, the size and number of the *hidden layers* effects the complexity of functions for neural nets. Try changing `dm` (the size of the single hidden layer) in the above example.
+Just as the order of a polynomial effects the complexity of functions that can result, the size and number of the *hidden layers* effects the complexity of functions for neural nets. Try changing `dm` (the size of the single hidden layer) in the above example -- pay particular attention to how the model generalizes out of the [-4,4] training interval.
 
-If we don't care very much about the uncertainty over functions we learn, or are not optimisic that we can capture the true posterior, we can do *maximum likelihood* inference. Here we choose the guide family to be Delta (technically this is regularized maximum likelihood, because we still have a Gaussian prior over the matrices):
+The posterior samples from the bove model probably all look about the same. This is because the observation noise is very low. Try changing it.
+
+If we actually don't care very much about the uncertainty over functions we learn, or are not optimisic that we can capture the true posterior, we can do *maximum likelihood* inference. Here we choose the guide family to be Delta (technically this is regularized maximum likelihood, because we still have a Gaussian prior over the matrices):
 
 ~~~~
-var dm = 100
+var dm = 10
 
 var makeFn = function(M1,M2,B1){
   return function(x){return T.toScalars(T.dot(M2,T.sigmoid(T.add(T.mul(M1,x),B1))))[0]}
@@ -115,7 +118,7 @@ var makeFn = function(M1,M2,B1){
 
 var observedData = [{"x":-4,"y":69.76636938284166},{"x":-3,"y":36.63586217969598},{"x":-2,"y":19.95244368751754},{"x":-1,"y":4.819485497724985},{"x":0,"y":4.027631414787425},{"x":1,"y":3.755022418210824},{"x":2,"y":6.557548104903805},{"x":3,"y":23.922485493795072},{"x":4,"y":50.69924692420815}]
 
-var inferOptions = {method: 'optimize', samples: 100, steps: 2000, optMethod: {adam: {stepSize: .01}}}
+var inferOptions = {method: 'optimize', samples: 100, steps: 3000, optMethod: {adam: {stepSize: 0.1}}}
 
 var post = Infer(inferOptions,
   function() {  
@@ -129,7 +132,7 @@ var post = Infer(inferOptions,
     var f = makeFn(M1,M2,B1)
     
     var obsFn = function(datum){
-      observe(Gaussian({mu: f(datum.x), sigma: 2}), datum.y)
+      observe(Gaussian({mu: f(datum.x), sigma: 0.1}), datum.y)
     }
     mapData({data: observedData}, obsFn)
 
@@ -140,13 +143,12 @@ var post = Infer(inferOptions,
 print("observed data:")
 viz.scatter(observedData)
 
-var xs = [-4,-3,-2,-1,0,1,2,3,4]
 var postFnSample = function(){
   var p = sample(post)
   return makeFn(p.M1,p.M2,p.B1) 
 }
-viz.line(xs, map(postFnSample(), xs))
-viz.line(xs, map(postFnSample(), xs))
+print("infered curve")
+var xs = _.range(-5,5,0.1)
 viz.line(xs, map(postFnSample(), xs))
 ~~~~
 
@@ -157,7 +159,7 @@ Neural nets are a very useful class of functions because they are very flexible,
 Having shown that we can put an unknown function in our supervised model, nothing pevents us from putting one anywhere in a generative model! Here we learn an unsupervised model of x,y pairs, which are generated from a latent z passed through a (learned) function.
 
 ~~~~
-var hd = 2
+var hd = 10
 var ld = 2
 var outSig = Vector([0.1, 0.1])
 
@@ -167,7 +169,7 @@ var makeFn = function(M1,M2,B1){
 
 var observedData = [{"x":-4,"y":69.76636938284166},{"x":-3,"y":36.63586217969598},{"x":-2,"y":19.95244368751754},{"x":-1,"y":4.819485497724985},{"x":0,"y":4.027631414787425},{"x":1,"y":3.755022418210824},{"x":2,"y":6.557548104903805},{"x":3,"y":23.922485493795072},{"x":4,"y":50.69924692420815}]
 
-var inferOptions = {method: 'optimize', samples: 100, steps: 20000, optMethod: {adam: {stepSize: .01}}, verbose: true}
+var inferOptions = {method: 'optimize', samples: 100, steps: 3000, optMethod: {adam: {stepSize: 0.1}}, verbose: true}
 
 var post = Infer(inferOptions,
   function() {  
@@ -188,7 +190,7 @@ var post = Infer(inferOptions,
     mapData({data: observedData}, obsFn)
 
     return {means: means, 
-            pp: repeat(observedData.length, sampleXY)}
+            pp: repeat(100, sampleXY)}
   }
 )
 
@@ -205,12 +207,12 @@ viz.scatter(map(function(v){return {x: T.toScalars(v)[0], y: T.toScalars(v)[1]}}
 Models of this sort are often called *deep generative models* because the (here not very) deep neural net is doing a large amount of work to generate complex observations. 
 
 Notice that while this model reconstructs the data well, the posterior predictive looks like noise. That is, this model *over-fits* the data. 
-To ameliorate overfitting, we might try to limit the expressive capacity of the model. For instance by reducing the latent dimension for z (i.e. `ld`) to 1, since we know that the data actually lie near a one-dimensional subspace. (Try it!) However that model can't capture the data at all. 
+To ameliorate overfitting, we might try to limit the expressive capacity of the model. For instance by reducing the latent dimension for z (i.e. `ld`) to 1, since we know that the data actually lie near a one-dimensional subspace. (Try it!) However that model usually simply overfits in a more costrained way. 
 
 Here, we instead increase the data (by a lot) with the flexible model (warning, this takes much longer to run):
 
 ~~~~
-var hd = 2
+var hd = 10
 var ld = 2
 var outSig = Vector([0.1, 0.1])
 
@@ -220,7 +222,7 @@ var makeFn = function(M1,M2,B1){
 
 var observedData = map(function(x){return {x:x,y:x*x}}, _.range(-4,4,0.1))
     
-var inferOptions = {method: 'optimize', samples: 100, steps: 10000, optMethod: {adam: {stepSize: .01}}, verbose: true}
+var inferOptions = {method: 'optimize', samples: 100, steps: 3000, optMethod: {adam: {stepSize: 0.1}}, verbose: true}
 
 var post = Infer(inferOptions,
   function() {  
@@ -240,7 +242,7 @@ var post = Infer(inferOptions,
     mapData({data: observedData}, obsFn)
 
     return {means: means, 
-            pp: repeat(observedData.length, makeData)}
+            pp: repeat(100, makeData)}
   }
 )
 
@@ -271,7 +273,7 @@ var makeFn = function(M1,M2,B1){
 
 var observedData = map(function(x){return {x:x,y:x*x}}, _.range(-4,4,0.1))
     
-var inferOptions = {method: 'optimize', samples: 100, steps: 10000, optMethod: {adam: {stepSize: .01}}, verbose: true}
+var inferOptions = {method: 'optimize', samples: 100, steps: 3000, optMethod: {adam: {stepSize: 0.1}}, verbose: true}
 
 var post = Infer(inferOptions,
   function() {  
