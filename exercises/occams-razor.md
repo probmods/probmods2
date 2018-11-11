@@ -116,7 +116,7 @@ var inSet = function(val, set) {
 ///
 
 // TODO: add a condition to this function that
-// calls genInterval with the parameters extracted from
+// calls genSetFromInterval with the parameters extracted from
 // your hypothesis string.
 // *Hint*: If you're having trouble converting fron strings to integers try the lodash function _.parseInt().
 var getSetFromHypothesis = function(rule) {
