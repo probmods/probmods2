@@ -116,11 +116,10 @@ var predictives = Infer({method: 'MCMC', samples: 200, lag: 100}, function(){
   }
   mapData({data: observedData}, obsFn)
 
-  return {cat1: catToMean('cat1'),
-          cat2: catToMean('cat2')}
+  return catToMean(obsToCat('newObs'))
 })
 
-viz.marginals(predictives)
+viz(predictives)
 ~~~~
 
 ## Example: Topic Models
@@ -424,7 +423,7 @@ Notice that we have added a final residual probability of 1.0 to the array of re
 After staring at the above code you might have an idea: why bother stopping? If we had an infinite set of residual probs we could still call `mySampleDiscrete`, and we would eventually stop each time. We can get the effect of an infinite set by using `mem` to only construct a particular value when we need it:
 
 ~~~~
-var residuals = mem(function(){beta(1,1)})
+var residuals = mem(function(i){beta(1,1)})
 
 var mySampleDiscrete = function(resid,i) {
   return flip(resid(i)) ? i : mySampleDiscrete(resid, i+1)
@@ -459,7 +458,7 @@ var results = Infer({method: 'MCMC', samples: 200, lag: 100}, function() {
   })
 
   //a prior over an infinite set of bags:
-  var residuals = mem(function(){beta(1,1)})
+  var residuals = mem(function(i){beta(1,1)})
   var mySampleDiscrete = function(resid,i) {
     return flip(resid(i)) ? i : mySampleDiscrete(resid, i+1)
   }
