@@ -1,11 +1,10 @@
 ---
 layout: exercise
-title: Learning (deep) continuous functions - exercise
+title: Learning (deep) continuous functions - readings
 description: Functional hypothesis spaces and deep probabilistic models
-chapter_num: 13
 ---
 
-For this chapter we've included a set of classic and recent readings on neural network models. 
+Here are a selection of classic and recent readings on neural network models:
 
 Check out [Rumelhart et al. (1986)](https://www.nature.com/articles/323533a0) on the origins of the backprop algorithm as well as eary work examining representation learning in autoencoders [Rumelhart & Todd (1991)](https://web.stanford.edu/class/psych209a/ReadingsByDate/02_08/RumelhartTodd93.pdf)
 
