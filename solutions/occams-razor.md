@@ -70,7 +70,7 @@ var learnConcept = function(examples, testQuery) {
      // note: this likelihood corresponds to size principle
      observe(Categorical({vs: set}), example)
    })
-   return {hypothesis, testQueryResponse : inSet(set, testQuery)}
+   return {hypothesis, testQueryResponse : inSet(testQuery, set)}
  }); 
 }
 
@@ -181,7 +181,7 @@ var learnConcept = function(examples, testQuery) {
      // note: this likelihood corresponds to size principle
      observe(Categorical({vs: set}), example)
    })
-   return {hypothesis, testQueryResponse : inSet(set, testQuery)}
+   return {hypothesis, testQueryResponse : inSet(testQuery, set)}
  }); 
 }
 
