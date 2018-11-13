@@ -47,7 +47,7 @@ var postFnSample = function(){
   var p = sample(post)
   return makePoly(p.coeffs.slice(0,p.order+1))
 }
-print("infered curves:")
+print("inferred curves:")
 var xs = _.range(-5,5,0.1)
 viz.line(xs, map(postFnSample(), xs))
 viz.line(xs, map(postFnSample(), xs))
@@ -56,7 +56,7 @@ viz.line(xs, map(postFnSample(), xs))
 
 Another approach to this curve fitting problem is to choose a family of functions that we think is flexible enough to capture any curve we might encounter. One possibility is to simply fix the order of the polynomial to be a high number -- try fixing the order to 3 in the above example.
 
-An alternative is to construct a class of functions by composing matrix multiplication with simple non-linearities. Functions consrtucted in this way are called *artificial neural nets*.
+An alternative is to construct a class of functions by composing matrix multiplication with simple non-linearities. Functions constructed in this way are called *artificial neural nets*.
 Let's explore learning with this class of functions:
 
 ~~~~
@@ -98,7 +98,7 @@ var postFnSample = function(){
   var p = sample(post)
   return makeFn(p.M1,p.M2,p.B1) 
 }
-print("infered curves")
+print("inferred curves")
 var xs = _.range(-5,5,0.1)
 viz.line(xs, map(postFnSample(), xs))
 viz.line(xs, map(postFnSample(), xs))
@@ -109,7 +109,7 @@ Just as the order of a polynomial effects the complexity of functions that can r
 
 The posterior samples from the above model probably all look about the same. This is because the observation noise is very low. Try changing it.
 
-If we actually don't care very much about the uncertainty over functions we learn, or are not optimisic that we can capture the true posterior, we can do *maximum likelihood* inference. Here we choose the guide family to be Delta (technically this is regularized maximum likelihood, because we still have a Gaussian prior over the matrices):
+If we actually don't care very much about the uncertainty over functions we learn, or are not optimistic that we can capture the true posterior, we can do *maximum likelihood* inference. Here we choose the guide family to be Delta (technically this is regularized maximum likelihood, because we still have a Gaussian prior over the matrices):
 
 <!--
   + We should at least link to Delta wikipedia page -- this might need some motivation
@@ -160,9 +160,16 @@ viz.line(xs, map(postFnSample(), xs))
 
 Neural nets are a very useful class of functions because they are very flexible, but can still (usually) be learned by maximum likelihood inference. 
 
-## Deep generative models
+## Gaussian processes
 
-Having shown that we can put an unknown function in our supervised model, nothing prevents us from putting one anywhere in a generative model! Here we learn an unsupervised model of x,y pairs, which are generated from a latent z passed through a (learned) function.
+Given the importance of the hidden dimension `hd`, you might be curious what happens if we let it get really big. In this case `y` is the sum of a very large number of terms. Due to the [central limit theorem](https://en.wikipedia.org/wiki/Central_limit_theorem), and assuming uncertainty over the weight matrices, this sum converges on a Gaussian as the width `hd` goes to infinity. That is, infinitely "wide" neural nets yield a model where `f(x)` is Gaussian distributed for each `x`, and further (it turns out) the covariance among different `x`s is also Gaussian. This kind of model is called a [Gaussian Process](https://en.wikipedia.org/wiki/Gaussian_process).
+
+
+# Deep generative models
+
+So far in this chapter we have considered *supervised* learning, where we are trying to learn the dependence of `y` on `x`. This is a special case because we only care about predicting `y`. Neural nets are particularly good at this kind of problem. However, many interesting problems are *unsupervised*: we get a bunch of examples and want to understand them by capturing their distribution.
+
+Having shown that we can put an unknown function in our supervised model, nothing prevents us from putting one anywhere in a generative model! Here we learn an unsupervised model of x,y pairs, which are generated from a latent random choice passed through a (learned) function.
 
 ~~~~
 var hd = 10
@@ -213,7 +220,7 @@ viz.scatter(map(function(v){return {x: T.toScalars(v)[0], y: T.toScalars(v)[1]}}
 Models of this sort are often called *deep generative models* because the (here not very) deep neural net is doing a large amount of work to generate complex observations. 
 
 Notice that while this model reconstructs the data well, the posterior predictive looks like noise. That is, this model *over-fits* the data. 
-To ameliorate overfitting, we might try to limit the expressive capacity of the model. For instance by reducing the latent dimension for z (i.e. `ld`) to 1, since we know that the data actually lie near a one-dimensional subspace. (Try it!) However that model usually simply overfits in a more constrained way. 
+To ameliorate over-fitting, we might try to limit the expressive capacity of the model. For instance by reducing the latent dimension for z (i.e. `ld`) to 1, since we know that the data actually lie near a one-dimensional subspace. (Try it!) However that model usually simply over-fits in a more constrained way. 
 
 Here, we instead increase the data (by a lot) with the flexible model (warning, this takes much longer to run):
 
@@ -266,10 +273,10 @@ Notice that we still fit the data reasonably well, but now we generalize a bit m
 
 ## Minibatches and amortized inference
 
-In order to do approximate variational inference with much larger data, we'll use minibatches: the idea is that randomly subsampling the data on each step can give us a good enough approximation to the whole data set. In WebPPL this requires only a small hint to `mapData`:
+In order to do approximate variational inference with much larger data, we'll use minibatches: the idea is that randomly sub-sampling the data on each step can give us a good enough approximation to the whole data set. In WebPPL this requires only a small hint to `mapData`:
 
 ~~~~
-var hd = 2
+var hd = 10
 var ld = 2
 var outSig = Vector([0.1, 0.1])
 
@@ -312,7 +319,7 @@ viz.scatter(map(function(v){return {x: T.toScalars(v)[0], y: T.toScalars(v)[1]}}
 An issue with this approach is that the latent random choice associated with each data point (inside `makeData`) is chosen fresh on each mini-batch and may not get to be very good before we move on to a new mini-batch. A solution explore in recent work is to *amortize* the inference, that is to learn an approximation mapping from an observation to a guess about the latent choices.
 
 ~~~~
-var hd = 2
+var hd = 10
 var ld = 2
 var outSig = Vector([0.1, 0.1])
 
