@@ -316,7 +316,7 @@ print("posterior predictive:")
 viz.scatter(map(function(v){return {x: T.toScalars(v)[0], y: T.toScalars(v)[1]}}, sample(post).pp))
 ~~~~
 
-An issue with this approach is that the latent random choice associated with each data point (inside `makeData`) is chosen fresh on each mini-batch and may not get to be very good before we move on to a new mini-batch. A solution explore in recent work is to *amortize* the inference, that is to learn an approximation mapping from an observation to a guess about the latent choices.
+An issue with this approach is that the latent random choice associated with each data point (inside `makeData`) is chosen fresh on each mini-batch and may not get to be very good before we move on to a new mini-batch. A solution explore in recent work is to *amortize* the inference, that is to learn an approximation mapping from an observation to a guess about the latent choice.
 
 ~~~~
 var hd = 10
@@ -370,6 +370,10 @@ viz.scatter(observedData)
 print("posterior predictive:")
 viz.scatter(map(function(v){return {x: T.toScalars(v)[0], y: T.toScalars(v)[1]}}, sample(post).pp))
 ~~~~
+
+The move to amortized inference is, in one sense, a minor technical change to make inference easier. However, seen from another point of view it makes a radical cognitive claim: we are not only learning a generative model of our observations, we are learning a model of the right posterior inferences to draw from observations. That is, we are learning how to do inference. Some authors have claimed that people do the same -- e.g. [Gershman and Goodman, 2014](https://web.stanford.edu/~ngoodman/papers/amortized_inference.pdf).
+
+In recent years there have been many other answers to the technical difficulty of learning deep generative models: generative adversarial networks, normalizing flows, etc.
 
 
 Reading & Discussion: [Readings]({{site.baseurl}}/readings/function-learning.html)
