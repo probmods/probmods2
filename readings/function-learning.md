@@ -14,7 +14,7 @@ We've included a selection of readings for your enjoyment. These papers span his
 
 * Here's a Bayesian view of neural network models as presented in [Ch. 5 Mackay's "Information Theory, Inference and Learning Algorithims"](http://www.inference.org.uk/itprnn/book.pdf) textbook.
 
-* For the brave, have a look at Radford Neals' [original thesis on Bayesian neural networks](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.446.9306&rep=rep1&type=pdf).
+* For the brave, have a look at Radford Neal's [original thesis on Bayesian neural networks](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.446.9306&rep=rep1&type=pdf).
 
 * If you like the historical stuff, check out the origins of the backprop algorithm in this 1986 Nature paper, [Rumelhart et al. \(1986\)](https://www.nature.com/articles/323533a0). 
 
