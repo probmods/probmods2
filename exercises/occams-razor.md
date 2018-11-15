@@ -11,7 +11,7 @@ In a related task called the [*number game*](https://web.mit.edu/cocosci/Papers/
 
 #### a)
 
-We've implemented a rule-only model of this task for you below. Examine the posterior over rules for the following inputs: $$3$$, $$3, 9$$, $$3, 5, 9$$. For the example of just feeding in $$3$$, why are some rules so strongly preferred over others, even though they are assigned equal probability under the prior? (HINT: think about the likelihood; read the section of the linked number game paper on the *size principle* if you're stuck).
+We've implemented a rule-only model of this task for you below. Examine the posterior over rules for the following inputs: $$[3]$$, $$[3, 9]$$, $$[3, 5, 9]$$. For the example of just feeding in $$3$$, why are some rules so strongly preferred over others, even though they are assigned equal probability under the prior? (HINT: think about the likelihood; read the section of the linked number game paper on the *size principle* if you're stuck).
 
 ~~~~
 ///fold:
