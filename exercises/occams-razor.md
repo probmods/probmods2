@@ -181,7 +181,7 @@ marginalize(posterior, function(x) {return x.hypothesis})
 
 #### c)
 
-Now examine the sets $$3$$, $$3, 6, 9$$, and $$3, 5,6,7,9$$. Sweep across all integers as testQueries to see the 'hotspots' of the model predictions. What do you observe? 
+Now examine the sets $$[3]$$, $$[3, 6, 9]$$, and $$[3, 5,6,7,9]$$. Sweep across all integers as testQueries to see the 'hotspots' of the model predictions. What do you observe? 
 
 #### d)
 
