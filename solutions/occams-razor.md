@@ -295,10 +295,11 @@ Fig. 1 of [-@Griffiths2005] shows a critical difference in the predictions of CP
 
 #### d)
 
-Explain why CS shows this effect. You explanation should involve the Bayesian Occam's razor. 
+> Explain why CS shows this effect. You explanation should involve the Bayesian Occam's razor. 
 
-Hint: Recall that CS is selecting between two models (one where there is a causal relation and one where there isn't). 
+> Hint: Recall that CS is selecting between two models (one where there is a causal relation and one where there isn't). 
 
+the point is that *inside* of the causal support model, there's a 'model selection' applying Occam's razor to have a bias toward there being no relation
 
 <!--
 a) Replicate the model predictions from Fig. 1 of GT05.
