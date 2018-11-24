@@ -236,7 +236,7 @@ The function `obsFn` captures the relation between the `hypothesis` and a single
 (The marginal probability function for `obsFn` is called the *likelihood*. Sometimes `obsFn` itself is colloquially called the likelihood, too.)
 Here we have used the special operator [`mapData`](http://webppl.readthedocs.io/en/master/functions/arrays.html?highlight=mapData) whose meaning is the same as `map`. We use `mapData` both to remind ourselves that we are expressing the special pattern of observing a sequence of observations, and because some inference algorithms can use this hint to do better learning.
 
-Overall this setup of prior, likelihood, and a sequence of observed data (which implies an exchangeable distribtuion on data!) describes an *ideal learner*.
+Overall this setup of prior, likelihood, and a sequence of observed data (which implies an exchangeable distribution on data!) describes an *ideal learner*.
 
 # Example: Subjective Randomness
 
