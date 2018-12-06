@@ -16,7 +16,7 @@ Imagine a factory where the widget-maker makes a stream of widgets, and the widg
 
 ~~~~
 // this machine makes a widget -- which we'll just represent with a real number:
-var widgetMachine = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
+var widgetMachine = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ],
                                  ps: [.05, .1, .2, .3, .2, .1, .05]})
 var thresholdPrior = Categorical({vs: [.3, .4, .5, .6, .7],
                                   ps: [.1, .2, .4, .2, .1]})
@@ -25,8 +25,8 @@ var makeWidgetSeq = function(numWidgets, threshold) {
     return [];
   } else {
     var widget = sample(widgetMachine);
-    return (widget > threshold ? 
-            [widget].concat(makeWidgetSeq(numWidgets - 1, threshold)) : 
+    return (widget > threshold ?
+            [widget].concat(makeWidgetSeq(numWidgets - 1, threshold)) :
             makeWidgetSeq(numWidgets, threshold));
   }
 }
@@ -41,11 +41,11 @@ var widgetDist = Infer({method: 'rejection', samples: 300}, function() {
 viz.auto(widgetDist)
 ~~~~
 
-But notice that the definition of next-good-widget is exactly like the definition of rejection sampling! We can re-write this as a nested-query model:
+But notice that the definition of `makeWidgetSeq` is exactly like the definition of rejection sampling! We can re-write this as a nested inference model:
 
 ~~~~
 // this machine makes a widget -- which we'll just represent with a real number:
-var widgetMachine = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ], 
+var widgetMachine = Categorical({vs: [.2 , .3, .4, .5, .6, .7, .8 ],
                                  ps: [.05, .1, .2, .3, .2, .1, .05]})
 var thresholdPrior = Categorical({vs: [.3, .4, .5, .6, .7],
                                   ps: [.1, .2, .4, .2, .1]})
@@ -141,7 +141,7 @@ Technically, this method of making a choices is not optimal, but rather it is *s
 
 ### Goals Versus Utilities
 
-In Bayesian decision theory, 
+In Bayesian decision theory,
 
 ~~~~
 (define (choose-action utility transition state)
@@ -157,7 +157,7 @@ This is equivalent to choosing an action proportionally to it's utility: $P(a|s)
 
 ## Goal Inference
 
-Now imagine that we don't know Sally's goal (which food she wants), but we observe her pressing button b. We can use a query to infer her goal (this is sometimes called "inverse planning", since the outer query "inverts" the query inside `chooseAction`).
+Now imagine that we don't know Sally's goal (which food she wants), but we observe her pressing button b. We can use `Infer` to infer her goal (this is sometimes called "inverse planning", since the outer infer "inverts" the infer inside `chooseAction`).
 
 ~~~~
 ///fold:
@@ -190,7 +190,7 @@ viz.auto(goalPosterior);
 
 Now let's imagine a more ambiguous case: button b is "broken" and will (uniformly) randomly result in a food from the machine. If we see Sally press button b, what goal is she most likely to have?
 
-~~~~ 
+~~~~
 ///fold:
 var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
 var haveCookie = function(obj) {return obj == 'cookie'};
@@ -227,11 +227,11 @@ Despite the fact that button b is equally likely to result in either bagel or co
 
 If we have some prior knowledge about Sally's preferences (which goals she is likely to have) we can incorporate this immediately into the prior over goals (which above was uniform).
 
-A more interesting situation is when we believe that Sally has *some* preferences, but we don't know what they are. 
-We capture this by adding a higher level prior (a uniform) over preferences. 
+A more interesting situation is when we believe that Sally has *some* preferences, but we don't know what they are.
+We capture this by adding a higher level prior (a uniform) over preferences.
 Using this we can learn about Sally's preferences from her actions: after seeing Sally press button b several times, what will we expect her to want the next time?
 
-~~~~ 
+~~~~
 ///fold:
 var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
 var haveCookie = function(obj) {return obj == 'cookie'};
@@ -269,7 +269,7 @@ In the above preference inference, it is extremely important that sally *could
 have* taken a different action if she had a different preference (i.e. she could
 have pressed button *a* if she preferred to have a bagel). In the program below we have set up a situation in which both actions lead to cookie most of the time:
 
-~~~~ 
+~~~~
 ///fold:
 var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
 
@@ -331,10 +331,10 @@ var goalPosterior = Infer({method: 'MCMC', samples: 50000}, function() {
   var bEffects = dirichlet(Vector([1,1]));
 
   var vendingMachine = makeVendingMachine(aEffects, bEffects);
-  
+
   var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
   var goalSatisfied = function(outcome) {return outcome == goal};
-  
+
   condition(goal == 'cookie' &&
             sample(chooseAction(goalSatisfied, vendingMachine, 'state')) == 'b');
   return T.get(bEffects, 1);
@@ -369,7 +369,7 @@ var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
   var vendingMachine = function(state, action) {
     return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs[action]})
   }
-  
+
   var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
   var goalSatisfied = function(outcome) {return outcome == goal}
   var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
@@ -384,7 +384,7 @@ print("probability of actions giving a cookie")
 viz.marginals(goalPosterior)
 ~~~~
 
-Compare the inferences that result if Sally presses the button twice to those if she only presses the button once. Why can we draw much stronger inferences about the machine when Sally chooses to press the button twice? When Sally does press the button twice, she could have done the "easier" (or rather, a priori more likely) action of pressing the button just once. Since she doesn't, a single press must have been unlikely to result in a cookie. This is an example of the *principle of efficiency*---all other things being equal, an agent will take the actions that require least effort (and hence, when an agent expends more effort all other things must not be equal). 
+Compare the inferences that result if Sally presses the button twice to those if she only presses the button once. Why can we draw much stronger inferences about the machine when Sally chooses to press the button twice? When Sally does press the button twice, she could have done the "easier" (or rather, a priori more likely) action of pressing the button just once. Since she doesn't, a single press must have been unlikely to result in a cookie. This is an example of the *principle of efficiency*---all other things being equal, an agent will take the actions that require least effort (and hence, when an agent expends more effort all other things must not be equal).
 Here, Sally has three possible actions but simpler actions are a priori more likely.
 
 In these examples we have seen two important assumptions combining to allow us to infer something about the world from the indirect evidence of an agents actions. The first assumption is the principle of rational action, the second is an assumption of *knowledgeability*---we assumed that Sally knows how the machine works, though we don't. Thus inference about inference, can be a powerful way to learn what others already know, by observing their actions. (This example was inspired by @Goodman:2009uy)
@@ -411,11 +411,11 @@ var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
   var buttonsToOutcomeProbs = {'a': T.toScalars(dirichlet(ones([2,1]))),
                                'aa': T.toScalars(dirichlet(ones([2,1]))),
                                'aaa': T.toScalars(dirichlet(ones([2,1])))}
-  
+
   var vendingMachine = function(state, action) {
     return categorical({vs: ['bagel', 'cookie'], ps: buttonsToOutcomeProbs[action]})
   }
-  
+
   var goal = categorical({vs: ['bagel', 'cookie'], ps: [.5, .5]})
   var goalSatisfied = function(outcome) {return outcome == goal}
   var chosenAction = sample(chooseAction(goalSatisfied, vendingMachine, 'state'))
@@ -423,7 +423,7 @@ var goalPosterior = Infer({method: 'rejection', samples: 5000}, function() {
   condition(chosenAction == 'aa')
   condition(vendingMachine('state', 'aa') == 'cookie')
 
-  return {goal: goal, 
+  return {goal: goal,
           once: buttonsToOutcomeProbs['a'][1],
           twice: buttonsToOutcomeProbs['aa'][1]};
 })
@@ -482,7 +482,7 @@ var teacher = function(die, depth) {
 var learner = function(side, depth) {
   return Infer(..., function() {
     var die = sample(diePrior);
-    condition(depth == 0 ? 
+    condition(depth == 0 ?
               side == roll(die) :
               side == teacher(die, depth - 1))
     return die
@@ -496,7 +496,7 @@ To make this concrete, assume that there are two dice, A and B, which each have 
 
 Which hypothesis will the learner infer if the teacher shows the green side?
 
-~~~~ 
+~~~~
 var dieToProbs = function(die) {
   return (die == 'A' ? [0, .2, .8] :
           die == 'B' ? [.1, .3, .6] :
@@ -518,7 +518,7 @@ var teacher = function(die, depth) {
 var learner = function(side, depth) {
   return Infer({method: 'enumerate'}, function() {
     var die = sample(diePrior);
-    condition(depth == 0 ? 
+    condition(depth == 0 ?
               side == roll(die) :
               side == sample(teacher(die, depth - 1)))
     return die
@@ -567,8 +567,8 @@ However this suffers from two flaws: the recursion never halts, and the literal 
 var listener = function(words) {
   return Infer(..., function() {
     var state = sample(statePrior);
-    condition(flip(literalProb) ? 
-              words(state) : 
+    condition(flip(literalProb) ?
+              words(state) :
               words == speaker(state))
     return state;
   });
@@ -585,23 +585,23 @@ Let us imagine a situation in which there are three plants which may or may not
 have sprouted. We imagine that there are three sentences that the speaker could
 say, "All of the plants have sprouted", "Some of the plants have sprouted", or
 "None of the plants have sprouted". For simplicity we represent the worlds by
-the number of sprouted plants (0, 1, 2, or 3) and take a uniform prior over worlds. 
+the number of sprouted plants (0, 1, 2, or 3) and take a uniform prior over worlds.
 Using the above representation for communicating with words (with an explicit depth argument):
 
-~~~~ 
+~~~~
 var allSprouted = function(state) {return state == 3}
 var someSprouted = function(state) {return state > 0}
 var noneSprouted = function(state) {return state == 0}
 var meaning = function(words) {
   return (words == 'all' ? allSprouted :
           words == 'some' ? someSprouted :
-          words == 'none' ? noneSprouted : 
+          words == 'none' ? noneSprouted :
           console.error("unknown words"))
 }
 
-var statePrior = Categorical({vs: [0,1,2,3], 
+var statePrior = Categorical({vs: [0,1,2,3],
                               ps: [1/4, 1/4, 1/4, 1/4]})
-var sentencePrior = Categorical({vs: ["all", "some", "none"], 
+var sentencePrior = Categorical({vs: ["all", "some", "none"],
                                  ps: [1/3, 1/3, 1/3]})
 
 var speaker = function(state, depth) {
@@ -616,7 +616,7 @@ var listener = function(words, depth) {
   return Infer({method: 'enumerate'}, function() {
     var state = sample(statePrior);
     var wordsMeaning = meaning(words)
-    condition(depth == 0 ? wordsMeaning(state) : 
+    condition(depth == 0 ? wordsMeaning(state) :
               _.isEqual(words, sample(speaker(state, depth - 1))))
     return state;
   })
@@ -753,4 +753,4 @@ Gergely and Csibra principle of efficiency and equifinality come from Bayes Occa
 
 Reading & Discussion: [Readings]({{site.baseurl}}/readings/social-cognition.html)
 
-Test your knowledge: [Exercises]({{site.baseurl}}/exercises/social-cognition.html) 
+Test your knowledge: [Exercises]({{site.baseurl}}/exercises/social-cognition.html)
