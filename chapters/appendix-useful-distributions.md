@@ -1,6 +1,6 @@
 ---
 layout: chapter
-title: Appendix - Useful distribtuions
+title: Appendix - Useful distributions
 description: A very brief sumary of some important distributions.
 chapter_num: 21
 ---
