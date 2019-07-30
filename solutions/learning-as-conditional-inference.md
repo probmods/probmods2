@@ -3,15 +3,13 @@ layout: exercise
 title: learning - exercises
 ---
 
-## 1. Calculating learning curves
+## 1. Our prior beliefs about coins
+
+TODO
+
+## 2. The strength of beliefs
 
 #### a)
-
-How does a *learning curve* differ from a *learning trajectory*?
-
-*A learning curve depicts how much one knows as a function of experience. A learning trajectory depicts how one's beliefs change as a function of experience.*
-
-#### b)
 
 In the chapter, we graphed *learning trajectories* for a number of models. Below is one of these models (the one with the Beta(10,10) prior). In the chapter, we observed how the model's best guess as to the weight of the coin changed across a sequence of sucessive heads. See what happens if instead we see heads and tails in alternation:
 
@@ -91,7 +89,7 @@ viz(post); //should graph the posterior distribution on weights
 
 ![](Figures/learning-as-inference-1.PNG)
 
-#### c)
+#### b)
 
 Ideally, we'd like to see how our belief distribution shifts as more data comes in. A particularly good measure would be entropy. Unfortunately, calculating entropy for a Beta distribution is [somewhat involved](https://en.wikipedia.org/wiki/Beta_distribution#Quantities_of_information_(entropy)). 
 
@@ -140,7 +138,7 @@ viz.line(observedDataSizes, variances);
 
 ![](Figures/learning-as-inference-2.PNG)
 
-## 2. Causal Power
+## 3. Causal Power
 
 Consider our model of causal power from the chapter:
 
