@@ -329,7 +329,7 @@ Infer({method: "enumerate"}, extendedSmilesModel)
 
 We condition on all the data that we have; bob failed to smile 5 times before, but then smiled today. Again, critically, because wantsSomething is not memoized, each of these observations is independent. We have uncertainty over whether bob wanted something on *every* day, but we're only interested in whether he wanted something on the day that he smiled, thus why we store that value and return it at the end.
 
-## Question 5.5: Sprinklers, Rain and `mem`
+## Exerrcise 5: Sprinklers, Rain and `mem`
 
 ### a)
 
@@ -423,7 +423,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 }))
 ~~~~
 
-## Exercise 5: Casino game
+## Exercise 6: Casino game
 
 > Consider the following game.
 > A machine randomly gives Bob a letter of the word "game"; it gives a, e (the vowels) with probability 0.45 each and the remaining letters (the consonants g, m) with probability 0.05 each.
@@ -459,7 +459,7 @@ Let $$Z$$ be the sum of $$ P(h) \cdot P(\text{win} \mid h) $$ across all values 
 | m     | 0.05     | 1/9                      | 0.05/9 / Z = 0.028       |
 | e     | 0.45     | 1/16                     | 0.45/16 / Z = 0.143      |
 
-### d)
+### c)
 
 > Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
 
@@ -497,7 +497,7 @@ If we had to guess a letter, `a` would be the best one. It's both likely to be d
 > 
 > Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
-### e)
+### d)
 
 Which is higher, $$p(\text{vowel} \mid \text{win})$$ or $$p(\text{consonant} \mid \text{win})$$?
 Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` function.
@@ -522,7 +522,7 @@ viz.auto(distribution);
 
 A vowel is more likely ($$P(vowel) = 0.7168141592920354$$) than a consonant ($$P(vowel) = 0.28318584070796465 $$)
 
-### f)
+### e)
 
 > What difference do you see between your code and the mathematical notation?
 > What are the advantages and disadvantages of each?
