@@ -1,3 +1,4 @@
+~~~
 ///fold:
 var time = function(foo, trials) {
   var start = _.now()
@@ -76,3 +77,4 @@ var opts = {method: 'MCMC', callbacks: [editor.MCMCProgress()],
             samples: nSamples, burn: 100}
 var posterior = Infer(opts, dataAnalysis)
 viz.marginals(posterior)
+~~~
