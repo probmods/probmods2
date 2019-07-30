@@ -1,6 +1,6 @@
 ---
-layout: exercise
-title: Algorithms for Inference - exercises
+layout: solutions
+title: Algorithms for Inference - solutions
 description: MCMC, etc.
 ---
 
@@ -256,14 +256,12 @@ Rejection sampling doesn't work well here in part because the range of `point2` 
 
 ### d)
 
-Add `verbose: true` to the list of options when you run `MH`. What is the acceptance rate over time (i.e. what proportion of proposals are actually accepted in the chain?). What about the model puts it at this level? 
+> Add `verbose: true` to the list of options when you run `MH`. What is the acceptance rate over time (i.e. what proportion of proposals are actually accepted in the chain?). What about the model puts it at this level? 
 
-### Solution
 The acceptance overall is quite low -- on average less than `0.05`. Since MH is generating proposals by sampling from the prior and our prior over `point2` is Uniform over a large range, we are rejecting most of the proposals.
 
-Consider the list of built-in drift kernels [here](https://webppl.readthedocs.io/en/master/driftkernels.html?highlight=drift%20kernel#helpers). Which of these would be appropriate to use in your model in place of the current uniform prior from which `point2` is sampled? After using that kernel in your model, what effect do you observe on the acceptence rate, and why?
+> Consider the list of built-in drift kernels [here](https://webppl.readthedocs.io/en/master/driftkernels.html?highlight=drift%20kernel#helpers). Which of these would be appropriate to use in your model in place of the current uniform prior from which `point2` is sampled? After using that kernel in your model, what effect do you observe on the acceptence rate, and why?
 
-## Solution
 ~~~~
 var interpolate = function(point1, point2, interpolationWeight) {
   return (point1 * interpolationWeight +
@@ -291,11 +289,11 @@ var posterior = Infer(params, model)
 
 Using a drift kernel like uniformDrift means that we will sample proposals from distributions centered at the previous value of our random choice. This produces a random walk that allows MH to more efficiently explore areas of high probability. We notice that the acceptance on average is about an order of magnitude larger!
 
-<!-- ===============
-===============
-===============
+<!-- =============================================
 
-## Exercise 2. Metropolis-Hastings Part 1
+note that these are not in exercises 
+
+## bonus exercise. Metropolis-Hastings Part 1
 
 Recall our code from the chapter that implements an Metropolis-Hastings markov chain:
 
