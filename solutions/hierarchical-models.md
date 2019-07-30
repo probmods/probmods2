@@ -209,3 +209,7 @@ var amod = Infer({method: 'MCMC', samples:5000, lag: 100}, function(){
 
 viz(amod)
 ~~~~
+
+## Exercise 3: Hierarchical models for BDA
+
+TODO
