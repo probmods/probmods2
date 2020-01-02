@@ -347,7 +347,7 @@ var samples = repeat(5000, function() {chain(3, 250)})
 viz.table(samples)
 ~~~~
 
-As we can see, this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the inference below, in the sense that it specifies a way to sample from the required conditional distribution.
+As we can see (**sorry I cannot *see* this, please give a more detailed explanation or proof**), this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the inference below, in the sense that it specifies a way to sample from the required conditional distribution.
 We can get the same computation using `Infer`:
 
 ~~~~
