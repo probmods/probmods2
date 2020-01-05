@@ -819,7 +819,7 @@ This is important to know; it provides a standard against which we can evaluate 
 At the same time, we observe in the posterior predictive scatterplot that not all the linear model is predicting certain symmetries that don't come out.
 Why might that be?
 
-## Mutiple regression
+## Multiple regression
 
 Now, some of the conditions has Alice winning against the same person, so maybe it's also important how many unique wins she has.
 
