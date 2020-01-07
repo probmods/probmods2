@@ -158,7 +158,7 @@ The prior is a mixture of these two possibilities.
 
 ## Scientists' models of people
 
-The above models instantiate different hypotheses about the coin spinning experiemnts, and  make different predictions about what people will do in this situation.
+The above models instantiate different hypotheses about the coin spinning experiments, and  make different predictions about what people will do in this situation.
 We could recruit volunteers, run experiments in a laboratory, and record our participants' responses.
 But, how are we to decide which model is better?
 
