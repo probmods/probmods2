@@ -666,7 +666,7 @@ $$y_{predicted} = \beta_0 + \beta_1 * n_{wins}$$
 Because we're in the business of building generative models, we will have to be explicit about how $$y_{predicted}$$ relates to the actual rating data we observed.
 We make the standard assumption that the actual ratings are normally distributed around $$y_{predicted}$$, with some noise $$\sigma$$. [This is analagous to having "randomly distributed errors".]
 
-$$d \sim \mathcal{N}(y_{predicted}, \sigma)$$
+$$Y\vert x \sim \mathcal{N}(y_{predicted}, \sigma)$$
 
 This is a model of our data.
 As in cognitive models, we will put priors on the parameters: $$\beta_0, \beta_1, \sigma$$, and infer their likely values by conditioning on the observed data.
