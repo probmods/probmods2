@@ -293,7 +293,7 @@ This WebPPL program runs a tournament between several teams, mixing up players a
 Can you guess who is strong or weak, looking at the tournament results?
 
 ~~~~
-var strength = mem(function (person) {return Math.abs(gaussian(1, 1), 0.01)})
+var strength = mem(function (person) {return Math.max(gaussian(1, 1), 0.01)})
 var lazy = function(person) {return flip(1/3) }
 var pulling = function(person) {
   return lazy(person) ? strength(person) / 2 : strength(person) }
@@ -318,7 +318,7 @@ We can use `Infer` to ask a variety of different questions. For instance, how li
 
 ~~~~
 var model = function() {
-  var strength = mem(function (person) {return Math.abs(gaussian(1, 1), 0.01)})
+  var strength = mem(function (person) {return Math.max(gaussian(1, 1), 0.01)})
   var lazy = function(person) {return flip(1/3) }
   var pulling = function(person) {
     return lazy(person) ? strength(person) / 2 : strength(person) }
@@ -351,7 +351,7 @@ We can form many complex queries from this simple model. We could ask how likely
 
 ~~~~
 var model = function() {
-var strength = mem(function (person) {return Math.abs(gaussian(1, 1), 0.01)})
+var strength = mem(function (person) {return Math.max(gaussian(1, 1), 0.01)})
   var lazy = function(person) {return flip(1/3) }
   var pulling = function(person) {
     return lazy(person) ? strength(person) / 2 : strength(person) }
