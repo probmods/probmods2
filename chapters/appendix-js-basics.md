@@ -230,10 +230,10 @@ Not all JavaScript methods are supported on arrays in WebPPL.
 Some of these JavaScript methods will have their own WebPPL version.
 A list of the WebPPL functions for arrays can be found [here](http://docs.webppl.org/en/master/functions/arrays.html).
 
-In addition, the WebPPL language has available a JavaScript library useful for dealing with arrays and objects, called Underscore.
-Underscore functions can be accessed using the `_.` prefix.
-A full list of functions available from Underscore can be found [here](http://underscorejs.org/).
-Note: underscore functions that take others functions (called predicates in underscore) as arguments are not available in WebPPL (e.g., `_.map`, `_.filter`, ...).
+In addition, the WebPPL language has available a JavaScript library useful for dealing with arrays and objects, called Lodash.
+Lodash functions can be accessed using the `_.` prefix.
+A full list of functions available from Lodash can be found [here](https://lodash.com/docs/4.17.15).
+Note: Avoid using higher-order functions from lodash (functions that take other functions as arguments). Higher-order functions from an external javascript library such as lodash probably will not work in WebPPL, or will not work as intended and may fail silently.
 
 Here is one example, for reshaping arrays:
 
