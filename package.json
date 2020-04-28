@@ -20,7 +20,7 @@
   },
   "keywords": [],
   "dependencies": {
-    "bootstrap": "~3.3.6",
+    "bootstrap": "~3.4.1",
     "d3": "^4.13.0",
     "jquery": "~2.2.3",
     "katex": "0.6.0",
