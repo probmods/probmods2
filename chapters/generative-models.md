@@ -81,9 +81,9 @@ Application of an XRP results in a *sample* from the probability distribution de
 -->
 For example, the `flip` function can be thought of as simulating a (possibly biased) coin toss (technically `flip` samples from a Bernoulli distribution, which we'll return to shortly):
 
-~~~~
+```
 flip()
-~~~~
+```
 
 Run this program a few times.
 You will get back a different sample on each execution.
@@ -94,82 +94,91 @@ Without parentheses `flip` is a *function* object---a representation of the simu
 In WebPPL, each time you run a program you get a *sample* by simulating the computations and random choices that the program specifies.
 If you run the program many times, and collect the values in a histogram, you can see what a typical sample looks like:
 
-~~~~
-viz(repeat(1000,flip))
-~~~~
+```
+viz(repeat(1000, flip))
+```
 
-Here we have used the `repeat` procedure which takes a number of repetitions, $$K$$, and a function (in this case `flip`) and returns a list of $$K$$ samples from that function.
+Here we have used the `repeat` procedure which takes a number of repetitions, $$K$$, and a function (in this case `flip`, note not `flip()`) and returns a list of $$K$$ samples from that function.
 We have used the `viz` function to visualize the results of calling the `flip` function 1000 times.
 As you can see, the result is an approximately uniform distribution over `true` and `false`.
 
 Using `flip` we can construct more complex expressions that describe more complicated sampling processes. For instance here we describe a process that samples a number adding up several flips (note that in JavaScript a boolean will be turned into a number, $$0$$ or $$1$$, by the plus operator `+`):
 
-~~~~
+```
 flip() + flip() + flip()
-~~~~
+```
 
 What if we want to invoke this sampling process multiple times? We would like to construct a stochastic function that adds three random numbers each time it is called.
 We can use `function` to construct such complex stochastic functions from the primitive ones.
 
-~~~~
-var sumFlips = function() { return flip() + flip() + flip() }
+```
+var sumFlips = function () {
+  return flip() + flip() + flip()
+}
 viz(repeat(100, sumFlips))
-~~~~
+```
 
 A function expression with an empty argument list, `function () {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`.
 <!--A thunk is an object that represents a whole *probability distribution*.-->
 Complex functions can also have arguments. Here is a stochastic function that will only sometimes double its input:
 
-~~~~
-var noisyDouble = function(x) { flip() ? x+x : x }
-noisyDouble(3)
-~~~~
+```
+var noisyDouble = function (x) { flip() ? x+x : x }
+noisyDouble(3);
+```
 
-By using higher-order functions we can construct and manipulate complex sampling processes.
+By using higher-order functions we can construct and manipulate complex sampling processes. We use the ternary operator `condition ? if-true : if-false` to induce hierarchy.
 A good example comes from coin flipping...
 
 ## Example: Flipping Coins
 
 The following program defines a fair coin, and flips it 20 times:
 
-~~~~
-var fairCoin = function() { flip(0.5) ? 'h' : 't' };
+```
+var fairCoin = function () { flip(0.5) ? 'h' : 't' }
 viz(repeat(20, fairCoin))
-~~~~
+```
 
 This program defines a "trick" coin that comes up heads most of the time (95%), and flips it 20 times:
 
-~~~~
-var trickCoin = function() { flip(0.95) ? 'h' : 't' };
+```
+var trickCoin = function () { flip(0.95) ? 'h' : 't' }
 viz(repeat(20, trickCoin))
-~~~~
+```
 
 The higher-order function `make-coin` takes in a weight and outputs a function (a thunk) describing a coin with that weight.  Then we can use `make-coin` to make the coins above, or others.
 
-~~~~
-var makeCoin = function(weight) { return function() { flip(weight) ? 'h' : 't' } };
-var fairCoin = makeCoin(0.5);
-var trickCoin = makeCoin(0.95);
-var bentCoin = makeCoin(0.25);
+```
+var makeCoin = function (weight) {
+  return function () { flip(weight) ? 'h' : 't' }
+}
 
-viz(repeat(20,fairCoin))
-viz(repeat(20,trickCoin))
-viz(repeat(20,bentCoin))
-~~~~
+var fairCoin = makeCoin(0.5)
+var trickCoin = makeCoin(0.95)
+var bentCoin = makeCoin(0.25)
+
+viz(repeat(20, fairCoin))
+viz(repeat(20, trickCoin))
+viz(repeat(20, bentCoin))
+```
 
 We can also define a higher-order function that takes a "coin" and "bends it":
 
-~~~~
-var makeCoin = function(weight) { return function() { flip(weight) ? 'h' : 't' } };
-var bend = function(coin) {
-  return function() {
-    (coin() == 'h') ? makeCoin(0.7)() : makeCoin(0.1)()
+```
+var makeCoin = function (weight) {
+  return function () { flip(weight) ? 'h' : 't' }
+}
+
+var bend = function (coin) {
+  return function () {
+    return coin() == 'h' ? makeCoin(0.7)() : makeCoin(0.1)()
   }
 }
+
 var fairCoin = makeCoin(0.5)
 var bentCoin = bend(fairCoin)
-viz(repeat(100,bentCoin))
-~~~~
+viz(repeat(100, bentCoin))
+```
 
 Make sure you understand how the `bend` function works! Why are there an "extra" pair of parentheses after each `make-coin` statement?
 
@@ -178,25 +187,28 @@ Here we use them to visualize the number of heads we expect to see if we flip a 
 We'll repeat this experiment 1000 times and then use `viz` to visualize the results.
 Try varying the coin weight or the number of repetitions to see how the expected distribution changes.
 
-~~~~
-var makeCoin = function(weight) { return function() { return flip(weight) } }
-var coin = makeCoin(0.8)
+```
+var makeCoin = function (weight) {
+  return function () { flip(weight) }
+}
 
-var data = repeat(1000, function() { sum(repeat(10, coin)) })
+var coin = makeCoin(0.8)
+var data = repeat(1000, function () { sum(repeat(10, coin)) })
 viz(data, {xLabel: '# heads'})
-~~~~
+```
 
 ## Example: Causal Models in Medical Diagnosis
 
 Generative knowledge is often *causal* knowledge that describes how events or states of the world are related to each other.
 As an example of how causal knowledge can be encoded in WebPPL expressions, consider a simplified medical scenario:
 
-~~~~
-var lungCancer = flip(0.01);
-var cold = flip(0.2);
-var cough = cold || lungCancer;
-cough;
-~~~~
+```
+var lungCancer = flip(0.01)
+var cold = flip(0.2)
+var cough = cold || lungCancer
+
+cough
+```
 
 This program models the diseases and symptoms of a patient in a doctor's office.
 It first specifies the base rates of two diseases the patient could have: lung cancer is rare while a cold is common, and there is an independent chance of having each disease.
@@ -204,44 +216,44 @@ The program then specifies a process for generating a common symptom of these di
 
 Here is a more complex version of this causal model:
 
-~~~~
-var lungCancer = flip(0.01);
-var TB = flip(0.005);
-var stomachFlu = flip(0.1);
-var cold = flip(0.2);
-var other = flip(0.1);
+```
+var lungCancer = flip(0.01)
+var TB = flip(0.005)
+var stomachFlu = flip(0.1)
+var cold = flip(0.2)
+var other = flip(0.1)
 
-var cough = (
+var cough = 
     (cold && flip(0.5)) ||
     (lungCancer && flip(0.3)) ||
     (TB && flip(0.7)) ||
-    (other && flip(0.01)))
+    (other && flip(0.01))
 
-var fever = (
+var fever = 
     (cold && flip(0.3)) ||
     (stomachFlu && flip(0.5)) ||
     (TB && flip(0.1)) ||
-    (other && flip(0.01)))
+    (other && flip(0.01))
 
-var chestPain = (
+var chestPain = 
     (lungCancer && flip(0.5)) ||
     (TB && flip(0.5)) ||
-    (other && flip(0.01)))
+    (other && flip(0.01))
 
-var shortnessOfBreath = (
+var shortnessOfBreath = 
     (lungCancer && flip(0.5)) ||
     (TB && flip(0.2)) ||
-    (other && flip(0.01)))
+    (other && flip(0.01))
 
 var symptoms = {
   cough: cough,
   fever: fever,
   chestPain: chestPain,
   shortnessOfBreath: shortnessOfBreath
-};
+}
 
 symptoms
-~~~~
+```
 
 Now there are four possible diseases and four symptoms.
 Each disease causes a different pattern of symptoms.
@@ -260,9 +272,9 @@ Run the program several times to observe the characteristic patterns of symptoms
 
 Suppose that we flip two fair coins, and return the list of their values:
 
-~~~~
+```
 [flip(), flip()]
-~~~~
+```
 
 How can we predict the return value of this program?
 For instance, how likely is it that we will see `[true, false]`?
@@ -271,10 +283,10 @@ The probability of an event $$A$$ (such as the above program returning `[true, f
 
 A **probability distribution** is the probability of each possible outcome of an event. For instance, we can examine the probability distribution on values that can be returned by the above program by sampling many times and examining the histogram of return values:
 
-~~~~
-var randomPair = function () { return [flip(), flip()]; };
-viz.hist(repeat(1000, randomPair), 'return values');
-~~~~
+```
+var randomPair = function () {  [flip(), flip()] }
+viz.hist(repeat(1000, randomPair), 'return values')
+```
 
 We see by examining this histogram that `[true, false]` comes out about 25% of the time.
 We may define the probability of a return value to be the fraction of times (in the long run) that this value is returned from evaluating the program -- then the probability of `[true, false]` from the above program is 0.25.
@@ -287,7 +299,7 @@ That is, it's a *sampler* or *simulator*. As we saw above we can build more comp
 From another perspective, `flip` is *itself* a characterization of the probability distribution over `true` and `false`.
 In order to make this view explicit, WebPPL has a special type of **distribution** objects. These are objects that can be sampled from using the `sample` operator, and that can explicitly return the probability of a return value using the `score` method. Distributions are made by a family of distribution constructors:
 
-~~~
+```
 //make a distribution using the Bernoulli constructor:
 var b = Bernoulli({p: 0.5})
 
@@ -299,12 +311,12 @@ print( b.score(true) )
 
 //visualize the distribution:
 viz(b)
-~~~
+```
 
 In fact `flip(x)` is just a helper function that constructs a Bernoulli distribution and samples from it. The function `bernoulli(x)` is an alias for `flip`.
 There are many other distribution constructors built into WebPPL listed [here](http://docs.webppl.org/en/master/distributions.html) (and each has a sampling helper, named in lower case). For instance the Gaussian (also called Normal) distribution is a very common distribution over real numbers:
 
-~~~
+```
 //create a gaussian distribution:
 var g = Gaussian({mu: 0, sigma: 1})
 
@@ -315,9 +327,10 @@ print( sample(g) )
 print( gaussian(0,1) )
 
 //and build more complex processes!
-var foo = function(){return gaussian(0,1)*gaussian(0,1)}
+var foo = function () { gaussian(0,1) * gaussian(0,1) }
+
 foo()
-~~~
+```
 
 
 <!-- describe Distribution generators, distirbutions, and sample here. -->
@@ -326,9 +339,9 @@ foo()
 
 Above we described how complex sampling processes can be built as complex functions, and how these sampling processes implicitly specify a distribution on return values (which we examined by sampling many times and building a histogram). This distribution on return values is called the **marginal distribution**, and the WebPPL `Infer` operator gives us a way to make this implicit distribution into an explicit distribution object:
 
-~~~
+```
 //a complex function, that specifies a complex sampling process:
-var foo = function(){gaussian(0,1)*gaussian(0,1)}
+var foo = function () { gaussian(0, 1) * gaussian(0, 1) }
 
 //make the marginal distributions on return values explicit:
 var d = Infer({method: 'forward', samples: 1000}, foo)
@@ -336,11 +349,12 @@ var d = Infer({method: 'forward', samples: 1000}, foo)
 //now we can use d as we would any other distribution:
 print( sample(d) )
 viz(d)
-~~~
+```
 
 Note that `Infer` took an object describing *how* to construct the marginal distribution (which we will describe more later) and a thunk describing the sampling process, or *model*, of interest. For more details see the [Infer documentation](http://docs.webppl.org/en/master/inference/index.html).
 
 Thus `sample` lets us sample from a distribution, and build complex sampling processes by using sampling in a program; conversely, `Infer` lets us reify the distribution implicitly described by a sampling process.
+
 When we think about probabilistic programs we will often move back and forth between these two views, emphasizing either the sampling perspective or the distributional perspective.
 With suitable restrictions this duality is complete: any WebPPL program implicitly represents a distribution and any distribution can be represented by a WebPPL program; see e.g., @Ackerman2011 for more details on this duality.
 
@@ -354,25 +368,31 @@ While `Infer` lets us build the marginal distribution for even very complicated 
 In the above example we take three steps to compute the output value: we sample from the first `flip()`, then from the second, then we make a list from these values.
 To make this more clear let us re-write the program as:
 
-~~~~
-var A = flip();
-var B = flip();
-var C = [A, B];
-C;
-~~~~
+```
+var a = flip()
+var b = flip()
+var c = [a, b]
+c
+```
 
 We can directly observe (as we did above) that the probability of `true` for `A` is 0.5, and the probability of `false` from `B` is 0.5. Can we use these two probabilities to arrive at the probability of 0.25 for the overall outcome `C` = `[true, false]`? Yes, using the *product rule* of probabilities:
 The probability of two random choices is the product of their individual probabilities.
 The probability of several random choices together is often called the *joint probability* and written as $$P(A,B)$$.
 Since the first and second random choices must each have their specified values in order to get `[true, false]` in the example, the joint probability is their product: 0.25.
 
-We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, compute the probability of `[true, false]` resulting from this program:
+We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, we can visualize the the exact probability of `[true, false]` resulting from this program using `Infer` with `enumerate`:
 
-~~~~
-var A = flip();
-var B = flip(A ? 0.3 : 0.7);
-[A, B];
-~~~~
+```
+var a = flip()
+var b = flip(a ? 0.3 : 0.7)
+
+Infer({method: 'enumerate'}, function () {
+  var a = flip()
+  var b = flip(a ? 0.3 : 0.7)
+  
+  return {'b': b, 'a': a}
+})
+```
 
 In general, the joint probability of two random choices $$A$$ and $$B$$ made sequentially, in that order, can be written as $$P(A,B) = P(A) P(B \vert A)$$.
 This is read as the product of the probability of $$A$$ and the probability of "$$B$$ given $$A$$", or "$$B$$ conditioned on $$A$$".
@@ -385,13 +405,13 @@ What is the relation between $$P(A,B)$$ and $$P(B,A)$$, the joint probability of
 
 Now let's consider an example where we can't determine from the overall return value the sequence of random choices that were made:
 
-~~~~
+```
 flip() || flip()
-~~~~
+```
 We can sample from this program and determine that the probability of returning `true` is about 0.75.
 
 We cannot simply use the product rule to determine this probability because we don't know the sequence of random choices that led to this return value.
-However we can notice that the program will return true if the two component choices are `[true,true]`, or `[true,false]`, or `[false,true]`. To combine these possibilities we use another rule for probabilities:
+However we can notice that the program will return true if the two component choices are `[true, true]`, or `[true, false]`, or `[false, true]`. To combine these possibilities we use another rule for probabilities:
 If there are two alternative sequences of choices that lead to the same return value, the probability of this return value is the sum of the probabilities of the sequences.
 We can write this using probability notation as: $$P(A) = \sum_{B} P(A,B)$$, where we view $$A$$ as the final value and $$B$$ as a random choice on the way to that value.
 Using the product rule we can determine that the probability in the example above is 0.25 for each sequence that leads to return value `true`, then, by the sum rule, the probability of `true` is 0.25+0.25+0.25=0.75.
@@ -409,14 +429,15 @@ In WebPPL it is possible to have a *stochastic* recursion that randomly decides 
 For example, the *geometric distribution* is a probability distribution over the non-negative integers.
 We imagine flipping a (weighted) coin, returning $$N-1$$ if the first `true` is on the Nth flip (that is, we return the number of times we get `false` before our first `true`):
 
-~~~~
+```
 var geometric = function (p) {
-    flip(p) ? 0 : 1 + geometric(p);
-};
+  return flip(p) ? 0 : 1 + geometric(p)
+}
+
 var g = Infer({method: 'forward', samples: 1000},
-              function(){return geometric(0.6)})
+               function () { geometric(0.6) })
 viz(g)
-~~~~
+```
 
 There is no upper bound on how long the computation can go on, although the probability of reaching some number declines quickly as we go.
 Indeed, stochastic recursions must be constructed to halt eventually (with probability 1).
@@ -426,49 +447,50 @@ Indeed, stochastic recursions must be constructed to halt eventually (with proba
 
 It is often useful to model a set of objects that each have a randomly chosen property. For instance, describing the eye colors of a set of people:
 
-~~~~
+```
 var eyeColor = function (person) {
-    return uniformDraw(['blue', 'green', 'brown']);
+  return uniformDraw(['blue', 'green', 'brown'])
 };
-[eyeColor('bob'), eyeColor('alice'), eyeColor('bob')];
-~~~~
 
-The results of this generative process are clearly wrong: Bob's eye color can change each time we ask about it! What we want is a model in which eye color is random, but *persistent.* We can do this using a WebPPL built-in: `mem`. `mem` is a higher order function that takes a procedure and produces a *memoized* version of the procedure.
+[eyeColor('bob'), eyeColor('alice'), eyeColor('bob')]
+```
+
+The results of this generative process are clearly wrong: Bob's eye color can change each time we ask about it! What we want is a model in which eye color is random, but *persistent*. We can do this using a WebPPL built-in: `mem`. `mem` is a higher order function that takes a procedure and produces a *memoized* version of the procedure.
 When a stochastic procedure is memoized, it will sample a random value the *first* time it is used with some arguments, but return that same value when called with those arguments thereafter.
 The resulting memoized procedure has a persistent value within each "run" of the generative model (or simulated world). For instance consider the equality of two flips, and the equality of two memoized flips:
 
-~~~~
+```
 flip() == flip()
-~~~~
+```
 
-~~~~
-var memFlip = mem(flip);
+```
+var memFlip = mem(flip)
 memFlip() == memFlip()
-~~~~
+```
 
 Now returning to the eye color example, we can represent the notion that eye color is random, but each person has a fixed eye color.
 
-~~~~
+```
 var eyeColor = mem(function (person) {
-    return uniformDraw(['blue', 'green', 'brown']);
+  return uniformDraw(['blue', 'green', 'brown'])
 });
-[eyeColor('bob'), eyeColor('alice'), eyeColor('bob')];
-~~~~
+
+[eyeColor('bob'), eyeColor('alice'), eyeColor('bob')]
+```
 
 This type of modeling is called *random world* style [@Mcallester2008].
 Note that we don't have to specify ahead of time the people whose eye color we will ask about: the distribution on eye colors is implicitly defined over the infinite set of possible people, but only constructed "lazily" when needed.
 Memoizing stochastic functions thus provides a powerful toolkit to represent and reason about an unbounded set of properties of an unbounded set of objects.
 For instance, here we define a function `flipAlot` that maps from an integer (or any other value) to a coin flip. We could use it to implicitly represent the $$n$$th flip of a particular coin, without having to actually flip the coin $$n$$ times.
 
-~~~~
+```
 var flipAlot = mem(function (n) {
-    return flip()
+  return flip()
 });
-[
-    [flipAlot(1), flipAlot(12), flipAlot(47), flipAlot(1548)],
-    [flipAlot(1), flipAlot(12), flipAlot(47), flipAlot(1548)]
-];
-~~~~
+
+[[flipAlot(1), flipAlot(12), flipAlot(47), flipAlot(1548)],
+ [flipAlot(1), flipAlot(12), flipAlot(47), flipAlot(1548)]]
+```
 
 There are a countably infinite number of such flips, each independent
 of all the others. The outcome of each, once determined, will always have the same value.
@@ -485,7 +507,7 @@ We have included such a 2-dimensional physics simulator, the function `runPhysic
 (We also have `animatePhysics`, which does the same, but gives us an animation to see what is happening.)
 We can use this to imagine the outcome of various initial states, as in the Plinko machine example above:
 
-~~~~
+```
 var dim = function () { uniform(5, 20) }
 var staticDim = function () { uniform(10, 50) }
 var shape = function () { flip() ? 'circle' : 'rect' }
@@ -499,66 +521,84 @@ var ground = {shape: 'rect',
               y: worldHeight}
 
 var falling = function () {
-  return {shape: shape(), static: false, dims: [dim(), dim()], x: xpos(), y: 0}
+  return {
+    shape: shape(),
+    static: false,
+    dims: [dim(), dim()],
+    x: xpos(),
+    y: 0}
 };
 
 var fixed = function () {
-  return {shape: shape(), static: true, dims: [staticDim(), staticDim()], x: xpos(), y: ypos()}
+  return {
+    shape: shape(),
+    static: true,
+    dims: [staticDim(), staticDim()],
+    x: xpos(),
+    y: ypos()}
 }
 
 var fallingWorld = [ground, falling(), falling(), falling(), fixed(), fixed()]
 physics.animate(1000, fallingWorld);
-~~~~
+```
 
 There are many judgments that you could imagine making with such a physics simulator.
 @Hamrick2011 have explored human intuitions about the stability of block towers.
 Look at several different random block towers; first judge whether you think the tower is stable, then simulate to find out if it is:
 
-~~~~
+```
 var xCenter = worldWidth / 2
-var ground = {shape: 'rect', static: true, dims: [worldWidth, 10], x: worldWidth/2, y: worldHeight}
-var dim = function() { uniform(10, 50) };
-var xpos = function(prevBlock) {
+var ground = {
+  shape: 'rect',
+  static: true,
+  dims: [worldWidth, 10],
+  x: worldWidth/2,
+  y: worldHeight
+}
+var dim = function () { uniform(10, 50) }
+var xpos = function (prevBlock) {
   var prevW = prevBlock.dims[0]
   var prevX = prevBlock.x
-  uniform(prevX - prevW, prevX + prevW)
-};
+  return uniform(prevX - prevW, prevX + prevW)
+}
 
-var ypos = function(prevBlock, h) {
+var ypos = function (prevBlock, h) {
   var prevY = prevBlock.y
   var prevH = prevBlock.dims[1]
-  prevY - (prevH + h)
-};
+  return prevY - (prevH + h)
+}
 
-var addBlock = function(prevBlock, isFirst) {
+var addBlock = function (prevBlock, isFirst) {
   var w = dim()
   var h = dim()
-  return {shape: 'rect',
-          static: false,
-          dims: [w, h],
-          x: isFirst ? xCenter : xpos(prevBlock),
-          y: ypos(prevBlock, h)}
-};
+  return {
+    shape: 'rect',
+    static: false,
+    dims: [w, h],
+    x: isFirst ? xCenter : xpos(prevBlock),
+    y: ypos(prevBlock, h)
+  }
+}
 
 var makeTowerWorld = function () {
-  var block1 = addBlock(ground, true);
-  var block2 = addBlock(block1, false);
-  var block3 = addBlock(block2, false);
-  var block4 = addBlock(block3, false);
-  var block5 = addBlock(block4, false);
+  var block1 = addBlock(ground, true)
+  var block2 = addBlock(block1, false)
+  var block3 = addBlock(block2, false)
+  var block4 = addBlock(block3, false)
+  var block5 = addBlock(block4, false)
   return [ground, block1, block2, block3, block4, block5]
 };
 
 physics.animate(1000, makeTowerWorld())
-~~~~
+```
 
 Were you often right?
 Were there some cases of 'surprisingly stable' towers?  @Hamrick2011 account for these cases by positing that people are not entirely sure where the blocks are initially (perhaps due to noise in visual perception).
 Thus our intuitions of stability are really stability given noise (or the expected stability marginalizing over slightly different initial configurations).
 We can realize this measure of stability as:
 
-~~~~
-var listMin = function(xs) {
+```
+var listMin = function (xs) {
   if (xs.length == 1) {
     return xs[0]
   } else {
@@ -566,8 +606,13 @@ var listMin = function(xs) {
   }
 }
 
-var ground = {shape: 'rect', static: true, dims: [worldWidth, 10],
-              x: worldWidth/2, y: worldHeight+6};
+var ground = {
+  shape: 'rect',
+  static: true,
+  dims: [worldWidth, 10],
+  x: worldWidth/2,
+  y: worldHeight+6
+}
 
 var stableWorld = [
   ground,
@@ -597,41 +642,46 @@ var unstableWorld = [
 ]
 
 var doesTowerFall = function (initialW, finalW) {
-  var highestY = function (w) { listMin(map(function(obj) { return obj.y }, w)) }
-  var approxEqual = function (a, b) { Math.abs(a - b) < 1.0 }
-  !approxEqual(highestY(initialW), highestY(finalW))
+  var highestY = function (w) {
+    return listMin(map(function (obj) { obj.y }, w))
+  }
+  var approxEqual = function (a, b) {
+    return Math.abs(a - b) < 1.0
+  }
+  return !approxEqual(highestY(initialW), highestY(finalW))
 }
 
 var noisify = function (world) {
   var perturbX = function (obj) {
     var noiseWidth = 10
-    obj.static ? obj : _.extend({}, obj, {x: uniform(obj.x - noiseWidth, obj.x + noiseWidth) })
+    
+    if (obj.static) {
+      return obj
+    } else {
+      return _.extend({}, obj, {x: uniform(obj.x - noiseWidth, obj.x + noiseWidth) })
+    }
   }
-  map(perturbX, world)
+  return map(perturbX, world)
 }
 
-var run = function(world) {
+var run = function (world) {
   var initialWorld = noisify(world)
   var finalWorld = physics.run(1000, initialWorld)
-  doesTowerFall(initialWorld, finalWorld)
+  return doesTowerFall(initialWorld, finalWorld)
 }
 
-viz(
-  Infer({method: 'forward', samples: 100},
-        function() { run(stableWorld) }))
-viz(
-  Infer({method: 'forward', samples: 100},
-        function() { run(almostUnstableWorld) }))
-viz(
-  Infer({method: 'forward', samples: 100},
-        function() { run(unstableWorld) }))
+viz(Infer({method: 'forward', samples: 100},
+           function () { run(stableWorld) }))
+viz(Infer({method: 'forward', samples: 100},
+           function () { run(almostUnstableWorld) }))
+viz(Infer({method: 'forward', samples: 100},
+           function () { run(unstableWorld) }))
 
 // uncomment any of these that you'd like to see for yourself
 // physics.animate(1000, stableWorld)
 // physics.animate(1000, almostUnstableWorld)
 // physics.animate(1000, unstableWorld)
-~~~~
-
+```
 
 Reading & Discussion: [Readings]({{site.baseurl}}/readings/generative-models.html)
 
