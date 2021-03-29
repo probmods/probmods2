@@ -20,37 +20,37 @@ So copy your answers over to your own document frequently.
 Show mathematically that the marginal distribution on return values for these three programs is the same by directly computing the probability using the rules of probability
 (hint: write down each possible history of random choices for each program).
 
-```
+~~~~
 flip() ? flip(.7) : flip(.1)
-```
+~~~~
 
-```
+~~~~
 flip(flip() ? .7 : .1)
-```
+~~~~
 
-```
+~~~~
 flip(.4)
-```
+~~~~
 
 ### b)
 
 Check your answers by sampling from the programs, 1000 times each, and plotting the results.
 
-```
-```
+~~~~
+~~~~
 
-```
-```
+~~~~
+~~~~
 
-```
-```
+~~~~
+~~~~
 
 ### c)
 
 Write another new program with the same marginal distribution on return values that looks different from all of the above programs.
 
-```
-```
+~~~~
+~~~~
 
 ## Exercise 2
 
@@ -58,30 +58,30 @@ Write another new program with the same marginal distribution on return values t
 
 Explain why (in terms of the evaluation process) these two programs give different answers (i.e. have different distributions on return values).
 
-```
+~~~~
 var foo = flip()
 display([foo, foo, foo])
-```
+~~~~
 
-```
+~~~~
 var foo = function() { return flip() }
 display([foo(), foo(), foo()])
-```
+~~~~
 
 ### b)
 
 Modify the second program using `mem` so that it has the same distribution as the first program.
 
-```
-```
+~~~~
+~~~~
 
 ### c)
 
 Change the program in Part B so that the first two elements in the list are always the same as each other, but the third element can be different.
 *Optional challenge:* try to do this by adding only these 4 characters: `x`, `0`, `0`, and `1`.
 
-```
-```
+~~~~
+~~~~
 
 ## Exercise 3
 
@@ -92,21 +92,21 @@ Justify your response.
 
 <center><img src="../assets/img/flip0.7.svg" ></center>
 
-```
+~~~~
 // Program "A"
 var A = flip()
 var B = flip(0.9)
 var C = flip() ? A && B : A || B
 display([A, B, C])
-```
+~~~~
 
-```
+~~~~
 // Program "B"
 var A = flip(0.9);
 var B = A && flip(0.9)
 var C = B && flip(0.9)
 display([A, B, C])
-```
+~~~~
 
 ### b)
 
@@ -121,7 +121,7 @@ In this exercise, we'll write a version of that model that represents the diseas
 
 Let's look at just two common conditions (a cold and allergies) and just two symptoms (sneeze and fever), and let's assume that symptoms are deterministic.
 
-```
+~~~~
 var allergies = flip(0.3)
 var cold = flip(0.2)
 
@@ -129,7 +129,7 @@ var sneeze = cold || allergies
 var fever = cold
 
 display([sneeze, fever])
-```
+~~~~
 
 Under this model, what is the probability that the patient is sneezing? What is the probability that the patient is sneezing *and* has a fever?
 
@@ -137,25 +137,25 @@ Under this model, what is the probability that the patient is sneezing? What is 
 
 Inspect the joint probability distributions of `sneeze` and `fever` using `Infer`.
 
-```
+~~~~
 Infer({method: "forward", samples: 1000}, function() {
   ...
   return { ... }
 })
-```
+~~~~
 
 ### c)
 
 If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a function from a person to whether they have that disease, like this:
 
-```
+~~~~
 var allergies = mem(function(person) { return flip(.3) })
 var cold = mem(function(person) { return flip(.2) })
 
 var sneeze = function(person) { return cold(person) || allergies(person) }
 
 display([sneeze('bob'), sneeze('alice')])
-```
+~~~~
 
 Add `fever` to the program above, and use `Infer` to inspect the probability distribution over Bob's symptoms.
 Is this the same probability distribution that you computed for the single patient in Part A? 
@@ -165,7 +165,7 @@ If not, what can you do to fix this program to capture our intuitions correctly?
 
 Work through the evaluation process for the `bend` higher-order function in this example:
 
-```
+~~~~
 var makeCoin = function(weight) {
   return function() {
     return flip(weight) ? 'h' : 't'
@@ -179,7 +179,7 @@ var bend = function(coin) {
 
 var fairCoin = makeCoin(.5)
 var bentCoin = bend(fairCoin)
-```
+~~~~
 
 ### a)
 
@@ -189,8 +189,8 @@ Directly compute the probability distribution of the bent coin in the example.
 
 Check your answer by using `Infer`.
 
-```
-```
+~~~~
+~~~~
 
 ## Exercise 6
 
@@ -199,18 +199,18 @@ Check your answer by using `Infer`.
 Directly compute the probability that the geometric distribution defined by the following stochastic recursion returns the number 5.
 *Hint:* What is the default parameter for `flip()`?
 
-```
+~~~~
 var geometric = function() {
   return flip() ? 0 : 1 + geometric()
 }
-```
+~~~~
 
 ### b)
 
 Check your answer by using `Infer`.
 
-```
-```
+~~~~
+~~~~
 
 ## Exercise 7
 
@@ -227,25 +227,25 @@ Convert the following probability table to a compact WebPPL program:
 
 **Requirement:** fix the probability of A first and then define the probability of B to *depend* on whether A is true or not.
 
-```
+~~~~
 var a = ...
 var b = ...
 display([a, b])
-```
+~~~~
 
 ### b)
 
 Run your WebPPL program and use `Infer` to check that you get the correct distribution.
 
-```
-```
+~~~~
+~~~~
 
 ## Exercise 8
 
 Below we've defined a higher-order function `flipSequence` that takes a coin flipping function (e.g. `trickCoin`, below) and flips that coin until it gets a *sequence* of two heads in a row (in which case it returns heads `'h'`) or two tails in a row (in which case it returns tails `'t'`).
 Try out different weights for the `trickCoin`.
 
-```
+~~~~
 var makeCoin = function(weight) {
   return function() {
     return flip(weight) ? 'h' : 't'
@@ -268,7 +268,7 @@ var trickCoin = makeCoin(.6)
 var n_samples = 10000;
 viz(Infer({method: "forward", samples: n_samples}, trickCoin))
 viz(Infer({method: "forward", samples: n_samples}, flipSequence(trickCoin)))
-```
+~~~~
 
 ### a)
 
@@ -300,7 +300,7 @@ The variables `worldWidth` and `worldHeight` are constants representing the visi
 
 Here's an example with a ground and a single rectangle. Add another object to `bowlingWorld` and give it an initial velocity so that it knocks the original rectangle down.
 
-```
+~~~~
 var ground = {
   shape: 'rect',
   static: true,
@@ -319,7 +319,7 @@ var rect = {
 
 var bowlingWorld = [ground, rect]
 physics.animate(1000, bowlingWorld)
-```
+~~~~
 
 
 ## Exercise 10
@@ -334,7 +334,7 @@ Let this measure take different values between 0 and 1.
 That way, your continuous measure will be numerically comparable to the discrete measure, `doesTowerFall` (defined here as either 0 or 1).
 Explain what your continuous measure represents and why it might be a good continuous measure of instability.
 
-```
+~~~~
 ///fold:
 var listMin = function(xs) {
   if (xs.length == 1) {
@@ -405,7 +405,7 @@ var visualizeInstabilityMeasure = function(measureFunction) {
 
 // Test custom towerFallDegree measure
 visualizeInstabilityMeasure(towerFallDegree)
-```
+~~~~
 
 ### b)
 
