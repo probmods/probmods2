@@ -891,7 +891,7 @@ var parameterPosterior = marginalize(posterior, function(x){return x.parameters}
 viz.marginals(parameterPosterior)
 ~~~~
 
-We see that $$\beta_2$$ is also probably not 0, suggesting that the number of *unique* wins a player has is relavent for predicting participants' judgments of their strength.
+We see that $$\beta_2$$ is also probably not 0, suggesting that the number of *unique* wins a player has is relevant for predicting participants' judgments of their strength.
 How well does the model fit the data?
 
 ~~~~
