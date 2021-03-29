@@ -387,7 +387,7 @@ What does each new piece of the larger data set contribute to your intuition abo
   pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
   pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')`
 
-* !`pass('bill', 'exam1') && !pass('bill', 'exam2') &&
+* `!pass('bill', 'exam1') && !pass('bill', 'exam2') &&
   pass('mary', 'exam1') && pass('mary', 'exam2') && pass('mary', 'exam3') && pass('mary', 'exam4') && pass('mary', 'exam5') &&
   pass('tim', 'exam1') && pass('tim', 'exam2') && pass('tim', 'exam3') && pass('tim', 'exam4') && pass('tim', 'exam5')`
 
