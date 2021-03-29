@@ -95,7 +95,9 @@ In WebPPL, each time you run a program you get a *sample* by simulating the comp
 If you run the program many times, and collect the values in a histogram, you can see what a typical sample looks like:
 
 ~~~~
-viz(repeat(1000,flip))
+var n = 1000             // number of Bernoulli trials
+viz(repeat(n,flip),
+    {xLabel:"X ~ Bernoulli(𝜃 = 0.5)", yLabel:"relative frequency h(X|n=1000)"})
 ~~~~
 
 Here we have used the `repeat` procedure which takes a number of repetitions, $$K$$, and a function (in this case `flip`) and returns a list of $$K$$ samples from that function.

@@ -236,7 +236,7 @@ viz(Infer({method: 'enumerate'}, model))
 
 ### Markov chain Monte Carlo (MCMC)
 
-With rejection sampling, each sample is an independent draw from the model's prior. Markov chain Monte Carlo, in contrast involves a random walk through the posterior. Each sample depends on the prior sample -- but ony the prior sample (it is a *Markov* chain). We describe this in more detail below.
+With rejection sampling, each sample is an independent draw from the model's prior. Markov chain Monte Carlo, in contrast involves a random walk through the posterior. Each sample depends on the prior sample -- but only the prior sample (it is a *Markov* chain). We describe this in more detail below.
 
 Importantly, while you can approximate an arbitrary conditional distribution with arbitrary precision using rejection sampling or MCMC if you run the algorithms long enough, MCMC tends to approach the conditional distribution much more rapidly. Consider again this simple model:
 
@@ -347,7 +347,7 @@ var samples = repeat(5000, function() {chain(3, 250)})
 viz.table(samples)
 ~~~~
 
-As we can see, this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the inference below, in the sense that it specifies a way to sample from the required conditional distribution.
+As we can see (**sorry I cannot *see* this, please give a more detailed explanation or proof**), this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the inference below, in the sense that it specifies a way to sample from the required conditional distribution.
 We can get the same computation using `Infer`:
 
 ~~~~
