@@ -858,7 +858,7 @@ drawLines(canvas, inferredTrajectory[0], inferredTrajectory.slice(1), "blue") //
 drawLines(canvas, trueLocs[0], trueLocs.slice(1), "green") // true
 ~~~~
 
-Again, the actual trajectory is in green, the observations are in grey, and the inferred trajectory is in green. Try increasing or decreasing the number of particles to see how this affects inference. 
+Again, the actual trajectory is in green, the observations are in grey, and the inferred trajectory is in blue. Try increasing or decreasing the number of particles to see how this affects inference. 
 
 [Here](http://dritchie.github.io/web-procmod/) is a more complex example of using SMC to generate a 3D model that matches a given volumetric target (Note: this demo uses a much older version of WebPPL, so some of the syntax is different / not compatible with the code we've been working with).
 
