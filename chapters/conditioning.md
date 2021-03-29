@@ -192,7 +192,7 @@ Much of the difficulty of implementing the WebPPL language (or probabilistic mod
 We have already seen rejection sampling and enumeration, but the AI literature is replete with other algorithms and techniques for dealing with conditional probabilistic inference.
 Many of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
 Switching from one method to another is as simple as changing the options passed to `Infer`. We have already seen two methods: `{method: 'enumerate'}` and `{method: 'rejection', samples: X}`; other methods include `'MCMC'`, `'SMC'`, and `'variational'`.
-Sometimes we even drop the method argument, asking WebPPL to guess the best inference method (which is can often do).
+Sometimes we even drop the method argument, asking WebPPL to guess the best inference method (which it can often do).
 The [Infer documentation](http://docs.webppl.org/en/master/inference/index.html) provides many more usage details.
 
 There is an interesting parallel between the `Infer` abstraction, wrapping up the engineering challenge of different inference methods, and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
