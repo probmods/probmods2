@@ -316,7 +316,7 @@ print("posterior predictive:")
 viz.scatter(map(function(v){return {x: T.toScalars(v)[0], y: T.toScalars(v)[1]}}, sample(post).pp))
 ~~~~
 
-An issue with this approach is that the latent random choice associated with each data point (inside `makeData`) is chosen fresh on each mini-batch and may not get to be very good before we move on to a new mini-batch. A solution explore in recent work is to *amortize* the inference, that is to learn an approximation mapping from an observation to a guess about the latent choice.
+An issue with this approach is that the latent random choice associated with each data point (inside `makeData`) is chosen fresh on each mini-batch and may not get to be very good before we move on to a new mini-batch. A solution explored in recent work is to *amortize* the inference, that is to learn an approximation mapping from an observation to a guess about the latent choice.
 
 ~~~~
 var hd = 10
