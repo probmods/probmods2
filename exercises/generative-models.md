@@ -149,8 +149,8 @@ Infer({method: "forward", samples: 1000}, function() {
 If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a function from a person to whether they have that disease, like this:
 
 ~~~~
-var allergies = mem(function(person) { return flip(.3) })
-var cold = mem(function(person) { return flip(.2) })
+var allergies = function(person) { return flip(.3) }
+var cold = function(person) { return flip(.2) }
 
 var sneeze = function(person) { return cold(person) || allergies(person) }
 

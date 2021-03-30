@@ -112,18 +112,18 @@ What if we want to invoke this sampling process multiple times? We would like to
 We can use `function` to construct such complex stochastic functions from the primitive ones.
 
 ~~~~
-var sumFlips = function () {
+var sumFlips = function() {
   return flip() + flip() + flip()
 }
 viz(repeat(100, sumFlips))
 ~~~~
 
-A function expression with an empty argument list, `function () {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`.
+A function expression with an empty argument list, `function() {...}`, is called a *thunk*: this is a function that takes no input arguments. If we apply a thunk (to no arguments!) we get a return value back, for example `flip()`.
 <!--A thunk is an object that represents a whole *probability distribution*.-->
 Complex functions can also have arguments. Here is a stochastic function that will only sometimes double its input:
 
 ~~~~
-var noisyDouble = function (x) { flip() ? x+x : x }
+var noisyDouble = function (x) { return flip() ? x+x : x }
 noisyDouble(3);
 ~~~~
 
@@ -135,14 +135,14 @@ A good example comes from coin flipping...
 The following program defines a fair coin, and flips it 20 times:
 
 ~~~~
-var fairCoin = function () { flip(0.5) ? 'h' : 't' }
+var fairCoin = function() { return flip(0.5) ? 'h' : 't' }
 viz(repeat(20, fairCoin))
 ~~~~
 
 This program defines a "trick" coin that comes up heads most of the time (95%), and flips it 20 times:
 
 ~~~~
-var trickCoin = function () { flip(0.95) ? 'h' : 't' }
+var trickCoin = function() { return flip(0.95) ? 'h' : 't' }
 viz(repeat(20, trickCoin))
 ~~~~
 
@@ -150,7 +150,7 @@ The higher-order function `make-coin` takes in a weight and outputs a function (
 
 ~~~~
 var makeCoin = function (weight) {
-  return function () { flip(weight) ? 'h' : 't' }
+  return function() { return flip(weight) ? 'h' : 't' }
 }
 
 var fairCoin = makeCoin(0.5)
@@ -166,11 +166,11 @@ We can also define a higher-order function that takes a "coin" and "bends it":
 
 ~~~~
 var makeCoin = function (weight) {
-  return function () { flip(weight) ? 'h' : 't' }
+  return function() { return flip(weight) ? 'h' : 't' }
 }
 
 var bend = function (coin) {
-  return function () {
+  return function() {
     return coin() == 'h' ? makeCoin(0.7)() : makeCoin(0.1)()
   }
 }
@@ -189,11 +189,11 @@ Try varying the coin weight or the number of repetitions to see how the expected
 
 ~~~~
 var makeCoin = function (weight) {
-  return function () { flip(weight) }
+  return function() { return flip(weight) }
 }
 
 var coin = makeCoin(0.8)
-var data = repeat(1000, function () { sum(repeat(10, coin)) })
+var data = repeat(1000, function() { return sum(repeat(10, coin)) })
 viz(data, {xLabel: '# heads'})
 ~~~~
 
@@ -284,7 +284,7 @@ The probability of an event $$A$$ (such as the above program returning `[true, f
 A **probability distribution** is the probability of each possible outcome of an event. For instance, we can examine the probability distribution on values that can be returned by the above program by sampling many times and examining the histogram of return values:
 
 ~~~~
-var randomPair = function () {  [flip(), flip()] }
+var randomPair = function() { return [flip(), flip()] }
 viz.hist(repeat(1000, randomPair), 'return values')
 ~~~~
 
@@ -327,7 +327,7 @@ print( sample(g) )
 print( gaussian(0,1) )
 
 //and build more complex processes!
-var foo = function () { gaussian(0,1) * gaussian(0,1) }
+var foo = function() { return gaussian(0,1) * gaussian(0,1) }
 
 foo()
 ~~~~
@@ -341,7 +341,7 @@ Above we described how complex sampling processes can be built as complex functi
 
 ~~~~
 //a complex function, that specifies a complex sampling process:
-var foo = function () { gaussian(0, 1) * gaussian(0, 1) }
+var foo = function() { return gaussian(0, 1) * gaussian(0, 1) }
 
 //make the marginal distributions on return values explicit:
 var d = Infer({method: 'forward', samples: 1000}, foo)
@@ -369,10 +369,10 @@ In the above example we take three steps to compute the output value: we sample 
 To make this more clear let us re-write the program as:
 
 ~~~~
-var a = flip()
-var b = flip()
-var c = [a, b]
-c
+var A = flip()
+var B = flip()
+var C = [A, B]
+C
 ~~~~
 
 We can directly observe (as we did above) that the probability of `true` for `A` is 0.5, and the probability of `false` from `B` is 0.5. Can we use these two probabilities to arrive at the probability of 0.25 for the overall outcome `C` = `[true, false]`? Yes, using the *product rule* of probabilities:
@@ -380,17 +380,17 @@ The probability of two random choices is the product of their individual probabi
 The probability of several random choices together is often called the *joint probability* and written as $$P(A,B)$$.
 Since the first and second random choices must each have their specified values in order to get `[true, false]` in the example, the joint probability is their product: 0.25.
 
-We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, we can visualize the the exact probability of `[true, false]` resulting from this program using `Infer` with `enumerate`:
+We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, we can visualize the the exact probability of `[true, false]` resulting from this program using `Infer`:
 
 ~~~~
-var a = flip()
-var b = flip(a ? 0.3 : 0.7)
+var A = flip()
+var B = flip(A ? 0.3 : 0.7)
 
-Infer({method: 'enumerate'}, function () {
-  var a = flip()
-  var b = flip(a ? 0.3 : 0.7)
+Infer({method: 'forward', samples: 1000}, function() {
+  var A = flip()
+  var B = flip(A ? 0.3 : 0.7)
   
-  return {'b': b, 'a': a}
+  return {'B': B, 'A': A}
 })
 ~~~~
 
@@ -435,7 +435,7 @@ var geometric = function (p) {
 }
 
 var g = Infer({method: 'forward', samples: 1000},
-               function () { geometric(0.6) })
+               function() { return geometric(0.6) })
 viz(g)
 ~~~~
 
@@ -508,11 +508,11 @@ We have included such a 2-dimensional physics simulator, the function `runPhysic
 We can use this to imagine the outcome of various initial states, as in the Plinko machine example above:
 
 ~~~~
-var dim = function () { uniform(5, 20) }
-var staticDim = function () { uniform(10, 50) }
-var shape = function () { flip() ? 'circle' : 'rect' }
-var xpos = function () { uniform(100, worldWidth - 100) }
-var ypos = function () { uniform(100, worldHeight - 100) }
+var dim = function() { return uniform(5, 20) }
+var staticDim = function() { return uniform(10, 50) }
+var shape = function() { return flip() ? 'circle' : 'rect' }
+var xpos = function() { return uniform(100, worldWidth - 100) }
+var ypos = function() { return uniform(100, worldHeight - 100) }
 
 var ground = {shape: 'rect',
               static: true,
@@ -520,7 +520,7 @@ var ground = {shape: 'rect',
               x: worldWidth/2,
               y: worldHeight}
 
-var falling = function () {
+var falling = function() {
   return {
     shape: shape(),
     static: false,
@@ -529,7 +529,7 @@ var falling = function () {
     y: 0}
 };
 
-var fixed = function () {
+var fixed = function() {
   return {
     shape: shape(),
     static: true,
@@ -555,7 +555,7 @@ var ground = {
   x: worldWidth/2,
   y: worldHeight
 }
-var dim = function () { uniform(10, 50) }
+var dim = function() { return uniform(10, 50) }
 var xpos = function (prevBlock) {
   var prevW = prevBlock.dims[0]
   var prevX = prevBlock.x
@@ -580,7 +580,7 @@ var addBlock = function (prevBlock, isFirst) {
   }
 }
 
-var makeTowerWorld = function () {
+var makeTowerWorld = function() {
   var block1 = addBlock(ground, true)
   var block2 = addBlock(block1, false)
   var block3 = addBlock(block2, false)
@@ -671,11 +671,11 @@ var run = function (world) {
 }
 
 viz(Infer({method: 'forward', samples: 100},
-           function () { run(stableWorld) }))
+           function() { return run(stableWorld) }))
 viz(Infer({method: 'forward', samples: 100},
-           function () { run(almostUnstableWorld) }))
+           function() { return run(almostUnstableWorld) }))
 viz(Infer({method: 'forward', samples: 100},
-           function () { run(unstableWorld) }))
+           function() { return run(unstableWorld) }))
 
 // uncomment any of these that you'd like to see for yourself
 // physics.animate(1000, stableWorld)

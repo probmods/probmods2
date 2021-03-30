@@ -58,18 +58,18 @@ flip(.4)
 
 ~~~~
 viz(repeat(1000, function() {
-  flip() ? flip(.7) : flip(.1)
+  return flip() ? flip(.7) : flip(.1)
 }))
 ~~~~
 
 ~~~~
 viz(repeat(1000, function() {
-  flip(flip() ? .7 : .1)
+  return flip(flip() ? .7 : .1)
 }))
 ~~~~
 
 ~~~~
-viz(repeat(1000, function() { flip(.4) }))
+viz(repeat(1000, function() { return flip(.4) }))
 ~~~~
 
 ### c)
@@ -207,7 +207,7 @@ Infer({method: "forward", samples: 1000}, function() {
 > If we wanted to represent the diseases of many patients we might have tried to make each disease and symptom into a function from a person to whether they have that disease, like this:
 
 ~~~~
-Infer({method: "enumerate"}, function() {
+Infer({method: "forward", samples: 1000}, function() {
   var allergies = mem(function(person) { return flip(.3) })
   var cold = mem(function(person) { return flip(.2) })
 
@@ -329,7 +329,7 @@ var fn = function() {
   var b = flip(a ? 0.5 : 0.3)
   return [a, b] 
 }
-Infer({method: "enumerate"}, fn)
+Infer({method: "forward", samples: 10000}, fn)
 ~~~~
 
 ## Exercise 8
