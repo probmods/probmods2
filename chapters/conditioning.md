@@ -192,7 +192,7 @@ Much of the difficulty of implementing the WebPPL language (or probabilistic mod
 We have already seen rejection sampling and enumeration, but the AI literature is replete with other algorithms and techniques for dealing with conditional probabilistic inference.
 Many of these have been adapted into WebPPL to give implementations of `Infer` that may be more efficient in various cases.
 Switching from one method to another is as simple as changing the options passed to `Infer`. We have already seen two methods: `{method: 'enumerate'}` and `{method: 'rejection', samples: X}`; other methods include `'MCMC'`, `'SMC'`, and `'variational'`.
-Sometimes we even drop the method argument, asking WebPPL to guess the best inference method (which is can often do).
+Sometimes we even drop the method argument, asking WebPPL to guess the best inference method (which it can often do).
 The [Infer documentation](http://docs.webppl.org/en/master/inference/index.html) provides many more usage details.
 
 There is an interesting parallel between the `Infer` abstraction, wrapping up the engineering challenge of different inference methods, and the idea of levels of analysis in cognitive science @Marr1982. At the top, or computational level, of analysis we are concerned more with the world knowledge people have and the inferences they license; at the next, algorithmic, level of analysis we are concerned with the details on *how* these inferences are done.
@@ -293,7 +293,7 @@ This WebPPL program runs a tournament between several teams, mixing up players a
 Can you guess who is strong or weak, looking at the tournament results?
 
 ~~~~
-var strength = mem(function (person) {return Math.abs(gaussian(1, 1), 0.01)})
+var strength = mem(function (person) {return Math.max(gaussian(1, 1), 0.01)})
 var lazy = function(person) {return flip(1/3) }
 var pulling = function(person) {
   return lazy(person) ? strength(person) / 2 : strength(person) }
@@ -318,7 +318,7 @@ We can use `Infer` to ask a variety of different questions. For instance, how li
 
 ~~~~
 var model = function() {
-  var strength = mem(function (person) {return Math.abs(gaussian(1, 1), 0.01)})
+  var strength = mem(function (person) {return Math.max(gaussian(1, 1), 0.01)})
   var lazy = function(person) {return flip(1/3) }
   var pulling = function(person) {
     return lazy(person) ? strength(person) / 2 : strength(person) }
@@ -351,7 +351,7 @@ We can form many complex queries from this simple model. We could ask how likely
 
 ~~~~
 var model = function() {
-var strength = mem(function (person) {return Math.abs(gaussian(1, 1), 0.01)})
+var strength = mem(function (person) {return Math.max(gaussian(1, 1), 0.01)})
   var lazy = function(person) {return flip(1/3) }
   var pulling = function(person) {
     return lazy(person) ? strength(person) / 2 : strength(person) }

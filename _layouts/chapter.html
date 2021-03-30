@@ -1,18 +1,24 @@
 ---
 layout: default
 custom_js:
-- assets/js/katex.min.js
 - assets/js/littlefoot.min.js
 - assets/js/paper-full.js
 - assets/js/parse-bibtex.js
 - assets/js/chapter.js
 
 custom_css:
-- assets/css/katex.min.css
 - assets/css/littlefoot.css
 - assets/css/webppl-viz.css
 - assets/css/webppl-editor.css
 ---
+<!-- temporarily removed katex:
+- assets/js/katex.min.js
+- assets/css/katex.min.css 
+-->
+<!-- MathJax -->
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
 
 <div class="page-header">
   <h1>{{ page.title }}</h1>

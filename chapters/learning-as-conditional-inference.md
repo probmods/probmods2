@@ -316,7 +316,7 @@ viz.line(observedDataSizes, estimates)
 
 It is easy to see that this model doesn't really capture our intuitions about coins, or at least not in everyday scenarios.  Imagine that you have just received a quarter in change from a store -- or even better, taken it from a nicely wrapped-up roll of quarters that you have just picked up from a bank.  Your prior expectation at this point is that the coin is almost surely fair.  If you flip it 10 times and get 7 heads out of 10, you'll think nothing of it; that could easily happen with a fair coin and there is no reason to suspect the weight of this particular coin is anything other than 0.5.  But running the above query with uniform prior beliefs on the coin weight, you'll guess the weight in this case is around 0.7. Our hypothesis generating function needs to be able to draw `coinWeight` not from a uniform distribution, but from some other function that can encode various expectations about how likely the coin is to be fair, skewed towards heads or tails, and so on. 
 
-One option is the Beta distribution. The Beta distribution takes parameters `a` and `b`, which describe the prior toward `true` and `false`. (When `a` and `b` are integers they can be can be thought of as *prior* observations.)
+One option is the Beta distribution. The Beta distribution takes parameters `a` and `b`, which describe the prior toward `true` and `false`. (When `a` and `b` are integers they can be thought of as *prior* observations.)
 
 ~~~~
 var pseudoCounts = {a: 10, b: 10};

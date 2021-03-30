@@ -158,7 +158,7 @@ The prior is a mixture of these two possibilities.
 
 ## Scientists' models of people
 
-The above models instantiate different hypotheses about the coin spinning experiemnts, and  make different predictions about what people will do in this situation.
+The above models instantiate different hypotheses about the coin spinning experiments, and  make different predictions about what people will do in this situation.
 We could recruit volunteers, run experiments in a laboratory, and record our participants' responses.
 But, how are we to decide which model is better?
 
@@ -891,7 +891,7 @@ var parameterPosterior = marginalize(posterior, function(x){return x.parameters}
 viz.marginals(parameterPosterior)
 ~~~~
 
-We see that $$\beta_2$$ is also probably not 0, suggesting that the number of *unique* wins a player has is relavent for predicting participants' judgments of their strength.
+We see that $$\beta_2$$ is also probably not 0, suggesting that the number of *unique* wins a player has is relevant for predicting participants' judgments of their strength.
 How well does the model fit the data?
 
 ~~~~
