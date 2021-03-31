@@ -18,8 +18,8 @@ var model = function() {
   // Your code here
 }
 
-var log_prob = Infer({method:'enumerate'}, model).score('H');
-Math.exp(log_prob);
+var logProb = Infer({method:'enumerate'}, model).score('H');
+Math.exp(logProb);
 ~~~~
 
 
@@ -273,7 +273,7 @@ Make sure that your WebPPL answers and hand-computed answers agree -- note that 
 
 ~~~~
 // define some variables and utility functions
-var checkVowel = function(letter) { letter == 'a' || letter == 'e' };
+var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
 var letterProbs = map(function(letter) { checkVowel ? 0.45 : 0.05 }, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs});
@@ -298,7 +298,7 @@ Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` functio
 
 ~~~~
 // define some variables and utility functions
-var checkVowel = function(letter) { letter == 'a' || letter == 'e' };
+var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
 var letterProbs = map(function(letter) { checkVowel ? 0.45 : 0.05 }, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs});

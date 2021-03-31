@@ -20,8 +20,8 @@ var model = function() {
   return flip() ? "H" : "T"
 }
 
-var log_prob = Infer({method:'enumerate'}, model).score('H');
-Math.exp(log_prob);
+var logProb = Infer({method:'enumerate'}, model).score('H');
+Math.exp(logProb);
 ~~~~
 
 
@@ -36,16 +36,16 @@ Math.exp(log_prob);
 P(Heads) = 0.8056603773584906
 
 ~~~~
-var flip_coin = function(coin_type) {
-  return coin_type == "fair" ? flip() : flip(0.9);
+var flipCoin = function(coinType) {
+  return coinType == "fair" ? flip() : flip(0.9);
 }
 
 var model = function() {
-  var coin_type = flip() ? "fair" : "biased";
+  var coinType = flip() ? "fair" : "biased";
   
-  var flip1 = flip_coin(coin_type);
-  var flip2 = flip_coin(coin_type);
-  var flip3 = flip_coin(coin_type);
+  var flip1 = flipCoin(coinType);
+  var flip2 = flipCoin(coinType);
+  var flip3 = flipCoin(coinType);
 
   // first 2 flips are `true`
   condition(flip1 && flip2);
@@ -65,22 +65,22 @@ viz.table(Infer({method:'enumerate'}, model));
 P(biased) = 0.8536299765807963
 
 ~~~~
-var flip_coin = function(coin_type) {
-  return coin_type == "fair" ? flip() : flip(0.9);
+var flipCoin = function(coinType) {
+  return coinType == "fair" ? flip() : flip(0.9);
 }
 
 var model = function() {
-  var coin_type = flip() ? "fair" : "biased";
+  var coinType = flip() ? "fair" : "biased";
   
-  var flip1 = flip_coin(coin_type);
-  var flip2 = flip_coin(coin_type);
-  var flip3 = flip_coin(coin_type);
+  var flip1 = flipCoin(coinType);
+  var flip2 = flipCoin(coinType);
+  var flip3 = flipCoin(coinType);
 
   // first 2 flips are `true`
   condition(flip1 && flip2 && flip3);
 
   // what is the next flip going to be?
-  return coin_type;
+  return coinType;
 }
 
 viz.table(Infer({method:'enumerate'}, model));
@@ -94,16 +94,16 @@ viz.table(Infer({method:'enumerate'}, model));
 P(Heads) = 0.6058823529411763
 
 ~~~~
-var flip_coin = function(coin_type) {
-  return coin_type == "fair" ? flip() : flip(0.9);
+var flipCoin = function(coinType) {
+  return coinType == "fair" ? flip() : flip(0.9);
 }
 
 var model = function() {
-  var coin_type = flip() ? "fair" : "biased";
+  var coinType = flip() ? "fair" : "biased";
   
-  var flip1 = flip_coin(coin_type);
-  var flip2 = flip_coin(coin_type);
-  var flip3 = flip_coin(coin_type);
+  var flip1 = flipCoin(coinType);
+  var flip2 = flipCoin(coinType);
+  var flip3 = flipCoin(coinType);
 
   // first 2 flips are `true`
   condition(flip1 != flip2);
@@ -383,8 +383,8 @@ display("rain")
 viz.table(Infer({method: "enumerate"}, function() {
   var sprinkler = flip();
   var rain = flip(0.3);
-  var wet_lawn = sprinkler || rain;
-  condition(wet_lawn);
+  var wetLawn = sprinkler || rain;
+  condition(wetLawn);
   return rain;
 }))
 
@@ -392,8 +392,8 @@ display("sprinkler")
 viz.table(Infer({method: "enumerate"}, function() {
   var sprinkler = flip();
   var rain = flip(0.3);
-  var wet_lawn = sprinkler || rain;
-  condition(wet_lawn);
+  var wetLawn = sprinkler || rain;
+  condition(wetLawn);
   return sprinkler;
 }))
 ~~~~
@@ -407,11 +407,11 @@ viz.table(Infer({method: "enumerate"}, function() {
 ~~~~
 viz.table(Infer({method: "enumerate"}, function() {
   var rain = flip(0.3);
-  var my_sprinkler = flip();
-  var her_sprinkler = flip();
-  var my_lawn_is_wet = my_sprinkler || rain;
-  var her_lawn_is_wet = her_sprinkler || rain;
-  condition(my_lawn_is_wet && her_lawn_is_wet);
+  var mySprinkler = flip();
+  var herSprinkler = flip();
+  var myLawnIsWet = mySprinkler || rain;
+  var herLawnIsWet = herSprinkler || rain;
+  condition(myLawnIsWet && herLawnIsWet);
   return rain;
 }))
 ~~~~
@@ -428,13 +428,13 @@ viz.table(Infer({method: "enumerate"}, function() {
   var rain = flip(0.3);
 
   var sprinkler = mem(function(person) { return flip() });
-  var wet_lawn = function(person) { return rain || sprinkler(person) };
+  var wetLawn = function(person) { return rain || sprinkler(person) };
 
-  condition(wet_lawn("me"));
-  condition(wet_lawn("Kelsey"));
-  condition(wet_lawn("Kevin"));
-  condition(wet_lawn("Manu"));
-  condition(wet_lawn("Josh"));
+  condition(wetLawn("me"));
+  condition(wetLawn("Kelsey"));
+  condition(wetLawn("Kevin"));
+  condition(wetLawn("Manu"));
+  condition(wetLawn("Josh"));
   return rain;
 }))
 ~~~~
@@ -500,8 +500,9 @@ Include a screenshot of the resulting graph.
 
 ~~~~
 // define some variables and utility functions
+var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
-var letterProbs = map(function(letter) { letter == 'a' || letter == 'e' ? 0.45 : 0.05 }, letterVals);
+var letterProbs = map(function(letter) { checkVowel ? 0.45 : 0.05 }, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs});
 
 // Compute p(h | win)
@@ -525,7 +526,7 @@ Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` functio
 
 ~~~~
 // define some variables and utility functions
-var checkVowel = function(letter) { letter == 'a' || letter == 'e' };
+var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
 var letterProbs = map(function(letter) { checkVowel ? 0.45 : 0.05 }, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs});
