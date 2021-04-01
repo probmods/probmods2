@@ -6,6 +6,7 @@ custom_js:
 - assets/js/physics.js
 ---
 
+
 ## Exercise 1: Fair coins and biased coins
 
 ### a)
@@ -16,11 +17,13 @@ custom_js:
 
 ~~~~
 var model = function() {
-  flip() ? "H" : "T";
+  return flip() ? "H" : "T"
 }
-var log_prob = Infer({method:'enumerate'}, model).score('H')
-Math.exp(log_prob)
+
+var logProb = Infer({method:'enumerate'}, model).score('H');
+Math.exp(logProb);
 ~~~~
+
 
 ### b)
 
@@ -33,16 +36,16 @@ Math.exp(log_prob)
 P(Heads) = 0.8056603773584906
 
 ~~~~
-var flip_coin = function(coin_type) {
-  return coin_type=="fair" ? flip() : flip(0.9);
+var flipCoin = function(coinType) {
+  return coinType == "fair" ? flip() : flip(0.9);
 }
 
 var model = function() {
-  var coin_type = flip() ? "fair" : "biased";
+  var coinType = flip() ? "fair" : "biased";
   
-  var flip1 = flip_coin(coin_type);
-  var flip2 = flip_coin(coin_type);
-  var flip3 = flip_coin(coin_type);
+  var flip1 = flipCoin(coinType);
+  var flip2 = flipCoin(coinType);
+  var flip3 = flipCoin(coinType);
 
   // first 2 flips are `true`
   condition(flip1 && flip2);
@@ -51,8 +54,9 @@ var model = function() {
   return flip3;
 }
 
-viz.table(Infer({method:'enumerate'}, model))
+viz.table(Infer({method:'enumerate'}, model));
 ~~~~
+
 
 ### c)
 
@@ -61,26 +65,27 @@ viz.table(Infer({method:'enumerate'}, model))
 P(biased) = 0.8536299765807963
 
 ~~~~
-var flip_coin = function(coin_type) {
-  return coin_type=="fair" ? flip() : flip(0.9);
+var flipCoin = function(coinType) {
+  return coinType == "fair" ? flip() : flip(0.9);
 }
 
 var model = function() {
-  var coin_type = flip() ? "fair" : "biased";
+  var coinType = flip() ? "fair" : "biased";
   
-  var flip1 = flip_coin(coin_type);
-  var flip2 = flip_coin(coin_type);
-  var flip3 = flip_coin(coin_type);
+  var flip1 = flipCoin(coinType);
+  var flip2 = flipCoin(coinType);
+  var flip3 = flipCoin(coinType);
 
   // first 2 flips are `true`
   condition(flip1 && flip2 && flip3);
 
   // what is the next flip going to be?
-  return coin_type;
+  return coinType;
 }
 
-viz.table(Infer({method:'enumerate'}, model))
+viz.table(Infer({method:'enumerate'}, model));
 ~~~~
+
 
 ### d)
 
@@ -89,16 +94,16 @@ viz.table(Infer({method:'enumerate'}, model))
 P(Heads) = 0.6058823529411763
 
 ~~~~
-var flip_coin = function(coin_type) {
-  return coin_type=="fair" ? flip() : flip(0.9);
+var flipCoin = function(coinType) {
+  return coinType == "fair" ? flip() : flip(0.9);
 }
 
 var model = function() {
-  var coin_type = flip() ? "fair" : "biased";
+  var coinType = flip() ? "fair" : "biased";
   
-  var flip1 = flip_coin(coin_type);
-  var flip2 = flip_coin(coin_type);
-  var flip3 = flip_coin(coin_type);
+  var flip1 = flipCoin(coinType);
+  var flip2 = flipCoin(coinType);
+  var flip3 = flipCoin(coinType);
 
   // first 2 flips are `true`
   condition(flip1 != flip2);
@@ -107,47 +112,51 @@ var model = function() {
   return flip3;
 }
 
-viz.table(Infer({method:'enumerate'}, model))
+viz.table(Infer({method:'enumerate'}, model));
 ~~~~
+
 
 ## Exercise 2: Conditioning and Intervention
 
 > In the earlier [Medical Diagnosis]({{site.baseurl}}/chapters/02-generative-models.html#example-causal-models-in-medical-diagnosis) section we suggested understanding the patterns of symptoms for a particular disease by changing the prior probability of the disease such that it is always true (also called the *do* operator).
 
+
 ### a)
 
-> For this example, does intervening on the program in this way (e.g. by setting the value of `lungCancer`) have the same effect as *conditioning* on the disease being true? What about the casual dependency makes this case?
+> Show that *intervening* (setting) on `lungCancer` has the same effect as *conditioning* on `lungCancer` has the same effect on `cough` in this example. 
+> Create a table showing the marginal probabilities.
+> What must be true about the causal structure for this to be the case?
 
-In *this* example, intervening on `lungCancer` or conditioning on it has the same effect on `cough`. The reason for this is that `lungCancer` is a cause of `cough` and it's not causally dependent on any other variable in the program.
+`lungCancer` is a cause of `cough` and it's not causally dependent on any other variable in the program.
 
 ~~~~
 // original
-display("original")
+display("original");
 viz.table(Infer({method: "enumerate"}, function() {
   var lungCancer = flip(0.01);
   var cold = flip(0.2);
   var cough = (
     (cold && flip(0.5)) ||
     (lungCancer && flip(0.3))
-  )
+  );
   return cough;
-}));
+}))
 
 // intervention
-display("intervention")
+display("intervention");
 viz.table(Infer({method: "enumerate"}, function() {
   var lungCancer = true;
   var cold = flip(0.2);
   var cough = (
     (cold && flip(0.5)) ||
     (lungCancer && flip(0.3))
-  )
+  );
   return cough;
-}));
+}))
 
 
 // conditioning
-display("conditioning")
+display("conditioning");
 viz.table(Infer({method: "enumerate"}, function() {
   var lungCancer = flip(0.01);
   condition(lungCancer);
@@ -155,54 +164,62 @@ viz.table(Infer({method: "enumerate"}, function() {
   var cough = (
     (cold && flip(0.5)) ||
     (lungCancer && flip(0.3))
-  )
+  );
   return cough;
-}));
+}))
 ~~~~
+
 
 ### b) 
 
-> Why would intervening have a different effect than conditioning for more general hypotheticals? Construct an example where they differ. Then translate this into a WebPPL model and show that manipulating the prior gives different answers than manipulating the observation. *Hint:* think about the effect that intervening vs. conditioning on a variable that has a **causal parent** would have on that parent.
+> This time, modify the program so that intervening and conditioning produce different results. Under what circumstances does intervening produce different results from conditioning?
+> Create a table showing the marginal probabilities.
+> 
+> *Hint:* you do not need to introduce any new variables. Think about what other questions you can ask in this example. 
 
-Conditioning on a causally downstream variable can inform us about what the value of the causal parent *might have been*, but intervention breaks that statistical dependence.
+Conditioning on a causally downstream variable can inform us about what the value of the causal parent *might have been*, but intervention breaks that conditional dependence.
 
 ~~~~
 // original
-display("original")
+display("original");
 viz.table(Infer({method: "enumerate"}, function() {
-var A = 
-}));
+  var lungCancer = flip(0.1);
+  var cold = flip(0.2);
+  var cough = (
+    (cold && flip(0.5)) ||
+    (lungCancer && flip(0.3))
+  );
+  return lungCancer;
+}))
 
 // intervention
-display("intervention")
+display("intervention");
 viz.table(Infer({method: "enumerate"}, function() {
-var lungCancer = true;
-var cold = flip(0.2);
-var cough = (
-  (cold && flip(0.5)) ||
-  (lungCancer && flip(0.3))
-)
-return cough;
-}));
-
+  var lungCancer = flip(0.1);
+  var cold = flip(0.2);
+  var cough = true;
+  return lungCancer;
+}))
 
 // conditioning
-display("conditioning")
+display("conditioning");
 viz.table(Infer({method: "enumerate"}, function() {
-var lungCancer = flip(0.01);
-condition(lungCancer);
-var cold = flip(0.2);
-var cough = (
-  (cold && flip(0.5)) ||
-  (lungCancer && flip(0.3))
-)
-return cough;
-}));
+  var lungCancer = flip(0.1);
+  var cold = flip(0.2);
+  var cough = (
+    (cold && flip(0.5)) ||
+    (lungCancer && flip(0.3))
+  );
+  condition(cough);
+  return lungCancer;
+}))
 ~~~~
+
 
 ## Exercise 3: Computing marginals
 
-> Use the rules for computing probabilities to compute the marginal distribution on return values from these programs by hand (use `viz()` to check your answers):
+> Find the marginal distribution of the return values from these programs mathematically (by hand).
+
 
 ### a)
 
@@ -221,20 +238,26 @@ viz.table(Infer({method: "enumerate"}, function() {
   var b = flip();
   condition(a || b);
   return a;
-}))
+}));
 ~~~~
+
 
 ### b)
 
 ~~~~
 var smilesModel = function() {
-  var nice = mem(function(person) {return flip(.7)});
-  var smiles = function(person) {return nice(person) ? flip(.8) : flip(.5);}
+  var nice = mem(function(person) { flip(.7) });
+  
+  var smiles = function(person) {
+    return nice(person) ? flip(.8) : flip(.5);
+  }
+  
   condition(smiles('alice') && smiles('bob') && smiles('alice'));
+  
   return nice('alice');
 }
 
-viz.table(Infer({method: "enumerate"}, smilesModel))
+viz.table(Infer({method: "enumerate"}, smilesModel));
 ~~~~
 
 Using Bayes rule:
@@ -258,40 +281,48 @@ $$ P(N_A \mid S_A, S_B, S_A)  = 0.31808 / (0.31808 + 0.05325) = 0.85659655831 $$
 
 ### a)
 
-> Describe (using ordinary English) what the second WebPPL program, `smilesModel` above means.
+> Describe (using ordinary English) the `smilesModel` program in Exercise 3b.
 
 Most people are nice. Nice people smile a lot, other people smile less. Alice smiled twice (and Bob smiled once). Is Alice nice?
 
+
 ### b)
 
-> Extend `smilesModel` to create a version of the model that captures these two intuitions:
+> Extend `smilesModel` to create a version of the model considers two additional factors:
 
-> 1. people are more likely to smile if they want something and
-> 2. *nice* people are less likely to want something.
+> 1. People will smile 80% of the time if they want something from you and 50% if they do not.
+> 2. *Nice* people will only want something from you 20% of the time; non-nice people 50% of the time.
+
+> Don't forget that nice people also smile more often!
 
 > *Hint:* Which variables change at different times for the same person? Which values *depend* on other values?
 
 ~~~~
 var extendedSmilesModel = function() {
-  var nice = mem(function(person) {return flip(.7)});
-
+  var nice = mem(function(person) { flip(.7) });
+  
   var wantsSomething = function(person) {
-    return nice(person) ? flip(.2) : flip(.5)
+    return flip(nice(person) ? .2 : .5);
   }
 
   var smiles = function(person, wants) {
     return (wants ? flip(.8) : flip(.5))
-            || (nice(person) ? flip(.8) : flip(.5))
-  }  
+            || (nice(person) ? flip(.8) : flip(.5));
+  }
 
-  var aliceWants = wantsSomething('alice');
-  return smiles('alice', aliceWants)
+  var wants = wantsSomething('alice');
+  return smiles('alice', wants);
 }
 
-Infer({method: "enumerate"}, extendedSmilesModel)
+Infer({method: "enumerate"}, extendedSmilesModel);
 ~~~~
 
-Note that smiles now has two possible causes (draw the diagram!) Being nice makes you more likely to smile and, separately, wanting something makes you more likely to smile. Using the OR operator here captures the intuition that either one is sufficient to make someone more likely to smile (recall the 'explaining away' phenomenon in Chapter 4 which had a similar flavor). Critically, being nice is a persistant property of a person and is therefore held constant within an execution using `mem` while wanting something is circumstantial: the same person may want something on one occasion and not another. Finally, by making smiles a function of a person and *whether they want something* at a given time (as opposed to calling `wantsSomething` inside smiles), we can query a particular instance of wanting something without flipping separate coins outside and inside.
+Note that smiles now has two possible causes.
+Being nice makes you more likely to smile and, separately, wanting something makes you more likely to smile.
+Using the OR operator here captures the intuition that either one is sufficient to make someone more likely to smile.
+Critically, being nice is a persistant property of a person and is therefore held constant within an execution using `mem` while wanting something is circumstantial: the same person may want something on one occasion and not another.
+Finally, by making smiles a function of a person and *whether they want something* at a given time (as opposed to calling `wantsSomething` inside smiles), we can query a particular instance of wanting something without flipping separate coins outside and inside.
+
 
 ### c)
 
@@ -299,37 +330,40 @@ Note that smiles now has two possible causes (draw the diagram!) Being nice make
 
 > *Hint:* How will you represent the same person (Bob) smiling *multiple times*? What features of Bob will stay the same each time he smiles (or doesn't) and what features will change?
 
-> In your answer, show the WebPPL inference and a histogram of the answers -- in what ways do these answers make intuitive sense or fail to?
-
 ~~~~
 var extendedSmilesModel = function() {
-  var nice = mem(function(person) {return flip(.7)});
-
+  var nice = mem(function(person) { flip(.7) });
+  
   var wantsSomething = function(person) {
-    return nice(person) ? flip(.2) : flip(.5)
+    return flip(nice(person) ? .2 : .5);
   }
 
   var smiles = function(person, wants) {
     return (wants ? flip(.8) : flip(.5))
-            || (nice(person) ? flip(.8) : flip(.5))
-  }  
+            || (nice(person) ? flip(.8) : flip(.5));
+  }
 
-  var wantToday = wantsSomething('bob');
-  condition(smiles('bob', wantToday)                  // smiles today!
-            && !smiles('bob', wantsSomething('bob'))  // no smile on day 1
-            && !smiles('bob', wantsSomething('bob'))  // no smile on day 2
-            && !smiles('bob', wantsSomething('bob'))  // no smile on day 3
-            && !smiles('bob', wantsSomething('bob'))  // no smile on day 4
-            && !smiles('bob', wantsSomething('bob'))) // no smile on day 5
-  return wantToday
+  var wantsToday = wantsSomething('bob');
+  
+  condition(!smiles('bob', wantsSomething('bob'))); // no smile on day 1
+  condition(!smiles('bob', wantsSomething('bob'))); // no smile on day 2
+  condition(!smiles('bob', wantsSomething('bob'))); // no smile on day 3
+  condition(!smiles('bob', wantsSomething('bob'))); // no smile on day 4
+  condition(!smiles('bob', wantsSomething('bob'))); // no smile on day 5
+  condition(smiles('bob', wantsToday));             // smiles today!
+  
+  return wantsToday;
 }
 
-Infer({method: "enumerate"}, extendedSmilesModel)
+viz.table(Infer({method: "enumerate"}, extendedSmilesModel));
 ~~~~
 
-We condition on all the data that we have; bob failed to smile 5 times before, but then smiled today. Again, critically, because wantsSomething is not memoized, each of these observations is independent. We have uncertainty over whether bob wanted something on *every* day, but we're only interested in whether he wanted something on the day that he smiled, thus why we store that value and return it at the end.
+We condition on all the data that we have; bob did not smile the previous 5 times, but then smiled today.
+Again, because wantsSomething is not memoized, each of these observations is independent.
+We have uncertainty over whether bob wanted something on *every* day, but we're only interested in whether he wanted something on the day that he smiled, thus why we store that value and return it at the end.
 
-## Exerrcise 5: Sprinklers, Rain and `mem`
+
+## Exercise 5: Sprinklers and Rain
 
 ### a)
 
@@ -342,21 +376,15 @@ We condition on all the data that we have; bob failed to smile 5 times before, b
 > Answer the following questions, either using the Rules of Probability or by writing your own sprinkler model in webppl.
 > 
 > * What is the probability that it rained?
-
-$$P(rain) = 0.46153846153846156$$
-
 > * What is the probability that my sprinkler turned on?
-
-$$P(sprinkler) = 0.7692307692307692$$
-
 
 ~~~~
 display("rain")
 viz.table(Infer({method: "enumerate"}, function() {
   var sprinkler = flip();
   var rain = flip(0.3);
-  var wet_lawn = sprinkler || rain;
-  condition(wet_lawn);
+  var wetLawn = sprinkler || rain;
+  condition(wetLawn);
   return rain;
 }))
 
@@ -364,82 +392,82 @@ display("sprinkler")
 viz.table(Infer({method: "enumerate"}, function() {
   var sprinkler = flip();
   var rain = flip(0.3);
-  var wet_lawn = sprinkler || rain;
-  condition(wet_lawn);
+  var wetLawn = sprinkler || rain;
+  condition(wetLawn);
   return sprinkler;
 }))
 ~~~~
+
 
 ### c)
 
 > My neighbour Kelsey, who has the same kind of sprinkler, tells me that her lawn was also wet that same morning.
 > What is the new posterior probability that it rained?
 
-$$P(rain) = 0.631578947368421$$
-
 ~~~~
 viz.table(Infer({method: "enumerate"}, function() {
   var rain = flip(0.3);
-  var my_sprinkler = flip();
-  var her_sprinkler = flip();
-  var my_lawn_is_wet = my_sprinkler || rain;
-  var her_lawn_is_wet = her_sprinkler || rain;
-  condition(my_lawn_is_wet && her_lawn_is_wet);
+  var mySprinkler = flip();
+  var herSprinkler = flip();
+  var myLawnIsWet = mySprinkler || rain;
+  var herLawnIsWet = herSprinkler || rain;
+  condition(myLawnIsWet && herLawnIsWet);
   return rain;
 }))
 ~~~~
+
 
 ### d)
 
 > To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning.
 > Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too.
-> Using `mem`, write a model to reason about arbitrary numbers of people, and then use it to find the new probability that it rained.
-
-$$P(rain) = 0.9320388349514566$$
+> Write a model to reason about all 5 people (including me and Kelsey), and then use it to find the probability that it rained.
 
 ~~~~
 viz.table(Infer({method: "enumerate"}, function() {
   var rain = flip(0.3);
 
-  var sprinkler = mem(function(person) {return flip();})
-  var wet_lawn = mem(function(person) {return rain || sprinkler(person);})
+  var sprinkler = mem(function(person) { return flip() });
+  var wetLawn = function(person) { return rain || sprinkler(person) };
 
-  condition(wet_lawn("me"), wet_lawn("Kelsey"), wet_lawn("Kevin"), wet_lawn("Manu"), wet_lawn("Josh"));
+  condition(wetLawn("me"));
+  condition(wetLawn("Kelsey"));
+  condition(wetLawn("Kevin"));
+  condition(wetLawn("Manu"));
+  condition(wetLawn("Josh"));
   return rain;
 }))
 ~~~~
 
-*Note:* We don't actually *have* to use `mem` here, because we're asking about rain. But if we instead wanted to reason about whether *my* sprinker went off, we can do that a lot more easily with the model that uses `mem`. E.g.
-
-~~~~
-viz.table(Infer({method: "enumerate"}, function() {
-  var rain = flip(0.3);
-
-  var sprinkler = mem(function(person) {return flip();})
-  var wet_lawn = mem(function(person) {return rain || sprinkler(person);})
-
-  condition(wet_lawn("me"), wet_lawn("Kelsey"), wet_lawn("Kevin"), wet_lawn("Manu"), wet_lawn("Josh"));
-  return wet_lawn("me");
-}))
-~~~~
 
 ## Exercise 6: Casino game
 
 > Consider the following game.
-> A machine randomly gives Bob a letter of the word "game"; it gives a, e (the vowels) with probability 0.45 each and the remaining letters (the consonants g, m) with probability 0.05 each.
-> The probability that Bob wins depends on which letter he got.
-> Letting $$h$$ denote the letter and letting $$Q(h)$$ denote the numeric position of that letter in the word "game" (e.g., $$Q(\text{g}) = 1, Q(\text{a}) = 2$$, and so on), the probability of winning is $$1/Q(h)^2$$.
-> 
-> Suppose that we observe Bob winning but we don't know what letter he got.
-> How can we use the observation that he won to update our beliefs about which letter he got?
-> Let's express this formally.
-> Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{g, a, m, e\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
+A machine randomly gives Bob a letter of the word "game" with and Bob has a different probability of winning depending on which letter he got:
+>
+> | $$h$$ | $$p(h)$$ | $$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
+| ----- | -------- | ----------------------- |------------------------- |
+| g     | 0.05     | 1                       |                          |
+| a     | 0.45     | 1/4                     |                          |
+| m     | 0.05     | 1/9                     |                          |
+| e     | 0.45     | 1/16                    |                          |
+>
+> Suppose that we observe Bob winning, but we don't know what letter he got.
+How can we use the observation that he won to update our beliefs about which letter he got?
+Let's express this formally.
+Before we begin, a bit of terminology: the set of letters that Bob could have gotten, $$\{g, a, m, e\}$$, is called the *hypothesis space* -- it's our set of hypotheses about the letter.
+
 
 ### a)
 
 > In English, what does the posterior probability $$p(h \mid \text{win})$$ represent?
 
 Given that Bob wins, which letter did he probably draw?
+ 
+> What does it mean for a letter to have the highest posterior?
+
+If we had to guess a letter, the letter with the highest posterior would be the best one. It's both likely to be drawn a priori (because it's a vowel) and likely to result in a win if Bob drew it.
+
 
 ### b)
 
@@ -459,43 +487,37 @@ Let $$Z$$ be the sum of $$ P(h) \cdot P(\text{win} \mid h) $$ across all values 
 | m     | 0.05     | 1/9                      | 0.05/9 / Z = 0.028       |
 | e     | 0.45     | 1/16                     | 0.45/16 / Z = 0.143      |
 
+
 ### c)
 
-> Now, we're going to write this model in WebPPL using `Infer`. Here is some starter code for you:
+> Now, let's write this model in WebPPL using `Infer`.
+Fill in the `...`'s in the code below to compute $$p(h \mid \text{win})$$.
+Include a screenshot of the resulting graph.
+> 
+> It might be helpful to comment out the `condition` statement so you can compare visually the prior (no `condition` statement) to the posterior (with `condition`).
+> 
+> Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
 ~~~~
 // define some variables and utility functions
-var checkVowel = function(letter) {return _.contains(['a', 'e', 'i', 'o', 'u'], letter);}
+var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
-var letterProbs = map(function(letter) {return checkVowel(letter) ? 0.45 : 0.05;}, letterVals);
-var letters = Categorical({vs: letterVals, ps: letterProbs})
+var letterProbs = map(function(letter) { checkVowel(letter) ? 0.45 : 0.05 }, letterVals);
+var letters = Categorical({vs: letterVals, ps: letterProbs});
 
 // Compute p(h | win)
 var distribution = Infer({method: 'enumerate'}, function() {
   var letter = sample(letters);
   var position = letterVals.indexOf(letter) + 1; 
   var winProb = 1 / Math.pow(position, 2);
-  var win = flip(winProb);
-  condition(win)
+  condition(flip(winProb));
   return letter;
 });
+
 viz.auto(distribution);
 viz.table(distribution);
 ~~~~
 
-> Fill in the `...`'s in the code to compute $$p(h \mid \text{win})$$.
-> Include a screenshot of the resulting graph.
-> What letter has the highest posterior probability?
-
-`a`
-
-> In English, what does it mean that this letter has the highest posterior?
-
-If we had to guess a letter, `a` would be the best one. It's both likely to be drawn a priori (because it's a vowel) and likely to result in a win if Bob drew it.
-
-> It might be interesting to comment out the `condition` statement so you can compare visually the prior (no `condition` statement) to the posterior (with `condition`).
-> 
-> Make sure that your WebPPL answers and hand-computed answers agree -- note that this demonstrates the equivalence between the program view of conditional probability and the distributional view.
 
 ### d)
 
@@ -504,23 +526,25 @@ Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` functio
 
 ~~~~
 // define some variables and utility functions
-var checkVowel = function(letter) {return _.contains(['a', 'e', 'i', 'o', 'u'], letter);}
+var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
-var letterProbs = map(function(letter) {return checkVowel(letter) ? 0.45 : 0.05;}, letterVals);
-var letters = Categorical({vs: letterVals, ps: letterProbs})
+var letterProbs = map(function(letter) { checkVowel(letter) ? 0.45 : 0.05 }, letterVals);
+var letters = Categorical({vs: letterVals, ps: letterProbs});
 
 // Compute p(h | win)
 var distribution = Infer({method: 'enumerate'}, function() {
   var letter = sample(letters);
   var position = letterVals.indexOf(letter) + 1; 
   var winProb = 1 / Math.pow(position, 2);
-  condition(...)
-  return ...
+  condition(flip(winProb));
+  return checkVowel(letter);
 });
-viz.auto(distribution);
+
+viz.table(distribution);
 ~~~~
 
 A vowel is more likely ($$P(vowel) = 0.7168141592920354$$) than a consonant ($$P(vowel) = 0.28318584070796465 $$)
+
 
 ### e)
 
@@ -528,6 +552,4 @@ A vowel is more likely ($$P(vowel) = 0.7168141592920354$$) than a consonant ($$P
 > What are the advantages and disadvantages of each?
 > Which do you prefer?
 
-The mathematical notation is more precise in some cases (we might get some rounding errors on the computer), but it's less error prone, easier to think about, and much easier to extend. What if we did this with all the letters of the alphabet instead? That would be tedious.
-
-
+The mathematical notation is more precise in some cases (we might get some rounding errors on the computer), but code is less error prone, easier to think about, and much easier to extend. It would be tedious to do this with all the letters of the alphabet instead by hand compared to using code.
