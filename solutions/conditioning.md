@@ -502,7 +502,7 @@ Include a screenshot of the resulting graph.
 // define some variables and utility functions
 var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
-var letterProbs = map(function(letter) { checkVowel ? 0.45 : 0.05 }, letterVals);
+var letterProbs = map(function(letter) { checkVowel(letter) ? 0.45 : 0.05 }, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs});
 
 // Compute p(h | win)
@@ -528,7 +528,7 @@ Answer this using the WebPPL code you wrote *Hint:* use the `checkVowel` functio
 // define some variables and utility functions
 var checkVowel = function(letter) { _.includes(['a', 'e', 'i', 'o', 'u'], letter) };
 var letterVals = ['g', 'a', 'm', 'e'];
-var letterProbs = map(function(letter) { checkVowel ? 0.45 : 0.05 }, letterVals);
+var letterProbs = map(function(letter) { checkVowel(letter) ? 0.45 : 0.05 }, letterVals);
 var letters = Categorical({vs: letterVals, ps: letterProbs});
 
 // Compute p(h | win)
