@@ -13,46 +13,46 @@ For each of the following programs:
 
 * Use conditioning to determine whether A and B are statistically dependent.
 
-a)
+### a)
 
 ~~~~ 
-var a = flip() 
-var b = flip()
-var c = flip(a && b ? .8 : .5)
+var a = flip();
+var b = flip();
+var c = flip(a && b ? .8 : .5);
 ~~~~
 
-b)
+### b)
 
 ~~~~ 
-var a = flip() 
-var b = flip(a ? .9 : .2)
-var c = flip(b ? .7 : .1)
+var a = flip();
+var b = flip(a ? .9 : .2);
+var c = flip(b ? .7 : .1);
 ~~~~
 
-c)
+### c)
 
 ~~~~ 
-var a = flip()
-var b = flip(a ? .9 : .2)
-var c = flip(a ? .7 : .1)
+var a = flip();
+var b = flip(a ? .9 : .2);
+var c = flip(a ? .7 : .1);
 ~~~~
 
-d)
+### d)
 
 ~~~~ 
-var a = flip(.6)
-var c = flip(.1)
+var a = flip(.6);
+var c = flip(.1);
 var z = flip() ? a : c;
-var b = z ? 'foo' : 'bar'
+var b = z ? 'foo' : 'bar';
 ~~~~
 
-e)
+### e)
 
 ~~~~ 
-var examFairPrior = Bernoulli({p: .8})
-var doesHomeworkPrior = Bernoulli({p: .8})
-var examFair = mem(function(exam) {return sample(examFairPrior)})
-var doesHomework = mem(function(student) {return sample(doesHomeworkPrior)});
+var examFairPrior = Bernoulli({p: .8});
+var doesHomeworkPrior = Bernoulli({p: .8});
+var examFair = mem(function(exam) { return sample(examFairPrior) });
+var doesHomework = mem(function(student) { return sample(doesHomeworkPrior) });
 
 var pass = function(student, exam) {
   return flip(examFair(exam) ?
