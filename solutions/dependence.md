@@ -16,9 +16,9 @@ title: Patterns of inference - solutions
 ### a)
 
 ~~~~ 
-var a = flip() 
-var b = flip()
-var c = flip(a && b ? .8 : .5)
+var a = flip();
+var b = flip();
+var c = flip(a && b ? .8 : .5);
 ~~~~
 
 neither causally dependent nor statistically dependent
@@ -28,9 +28,9 @@ neither causally dependent nor statistically dependent
 ### b)
 
 ~~~~ 
-var a = flip() 
-var b = flip(a ? .9 : .2)
-var c = flip(b ? .7 : .1)
+var a = flip();
+var b = flip(a ? .9 : .2);
+var c = flip(b ? .7 : .1);
 ~~~~
 
 both causally dependent *and* statistically dependent
@@ -40,37 +40,37 @@ both causally dependent *and* statistically dependent
 ### c)
 
 ~~~~ 
-var a = flip()
-var b = flip(a ? .9 : .2)
-var c = flip(a ? .7 : .1)
+var a = flip();
+var b = flip(a ? .9 : .2);
+var c = flip(a ? .7 : .1);
 ~~~~
 
 both causally dependent *and* statistically dependent
 
 ![](../assets/img/04_01_c.png)
 
-d)
+### d)
 
 ~~~~ 
-var a = flip(.6)
-var c = flip(.1)
+var a = flip(.6);
+var c = flip(.1);
 var z = flip() ? a : c;
-var b = z ? 'foo' : 'bar'
+var b = z ? 'foo' : 'bar';
 ~~~~
 
 both causally dependent *and* statistically dependent
 
 ![](../assets/img/04_01_d.png)
 
-e)
+### e)
 
 statistically dependent but *not* causally dependent
 
 ~~~~ 
-var examFairPrior = Bernoulli({p: .8})
-var doesHomeworkPrior = Bernoulli({p: .8})
-var examFair = mem(function(exam) {return sample(examFairPrior)})
-var doesHomework = mem(function(student) {return sample(doesHomeworkPrior)});
+var examFairPrior = Bernoulli({p: .8});
+var doesHomeworkPrior = Bernoulli({p: .8});
+var examFair = mem(function(exam) { return sample(examFairPrior) });
+var doesHomework = mem(function(student) { return sample(doesHomeworkPrior) });
 
 var pass = function(student, exam) {
   return flip(examFair(exam) ?
