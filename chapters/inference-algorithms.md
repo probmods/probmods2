@@ -458,11 +458,11 @@ var proposal_dist = function (x1, x2){
 
 // the MH recipe:
 var accept = function (x1, x2){
-  let p = Math.min(1, (target_dist(x2) * proposal_dist(x2, x1)) / (target_dist(x1) * proposal_dist(x1,x2)))
+  var p = Math.min(1, (target_dist(x2) * proposal_dist(x2, x1)) / (target_dist(x1) * proposal_dist(x1,x2)))
   return flip(p)
 }
 var transition = function(x){
-  let proposed_x = proposal_fn(x)
+  var proposed_x = proposal_fn(x)
   return (accept(x, proposed_x) ? proposed_x : x)
 }
 
