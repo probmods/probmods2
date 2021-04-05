@@ -658,7 +658,7 @@ The most likely ratings are one standard deviation above or below the mean, thou
 
 ## Single regression
 
-Let's say we ran this experiment and hypothesized that the number of times the target character won (`"nWins"` in the data set) is a predictor of how participants' ratings of strength.
+Let's say we ran this experiment and hypothesized that the number of times the target character won (`"nWins"` in the data set) is a predictor of <!-- typo? --> how participants' ratings of strength.
 We'll formalize this in a Bayesian regression framework, where ratings of strength $$r$$ are a linear combination of a fixed intercept $$\beta_0$$ and weighted component of number of wins $$\beta_1 *  n_{wins}$$.
 
 $$y_{predicted} = \beta_0 + \beta_1 * n_{wins}$$
@@ -816,7 +816,7 @@ viz.table(summaryData)
 The simple linear regression does surprisingly well on this data set (at least at predicting the mean responses).
 This is important to know; it provides a standard against which we can evaluate richer models.
 
-At the same time, we observe in the posterior predictive scatterplot that not all the linear model is predicting certain symmetries that don't come out.
+<!-- This sentence is confusing.) --> At the same time, we observe in the posterior predictive scatterplot that not all the linear model is predicting certain symmetries that don't come out.
 Why might that be?
 
 ## Mutiple regression
