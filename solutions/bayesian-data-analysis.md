@@ -13,15 +13,29 @@ we compared the parameter priors and posteriors to the corresponding **predictiv
 which tell us what data we should expect given our prior and posterior beliefs.
 For convenience, we've reproduced that model here.
 
-### Part A
+### Exercise 1.1
 
 > Notice that we used a uniform distribution over the interval [0, 1] as our prior, reflecting our assumption that a probability must lie between 0 and 1 but otherwise remaining agnostic to which values are most likely to be the case.
 While this is convenient, we may want to represent other assumptions.
-The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution), expressed in WebPPL as `Beta({a:..., b:...})`' is a more general way of expressing beliefs over the interval [0,1].
+> 
+> The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution), expressed in WebPPL as `Beta({a:..., b:...})`' is a more general way of expressing beliefs over the interval [0,1].
+> The beta distribution is what's called the conjugate prior probability distribution for the binomial distribution due
+> to its relationship between the prior and the posterior, and it also has a really neat interpretation that we will
+> explore in this problem.
+> 
+> You may want to visualize the beta distribution a few times with different parameters to get a sense of its shape.
+> 1. Beta(1, 1)
+> 2. Beta(3, 3)
+> 3. Beta(50, 50)
+> 4. Beta(1, 10)
+> 5. Beta(10, 1)
+> 6. Beta(.2, .2)
 
-> Try different beta priors on `p`, by changing `priorDist = Uniform(...)` to `p = Beta({a: 10, b: 10})`, `Beta({a: 1, b: 5})`, `Beta({a: 2, b: 21})`, and `Beta({a: 0.1, b: 0.1})`.
-(Note that `beta(1, 1)` is mathematically the same as `uniform(0, 1)`.)
-Describe the assumptions these priors capture and how they interact with the same data to produce posterior inferences and predictions.
+~~~~
+viz(repeat(10000, function() { sample(Beta({a:1, b: 1})) }));
+~~~~
+
+> Here, we have the binomial distribution example from the chapter.
 
 ~~~~
 // observed data
@@ -55,17 +69,47 @@ var posterior = Infer(opts, model);
 viz.marginals(posterior);
 ~~~~
 
-`a` can intuitively be thought of as the number of tails flips we've seen before, and `b` as the number of heads flips.
-If `a` is greater than `b`, the distribution will be skewed to the left.
-If those numbers are less than `1`, we have strong intuitions against 50-50.
+> Using the code above, answer the following questions.
+> 1. Run the code as is. How does the posterior compare to beta(2, 20)?
 
-### b)
+They look similar.
+
+> 2. Set the prior to beta(1, 1). What do you notice about the posterior distribution?
+
+The posterior looks similar to before.
+
+> 3. Set n = 10 and the prior to beta(1, 11). What do you notice about the posterior distribution?
+
+The posterior looks similar to before.
+
+> 4. Set k = 5, n = 15, and the prior to beta(1, 1). Compare the posterior to beta(6, 11).
+
+The posterior looks similar to beta(6, 11). 
+
+> 5. Set k = 4, n = 10, and the prior to beta(1, 1). 
+     What values of `a` and `b` would of beta(a, b) would the posterior look like?
+
+beta(5, 11)
+
+> 6. Set k = 10 and n = 20.
+     What values of `a` and `b` would a prior of beta(a, b) make the posterior look like beta(12, 10)?
+
+beta(3, 1)
+
+> 7. Based on these observations (and any others you may have tried),
+     what is the relationship between the beta distribution and the binomial distribution?
+
+`a` can intuitively be thought of as the number of successes/trues/heads/etc. we've seen before,
+and `b` as the number of failures/falses/tails, etc. we've seen before.
+Note that if `a` and `b` are less than `1`, we have strong intuitions against values towards the center.
+
+### Exercise 1.2
 
 > Predictive distributions are not restricted to exactly the same experiment as the observed data,
 and can be used in the context of any experiment where the inferred model parameters make predictions.
-In the current simple binomial setting, for example, predictive distributions could be found by an experiment
+> In the current simple binomial setting, for example, predictive distributions could be found by an experiment
 that is different because it has `n' != n` observations.
-Change the model to implement an example of this.
+> Change the model to implement an example of this.
 
 ~~~~
 // observed data
@@ -91,7 +135,7 @@ var model = function() {
    return {
        prior: prior_p, priorPredictive : priorPredictive,
        posterior : p, posteriorPredictive : posteriorPredictive
-    };
+   };
 }
 
 var opts = {method: "MCMC", samples: 2500, lag: 50};
@@ -153,7 +197,6 @@ You run one subject through your training regime and have them do the task.
 The subject performs well!
 Soon after, your adviser drops by and wants you to make a decision to collect more data or tweak your experimental paradigm.
 You thought beforehand that your task was too difficult.
-Do you still think your task is too hard?
 
 > Since you wrote down your prior beliefs, we can examine how much the data update those beliefs about the `taskDifficulty` parameter.
 How does your degree of belief in task difficult change as a result of your one pilot subject performing well?
@@ -186,54 +229,32 @@ viz.hist(taskDifficultyPosterior, {numBins: 9});
 print("Expectation: " + expectation(taskDifficultyPosterior));
 ~~~~
 
-### Part A
+### Exercise 2.1
 
-> Would you proceed with more data collection or would you change your paradigm?
-> How did you come to this conclusion?
+> Would you proceed with more data collection or would you change your experimental paradigm?
+In other words, do you still think your task is too hard?
 
-Answers are subjective and may vary.
-
-One possible answer:
+The posterior distribution shows that the task may not be as difficult as originally thought.
 If this participant did well, other participants may also do well, so the paradigm may not need to be changed.
-The actual decision may depend on the relative costs of tweaking the experiment, having a task that's too difficult or too easy, and collecting data.
 
-### b)
 
-> In Part A, you probably used either one value of the task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm.
-We find ourselves in a similar situation when we have models of psychological phenomena and want to decide whether or not the model fits the data (or, equivalently, whether our psychological theory is capturing the phenomenon).
+### Exercise 2.2
+
+> In Exercise 2.1, you probably used either one value of the task-difficulty or the full distribution of values to decide about whether to continue data collection or tweak the paradigm.
+We find ourselves in a similar situation when we have models of psychological phenomena and want to decide whether the model fits the data (or, equivalently, whether our psychological theory is capturing the phenomenon).
 The traditional approach is the value (or "point-wise estimate") approach: take the value that corresponds to the best fit
 (e.g., by using least-squares or maximum-likelihood estimation; here,
 you would have taken the Maximum A Posteriori (or, MAP) estimate, which would be 0.9).
-Why might this not be a good idea? Comment on the reliability of the MAP estimate and how MAP estimate relates to other values of the posterior distribution.
+Why might this not be a good idea? Comment on the reliability of the MAP estimate and how MAP estimate compares to other values of the posterior distribution.
 
 The MAP is only 0.9 because of our strong prior beliefs.
 The second most likely posterior value is the complete opposite (p = 0).
 
 
-## Exercise 3: BDA of Bayesian Cognitive Models
-
-> We saw in this chapter how to analyze our models of cognition by using Bayesian statistical techniques.
-> Compare and contrast the results of our cognitive model of tug-of-war with our regression models.
-> Please consider each question and provide a couple sentences describing your answer.
-
-> A. What phenomena in the data was the cognitive model better able to capture?
-
-Explaining away Alice's strength if Bob and Alice win on a team together, but then Bob also wins on his own.
-
-> B. What, if anything, did the models fail to capture?
-
-Answers may vary.
-Some examples:
-Teamwork, excitement or nervousness due to a winning streak, intimidation or loafing (e.g. being lazy because you think it wouldn't make a difference anyway).
-
-> C. What are some commonalities between the two models?
-
-Both are models, both infer parameters of the model, both set priors on the model parameters and update the parameters based on the observations.
-
-## Exercise 4
+## Exercise 3
 
 > Let's continue to explore the inferences you (as a scientist) can draw from the posterior over parameter values.
-This posterior can give you an idea of whether or not your model is well-behaved.
+This posterior can give you an idea of whether your model is well-behaved.
 In other words, do the predictions of your model depend heavily on the exact parameter value?
 
 > To help us understand how to examine posteriors over parameter settings, we're going to revisit the example of the blicket detector from the chapter on `Conditional Dependence`.
@@ -270,7 +291,7 @@ viz(blicketPosterior([['A', 'B']]));
 viz(blicketPosterior([['A', 'B'], ['B']]));
 ~~~~
 
-### a)
+### Exercise 3.1
 
 > What are the parameters of the above model?
 > Explain what they represent in plain English.
@@ -281,7 +302,7 @@ viz(blicketPosterior([['A', 'B'], ['B']]));
 `machineSpontaneouslyGoesOff` | 0.05 | The probability that the machine goes off on its own.
 
 
-### b)
+### Exercise 3.2
 
 > Let's analyze this model with respect to some data.
 > First, we'll put priors on these parameters, and then we'll do inference,
@@ -388,7 +409,7 @@ viz.scatter(predictiveSummary(dataAnalysis), dataSummary(data),
             {xLabel: 'model', yLabel: 'data'});
 ~~~~
 
-### c)
+### Exercise 3.3
 
 > Now, run the program.
 > [Note: This will take between 15-30 seconds to run.]
@@ -405,13 +426,13 @@ viz.scatter(predictiveSummary(dataAnalysis), dataSummary(data),
 `predictive: cond5 P(true)` | `A` is probably not a blicket
 model (`x`) vs. data (`y`) | We can accurately guess people's response from model, but they're not exactly 1-1
 
-### d)
+### Exercise 3.4
 
 > How do the posterior parameter values relate to the parameter values that were set in the original program?
 
 The original program's parameter values were approximately the expected value of the posterior parameter values.
 
-### e)
+### Exercise 3.5
 
 > Look carefully at the priors (in the code) and the posteriors (in the plots) over `blicketPower` and `nonBlicketPower`. 
 > Were there any a priori assumptions about the relationship between these parameters in the experimental setup?  
@@ -443,7 +464,7 @@ It's cool that we can learn the appropriate relationship (`blicketPower > nonBli
 but it would be OK to code it in.
 It wasn't a key part of our theory, and we're pretty confident that kids understood how blickets worked.
 
-### f)
+### Exercise 3.6
 
 > Do you notice anything about the scatter plot?
 > How would you interpret this?
@@ -452,7 +473,7 @@ It wasn't a key part of our theory, and we're pretty confident that kids underst
 There seems to be a linear relationship between the model predictions and the data, but the values are not always equal.
 If we add some scaling factor, we could translate the model outputs to get to accurate predictions of people's responses.
 
-### g)
+### Exercise 3.7
 
 > Now, we're going to examine the predictions of the model if we had done a more traditional analysis of point-estimates of parameters (i.e. fitting parameters).
 > Examine your histograms and determine the "maximum a posteriori" (MAP) value for each parameter.
@@ -518,7 +539,7 @@ var bestFitModelPredictions = map(function(evidence) {
 viz.scatter(bestFitModelPredictions, dataSummary(data));
 ~~~~
 
-### h)
+### Exercise 3.8
 
 > What can you conclude about the two ways of looking at parameters in this model's case?
 
