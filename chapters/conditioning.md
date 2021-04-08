@@ -325,7 +325,7 @@ var model = function() {
   var totalPulling = function (team) {return sum(map(pulling, team))}
   var winner = function (team1, team2) {
     totalPulling(team1) > totalPulling(team2) ? team1 : team2 }
-  var beat = function(team1,team2){winner(team1,team2) == team1}
+  var beat = function(team1,team2){_.isEqual(winner(team1,team2), team1)}
 
   condition(beat(['bob', 'mary'], ['tom', 'sue']))
   condition(beat(['bob', 'sue'],  ['tom', 'jim']))
@@ -358,7 +358,7 @@ var strength = mem(function (person) {return Math.max(gaussian(1, 1), 0.01)})
   var totalPulling = function (team) {return sum(map(pulling, team))}
   var winner = function (team1, team2) {
     totalPulling(team1) > totalPulling(team2) ? team1 : team2 }
-  var beat = function(team1,team2){winner(team1,team2) == team1}
+  var beat = function(team1,team2){_.isEqual(winner(team1,team2), team1)}
 
   condition(strength('mary') >= strength('sue'))
   condition(beat(['bob'], ['jim']))
