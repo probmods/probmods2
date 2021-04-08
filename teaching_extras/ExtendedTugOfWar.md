@@ -32,7 +32,7 @@ Find an example of *explaining away*. What evidence would cancel out the initial
 
 ## Cleverness
 
-Now let's extend this example. People likely have several properties that affect their performance. Let's call them `strength` and `cleverness`. The outcome of most games likely depends on both proprerties, but some games may depend more on one than the other. Extend the model to include `cleverness`. Also extend the model to have two different games (say tug of war and table tennis), that depend differently on the the two factors.
+Now let's extend this example. People likely have several properties that affect their performance. Let's call them `strength` and `cleverness`. The outcome of most games likely depends on both properties, but some games may depend more on one than the other. Extend the model to include `cleverness`. Also extend the model to have two different games (say tug of war and table tennis), that depend differently on the two factors.
 
 ~~~~
 var model = function() {
@@ -59,12 +59,11 @@ viz(dist)
 Note that `strength` and `cleverness` are probably *a priori* independent in your model. Show that after an observed outcome they are now statistically dependent. Can you find examples where new evidence explains away elevated `strength` but not `cleverness`? Can you find examples of "two hop" explaining away, where strength of one player becomes coupled to strength of another, via cleverness? These are examples of how complex patterns of inference can emerge from relatively simple beliefs about the world.
 
 
-
 ## Mindsets
 
-The initial Tug of War model reflects what psychologists might call a *fixed mindset*: each person has a fixed quality (`strength`) that affects their performance and that they can't change. Imagine that Bob uses the model to reason about his own strength, and thence to decide which matches to play. Let's say his goal is to beat a super strong player, Slim. Because Bob believes his strength is a fixed (though unobservable) property, he doesn't other games he plays affect his chance of beating Slim. In particular, he won't seek out challenging matches in order to get better.
+The initial Tug of War model reflects what psychologists might call a *fixed mindset*: each person has a fixed quality (`strength`) that affects their performance and that they can't change. Imagine that Bob uses the model to reason about his own strength, and thence to decide which matches to play. Let's say his goal is to beat a super strong player, Slim. Because Bob believes his strength is a fixed (though unobservable) property, he doesn't believe other games he plays affect his chance of beating Slim. In particular, he won't seek out challenging matches in order to get better.
 
-An alternative model is called a *growth mindset*: a person's strength depends on what matches they've played before, and how difficult these matches were. Let's modify our tug of war model to reflect a growth mindset. First, we have modified the model below to have only one player teams (for simplicity) and to define strength in terms of the match history.
+An alternative model is called a *growth mindset*: a person's strength depends on what matches they've played before, and how difficult these matches were. Let's modify our Tug of War model to reflect a growth mindset. First, we have modified the model below to have only one player teams (for simplicity) and to define strength in terms of the match history.
 
 ~~~~
 //write the matches as an array of objects that include players and outcome:
@@ -113,14 +112,16 @@ viz(dist)
 ~~~~
 
 The above model should be the same -- fixed mindset -- as the original model. 
-How would you change it to encode the idea that playing improves strength?
-That playing a stronger player improves strength?
-That strength improves based on how much stronger the other player is?
+How would you change it to encode the idea that
+
+1. playing improves strength?
+2. playing a stronger player improves strength?
+3. strength improves based on how much stronger the other player is?
 
 
 Imagine Bob's ultimate goal is to beat the super strong player, Slim. 
 He can use the above model to judge how strong he'll be after several matches, and whether he's likely to beat Slim. (Hint: you can return `winner({player1:'bob', player2:'slim'},1)=='player1' //can bob beat slim?`.)
 Will Bob decide to first play Alice (strong) or Jim (less strong)? How is this decision going to be affected by the different mindsets you explored above?
 
-NB: Psychologists call this kind of knowledge by many names: intuitive theories, lay theories, schemas, and mindsets are a few. They mean more or less the same thing, though the level of abstraction and format of representation varries from one theorist to another.
+NB: Psychologists call this kind of knowledge by many names: intuitive theories, lay theories, schemas, and mindsets are a few. They mean more or less the same thing, though the level of abstraction and format of representation varies from one theorist to another.
 
