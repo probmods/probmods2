@@ -272,7 +272,7 @@ The rest of this chapter will be focused on examining each part in more detail.
 -->
 
 
-Bayesian data analysis (BDA) is a general-purpose approach to making sense of data. A BDA model is an explicit hypotheses about the generative process behind the experimental data -- where did teh observed data come from? 
+Bayesian data analysis (BDA) is a general-purpose approach to making sense of data. A BDA model is an explicit hypotheses about the generative process behind the experimental data -- where did the observed data come from? 
 For instance, the hypothesis that data from two experimental conditions came from two *different* distributions.
 After making explicit hypotheses, Bayesian inference can be used to *invert* the model: go from experimental data to updated beliefs about the hypotheses.
 
@@ -289,7 +289,7 @@ For a given Bayesian model (together with data), there are four conceptually dis
 + The *prior distribution over parameters* captures our initial state of knowledge (or beliefs) about the values that the latent parameters could have, before seeing the data.
 + The *posterior distribution over parameters* captures what we know about the latent parameters having updated our beliefs with the evidence provided by data.
 
-From either the prior or the posterior over parameters we can then run the model forward, ato get predictions about data sets:
+From either the prior or the posterior over parameters we can then run the model forward, to get predictions about data sets:
 
 + The *prior predictive distribution* tells us what data to expect, given our model and our initial beliefs about the parameters.
 The prior predictive is a distribution over data, and gives the relative probability of different *observable* outcomes before we have seen any data.
@@ -339,23 +339,18 @@ var posterior = Infer(model);
 viz.marginals(posterior)
 ~~~~
 
-
 Notice that some plots densities and others bar graphs. This is because the data space for this experiment is counts, while the parameter space is continuous.
 What can we conclude intuitively from examining these plots?
 First, because prior differs from posterior (both parameters and predictives), the evidence has changed our beliefs.
 Second, the posterior predictive assigns quite high probability to the true data, suggesting that the model considers the data "reasonable".
-Finally, after oberving the data, we conclude the true proportion of people supporting Candidate A is quite low -- around 0.09, or anyhow somewhere between 0.0 and 0.15.
+Finally, after observing the data, we conclude the true proportion of people supporting Candidate A is quite low -- around 0.09, or anyhow somewhere between 0.0 and 0.15.
 Check your understanding by trying other data sets, varying both `k` and `n`.
 
-<!-- 2. Try different priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions.
-
-3. Predictive distributions are not restricted to exactly the same experiment as the observed data, and can be used in the context of any experiment where the inferred model parameters make predictions. In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations. Change the model to implement an example of this.
- -->
 
 ## Quantifying claims about parameters
 
 How can we quantify a claim like "the true parameter is low"? 
-One posibility is to compute the *mean* or *expected value* of the parameter, which is mathematically given by $$\int x p(x) dx$$ for a posterior distribution $$p(x)$$. In WebPPL this can be computed via  `expectation(d)` for a distribution `d`. Thus in the above election example we could:
+One possibility is to compute the *mean* or *expected value* of the parameter, which is mathematically given by $$\int x\cdot p(x) dx$$ for a posterior distribution $$p(x)$$. In WebPPL this can be computed via  `expectation(d)` for a distribution `d`. Thus in the above election example we could:
 
 ~~~~
 // observed data
@@ -387,7 +382,7 @@ print("Expected proportion voting for A: " + expectation(posterior) )
 ~~~~
 
 This tells us that the mean is about 0.09. This can be a very useful way to summarize a posterior, but it eliminates crucial information about how *confident* we are in this mean.
-A coherent way to summarize our confidence is by exploring the probability that the parameter lies within a given interval. Conversely, an interval that the parameter lies in with high probability (say 90%) is called a *credible interval* (CI). Let's explore credible intervals for the parameter in teh above model:
+A coherent way to summarize our confidence is by exploring the probability that the parameter lies within a given interval. Conversely, an interval that the parameter lies in with high probability (say 90%) is called a *credible interval* (CI). Let's explore credible intervals for the parameter in the above model:
 
 ~~~~
 // observed data
@@ -415,7 +410,7 @@ var model = function() {
 
 var posterior = Infer(model);
 
-//compute the probbaility that p lies in the interval [0.01,0.18]
+//compute the probability that p lies in the interval [0.01,0.18]
 expectation(posterior,function(p){0.01<p && p<0.18})
 ~~~~
 
@@ -426,7 +421,7 @@ Credible intervals are related to, but shouldn't be mistaken for, the confidence
 
 ## Example: logistic regression
 
-Now imagine you are a pollster who is interested in the effect of age on voting tendency. You run the same poll, but you are carefull to recruit people in their 20's, 30's, etc. We can analyze this data by assuming there is an underlying linear relationship between age and voting tendency. However since our data are Boolean (or if we aggregate, the count of people in eahc age group who will vote for candidate A), we must use a function to link from real numbers to the range [0,1]. The logistic function is a common way to do so.
+Now imagine you are a pollster who is interested in the effect of age on voting tendency. You run the same poll, but you are careful to recruit people in their 20's, 30's, etc. We can analyze this data by assuming there is an underlying linear relationship between age and voting tendency. However since our data are Boolean (or if we aggregate, the count of people in each age group who will vote for candidate A), we must use a function to link from real numbers to the range [0,1]. The logistic function is a common way to do so.
 
 ~~~~
 var data = [{age: 20, n:20, k:1},
@@ -461,12 +456,12 @@ Looking at the parameter posteriors we see that there seems to be an effect of a
 ## Posterior prediction and model checking
 
 The posterior predictive distribution describes what data you should expect to see, given the model you've assumed and the data you've collected so far.
-If the model is able to desribe the data you've collected, then the model shouldn't be surprised if you got the same data by running the experiment again.
+If the model is able to describe the data you've collected, then the model shouldn't be surprised if you got the same data by running the experiment again.
 That is, the most likely data for your model after observing your data should be the data you observed.
 It is natural then to use the posterior predictive distribution to examine the descriptive adequacy of a model.
 If these predictions do not match the data *already seen* (i.e., the data used to arrive at the posterior distribution over parameters), the model is descriptively inadequate.
 
-A common way to check whether the posterior predictive matches the data, imaginatively called a *posterior predictive check*, is to plot some statistics of your data vs the expectation of these statistics according to the predictive. Ket's do this for the number of votes in each age group:
+A common way to check whether the posterior predictive matches the data, imaginatively called a *posterior predictive check*, is to plot some statistics of your data vs the expectation of these statistics according to the predictive. Let's do this for the number of votes in each age group:
 
 ~~~~
 var data = [{age: 20, n:20, k:1},
@@ -606,64 +601,54 @@ What can you conclude about the parameter `p`?
 
 
 
-# Comparing hypotheses
+# Model selection
 
 In the above examples, we've had a single data-analysis model and used the experimental data to learn about the parameters of the models and the descriptive adequacy of the models.
 Often as scientists, we are in fortunate position of having multiple, distinct models in hand, and want to decide if one or another is a better description of the data.
-Indeed, we saw an example with the spinning coins when we decided whether `"observerModel"` or  `"skepticalModel"` was a better explanation of some data.
+The problem of *model selection* given data is one of the most important and difficult tasks of BDA.
 
-In that example, model comparison was shown a special case of learning about the parameters of a model.
-In that case, we defined an uber model (`scientistModel`), that had a binary decision parameter that we wanted to learn about (which one of the models was better).
-We did this by having a binary decision variable gate between which of our two models we let generate the data.
-We then go backwards (performing Bayesian inference) to decide which model was more likely to have generated the data we observed.
-
-We take the same approach here, articulating a simple data analysis model for model comparison.
-We observe some number of binary outcomes and want to decide if the pattern we see is random or not (e.g., to see if the helping behavior "is systematic" [assuming we've figured out the weird stuff going on with the experimenters before]).
-This model mimics a simple cognitive model for subjective randomness, which we will explore in another chapter of this book on Subjective Randomness.
-
-Formally, a "true random" pattern would be generated by a coin with probability of doing one or other binary outcome as 0.5 (a fair coin); a "non random" pattern would be generated by a trick coin.
-We run into our first complication: A fair coin is simple to define: `Bernoulli({p: 0.5})`, but how can we treat a trick coin?
-For purposes of scientific hypothesis testing, a trick coin is formalized as a coin with some *unknown* weight:
-
-~~~~ norun
-var p = uniform(0,1);
-Bernoulli({p: p})
-~~~~
-
-Using this to now compare models:
+Returning to the simple election polling example above, imagine we begin with a (rather unhelpful) data analysis model that assumes each candidate is equally likely to win, that is `p=0.5`. We quickly notice, by looking at the posterior predictives, that this model doesn't accommodate the data well at all. We thus introduce the above model where `p = uniform(0,1)`. How can we quantitatively decide which model is better? One approach is to combine the models into an uber model that
+ decides which approach to take:
 
 ~~~~
-var k = 7, n = 20;
+// observed data
+var k = 5 // number of people who support candidate A
+var n = 20  // number of people asked
 
-var compareModels = function() {
+var model = function() {
 
   // binary decision variable for which hypothesis is better
-  var x = flip(0.5) ? "simple" : "complex";
-  var p = (x == "simple") ? 0.5 : uniform(0, 1);
+  var x = flip(0.5) ? "simple" : "complex"
+  var p = (x == "simple") ? 0.5 : uniform(0, 1)
 
-  observe(Binomial({p: p, n: n}), k);
+  observe(Binomial({p : p, n: n}), k)
 
   return {model: x}
 }
 
-var opts = {method: "rejection", samples: 2000};
-print("We observed " + k + " successes out of " + n + " attempts")
-var modelPosterior = Infer(opts, compareModels);
+var modelPosterior = Infer(model);
+
 viz(modelPosterior)
 ~~~~
+
+We see that, as expected, the more complex model is preferred: we can confidently say that given the data the more complex model is the one we should believe. Further we can quantify this via the posterior probability of the complex model.
 
 This model is an example from the classical hypothesis testing framework.
 We consider a model that fixes one of its parameters to a pre-specified value of interest (here $$\mathcal{H_0} : p = 0.5$$).
 This is sometimes referred to as a *null hypothesis*.
 The other model says that the parameter is free to vary.
-In the classical hypothesis testing framework, we would write: $${H_1} : p \neq 0.5$$.
-With Bayesian hypothesis testing, we must be explicit about what $$p$$ is (not just what p is not), so we write $${H_1} : p \sim \text{Uniform}(0, 1) $$.
+In the classical hypothesis testing framework, we would write: $$\mathcal{H_1} : p \neq 0.5$$.
+With Bayesian hypothesis testing, we must be explicit about what $$p$$ is (not just what p is not), so we write $$\mathcal{H_1} : p \sim \text{Uniform}(0, 1) $$.
 
 One might have a conceptual worry: Isn't the second model just a more general case of the first model?
 That is, if the second model has a uniform distribution over `p`, then `p: 0.5` is included in the second model.
-This is what's called a *nested model*.
+Fortunately, the posterior on models automatically penalizes the more complex model when it's flexibility isn't needed. (To verify this, set `k=10` in the example.) 
+This idea is called the principle of parsimony or Occam's razor, and will be discussed at length [later in this book](occams-razor).
+For now, it's sufficient to know that more complex models will be penalized for being more complex, intuitively because they will be diluting their predictions.
+At the same time, more complex models are more flexible and can capture a wider variety of data (they are able to bet on more horses, which increases the chance that they will win some money).
+Bayesian model comparison lets us weigh these costs and benefits.
 
-Shouldn't the more general model always be better?
+<!--
 If we're at a track, and you bet on horse A, and I bet on horse A and B, aren't I strictly in a better position than you?
 The answer is no, and the reason has to do with our metric for winning.
 Intuitively, we don't care whether your horse won or not, but how much money you win.
@@ -673,66 +658,66 @@ In probabilistic models, our money is probabilities. Each model must allocate it
 So my act of betting on horse A and horse B actually requires me to split my money (say, betting 50 / 50 on each).
 On the other hand, you put all your money on horse A (100 on A, 0 on B).
 If A wins, you will gain more money because you put more money down.
+-->
 
-This idea is called the principle of parsimony or Occam's razor, and will be discussed at length later in this book.
-For now, it's sufficient to know that more complex models will be penalized for being more complex, intuitively because they will be diluting their predictions.
-At the same time, more complex models are more flexible and can capture a wider variety of data (they are able to bet on more horses, which increases the chance that they will win some money).
-Bayesian model comparison lets us weigh these costs and benefits.
+
 
 
 ## Bayes' factor
 
-What we are plotting above are **posterior model probabilities**.
+What we are plotting above are *posterior model probabilities*.
 These are a function of the marginal likelihoods of the data under each hypothesis and the prior model probabilities (here, defined to be equal: `flip(0.5)`).
 Sometimes, scientists feel a bit strange about reporting values that are based on prior model probabilities (what if scientists have different priors as to the relative plausibility of the hypotheses?) and so often report the ratio of marginal likelihoods, a quantity known as a *Bayes Factor*.
 
 Let's compute the Bayes' Factor, by computing the likelihood of the data under each hypothesis.
 
 ~~~~
-var k = 7, n = 20;
+var k = 5, n = 20;
 
-var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
+var simpleModel = Binomial({p: 0.5, n: n})
 
-var complexModel = Infer({method: "forward", samples: 10000}, function(){
+var complexModel = Infer(function(){
   var p = uniform(0, 1);
   return binomial(p, n)
 })
+
+var simpleLikelihood = Math.exp(simpleModel.score(k))
 var complexLikelihood = Math.exp(complexModel.score(k))
 
-var bayesFactor_01 = simpleLikelihood / complexLikelihood
-bayesFactor_01
+var bayesFactor = simpleLikelihood / complexLikelihood
+print( bayesFactor )
 ~~~~
 
 How does the Bayes Factor in this case relate to posterior model probabilities above?
+A short derivation shows that when the model priors are equal, the Bayes Factor has a simple relation to the model posterior. 
 
-## Savage-Dickey method
+### Savage-Dickey method
 
-For this example, the Bayes factor can be obtained by integrating out the model parameter (using `Infer` with `{method: "forward"}`).
-However, it is not always easy to get good estimates of the two marginal probabilities.
-It turns out, the Bayes factor can also be obtained by considering *only* the more complex hypothesis ($$\mathcal{H}_1$$).
-What you do is look at the distribution over the parameter of interest (here, $$p$$) at the point of interest (here, $$p = 0.5$$).
-Dividing the probability density of the posterior by the density of the prior (of the parameter at the point of interest) also gives you the Bayes Factor!
-This perhaps surprising result was described by Dickey and Lientz (1970), and they attribute it to Leonard "Jimmie" Savage.
+Sometimes the Bayes factor can be obtained by computing marginal likelihoods directly. (As in the example, where we marginalize over the model parameter using `Infer`.)
+However, it is sometimes hard to get *good* estimates of the two marginal probabilities.
+In the case where one model is a special case of the other, called *nested model comparison*, there is another option.
+The Bayes factor can also be obtained by considering *only* the more complex hypothesis, by looking at the distribution over the parameter of interest (here, $$p$$) at the point of interest (here, $$p = 0.5$$).
+Dividing the probability density of the posterior by the density of the prior (of the parameter at the point of interest)  gives you the Bayes Factor!
+This, perhaps surprising, result was described by Dickey and Lientz (1970), and they attribute it to Leonard "Jimmie" Savage.
 The method is called the *Savage-Dickey density ratio* and is widely used in experimental science.
-
 We would use it like so:
 
 ~~~~
-var k = 7, n = 20;
+var k = 5, n = 20;
 
-var complexModelPrior = Infer({method: "forward", samples: 10000}, function(){
+var complexModelPrior = Infer(function(){
   var p = uniform(0, 1);
   return p
 })
 
-var complexModelPosterior = Infer({method: "rejection", samples: 10000}, function(){
+var complexModelPosterior = Infer(function(){
   var p = uniform(0, 1);
   observe(Binomial({p: p, n: n}), k);
   return p
 })
 
-var savageDickeyDenomenator = expectation(complexModelPrior, function(x){return Math.abs(x-0.5)<0.05})
-var savageDickeyNumerator = expectation(complexModelPosterior, function(x){return Math.abs(x-0.5)<0.05})
+var savageDickeyDenomenator = expectation(complexModelPrior, function(x){return 0.45<x & x<0.55})
+var savageDickeyNumerator = expectation(complexModelPosterior, function(x){return 0.45<x & x<0.55})
 var savageDickeyRatio = savageDickeyNumerator / savageDickeyDenomenator
 print( savageDickeyRatio )
 ~~~~
@@ -743,7 +728,16 @@ print( savageDickeyRatio )
 **Discuss difficulties with model comparison? (harmonic mean estimators, mcmc for likelihoods)**
 -->
 
-<!-- # Linking functions
+# BDA of cognitive models
+
+In this chapter we have described how we can use generative models of data to do data analysis.
+In the rest of this book we are largely interested in how we can build *cognitive models* by hypothesizing that people have generative models of the world and use them to interpret observations. That is, we view people as intuitive Bayesian statisticians, doing in their heads what scientists do in their notebooks.
+
+Of course when we, as scientists, try to test our cognitive models of people, we can do so using BDA! This leads to more complex models in which we have an "outer" Bayesian data analysis model and an "inner" Bayesian cognitive model. 
+
+<!-- 
+  # Linking functions
+  #  include some discussion of contamination models and other standard BDA model idioms.
  -->
 
 

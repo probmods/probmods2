@@ -9,3 +9,5 @@ For further reading on Bayesian data analysis see:
 - [Lee & Wagenmakers (2013)](https://bayesmodels.com/),
 - [Kruschke (2014)](https://sites.google.com/site/doingbayesiandataanalysis/),  
 - [Gelman et al. (2014)](http://www.stat.columbia.edu/~gelman/book/).
+
+For an extended example of using these tools in WebPPL, see the [Example: BDA for Tug of War](bda-tow).
