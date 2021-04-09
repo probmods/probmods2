@@ -28,7 +28,7 @@ print('Expected strength: ' + expectation(dist))
 viz(dist)
 ~~~~
 
-Find an example of *explaining away*. What evidence would cancel out the initial belief that Bob is stronger than average?
+Find an example of *explaining away*: What evidence would cancel out the initial belief that Bob is stronger than average?
 
 ## Cleverness
 
@@ -56,7 +56,7 @@ print('Expected strength: ' + expectation(dist))
 viz(dist)
 ~~~~
 
-Note that `strength` and `cleverness` are probably *a priori* independent in your model. Show that after an observed outcome they are now statistically dependent. Can you find examples where new evidence explains away elevated `strength` but not `cleverness`? Can you find examples of "two hop" explaining away, where strength of one player becomes coupled to strength of another, via cleverness? These are examples of how complex patterns of inference can emerge from relatively simple beliefs about the world.
+Note that `strength` and `cleverness` are probably *a priori* independent in your model. Show that after a match outcome they are now statistically dependent. Can you find examples where new evidence explains away elevated `strength` but not `cleverness`? Can you find examples of "two hop" explaining away, where strength of one player becomes coupled to strength of another, via cleverness? These are examples of how complex patterns of inference can emerge from relatively simple beliefs about the world.
 
 
 

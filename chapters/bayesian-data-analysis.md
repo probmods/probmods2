@@ -8,25 +8,17 @@ chapter_num: 6
 ### Authors: Michael Henry Tessler; Noah Goodman
 
 <!--
-mht: some similar ideas (and examples) are presented in occams razor chapter. make sure the division of labor is good.
 
 ndg: after moving earlier in the book, some major revisions are in order:
-  -remove or move+shorten the spinning coin stuff, which is mostly about cogitive models and then bda of cognitive models.
-  -start with the existing simple models illustrating the kinds of questions one asks with BDA and the metrics for answers (BF, CI, etc)
-  -then do a slightly more complex model: regression analysis.
-  -then do BDA of cognitive models.
-  -then do full tug-of-war example. needs to be cleaned up for clarity.
 
   -consider splitting into two chapters, with model selection stuff in part 2 occurring after occam's razor chapter. LMER models also make more sense there....
-  -need to add some discussion of CIs.
-  -Include illustrations of each point with regression models, as wel as simpler models that are there now.
-  -include some discussion of contamination models and other stadard BDA model idioms.
-  -most of the editor.put and .get things are unecessary?
-  -the data munging is pretty crazy. use more standard DF library?
-  -dist.MAP() seems suspect....
-  -posterior predictive checks are not very well explained -- need to show an example of a good result, not just the bad one. (also having only two data points makes it hard to understand the scatter plot...)
 
   -a bit of advanced discussion? eg time varrying data, optional stopping?
+
+
+  -add more on BDA of cognitive models. Perhaps move social cognition earlier in book?
+  -discuss common patterns: contamination models, 
+  -make sure there's an exercise on mixed effects regression in the hierarchical models chapter
 -->
 
 
