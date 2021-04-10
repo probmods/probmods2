@@ -473,15 +473,100 @@ viz.marginals(goalPosterior)
 Here we have also returned the posterior belief about how likely one press is to yield a cookie.
 Notice the U-shaped distribution. Without any direct evidence about what happens when the button is pressed just once we can infer that it probably won't give a cookie---because her goal is likely to have been a cookie but she didn't press the button just once---but there is a small chance that her goal was actually not to get a cookie, in which case pressing the button once could result in a cookie. This very complex (and hard to describe!) inference comes naturally from joint inference of goals and knowledge.
 
-<!--
+
 ## Inferring whether they know
 
-## False beliefs 
+Let's imagine that we (the observer) know that the vending machine actually tends to return a bagel for button a and a cookie for button b. But we don't know if Sally knows this! Instead we see Sally announce that she wants a cookie, but pushes button a. How can we determine, from her actions, whether Sally is knowledgeable or ignorant? We hypothesize that if she is ignorant, Sally chooses according to a random vending machine. We can then infer her knowledge state:
+
+~~~~
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
+
+var chooseAction = function(goalState, transition, state) {
+  var state = (state==undefined)?'start':state
+  return Infer(function() {
+    var action = sample(actionPrior)
+    condition(goalState == transition(state, action))
+    return action
+  })
+}
+///
+
+var buttonsToBagelProbs = {'a': 0.9, 'b': 0.1}
+var trueVendingMachine = function(state, action) {
+  return categorical({vs: ['bagel', 'cookie'], 
+                      ps: [buttonsToBagelProbs[action], 1-buttonsToBagelProbs[action]]})
+}
+var randomMachine = function(state, action) {
+  return categorical({vs: ['bagel', 'cookie'], 
+                      ps: [0.5, 0.5]})
+}
+
+var p = Infer(function() {
+  var knows = flip()
+
+  var goal = 'cookie'
+  observe(chooseAction(goal, knows?trueVendingMachine:randomMachine), 'a')
+  condition(trueVendingMachine('start', 'a') == 'bagel')
+
+  return {knowledge: knows}
+})
+
+viz.marginals(p)
+~~~~
+
+This is a very simple example, but it illustrates how we can represent a difference in knowledge between the observer and the observed agent by simply using different world models (the vending machines) for explaining the action (in `chooseAction`) and for explaining the outcome (in the `condition`). 
+
+
+## Inferring what they believe 
+
+Above we assumed that if Sally is ignorant she chooses based on a random machine. This is both not flexible enough and too strong an assumption. Indeed, Sally may have all kinds of specific (and potentially false) beliefs about vending machines. To capture this, we can represent Sally's beliefs as a separate randomly chosen vending machine: by passing this into Sally's `chooseAction` we indicate these are *Sally's* beliefs, by putting this inside the outer `Infer` we represent the observer reasoning about Sally's beliefs:
+
+~~~~
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
+
+var chooseAction = function(goalState, transition, state) {
+  var state = (state==undefined)?'start':state
+  return Infer(function() {
+    var action = sample(actionPrior)
+    condition(goalState == transition(state, action))
+    return action
+  })
+}
+///
+
+var buttonsToBagelProbs = {'a': 0.9, 'b': 0.1}
+var trueVendingMachine = function(state, action) {
+  return categorical({vs: ['bagel', 'cookie'], 
+                      ps: [buttonsToBagelProbs[action], 1-buttonsToBagelProbs[action]]})
+}
+
+var p = Infer(function() {
+  var SallyBelief = {'a': uniform(0,1), 'b': uniform(0,1)}
+  var SallyMachine = function(state, action) {
+    return categorical({vs: ['bagel', 'cookie'], 
+                        ps: [SallyBelief[action], 1-SallyBelief[action]]})}
+  
+  var goal = 'cookie'
+  observe(chooseAction(goal, SallyMachine), 'a')
+  condition(trueVendingMachine('start', 'a') == 'bagel')
+  
+  return {SallyBeliefButtonA: SallyMachine('start','a')}
+})
+
+viz.marginals(p)
+~~~~
+
+In the developmental psychology literature, the ability to represent and reason about other people's *false beliefs* has been extensively investigated as a hallmark of human Theory of Mind.
 
 
 # Emotion and other mental states
 
--->
+So far we have explored reasoning about others' goals, preferences, knowledge, and beliefs. It is commonplace to discuss  other's actions in terms of many other mental states as well! We might explain an unexpected slip in terms of wandering *attention*, a short-sighted choice in terms of *temptation*, a violent reaction in terms of *anger*, a purposeless embellishment in terms of *joy*. Each of these has a potential role to play in an elaborated scientific theory of how humans represent other's minds.
+
+<!-- todo describe Ong et al a bit as an example -->
+
 
 # Communication and Language
 
