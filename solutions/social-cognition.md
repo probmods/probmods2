@@ -5,24 +5,34 @@ title: Inference about inference - exercises
 
 ## Exercise 1: Tricky Agents
 
-What would happen if Sally knew you were watching her and wanted to deceive you? 
+> What would happen if Sally knew you were watching her and wanted to deceive you?
 
-a) *Complete the code below so that `chooseAction` chooses a misdirection if Sally is deceptive. Then describe and show what happens if you knew Sally was deceptive and chose action "b".*
+### Exercise 1.1
+
+> Complete the code below so that `chooseAction` chooses a misdirection if Sally is deceptive.
+> Then describe and show what happens if you knew Sally was deceptive and chose action "b".
 
 ~~~~
-var actionPrior = Categorical({vs: ['a', 'b', 'c'], ps: [1/3, 1/3, 1/3]});
-var foodPrior = Categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [1/3, 1/3, 1/3]});
+var actionPrior = Categorical({vs: ['a', 'b', 'c'],
+                               ps: [1/3, 1/3, 1/3]});
+var foodPrior = Categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                             ps: [1/3, 1/3, 1/3]});
 
-var vendingMachine = function(state action) {
-  return (action == 'a' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.8, .1, .1]}) :
-          action == 'b' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.1, .8, .1]}) :
-	  action == 'c' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.1, .1, .8]}) :
-	  'nothing');
+var vendingMachine = function(state, action) {
+  return action == 'a' ? categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                                      ps: [.8, .1, .1]}) :
+         action == 'b' ? categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                                      ps: [.1, .8, .1]}) :
+         action == 'c' ? categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                                      ps: [.1, .1, .8]}) :
+         'nothing';
+}
 
 var chooseAction = function(goal, transition, state, deceive) {
   return Infer({method: 'enumerate'}, function() {
     var action = sample(actionPrior);
-    condition((!deceive && goal(transition(state,action))) || (deceive && !goal(transition(state, action))))
+    var outcome = transition(state, action);
+    condition(deceive ? !goal(outcome) : goal(outcome));
     return action;
   })
 };
@@ -32,137 +42,209 @@ var goalPosterior = Infer({method: 'enumerate'}, function() {
   var goalFood = sample(foodPrior);
   var goal = function(outcome) {return outcome == goalFood};
   var sallyActionDist = chooseAction(goal, vendingMachine, 'state', deceive);
-  condition(deceive && sample(sallyActionDist) == 'b')
+  condition(deceive);
+  condition(sample(sallyActionDist) == 'b');
   return goalFood;
 });
 
 viz.auto(goalPosterior);
 ~~~~
 
-Results: Given the conditions, the probabilities that Alice wants a bagel or doughnut (p=0.45 for both) are much larger than the probability she wants a cooke (p=0.1):
-![](Figures/inference-about-inference-1a.png)
+Results: The probabilities that Sally wants a bagel or doughnut (p=0.45 for both) are much larger than
+the probability she wants a cookie (p=0.1).
 
-b) *What happens if you don't know Sally is deceptive and she chooses "b" and then "b". What if she chooses "a" and then "b." Show the models and describe the difference in behavior. Is she deceptive in each case?*
+### Exercise 1.2
 
-For the first possibility, we condition on:
-
-~~~~
-condition(sample(sallyActionDist) == 'b' && sample(sallyActionDist)=='b');
-~~~~
-
-We suspect that Sally wants a cookie and was not deceptive, since she chose the option most likely to give her a cookie both times:
-
-![](Figures/inference-about-inference-1b.png)
-
-(Note that we can confirm that the model does not believe Sally is being deceptive by returning the value of `deceive`.)
-
-For the second possibility, we condition on:
+> You observe that Sally chooses `a`, and then `b`.
+How likely is it that she is deceptive?
+What if you instead observed that she chose `b` and then `b` again?
+Explain how deceptiveness and preferences interact to produce her actions.
 
 ~~~~
-condition(sample(sallyActionDist) == 'a' && sample(sallyActionDist)=='b');
+///fold:
+var actionPrior = Categorical({vs: ['a', 'b', 'c'],
+                               ps: [1/3, 1/3, 1/3]});
+var foodPrior = Categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                             ps: [1/3, 1/3, 1/3]});
+
+var vendingMachine = function(state, action) {
+  return action == 'a' ? categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                                      ps: [.8, .1, .1]}) :
+         action == 'b' ? categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                                      ps: [.1, .8, .1]}) :
+         action == 'c' ? categorical({vs: ['bagel', 'cookie', 'doughnut'],
+                                      ps: [.1, .1, .8]}) :
+         'nothing';
+}
+
+var chooseAction = function(goal, transition, state, deceive) {
+  return Infer({method: 'enumerate'}, function() {
+    var action = sample(actionPrior);
+    var outcome = transition(state, action);
+    condition(deceive ? !goal(outcome) : goal(outcome));
+    return action;
+  })
+};
+///
+
+var goalPosterior = Infer({method: 'enumerate'}, function() {
+  var deceive = flip();
+  var goalFood = sample(foodPrior);
+  var goal = function(outcome) {return outcome == goalFood};
+  var sallyActionDist = chooseAction(goal, vendingMachine, 'state', deceive);
+  
+  // condition(sample(sallyActionDist) == 'a'); // case 1
+  condition(sample(sallyActionDist) == 'b'); // case 2
+  condition(sample(sallyActionDist) == 'b');
+  return goalFood;
+});
+
+viz.auto(goalPosterior);
+
+var possibleActions = Infer({method: 'enumerate'}, function() {
+  var deceive = flip();
+  var goalFood = sample(foodPrior);
+  var goal = function(outcome) {return outcome == goalFood};
+  var sallyActionDist = chooseAction(goal, vendingMachine, 'state', deceive);
+  
+  condition(deceive);
+  var outcome1 = sample(sallyActionDist);
+  var outcome2 = sample(sallyActionDist);
+  return {o1: outcome1, o2: outcome2};
+});
+
+viz.auto(possibleActions);
 ~~~~
 
-It is most likely that Alice wants a doughnut, i.e. that the button  most likely to result in her goal is 'c'. The model predicts from her inconsistency (swiching from 'a' to 'b) that it is most likely that she is deceptive. If she was not being deceptive, she would have chosen the same thing both times. So her true goal is the result of the only button she didn't press: 'c':
-![](Figures/inference-about-inference-1c.png)
+When Sally chooses `a` and `b`, it's unlikely that she wanted a bagel or a cookie since she would have then selected
+`a` twice or `b` twice.
+However, if she really wanted a doughnut and deceptive, it makes sense that she would avoid `c` both times.
+When Sally chooses `b` twice, the scenario where she's honest is much more consistent with the outcome.
+In the second visualization above, we can see that if Sally is deceptive, the probability of any two actions is
+relatively uniform. However, if we set `condition(!deceive)` instead, we see much higher peaks for pairs of the same
+actions.
 
-(Note that we can confirm that the model believes Sally is being deceptive by returning the value of `deceive`.)
 
 ## Exercise 2: Monty Hall.
 
-*Here, we will use the tools of Bayesian inference to explore a classic statistical puzzle -- the Monty Hall problem. Here is one statement of the problem:*
+> Here, we will use the tools of Bayesian inference to explore a classic statistical puzzle -- the Monty Hall problem.
+Here is one statement of the problem:
+> 
+>> Alice is on a game show, and she's given the choice of three doors.
+>> Behind one door is a car; behind the others, goats.
+>> She picks door 1. The host,
+>> Monty, knows what's behind the doors and opens another door, say No. 3, revealing a goat.
+>> He then asks Alice if she wants to switch doors.
+>> Should she switch?
+> 
+> Intuitively, it may seem like switching doesn't matter.
+> However, the canonical solution is that you *should* switch doors.
+> We will explore why this is the case.
 
-> Alice is on a game show and she's given the choice of three doors. Behind one door is a car; behind the others, goats. She picks door 1. The host, Monty, knows what's behind the doors and opens another door, say No. 3, revealing a goat. He then asks Alice if she wants to switch doors. Should she switch?
+### Exercise 2.1
 
-*Intuitively, it may seem like switching doesn't matter. However, the canonical solution is that you should switch doors. We'll explore (a) the intuition that switching doesn't matter, (b) the canonical solution, and more.*
-
-a) *Whether you should switch depends crucially on how you believe Monty chooses doors to pick. First, write the model such that the host randomly picks doors (for this, fill in `montyRandom`). In this setting, should Alice switch? Or does it not matter? Hint: it is useful to condition on the exact doors that we discussed in the problem description.*
+> The decision to switch depends crucially on how you believe Monty chooses doors to pick.
+First, write the model such that the host *randomly* picks doors (for this, fill in `montyRandom`).
+In this setting, should Alice switch, or does it not matter?
+Hint: it is useful to condition on the exact doors that we discussed in the problem description.
 
 ~~~~
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
+///fold: 
 var removeBadItems = function(l, badItems) {
   return reduce(function(badItem, remainingL) {
     return remove(badItem, remainingL)
   }, l, badItems);
 }
 
-var doors = [1,2,3]
-var chooseDoor = Categorical({vs: doors, ps: [1/3, 1/3, 1/3]});
+var doors = [1, 2, 3];
+///
 
 var montyRandom = function(aliceDoor, prizeDoor) {
   return Infer({method: 'enumerate'}, function() {
-    return sample(chooseDoor);
-  });
+    return categorical({vs: doors});
+  })
 };
 
-Infer({method: 'enumerate'}, function() {
-  var aliceDoor = sample(chooseDoor);
-  var prizeDoor = sample(chooseDoor);
-  var montyFunction = montyAvoidBoth;
+var model = function(switches) {
+  var aliceDoor = categorical({vs: doors});
+  var prizeDoor = categorical({vs: doors});
 
-  var montyDoorDist = montyFunction(aliceDoor, prizeDoor);
+  var montyDoorDist = montyRandom(aliceDoor, prizeDoor);
+  var montyDoor = sample(montyDoorDist);
+  var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
+  
+  return aliceDoor == prizeDoor;
+}
 
-  let montyDoor = sample(montyDoorDist);
-  condition(montyDoor != prizeDoor && montyDoor != aliceDoor);
-
-  let switchDoor = removeBadItems(doors, [aliceDoor, montyDoor])[0]
-
-  display("Likelihood of winning if Alice switches doors:")
-  return switchDoor==prizeDoor;
-});
+display("P(win) if Alice doesn't switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(false)}));
+display("P(win) if Alice does switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
 ~~~~
 
-In this case, it doesn't matter whether Alice switches. *A priori* all doors are equally likely to be the prize door. Monte has eliminated one, but there's no reason to favor either of the other two:
+In this case, it doesn't matter whether Alice switches.
+*A priori*, all doors are equally likely to be the prize door.
+Monty has eliminated one, but there's no reason to favor either of the other two.
 
-![](Figures/inference-about-inference-PartA_1.PNG)
+### Exercise 2.2
 
-b) *Now, fill in* `montyAvoidBoth` *(make sure you switch your* `var montyFunction = ...` *alias to use* `montyAvoidBoth`). *Here, Monty randomly picks a door that is neither the prize door nor Alice's door. For both-avoiding Monty, you'll find that Alice should switch. 
+> This time, fill in the code so that Monty behaves according to the original Monty Hall problem,
+i.e. picking the door that is neither the prize door nor Alice's door.
+For both-avoiding Monty, you'll find that Alice *should* switch.
 
-```javascript
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
+~~~~
+///fold: 
 var removeBadItems = function(l, badItems) {
   return reduce(function(badItem, remainingL) {
     return remove(badItem, remainingL)
   }, l, badItems);
 }
 
-var doors = [1,2,3]
-var chooseDoor = Categorical({vs: doors, ps: [1/3, 1/3, 1/3]});
+var doors = [1, 2, 3];
+///
 
 var montyAvoidBoth = function(aliceDoor, prizeDoor) {
   return Infer({method: 'enumerate'}, function() {
-    let montyDoor = sample(chooseDoor);
-    condition(montyDoor != prizeDoor && montyDoor != aliceDoor);
+    var montyDoor = categorical({vs: doors});
+    condition(montyDoor != aliceDoor);
+    condition(montyDoor != prizeDoor);
     return montyDoor;
-  });
+  })
 };
 
-Infer({method: 'enumerate'}, function() {
-  var aliceDoor = sample(chooseDoor);
-  var prizeDoor = sample(chooseDoor);
-  var montyFunction = montyAvoidBoth;
+var model = function(switches) {
+  var aliceDoor = categorical({vs: doors});
+  var prizeDoor = categorical({vs: doors});
 
-  var montyDoorDist = montyFunction(aliceDoor, prizeDoor);
+  var montyDoorDist = montyAvoidBoth(aliceDoor, prizeDoor);
+  var montyDoor = sample(montyDoorDist);
+  var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
+  
+  return aliceDoor == prizeDoor;
+}
 
-  let montyDoor = sample(montyDoorDist);
-  condition(montyDoor != prizeDoor && montyDoor != aliceDoor);
+display("P(win) if Alice doesn't switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(false)}));
+display("P(win) if Alice does switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
+~~~~
 
-  let switchDoor = removeBadItems(doors, [aliceDoor, montyDoor])[0]
+By running the model, we see that switching doors allows Alice to find the car 2/3 of the time.
 
-  display("Likelihood of winning if Alice switches doors:")
-  return switchDoor==prizeDoor;
-});
-```
+### Exercise 2.3
 
-By running the model, we see that switching doors allows Alice to find the car 2/3 of the time:
-![](Figures/inference-about-inference-PartB.PNG)
+> This is unintuitive  -- we know that Monty picked door 3, so why should the process he used to arrive at this choice matter?
+By hand, complete the probability table for P(Alice, Prize, Monty) under both `montyRandom` and `montyAvoidBoth`.
+Your tables should look like:
 
-*This is unintuitive  -- we know that Monty picked door 3, so why should the process he used to arrive at this choice matter? By hand, compute the probability table for* $$P(\text{Prize } \mid \text{Alice picks door 1}, \text{Monty picks door 3}, \text{Door 3 is not the prize})$$ under both `montyRandom` and `montyAvoidBoth`. *Using these tables, explain why Alice should switch for both-avoiding Monty but why switching doesn't matter for random Monty. Hint: you will want to compare particular rows of these tables.*
+> Alice's door|   Prize door|     Monty's Door|   P(Alice, Prize, Monty)
+-------------|  -----------|    -------------|  -----------------------
+1|              1|              1|              ...
+1|              1|              2|              ...
+...|            ...|            ...|            ...
 
-Under `montyRandom`, here are the probabilities prior to conditioning:
+> Using these tables, explain why Alice should switch for both-avoiding Monty but why switching doesn't matter for random Monty.
+Hint: you will want to compare particular *rows* of these tables.
 
 | Alice's Door | Prize Door | Monty's Door | P(Alice, Prize, Monty) |
 |--------------|------------|--------------|------------------------|
@@ -194,7 +276,8 @@ Under `montyRandom`, here are the probabilities prior to conditioning:
 | 3            | 3          | 2            | 0.037                  |
 | 3            | 3          | 3            | 0.037                  |
 
-After we condition on Alice choosing Door 1, Monte choosing Door 3, and Door 3 not being the prize, there are only two remaining possibilities:  
+If we condition on Alice choosing Door 1, Monty choosing Door 3, and Door 3 not being the prize,
+there are only two remaining possibilities:  
 
 | Alice's Door | Prize Door | Monty's Door | P(Alice, Prize, Monty) |
 |--------------|------------|--------------|------------------------|
@@ -242,169 +325,89 @@ Again, conditioning leaves only the two possibilities:
 | 1            | 1          | 3            | 0.06                   |
 | 1            | 2          | 3            | 0.11                   |
 
-Thus, in the posterior, the possibility where Door 2 is the prize door is twice as likely as the possibility where Door 1 is the prize door. Alice should switch.
+Thus, in the posterior, the possibility where Door 2 is the prize door is twice as likely as the possibility where Door 1 is the prize door.
+Alice should switch.
 
-c) *Fill in* `montyAvoidAlice`. *Here, Monty randomly picks a door that is simply not Alice's door. Should Alice switch here?*
+Via code:
 
-```javascript
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
+~~~
+///fold: 
 var removeBadItems = function(l, badItems) {
   return reduce(function(badItem, remainingL) {
     return remove(badItem, remainingL)
   }, l, badItems);
 }
 
-var doors = [1,2,3]
-var chooseDoor = Categorical({vs: doors, ps: [1/3, 1/3, 1/3]});
-
-var montyAvoidAlice = function(aliceDoor, prizeDoor) {
-  return Infer({method: 'enumerate'}, function() {
-    let montyDoor = sample(chooseDoor);
-    condition(montyDoor != aliceDoor);
-    return montyDoor;
-  });
-};
-
-Infer({method: 'enumerate'}, function() {
-  var aliceDoor = sample(chooseDoor);
-  var prizeDoor = sample(chooseDoor);
-  var montyFunction = montyAvoidAlice;
-
-  var montyDoorDist = montyFunction(aliceDoor, prizeDoor);
-
-  let montyDoor = sample(montyDoorDist);
-  condition(montyDoor != prizeDoor && montyDoor != aliceDoor);
-
-  let switchDoor = removeBadItems(doors, [aliceDoor, montyDoor])[0]
-
-  display("Likelihood of winning if Alice switches doors:")
-  return switchDoor==prizeDoor;
-});
-```
-
-In this case, Alice should be indifferent to switching. 
-![](Figures/inference-about-inference-PartD.PNG)
-    
-d) Fill in `montyAvoidPrize`. Here, Monty randomly picks a door that is simply not the prize door. Should Alice switch here?
-
-```javascript
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
-var removeBadItems = function(l, badItems) {
-  return reduce(function(badItem, remainingL) {
-    return remove(badItem, remainingL)
-  }, l, badItems);
-}
-
-var doors = [1,2,3]
-var chooseDoor = Categorical({vs: doors, ps: [1/3, 1/3, 1/3]});
-
-var montyAvoidPrize = function(aliceDoor, prizeDoor) {
-  return Infer({method: 'enumerate'}, function() {
-    let montyDoor = sample(chooseDoor);
-    condition(montyDoor != prizeDoor);
-    return montyDoor;
-  });
-};
-
-Infer({method: 'enumerate'}, function() {
-  var aliceDoor = sample(chooseDoor);
-  var prizeDoor = sample(chooseDoor);
-  var montyFunction = montyAvoidPrize;
-
-  var montyDoorDist = montyFunction(aliceDoor, prizeDoor);
-
-  let montyDoor = sample(montyDoorDist);
-  condition(montyDoor != prizeDoor && montyDoor != aliceDoor);
-
-  let switchDoor = removeBadItems(doors, [aliceDoor, montyDoor])[0]
-
-  display("Likelihood of winning if Alice switches doors:")
-  return switchDoor==prizeDoor;
-});
-```
-
-Here, Alice should be indifferent towards staying or switching, since she has a 50/50 chance on expectation:
-![](Figures/inference-about-inference-PartD.PNG)
-
-e) *An interesting cognitive question is: why do we have the initial intuition that switching shouldn't matter? Given your explorations, propose an answer.*
-
-[Note: There's no right answer to this. Here are two reasonable answers.]
-
-*Answer 1*: Either we believe that Monte is trying to avoid the prize door or we believe he is acting randomly. Either possibility would lead to the (correct) prediction that we think Alice should be indifferent to switching.
-
-*Answer 2*: We are uncertain as to what Monte's strategy is, and so we average over the four possibilities:
-
-```javascript
-// Here's a function that might be handy: it removes some set of badItems from a list l
-// e.g. removeBadItems(['nut', 'cake', 'nut', 'bagel'], ['cake', 'bagel']) => ['nut', 'nut']
-var removeBadItems = function(l, badItems) {
-  return reduce(function(badItem, remainingL) {
-    return remove(badItem, remainingL)
-  }, l, badItems);
-}
-
-var doors = [1,2,3]
-var chooseDoor = Categorical({vs: doors, ps: [1/3, 1/3, 1/3]});
+var doors = [1, 2, 3];
+///
 
 var montyRandom = function(aliceDoor, prizeDoor) {
   return Infer({method: 'enumerate'}, function() {
-    return sample(chooseDoor);
-  });
+    return categorical({vs: doors});
+  })
 };
 
 var montyAvoidBoth = function(aliceDoor, prizeDoor) {
   return Infer({method: 'enumerate'}, function() {
-    let montyDoor = sample(chooseDoor);
-    condition(montyDoor != prizeDoor && montyDoor != aliceDoor);
-    return montyDoor;
-  });
+    return categorical({vs: removeBadItems(doors, [aliceDoor, prizeDoor])});
+  })
 };
 
-var montyAvoidAlice = function(aliceDoor, prizeDoor) {
-  return Infer({method: 'enumerate'}, function() {
-    let montyDoor = sample(chooseDoor);
-    condition(montyDoor != aliceDoor);
-    return montyDoor;
-  });
-};
+var model = function(montyFunction) {
+  var aliceDoor = categorical({vs: doors});
+  var prizeDoor = categorical({vs: doors});
+
+  var montyDoorDist = montyFunction(aliceDoor, prizeDoor);
+  var montyDoor = sample(montyDoorDist);
+  return {alice: aliceDoor, prize: prizeDoor, monty: montyDoor};
+}
+
+display("Using montyRandom")
+viz.table(Infer({method: 'enumerate'}, function() { model(montyRandom) }));
+
+display("Using montyAvoidBoth")
+viz.table(Infer({method: 'enumerate'}, function() { model(montyAvoidBoth) }));
+~~~
+
+### Exercise 2.4
+
+> This time, fill in the code so that Monty randomly chooses between the two doors that aren't the prize door.
+> What should Alice do now?
+
+~~~
+///fold: 
+var removeBadItems = function(l, badItems) {
+  return reduce(function(badItem, remainingL) {
+    return remove(badItem, remainingL)
+  }, l, badItems);
+}
+
+var doors = [1, 2, 3];
+///
 
 var montyAvoidPrize = function(aliceDoor, prizeDoor) {
   return Infer({method: 'enumerate'}, function() {
-    let montyDoor = sample(chooseDoor);
+    var montyDoor = categorical({vs: doors});
     condition(montyDoor != prizeDoor);
     return montyDoor;
-  });
+  })
 };
 
-var chooseMontyFunction = function(){
-  var f = randomInteger(4);
-  return f==0? montyRandom :
-         f==1? montyAvoidBoth :
-         f==2? montyAvoidAlice :
-         montyAvoidPrize
+var model = function(switches) {
+  var aliceDoor = categorical({vs: doors});
+  var prizeDoor = categorical({vs: doors});
+
+  var montyDoorDist = montyAvoidPrize(aliceDoor, prizeDoor);
+  var montyDoor = sample(montyDoorDist);
+  var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
+  
+  return aliceDoor == prizeDoor;
 }
 
-Infer({method: 'enumerate'}, function() {
-  var aliceDoor = sample(chooseDoor);
-  var prizeDoor = sample(chooseDoor);
-  var montyFunction = chooseMontyFunction()
-  
-  var montyDoorDist = montyFunction(aliceDoor, prizeDoor);
+display("P(win) if Alice doesn't switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(false)}));
+display("P(win) if Alice does switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
+~~~
 
-  let montyDoor = sample(montyDoorDist);
-  //condition(montyDoor != prizeDoor && montyDoor != aliceDoor); //Part A
-
-  let switchDoor = removeBadItems(doors, [aliceDoor, montyDoor])[0]
-
-  display("Likelihood of winning if Alice switches doors:")
-  return switchDoor==prizeDoor;
-});
-```
-This results in a slight bias towards not switching, but it's close enough to 50/50 that we may not sense of a distinction between switching and not switching.
-![](Figures/inference-about-inference-PartE.PNG)
+Alice should switch.
