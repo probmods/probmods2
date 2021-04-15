@@ -164,6 +164,44 @@ Hint: you will want to compare particular *rows* of these tables.
 
 ### Exercise 2.4
 
+This time, fill in the code so that Monty randomly chooses between the two doors that aren't Alice's door.
+Then condition the model so that Monty doesn't choose the prize door (otherwise she should just pick it).
+What should Alice do now?
+
+~~~~
+///fold: 
+var removeBadItems = function(l, badItems) {
+  return reduce(function(badItem, remainingL) {
+    return remove(badItem, remainingL)
+  }, l, badItems);
+}
+
+var doors = [1, 2, 3];
+///
+
+var montyAvoidAlice = function(aliceDoor, prizeDoor) {
+  return Infer({method: 'enumerate'}, function() {
+    return ...
+  })
+};
+
+var model = function(switch_cond) {
+  var aliceDoor = ...
+  var prizeDoor = ...
+
+  var montyDoorDist = montyAvoidAlice(aliceDoor, prizeDoor);
+  return ...
+}
+
+display("P(win) if Alice doesn't switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(false)}));
+display("P(win) if Alice does switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
+~~~~
+
+
+### Exercise 2.5
+
 This time, fill in the code so that Monty randomly chooses between the two doors that aren't the prize door.
 What should Alice do now?
 
@@ -197,3 +235,10 @@ viz.auto(Infer({method: 'enumerate'}, function() {model(false)}));
 display("P(win) if Alice does switch");
 viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
 ~~~~
+
+
+### Exercise 2.6
+
+The psychological question is why do people have the initial intuition that switching shouldn’t matter?
+Given your explorations, propose a hypothesis.
+Can you think of an experiment that would test this hypothesis?

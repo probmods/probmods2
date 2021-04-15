@@ -369,7 +369,54 @@ display("Using montyAvoidBoth")
 viz.table(Infer({method: 'enumerate'}, function() { model(montyAvoidBoth) }));
 ~~~
 
+
 ### Exercise 2.4
+
+> This time, fill in the code so that Monty randomly chooses between the two doors that aren't Alice's door.
+> Then condition the model so that Monty doesn't choose the prize door (otherwise she should just pick it).
+> What should Alice do now?
+
+~~~
+///fold: 
+var removeBadItems = function(l, badItems) {
+  return reduce(function(badItem, remainingL) {
+    return remove(badItem, remainingL)
+  }, l, badItems);
+}
+
+var doors = [1, 2, 3];
+///
+
+var montyAvoidAlice = function(aliceDoor, prizeDoor) {
+  return Infer({method: 'enumerate'}, function() {
+    var montyDoor = categorical({vs: doors});
+    condition(montyDoor != aliceDoor);
+    return montyDoor;
+  })
+};
+
+var model = function(switches) {
+  var aliceDoor = categorical({vs: doors});
+  var prizeDoor = categorical({vs: doors});
+
+  var montyDoorDist = montyAvoidAlice(aliceDoor, prizeDoor);
+  var montyDoor = sample(montyDoorDist);
+  var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
+  
+  condition(montyDoor != prizeDoor);
+  return aliceDoor == prizeDoor;
+}
+
+display("P(win) if Alice doesn't switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(false)}));
+display("P(win) if Alice does switch");
+viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
+~~~
+
+It doesn't matter whether she switches or not.
+
+
+### Exercise 2.5
 
 > This time, fill in the code so that Monty randomly chooses between the two doors that aren't the prize door.
 > What should Alice do now?
@@ -411,3 +458,16 @@ viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
 ~~~
 
 Alice should switch.
+
+
+### Exercise 2.6
+
+> The psychological question is why do people have the initial intuition that switching shouldn’t matter?
+> Given your explorations, propose a hypothesis.
+> Can you think of an experiment that would test this hypothesis?
+
+[Note: There’s no right answer to this, so answers may vary.]
+
+One model might be that people believe that Monty is trying to avoid the prize door, 
+or believe that he actually acts randomly.
+Either possibility would lead to the prediction that Alice should be indifferent to switching.
