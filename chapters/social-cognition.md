@@ -8,12 +8,12 @@ custom_js:
 - assets/js/physics.js
 ---
 
-The `Infer` operator is an ordinary WebPPL function, in the sense that it can occur anywhere that any other function can occur. In particular, we can construct an inference containing another inference inside of it: this represents hypothetical inference *about* a hypothetical inference. Nested inferences are particularly useful in modeling social cognition: reasoning about another agent, who is herself reasoning.
+The `Infer` operator is an ordinary WebPPL function, in the sense that it can occur anywhere that any other function can occur. In particular, we can construct an inference containing another inference inside it: this represents hypothetical inference *about* a hypothetical inference. Nested inferences are particularly useful in modeling social cognition: reasoning about another agent, who is herself reasoning.
 
 # Prelude: Thinking About Assembly Lines
 
 Imagine a factory where the widget-maker is used to make widgets, but they are sometimes faulty.
-The tester tests them and let's through only the good ones.
+The tester tests them and lets through only the good ones.
 You don't know what tolerance the widget tester is set to, and wish to infer it. 
 We can represent this as:
 
@@ -70,9 +70,9 @@ viz(d)
 ~~~~
 
 We are now abstracting the tester machine, rather than thinking about the details inside the widget tester.
-We represent only that the machine correctly gives a widget above tollerance (by some means). 
+We represent only that the machine correctly gives a widget above tolerance (by some means). 
 
-In order to preserve the return values of `getGoodWidget` we had to take a single `sample` from the infered distribution on widgets. Knowing that we have access to this distribution, we can modify our outer inference to use it directly:
+In order to preserve the return values of `getGoodWidget` we had to take a single `sample` from the inferred distribution on widgets. Knowing that we have access to this distribution, we can modify our outer inference to use it directly:
 
 ~~~~
 // this machine makes a widget -- which we'll just represent with a real number:
@@ -353,7 +353,7 @@ Now we can draw no conclusion about Sally's preferences. Try varying the machine
 
 ## Inferring what they know
 
-In the above models of goal and preference inference, we have assumed that the structure of the world (both the operation of the vending machine and the, irrelevant, initial state) were common knowledge---they were non-random constructs used by both the agent (Sally) selecting actions and the observer interpreting these actions. What if we (the observer) don't know how exactly the vending machine works, but think that however it works Sally knows? We can capture this by placing uncertainty on the vending machine, inside the overall query but "outside" of Sally's inference:
+In the above models of goal and preference inference, we have assumed that the structure of the world (both the operation of the vending machine and the (irrelevant) initial state) were common knowledge---they were non-random constructs used by both the agent (Sally) selecting actions and the observer interpreting these actions. What if we (the observer) don't know how exactly the vending machine works, but think that Sally knows how it works? We can capture this by placing uncertainty on the vending machine inside the overall query but "outside" of Sally's inference:
 
 ~~~~
 ///fold:
@@ -520,7 +520,7 @@ This is a very simple example, but it illustrates how we can represent a differe
 
 ## Inferring what they believe 
 
-Above we assumed that if Sally is ignorant she chooses based on a random machine. This is both not flexible enough and too strong an assumption. Indeed, Sally may have all kinds of specific (and potentially false) beliefs about vending machines. To capture this, we can represent Sally's beliefs as a separate randomly chosen vending machine: by passing this into Sally's `chooseAction` we indicate these are *Sally's* beliefs, by putting this inside the outer `Infer` we represent the observer reasoning about Sally's beliefs:
+Above we assumed that if Sally is ignorant, she chooses based on a random machine. This is both not flexible enough and too strong an assumption. Indeed, Sally may have all kinds of specific (and potentially false) beliefs about vending machines. To capture this, we can represent Sally's beliefs as a separate randomly chosen vending machine: by passing this into Sally's `chooseAction` we indicate these are *Sally's* beliefs, by putting this inside the outer `Infer` we represent the observer reasoning about Sally's beliefs:
 
 ~~~~
 ///fold:
@@ -599,7 +599,7 @@ var learner = function(side) {
 }
 ~~~~
 
-This pair of mutually recursive functions represents a teacher choosing examples or a learner inferring a hypothesis, each thinking about the other. However, notice that this recursion will never halt---it will be an unending chain of "I think that you think that I think that...". To avoid this infinite recursion say that eventually the learner will just assume that the teacher rolled the die and showed the side that came up (rather than reasoning about the teacher choosing a side):
+This pair of mutually recursive functions represents a teacher choosing examples or a learner inferring a hypothesis, each thinking about the other. However, notice that this recursion will never halt---it will be an unending chain of "I think that you think that I think that...". To avoid this infinite recursion, say that eventually the learner will just assume that the teacher rolled the die and showed the side that came up (rather than reasoning about the teacher choosing a side):
 
 ~~~~ norun
 var teacher = function(die, depth) {
