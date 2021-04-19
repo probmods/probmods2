@@ -1,8 +1,8 @@
 ---
 layout: chapter
-title: Bayesian data analysis
+title: Interlude - Bayesian data analysis
 description: Making scientific inferences from data.
-chapter_num: 6
+chapter_num: 6.5
 ---
 
 ### Authors: Michael Henry Tessler; Noah Goodman
@@ -406,7 +406,30 @@ var posterior = Infer(model);
 expectation(posterior,function(p){0.01<p && p<0.18})
 ~~~~
 
-Here we see that [0.01, 0.18] is an (approximately) 90% credible interval -- we can be about 90% sure that the true parameter lies within this interval. Notice that the 90%CI is not unique. There are different ways to choose a particular CI. One particularly common, and useful, one is the Highest Density Interval (HDI), which is the smallest interval achieving a given confidence. (For unimodal distributions the HDI is unique and includes the mean.)
+Here we see that [0.01, 0.18] is an (approximately) 90% credible interval -- we can be about 90% sure that the true parameter lies within this interval. Notice that the 90%CI is not unique. There are different ways to choose a particular CI. One particularly common, and useful, one is the Highest Density Interval (HDI), which is the smallest interval achieving a given confidence. (For unimodal distributions the HDI is unique and includes the mean.) 
+
+Here is a quick way to approximate the HDI of a distribution:
+
+~~~~
+var cred = function(d,low,up) {expectation(d,function(p){low<p && p<up})}
+
+var findHDI = function(targetp,d,low,up,eps) {
+  if (cred(d,low,up)<targetp) {return [low,up]}
+  var y = cred(d,low+eps,up)
+  var z = cred(d,low,up-eps)
+  return y>z ? findHDI(targetp,d,low+eps,up,eps) : findHDI(targetp,d,low,up-eps,eps)
+}
+
+//simple test: a censored gaussian:
+var d = Infer(function(){
+  var x = gaussian(0,1)
+  condition(x>0)
+  return x
+})
+
+//find the 95% HDI for this distribution:
+findHDI(0.95, d, -10, 10, 0.1)
+~~~~
 
 Credible intervals are related to, but shouldn't be mistaken for, the confidence intervals that are often used in frequentist statistics. (And these confidence intervals themselves should definitely not be confused with p-values....)
 
@@ -723,9 +746,13 @@ print( savageDickeyRatio )
 # BDA of cognitive models
 
 In this chapter we have described how we can use generative models of data to do data analysis.
-In the rest of this book we are largely interested in how we can build *cognitive models* by hypothesizing that people have generative models of the world and use them to interpret observations. That is, we view people as intuitive Bayesian statisticians, doing in their heads what scientists do in their notebooks.
+In the rest of this book we are largely interested in how we can build *cognitive models* by hypothesizing that people have generative models of the world that they use to reason and learn. That is, we view people as intuitive Bayesian statisticians, doing in their heads what scientists do in their notebooks.
 
 Of course when we, as scientists, try to test our cognitive models of people, we can do so using BDA! This leads to more complex models in which we have an "outer" Bayesian data analysis model and an "inner" Bayesian cognitive model. 
+This is exactly the "nested Infer" pattern introduced for [Social cognition](social-cognition).
+What is in the inner (cognitive) model captures our scientific hypotheses about what people know and how they reason. What is in the outer (BDA) model represents aspects of our hypotheses about the data that we *are not* attributing to people: linking functions, unknown parameters of the cognitive model, and so on. This distinction can be subtle.
+
+<!-- make an example of BDA for a cognitive model. show how putting variables in different places corresponds to cognitive vs data analytic hypotheses. -->
 
 <!-- 
   # Linking functions

@@ -2,7 +2,7 @@
 layout: chapter
 title: Social cognition
 description: Inference about inference
-chapter_num: 15
+chapter_num: 6
 custom_js:
 - assets/js/box2d.js
 - assets/js/physics.js

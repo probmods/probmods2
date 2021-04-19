@@ -2,7 +2,7 @@
 layout: chapter
 title: Learning (deep) continuous functions
 description: Functional hypothesis spaces and deep probabilistic models
-chapter_num: 13
+chapter_num: 16
 ---
 
 

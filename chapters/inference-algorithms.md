@@ -1,7 +1,7 @@
 ---
 layout: chapter
-title: Algorithms for inference
-description: The many ways to approximate inference. Efficiency tradeoffs of different algorithms.
+title: Interlude - Algorithms for inference
+description: Approximate inference. Efficiency tradeoffs of different algorithms.
 chapter_num: 7
 custom_js:
 - assets/js/box2d.js
@@ -13,10 +13,19 @@ custom_css:
 - /assets/css/draw.css
 ---
 
+<!-- revision notes:
+
+  - there is some redundacy between "prologue" and next section.
+  - do we really want all those fancy graphics?
+  - add something about inference heuristics (and default Infer)?
+  - heading depths are wrong...
+
+-->
+
 
 # Prologue: The performance characteristics of different algorithms
 
-When we introduced [conditioning]({{site.baseurl}}/chapters/conditioning.html) we pointed out that the rejection sampling and enumeration (or mathematical) definitions are equivalent---we could take either one as the definition of how `Infer` should behave with `condition` statements.
+When we introduced [conditioning](conditioning) we pointed out that the rejection sampling and enumeration (or mathematical) definitions are equivalent---we could take either one as the definition of how `Infer` should behave with `condition` statements.
 There are many different ways to compute the same distribution, it is thus useful to separately think about the distributions we are building (including conditional distributions) and how we will compute them.
 Indeed, in the last few chapters we have explored the dynamics of inference without worrying about the details of inference algorithms.
 The efficiency characteristics of different implementations of `Infer` can be very different, however, and this is important both practically and for motivating cognitive hypotheses at the level of algorithms (or psychological processes).
@@ -24,7 +33,9 @@ The efficiency characteristics of different implementations of `Infer` can be ve
 The "guess and check" method of rejection sampling (implemented in `method:"rejection"`) is conceptually useful but is often not efficient: even if we are sure that our model can satisfy the condition, it will often take a very large number of samples to find computations that do so. To see this, let us explore the impact of `baserate` in our simple warm-up example:
 
 ~~~~
-var infModel = function(baserate){
+var baserate = 0.1
+
+var infModel = function(){
   Infer({method: 'rejection', samples: 100}, function(){
     var A = flip(baserate)
     var B = flip(baserate)
@@ -41,8 +52,7 @@ var time = function(foo, trials) {
   return (end-start)/trials
 }
 
-var baserate = 0.1
-time(function(){infModel(baserate)}, 10)
+time(infModel, 10)
 ~~~~
 
 Even for this simple program, lowering the baserate by just one order of magnitude, to $$0.01$$, will make rejection sampling impractical.
@@ -50,7 +60,9 @@ Even for this simple program, lowering the baserate by just one order of magnitu
 Another option that we've seen before is to enumerate all of the possible executions of the model, using the rules of probability to calculate the conditional distribution:
 
 ~~~~
-var infModel = function(baserate){
+var baserate = 0.1
+
+var infModel = function(){
   Infer({method: 'enumerate'}, function(){
     var A = flip(baserate)
     var B = flip(baserate)
@@ -67,14 +79,16 @@ var time = function(foo, trials) {
   return (end-start)/trials
 }
 
-var baserate = 0.1
-time(function(){infModel(baserate)}, 10)
+time(infModel, 10)
 ~~~~
 
 Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this we modify the model to allow a flexible number of `flip` choices:
 
 ~~~~
-var infModel = function(baserate, numFlips){
+var baserate = 0.1
+var numFlips = 3
+
+var infModel = function(){
   Infer({method: 'enumerate'}, function(){
     var choices = repeat(numFlips, function(){flip(baserate)})
     condition(sum(choices) >= 2)
@@ -89,9 +103,8 @@ var time = function(foo, trials) {
   return (end-start)/trials
 }
 
-var baserate = 0.1
-var numFlips = 3
-time(function(){infModel(baserate,numFlips)}, 10)
+
+time(infModel, 10)
 ~~~~
 
 The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated).
@@ -99,7 +112,10 @@ The dependence on size of the execution space renders enumeration impractical fo
 There are many other algorithms and techniques for probabilistic inference, reviewed below. They each have their own performance characteristics. For instance, *Markov chain Monte Carlo* inference approximates the posterior distribution via a random walk.
 
 ~~~~
-var infModel = function(baserate, numFlips){
+var baserate = 0.1
+var numFlips = 3
+
+var infModel = function(){
   Infer({method: 'MCMC', lag: 100}, function(){
     var choices = repeat(numFlips, function(){flip(baserate)})
     condition(sum(choices) >= 2)
@@ -114,9 +130,7 @@ var time = function(foo, trials) {
   return (end-start)/trials
 }
 
-var baserate = 0.1
-var numFlips = 3
-time(function(){infModel(baserate,numFlips)}, 10)
+time(infModel, 10)
 ~~~~
 
 See what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably (but results will become less stable). Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
@@ -146,7 +160,7 @@ Infer({method: 'enumerate'}, gaussianModel);
 
 Even when all the variables are categorical, problems arise quickly. As a program makes more random choices, and as these choices gain more possible values, the number of possible execution paths through the program grows exponentially. Explicitly enumerating all of these paths can be prohibitively expensive. For instance, consider this program which computes the posterior distribution on rendered 2D lines, conditioned on those lines approximately matching this target image:
 
-<img src="../assets/img/box.png" alt="diagram" style="width: 400px;"/>
+<img src="../assets/img/box.png" alt="diagram" style="width: 200px;"/>
 
 ~~~~
 ///fold:
