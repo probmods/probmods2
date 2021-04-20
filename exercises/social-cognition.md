@@ -21,6 +21,7 @@ var vendingMachine = function(state, action) {
           action == 'b' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.1, .8, .1]}) :
 	  action == 'c' ? categorical({vs: ['bagel', 'cookie', 'doughnut'], ps: [.1, .1, .8]}) :
 	  'nothing');
+}
 
 var chooseAction = function(goal, transition, state, deceive) {
   return Infer({method: 'enumerate'}, function() {
