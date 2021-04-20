@@ -471,7 +471,8 @@ display("P(win) if Alice does switch");
 viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
 ~~~
 
-Alice should switch.
+If Monty's policy is to open a door that isn't the prize door, but we observe
+that his door isn't Alice's door, it doesn't matter whether she switches or not.
 
 
 ### Exercise 2.6
