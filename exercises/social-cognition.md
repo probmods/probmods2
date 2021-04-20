@@ -70,12 +70,14 @@ Intuitively, it may seem like switching doesn't matter.
 However, the canonical solution is that you *should* switch doors.
 We will explore why this is the case.
 
+For this problem, we will assume (condition) that we observe Monty opening the door that
+is neither Alice's door nor the prize door.
+
 ### Exercise 2.1
 
 The decision to switch depends crucially on how you believe Monty chooses doors to pick.
 First, write the model such that the host *randomly* picks doors (for this, fill in `montyRandom`).
 In this setting, should Alice switch, or does it not matter?
-Hint: it is useful to condition on the exact doors that we discussed in the problem description.
 
 ~~~~
 ///fold: 
@@ -97,8 +99,11 @@ var montyRandom = function(aliceDoor, prizeDoor) {
 var model = function(switch_cond) {
   var aliceDoor = ...
   var prizeDoor = ...
-
-  var montyDoorDist = montyRandom(aliceDoor, prizeDoor);
+  var montyDoor = ...
+  
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
+  
   return ...
 }
 
@@ -135,8 +140,11 @@ var montyAvoidBoth = function(aliceDoor, prizeDoor) {
 var model = function(switch_cond) {
   var aliceDoor = ...
   var prizeDoor = ...
-
-  var montyDoorDist = montyAvoidBoth(aliceDoor, prizeDoor);
+  var montyDoor = ...
+  
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
+  
   return ...
 }
 
@@ -166,7 +174,6 @@ Hint: you will want to compare particular *rows* of these tables.
 ### Exercise 2.4
 
 This time, fill in the code so that Monty randomly chooses between the two doors that aren't Alice's door.
-Then condition the model so that Monty doesn't choose the prize door (otherwise she should just pick it).
 What should Alice do now?
 
 ~~~~
@@ -189,8 +196,11 @@ var montyAvoidAlice = function(aliceDoor, prizeDoor) {
 var model = function(switch_cond) {
   var aliceDoor = ...
   var prizeDoor = ...
-
-  var montyDoorDist = montyAvoidAlice(aliceDoor, prizeDoor);
+  var montyDoor = ...
+  
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
+  
   return ...
 }
 
@@ -226,8 +236,11 @@ var montyAvoidPrize = function(aliceDoor, prizeDoor) {
 var model = function(switch_cond) {
   var aliceDoor = ...
   var prizeDoor = ...
-
-  var montyDoorDist = montyAvoidPrize(aliceDoor, prizeDoor);
+  var montyDoor = ...
+  
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
+  
   return ...
 }
 
