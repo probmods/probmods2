@@ -140,13 +140,15 @@ Here is one statement of the problem:
 > Intuitively, it may seem like switching doesn't matter.
 > However, the canonical solution is that you *should* switch doors.
 > We will explore why this is the case.
+> 
+> For this problem, we will assume (condition) that we observe Monty opening the door that
+> is neither Alice's door nor the prize door.
 
 ### Exercise 2.1
 
 > The decision to switch depends crucially on how you believe Monty chooses doors to pick.
 First, write the model such that the host *randomly* picks doors (for this, fill in `montyRandom`).
 In this setting, should Alice switch, or does it not matter?
-Hint: it is useful to condition on the exact doors that we discussed in the problem description.
 
 ~~~~
 ///fold: 
@@ -171,6 +173,9 @@ var model = function(switches) {
 
   var montyDoorDist = montyRandom(aliceDoor, prizeDoor);
   var montyDoor = sample(montyDoorDist);
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
+  
   var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
   
   return aliceDoor == prizeDoor;
@@ -184,7 +189,8 @@ viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
 
 In this case, it doesn't matter whether Alice switches.
 *A priori*, all doors are equally likely to be the prize door.
-Monty has eliminated one, but there's no reason to favor either of the other two.
+Monty has eliminated one of the non-prize doors,
+but there's no reason to favor either of the other two.
 
 ### Exercise 2.2
 
@@ -218,6 +224,8 @@ var model = function(switches) {
 
   var montyDoorDist = montyAvoidBoth(aliceDoor, prizeDoor);
   var montyDoor = sample(montyDoorDist);
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
   var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
   
   return aliceDoor == prizeDoor;
@@ -359,6 +367,8 @@ var model = function(montyFunction) {
 
   var montyDoorDist = montyFunction(aliceDoor, prizeDoor);
   var montyDoor = sample(montyDoorDist);
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
   return {alice: aliceDoor, prize: prizeDoor, monty: montyDoor};
 }
 
@@ -373,7 +383,6 @@ viz.table(Infer({method: 'enumerate'}, function() { model(montyAvoidBoth) }));
 ### Exercise 2.4
 
 > This time, fill in the code so that Monty randomly chooses between the two doors that aren't Alice's door.
-> Then condition the model so that Monty doesn't choose the prize door (otherwise she should just pick it).
 > What should Alice do now?
 
 ~~~
@@ -401,6 +410,8 @@ var model = function(switches) {
 
   var montyDoorDist = montyAvoidAlice(aliceDoor, prizeDoor);
   var montyDoor = sample(montyDoorDist);
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
   var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
   
   condition(montyDoor != prizeDoor);
@@ -413,7 +424,8 @@ display("P(win) if Alice does switch");
 viz.auto(Infer({method: 'enumerate'}, function() {model(true)}));
 ~~~
 
-It doesn't matter whether she switches or not.
+If Monty's policy is to open a door that Alice didn't choose, but we observe
+that his door isn't the prize door, it doesn't matter whether she switches or not.
 
 
 ### Exercise 2.5
@@ -446,6 +458,8 @@ var model = function(switches) {
 
   var montyDoorDist = montyAvoidPrize(aliceDoor, prizeDoor);
   var montyDoor = sample(montyDoorDist);
+  condition(montyDoor != prizeDoor);
+  condition(montyDoor != aliceDoor);
   var aliceDoor = switches ? removeBadItems(doors, [aliceDoor, montyDoor])[0] : aliceDoor;
   
   return aliceDoor == prizeDoor;
