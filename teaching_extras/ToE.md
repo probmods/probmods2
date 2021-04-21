@@ -136,6 +136,27 @@ var appraisal = function(...) {...}
 
 # Emotion displays
 
+Some things that people do are a (somewhat) direct result of their emotional experience. This includes facial expressions, body language, and perhaps some verbal ejaculations. This type of action is called an *emotion display*. Because emotion displays depend only on the emotion, they require a simple causal model, `emoDisplay(emotion)`, but they can be perceptually quite complex.
+
+Let's think about facial expressions.
+(Sometimes extreme positive and negative emotions lead to similar facial expressions. Does your model capture this?)
+
+~~~~
+~~~~
+
+Some people express emotions more, or to different degrees. (Everyone has that one really stoic friend who barely moves his mouth when he laughs, right?) How can you incorporate these individual differences into your model?
+
+~~~~
+~~~~
+
+Notice that it now takes more observations from a person to make a confident attribution of their emotion from their facial expression! Why?
+
+Finally, combine your model of facial expressions with your model above of appraisal. 
+
+~~~~
+~~~~
+
+Now explore the emotion attributions this model predicts. How do the outcome and the observed facial display trade off? 
 
 
 # Other actions
