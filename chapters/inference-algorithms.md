@@ -15,10 +15,8 @@ custom_css:
 
 <!-- revision notes:
 
-  - there is some redundacy between "prologue" and next section.
   - do we really want all those fancy graphics?
   - add something about inference heuristics (and default Infer)?
-  - heading depths are wrong...
 
 -->
 
@@ -60,6 +58,16 @@ Even for this simple program, lowering the baserate by just one order of magnitu
 Another option that we've seen before is to enumerate all of the possible executions of the model, using the rules of probability to calculate the conditional distribution:
 
 ~~~~
+///fold:
+//a timing utility: run 'foo' 'trials' times, report average time.
+var time = function(foo, trials) {
+  var start = _.now()
+  var ret = repeat(trials, foo)
+  var end = _.now()
+  return (end-start)/trials
+}
+///
+
 var baserate = 0.1
 
 var infModel = function(){
@@ -71,6 +79,13 @@ var infModel = function(){
     return A})
 }
 
+time(infModel, 10)
+~~~~
+
+Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this we modify the model to allow a flexible number of `flip` choices:
+
+~~~~
+///fold:
 //a timing utility: run 'foo' 'trials' times, report average time.
 var time = function(foo, trials) {
   var start = _.now()
@@ -78,13 +93,8 @@ var time = function(foo, trials) {
   var end = _.now()
   return (end-start)/trials
 }
+///
 
-time(infModel, 10)
-~~~~
-
-Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this we modify the model to allow a flexible number of `flip` choices:
-
-~~~~
 var baserate = 0.1
 var numFlips = 3
 
@@ -95,6 +105,15 @@ var infModel = function(){
     return choices[0]})
 }
 
+time(infModel, 10)
+~~~~
+
+The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated). Try inserting `var x = gaussian(0,1)` in the above model.
+
+There are many other algorithms and techniques for probabilistic inference, reviewed below. They each have their own performance characteristics. For instance, *Markov chain Monte Carlo* inference approximates the posterior distribution via a random walk (described in detail below).
+
+~~~~
+///fold:
 //a timing utility: run 'foo' 'trials' times, report average time.
 var time = function(foo, trials) {
   var start = _.now()
@@ -102,16 +121,8 @@ var time = function(foo, trials) {
   var end = _.now()
   return (end-start)/trials
 }
+///
 
-
-time(infModel, 10)
-~~~~
-
-The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated).
-
-There are many other algorithms and techniques for probabilistic inference, reviewed below. They each have their own performance characteristics. For instance, *Markov chain Monte Carlo* inference approximates the posterior distribution via a random walk.
-
-~~~~
 var baserate = 0.1
 var numFlips = 3
 
@@ -122,26 +133,21 @@ var infModel = function(){
     return choices[0]})
 }
 
-//a timing utility: run 'foo' 'trials' times, report average time.
-var time = function(foo, trials) {
-  var start = _.now()
-  var ret = repeat(trials, foo)
-  var end = _.now()
-  return (end-start)/trials
-}
-
 time(infModel, 10)
 ~~~~
 
 See what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably (but results will become less stable). Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
-This is an example of the kind of tradeoffs that are common between different inference algorithms.
+This is an example of the kind of trade offs that are common between different inference algorithms.
+
+The varying performance characteristics of different algorithms for (approximate) inference mean that getting accurate results for complex models can depend on choosing the right algorithm (with the right parameters). In what follows we aim to gain some intuition for how and when algorithms work, without being exhaustive.
 
 
+<!--
 
 # The landscape of inference algorithms
 
 Portions of the following were adapted from "[Notes of the PPAML Summer School 2016](http://probmods.github.io/ppaml2016/)".
-<!--TODO get permission? -->
+
 
 ## Analytic Solutions
 
@@ -273,7 +279,18 @@ This is an example of the kind of tradeoffs that are common between different in
 
 Next, we provide more intuition on how MCMC works. 
 
-#### Markov chains as samplers
+-->
+
+<!--
+# Sampling and Monte Carlo estimates
+-->
+
+
+# Markov chain Monte Carlo (MCMC)
+
+We have already seen that samples from a (conditional) distribution can be an effective way to represent the results of inference -- when rejection sampling is feasible it is an excellent approach. Other methods have been developed to take *approximate* samples from a conditional distribution. One popular method uses Markov chains.
+
+### Markov chains as samplers
 
 <!-- TODO: This discussion hasn't felt that useful to me recently. Revise and shorten? -->
 
@@ -313,7 +330,7 @@ Notice that the distribution of states after only a few steps is highly influenc
 $$p(x') = \sum_x p(x)\pi(x \rightarrow x')$$.
 Note that the balance condition holds for the distribution as a whole---a single state can of course be moved by the transition.
 
-For the chain above, the stable distribution is uniform---we have another (fairly baroque!) way to sample from the uniform distribution on `['a', 'b', 'c', 'd']`! Of course we could have sampled from the uniform distribution using other Markov chains. For instance the following chain is more natural, since it transitions uniformly:
+For the chain above, the stable distribution is uniform---we have found a (fairly baroque!) way to sample from the uniform distribution on `['a', 'b', 'c', 'd']`! We could have sampled from the uniform distribution using other Markov chains. For instance the following chain is more natural, since it transitions uniformly:
 
 ~~~~
 var states = ['a', 'b', 'c', 'd'];
@@ -339,11 +356,11 @@ viz.hist(repeat(1000,function() {chain('a',50)}))
 viz.hist(repeat(1000,function() {chain('c',50)}))
 ~~~~
 
-Notice that this chain converges much more quickly to the uniform distribution. Edit the code to confirm to yourself that the chain converges on the stationary distribution after a single step. 
+Notice that this chain converges much more quickly to the uniform distribution. (Edit the code to confirm to yourself that the chain converges to the stationary distribution after a single step.) 
 The number of steps it takes for the distribution on states to reach the stable distribution (and hence lose traces of the starting state) is called the *burn-in time*. Thus, while we can use a Markov chain as a way to (approximately) sample from its stable distribution, the efficiency depends on burn-in time.
 While many Markov chains have the same stable distribution they can have very different burn-in times, and hence different efficiency.
 
-While state space in our examples above involved a finite number of states (4!), Markov chains can also be constructed over infinite state spaces. Here's a chain over the integers:
+The state space in our examples above involved a small number of states, but Markov chains can also be constructed over infinite state spaces. Here's a chain over the integers:
 
 ~~~~
 var p = 0.7
@@ -362,7 +379,6 @@ viz.table(samples)
 ~~~~
 
 As we can see, this Markov chain has as its stationary distribution a [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) conditioned to be greater than 2. The Markov chain above *implements* the inference below, in the sense that it specifies a way to sample from the required conditional distribution.
-We can get the same computation using `Infer`:
 
 ~~~~
 var p = .7
@@ -381,8 +397,9 @@ var post = Infer({method: 'MCMC', samples: 25000, lag: 10, model: function(){
 viz.table(post)
 ~~~~
 
-Thus, MCMC involves identifying a Markov chain whose stationary distribution matches the condition distribution you'd like to estimate. That is, you want a Markov chain such that in the limit a histogram (or density plot) of states in the Markov chain approaches the conditional distribution in question. 
+Markov chain Monte Carlo (MCMC) is an approximate inference method based on identifying a Markov chain whose stationary distribution matches the conditional distribution you'd like to estimate. If such a transition distribution can be identified, we simply run it forward to generate samples from the target distribution.
 
+<!--
 As we have already seen, each successive sample from a Markov chain is highly correlated with the prior state. (Why?). To see another example, let's return to our attempt to match the 2D image. This time, we will take 50 MCMC samples:
 
 ~~~~
@@ -430,6 +447,7 @@ viz.table(lineDist);
 ~~~~
 
 As you can see, each successive sample is highly similar to the previous one. Since the first sample is chosen randomly, the sequence you see will be very different if you re-run the model. If you run the chain long enough, these local correlations wash out. However, that can result in a very large collection of samples. For convenience, modelers sometimes record only every Nth states in the chain. WebPPL provides an option for MCMC called `'lag'`, which we actually saw in the first example from this section.
+-->
 
 
 
@@ -438,9 +456,9 @@ To construct a Markov chain that converges to a stationary distribution of inter
 -->
 
 
-#### Metropolis-Hastings
+### Metropolis-Hastings
 
-Fortunately, it turns out that for any given (condition) distribution we might want to sample from, there is at least one Markov chain with a matching stationary distribution. There are a number of methods for finding an appropriate Markov chain. One particularly common method is *Metropolis Hastings* recipe. 
+Fortunately, it turns out that for any given (conditional) distribution there are Markov chains with a matching stationary distribution. There are a number of methods for finding an appropriate Markov chain. One particularly common method is *Metropolis Hastings* recipe. 
 
 To create the necessary transition function, we first create a *proposal distribution*, $$q(x\rightarrow x')$$, which does not need to have the target distribution as its stationary distribution, but should be easy to sample from (otherwise it will be unwieldy to use!). A common option for continuous state spaces is to sample a new state from a multivariate Gaussian centered on the current state. To turn a proposal distribution into a transition function with the right stationary distribution, we either accepting or reject the proposed transition with probability: $$\min\left(1, \frac{p(x')q(x'\rightarrow x)}{p(x)q(x\rightarrow x')}\right).$$
 That is, we flip a coin with that probability: if it comes up heads our next state is $x'$, otherwise our next state is still $$x$$.
@@ -491,90 +509,83 @@ viz.table(chain)
 
 Note that the transition function that is automatically derived using the MH recipe is actually the same as the one we wrote by hand earlier: 
 
-```js
+~~~~
 var transition = function(state){
 	return (state == 3 ? sample(Categorical({vs: [3, 4], ps: [(1 - 0.5 * (1 - p)), (0.5 * (1 - p))]})) :
 						    sample(Categorical({vs: [(state - 1), state, (state + 1)], ps: [0.5, (0.5 - 0.5 * (1 - p)), (0.5 * (1 - p))]})))
 }
-```
+~~~~
 
 <!--
 For background on MH and MCMC, see the excellent introductions by David MacKay ([Chapter 29](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/356.384.pdf) and [30](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/387.412.pdf) of Information Theory, Inference, and Learning Algorithms) or [Radford Neal](http://www.cs.utoronto.ca/~radford/review.abstract.html).
 -->
 
-#### Hamiltonian Monte Carlo
+<!-- TODO: mention lag (and autocorrelation). say something about acceptance rate. -->
 
-WebPPL's `method:'MCMC'` uses *Metropolis-Hastings* by default. However, it is not the only option, nor is it always the best. When the input to a `factor` statement is a function of multiple variables, those variables become correlated in the posterior distribution. If the induced correlation is particularly strong, MCMC can sometimes become 'stuck.' In controling the random walk, Metropolis-Hastings choses a new point in probability space to go to and then decides whether or not to go based on the probability of the new point. If it has difficulty finding new points with reasonable probability, it will get stuck and simplly stay where it is. Given an infinite amount of time, Metropolis-Hastings will recover. However, the first N samples will be heavily dependent on where the chain started (the first sample) and will be a poor approximation of the true posterior. 
+### Hamiltonian Monte Carlo
 
-Take this example below, where we use a Gaussian likelihood factor to encourage ten uniform random numbers to sum to the value 5:
+WebPPL's `method:'MCMC'` uses *Metropolis-Hastings* by default. However, it is not the only option, nor is it always the best. When the input to a `factor` statement is a function of multiple variables, those variables become correlated in the posterior distribution. If the induced correlation is particularly strong, MCMC can sometimes become 'stuck.' In controlling the random walk, Metropolis-Hastings choses a new point in probability space to go to and then decides whether or not to go based on the probability of the new point. If it has difficulty finding new points with reasonable probability, it will get stuck and simply stay where it is. Given an infinite amount of time, Metropolis-Hastings will recover. However, the first N samples will be heavily dependent on where the chain started (the first sample) and will be a poor approximation of the true posterior. 
+
+Take this example below, where we use a Gaussian likelihood to encourage ten uniform random numbers to sum to the value 5:
 
 ~~~~
-var bin = function(x) {
-  return Math.floor(x * 1000) / 1000;
-};
-
 var constrainedSumModel = function() {
-  var xs = repeat(10, function() {
-    return uniform(0, 1);
-  });
-  var targetSum = xs.length / 2;
-  observe(Gaussian({mu: targetSum, sigma: 0.005}), sum(xs));
-  return map(bin, xs);
+  var xs = repeat(10, function() {uniform(0, 1)})
+  var targetSum = 5.0
+  observe(Gaussian({mu: targetSum, sigma: 0.005}), sum(xs))
+  return xs
 };
 
-var post = Infer({
-	method: 'MCMC',
-	samples: 5000,
-	callbacks: [MCMC_Callbacks.finalAccept]
-}, constrainedSumModel);
-var samps = repeat(10, function() { return sample(post); });
-reduce(function(x, acc) {
-	return acc + 'sum: ' + sum(x).toFixed(3) + ' | nums: ' + x.toString() + '\n';
-}, '', samps);
+var opts = {method: 'MCMC',
+            samples: 5000,
+            callbacks: [MCMC_Callbacks.finalAccept] }
+var post = Infer(opts, constrainedSumModel)
+
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
 ~~~~
 
-The output box displays 10 random samples from the posterior. You'll notice that they are all very similiar, despite there being many distinct ways for ten real numbers to sum to 5. The reason is technical but straight-forward.  The program above uses the `callbacks` option to `MCMC` to display the final acceptance ratio (i.e. the percentage of proposed samples that were accepted)--it should be around 1-2%, which is very inefficient.
+The output box displays 10 random samples from the posterior. You'll notice that they are all very similiar, despite there being many distinct ways for ten real numbers to sum to 5. The reason is technical but straight-forward.  The default version of MCMC used by WebPPL is Metropolis Hastings (MH). As described above, MH proposes new states and then uses the MH acceptance rule to decide whether to move there.
+The program above uses the `callbacks` option to `MCMC` to display the final acceptance ratio (i.e. the percentage of proposed samples that were accepted)--we see it is around 1-2%. This means there are few "new" states accepted by the Markov chain.
 
-To deal with situations like this one, WebPPL provides an implementation of [Hamiltonian Monte Carlo](http://docs.webppl.org/en/master/inference.html#kernels), or HMC. HMC automatically computes the gradient of the posterior with respect to the random choices made by the program. It can then use the gradient information to make coordinated proposals to all the random choices, maintaining posterior correlations. Below, we apply HMC to `constrainedSumModel`:
+To deal with situations like this one, WebPPL provides an implementation of [Hamiltonian Monte Carlo](http://docs.webppl.org/en/master/inference.html#kernels) (HMC). HMC automatically computes the gradient of the target distribution with respect to the random choices made by the program. It uses this gradient information to make coordinated proposals to all the random choices. This can yield much better proposals for MH.
+Below, we apply HMC to `constrainedSumModel`:
 
 ~~~~
-///fold:
-var bin = function(x) {
-  return Math.floor(x * 1000) / 1000;
-};
-
 var constrainedSumModel = function() {
-  var xs = repeat(10, function() {
-    return uniform(0, 1);
-  });
-  var targetSum = xs.length / 2;
-  observe(Gaussian({mu: targetSum, sigma: 0.005}), sum(xs));
-  return map(bin, xs);
+  var xs = repeat(10, function() {uniform(0, 1)})
+  var targetSum = 5.0
+  observe(Gaussian({mu: targetSum, sigma: 0.005}), sum(xs))
+  return xs
 };
-///
 
-var post = Infer({
-	method: 'MCMC',
-	samples: 100,
-	callbacks: [MCMC_Callbacks.finalAccept],
-	kernel: {
-		HMC : { steps: 50, stepSize: 0.0025 }
-	}
-}, constrainedSumModel);
-var samps = repeat(10, function() { return sample(post); });
-reduce(function(x, acc) {
-	return acc + 'sum: ' + sum(x).toFixed(3) + ' | nums: ' + x.toString() + '\n';
-}, '', samps);
+var opts = {method: 'MCMC',
+            samples: 100,
+            callbacks: [MCMC_Callbacks.finalAccept],
+            kernel: {HMC : { steps: 50, stepSize: 0.0025 }} }
+var post = Infer(opts, constrainedSumModel)
+
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
 ~~~~
 
-The approximate posterior samples produced by this program are more varied, and the final acceptance rate is much higher.
+The approximate posterior samples produced by this program are more varied, and the final acceptance rate is much higher!
 
 There are a couple of caveats to keep in mind when using HMC:
 
- - Its parameters can be extremely sensitive. Try increasing the `stepSize` option to `0.004` and seeing how the output samples degenerate. 
- - It is only applicable to continuous random choices, due to its gradient-based nature. You can still use HMC with models that include discrete choices, though: under the hood, this will alternate between HMC for the continuous choices and MH for the discrete choices.
+ - Its parameters can be extremely sensitive. Try increasing the `stepSize` option to `0.004` and see how the output samples degenerate. 
+ - It is only applicable to continuous random choices, due to its gradient-based nature. (You can use WebPPl's HMC with models that include discrete choices: under the hood, this will alternate between HMC for the continuous choices and MH for the discrete choices.)
 
-### Particle Filters
+
+# Particle Filters
 
 Particle filters -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintain a collection of samples (particles) that are resampled upon encountering new evidence. They are particularly useful for models that incrementally update beliefs as new observations come in. Before considering such models, though, let's get a sense of how particle filters work. Below, we apply a particle filter to our 2D image rendering model, using `method: 'SMC'`.
 
@@ -675,11 +686,11 @@ posEstimate;
 
 We display the true location (`trueLoc`) in green, the observations in grey, and the inferred location (`posEstimate`) in blue. Again, try adjusting the number of particles (`numParticles`) and number of observations (`numObservations`) to see how these affect accuracy. 
 
-#### Interlude on `factor`/`observe` vs. `condition`
+## Interlude on `factor`/`observe` vs. `condition`
 
 In earlier chapters we introduced the `factor` and `observe` keywords as soft alternatives to the hard `condition` statement in WebPPL.  While the notion of `condition`ing on an observation being true is conceptually straight-forward, it should now be clearer from the details of algorithms what its computational drawbacks might be. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on exactly the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` and `observe` provide a much softer constraint: parameter values that do not give rise to our observations are lower-probability, but not impossible. 
 
-#### Incremental inference based on incremental evidence
+## Incremental inference based on incremental evidence
 
 When a particle filter encounters new evidence, it updates its collection of particles (estimates). Those particles that predict the new data well are likely to be retained or even multiplied. Those particles that do not predict the new data well are likely to be eliminated. Thus, particle filters integrate new data with prior beliefs. This makes them particularly well-suited for programs that interleave inference and observation. 
 
@@ -874,9 +885,8 @@ drawLines(canvas, trueLocs[0], trueLocs.slice(1), "green") // true
 
 Again, the actual trajectory is in green, the observations are in grey, and the inferred trajectory is in blue. Try increasing or decreasing the number of particles to see how this affects inference. 
 
-[Here](http://dritchie.github.io/web-procmod/) is a more complex example of using SMC to generate a 3D model that matches a given volumetric target (Note: this demo uses a much older version of WebPPL, so some of the syntax is different / not compatible with the code we've been working with).
 
-## Variational Inference
+# Variational Inference
 
 The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent the posterior distribution. This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can require a very many expensive samples. 
 
@@ -1000,6 +1010,10 @@ viz.heatMap(post)
 ~~~~
 
 Here we have explicitly described a linear dependence of the mean of `illumination` on `reflectance`. Can you think of ways to adjust the guide functions to even better capture the true posterior?
+
+<!--
+## Amortized variational families
+-->
 
 
 
