@@ -29,10 +29,6 @@ DrawObject.prototype.newPoint = function(x, y){
   return new this.paper.Point(x, y);
 };
 
-// DrawObject.prototype.newSegment = function(x, y,){
-//   return new this.paper.Point(x, y);
-// };
-
 DrawObject.prototype.circle = function(x, y, radius, stroke, fill){
   var point = this.newPoint(x, y);
   var circle = new this.paper.Path.Circle(point, radius || 50);
@@ -67,26 +63,22 @@ DrawObject.prototype.line = function(x1, y1, x2, y2, strokeWidth, opacity, color
 };
 
 DrawObject.prototype.squiggle = function(x1, y1, hx1, hy1, x2, y2, hx2, hy2, strokeWidth, opacity, color){
-  path.strokeColor = color || 'black';
-  path.strokeWidth = strokeWidth || 8;
-  path.opacity = opacity || 0.6;
-
   var firstSegment = new this.paper.Segment({
       point: [x1,y1],
       handleOut: [hx1,hy1]
   });
-
   var secondSegment = new this.paper.Segment({
       point: [x2,y2],
       handleIn: [hx2,hy2]
   });
-
   var path = new this.paper.Path({
       segments: [firstSegment, secondSegment],
       strokeColor: 'black'
   });
-
-    this.redraw();
+  path.strokeColor = color || 'black';
+  path.strokeWidth = strokeWidth || 8;
+  path.opacity = opacity || 0.6;
+  this.redraw();
 };
 
 DrawObject.prototype.redraw = function(){
