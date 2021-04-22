@@ -899,7 +899,6 @@ Again, the actual trajectory is in green, the observations are in grey, and the 
 The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent a conditional distribution. 
 Another way to represent a distribution is by finding the closest approximation among a set (or "family") of simpler distributions. This is the approach taken by *variational inference*. At a high level, we declare a family of models that has the same choices as our target model, but doesn't have any conditions (i.e. no `condition`, `observe`, or `factor`); we then try to find the member of this family closest to our target use it as the result of `Infer`. 
 
-## Parametrized families 
 
 In WebPPL we declare parameters of a family with `param()`. For instance, here is a family of Gaussian distributions with fixed variance but different means:
 
@@ -911,8 +910,10 @@ Because we want to make sure the family of distributions has the same choices as
 
 ~~~~
 var gaussianModel = function() {
-  var mu = sample(Gaussian(0, 20))
-  var sigma = Math.exp(sample(Gaussian(0, 1)) // ensure sigma > 0
+  var mu = sample(Gaussian(0, 20),
+      {guide: function(){Gaussian({mu:param(), sigma:param()})}})
+  var sigma = Math.exp(sample(Gaussian(0, 1),
+      {guide: function(){Gaussian({mu:param(), sigma:param()})}}) 
   map(function(d) {
     observe(Gaussian({mu: mu, sigma: sigma}), d)
   }, data)
@@ -920,8 +921,7 @@ var gaussianModel = function() {
 }
 ~~~~
 
-
-## Optimizing parameters
+This represents both the conditional model, a Gaussian of unknown mean and variance with observed samples, and the (unconditional) family.
 
 <!--
 This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can require a very many expensive samples. 
@@ -931,8 +931,38 @@ On the other side of the same coin, we have [*parametric*](https://en.wikipedia.
 Thus, if we believe we can fit the distribution of interest reasonably well parametrically, there are a number of advantages to doing so. This is the approach taken by the family of [variational inference](http://docs.webppl.org/en/master/inference.html#optimization) methods, and WebPPL provides a version of these algorithms via the `optimize` inference option (the name 'optimize' comes from the fact that we're optimizing the parameters of a density function to make it as close as possible to the true posterior).
 -->
 
+Once we have specified the target model and the family we'll use to approximate it, our goal is to find the best member of the family -- that is the one closest to the target model. Formally we want the member of the family with smallest Kullback-Liebler distance to the target model. WebPPL has built in algorithms for minimizing this distance via gradient descent. This is called *variational inference*.
 
-Below, we use `optimize` to fit the hyperparameters of a Gaussian distribution from data:
+Here we use WebPPL inference method `optimize` to do variational inference in the above model:
+
+~~~~
+var trueMu = 3.5
+var trueSigma = 0.8
+
+var data = repeat(100, function() { return gaussian(trueMu, trueSigma)})
+
+var gaussianModel = function() {
+  var mu = sample(Gaussian(0, 20),
+      {guide: function(){Gaussian({mu:param(), sigma:param()})}})
+  var sigma = Math.exp(sample(Gaussian(0, 1),
+      {guide: function(){Gaussian({mu:param(), sigma:param()})}}) 
+  map(function(d) {
+    observe(Gaussian({mu: mu, sigma: sigma}), d)
+  }, data)
+  return {mu: mu, sigma: sigma}
+}
+
+var post = Infer({
+  method: 'optimize',
+  optMethod: {adam: {stepSize: .25}},
+  steps: 250,
+  samples: 1000}, 
+  gaussianModel)
+
+viz.marginals(post)
+~~~~
+
+It is worth knowing that if no `guide` family is provided, WebPPL will fill one in by default:
 
 ~~~~
 var trueMu = 3.5
@@ -953,12 +983,8 @@ var post = Infer({
   method: 'optimize',
   optMethod: {adam: {stepSize: .25}},
   steps: 250,
-  samples: 1000
-// Also try using MCMC and seeing how many samples it takes to converge
-//   method: 'MCMC',
-//   onlyMAP: true,
-//   samples: 5000
-}, gaussianModel)
+  samples: 1000}, 
+  gaussianModel)
 
 viz.marginals(post)
 ~~~~
@@ -966,9 +992,8 @@ viz.marginals(post)
 Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to converge.
 
 
-How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 20)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). 
-
-However, though it can be very useful, the mean-field approximation necessarily fails to capture correlation between variables. To see this, return to the model we used to explain the checkershaddow illusion:
+The default guide family is constructed by replacing the arguments of random choices in the program with free parameters, which it then optimizes. This approach is known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). 
+Though it can be very useful, the mean-field approximation necessarily fails to capture correlation between variables. To see this, return to the model we used to explain the checkershaddow illusion:
 
 ~~~~
 var observedLuminance = 3;
@@ -998,7 +1023,7 @@ viz.heatMap(post)
 
 Try the above model with both 'optimize' and 'MCMC', do you see how 'optimize' fails to capture the correlation? Think about why this is!
 
-There are other methods for variational inference in addition to *mean-field*. We can instead approximate the posterior with a more complex family of distributions; for instance one that directly captures the (potential) correlation in the above example. To do so in WebPPL we need to explicitly describe the approximating family, or *guide*. First let's look at the above mean field approach, written with explicit guides:
+There are other methods for variational inference in addition to *mean-field*. We can instead approximate the posterior with a more complex family of distributions; for instance one that directly captures the (potential) correlation in the above example. To do so in WebPPL we need to explicitly describe the approximating (guide) family. First let's look at the above mean field approach, written with explicit guides:
 
 ~~~~
 var observedLuminance = 3;
