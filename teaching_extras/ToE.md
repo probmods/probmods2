@@ -157,8 +157,10 @@ var showSally = function(faceParams) {
   var canvas = Draw(400, 400, true);
   canvas.circle(200,200,200, 10, '#ffa64d')
   //eyes:
-  canvas.circle(100,150,20, 10)
-  canvas.circle(300,150,20, 10)
+  canvas.circle(100,150,20,'white','white')
+  canvas.circle(105,150,10)
+  canvas.circle(300,150,20,'white','white')
+  canvas.circle(305,150,10)
   //eyebrows:
   canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
   canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
@@ -182,8 +184,10 @@ var showSally = function(faceParams) {
   var canvas = Draw(400, 400, true);
   canvas.circle(200,200,200, 10, '#ffa64d')
   //eyes:
-  canvas.circle(100,150,20, 10)
-  canvas.circle(300,150,20, 10)
+  canvas.circle(100,150,20,'white','white')
+  canvas.circle(105,150,10)
+  canvas.circle(300,150,20,'white','white')
+  canvas.circle(305,150,10)
   //eyebrows:
   canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
   canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
@@ -208,8 +212,10 @@ var showSally = function(faceParams) {
   var canvas = Draw(400, 400, true);
   canvas.circle(200,200,200, 10, '#ffa64d')
   //eyes:
-  canvas.circle(100,150,20, 10)
-  canvas.circle(300,150,20, 10)
+  canvas.circle(100,150,20,'white','white')
+  canvas.circle(105,150,10)
+  canvas.circle(300,150,20,'white','white')
+  canvas.circle(305,150,10)
   //eyebrows:
   canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
   canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
