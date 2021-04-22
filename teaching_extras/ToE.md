@@ -9,7 +9,7 @@ custom_js:
 When humans think about other people, we consider their feelings as well as their beliefs, desires, and other cognitive states.
 How can we integrate emotions into a theory of mind?
 We will need to say what kind of values "emotion" should take, as well as how these states are causally related to other (observable and unobservable) states.
-Here is a figure from [Ong, Soh, Zaki, Goodman (2019)](https://arxiv.org/abs/1903.06445), illustrating the potential causal relations:
+Here is a figure from [Ong, Soh, Zaki, Goodman (2019)](https://arxiv.org/abs/1903.06445), illustrating the potential causal relations in an intuitive theory of emotions:
 ![theory of emotion graphical model](../assets/img/ToE-fig.png)
 
 # Appraisal
@@ -150,26 +150,83 @@ Now play with different scenarios (e.g. change the outcomes from the vending mac
 
 Some things that people do are a (somewhat) direct result of their emotional experience. This includes facial expressions, body language, and perhaps some verbal ejaculations (e.g. grunts, cursing). This type of action is called an *emotion display*. Because emotion displays depend only on the emotion, they require a simple causal model, `emoDisplay(emotion)`, but they can be perceptually quite complex.
 
-Let's think about facial expressions. For simplicity, let's imagine a facial expression is determined by five numbers: mouth width (`mw`), mouth angle (`ma`), mouth openness (`mo`), eyebrow height (`eh`), eyebrow angle (`ea`). 
+Let's think about facial expressions. For simplicity, let's imagine a facial expression is determined by four numbers: mouth angle (`ma`), mouth openness (`mo`), eyebrow height (`eh`), eyebrow angle (`ea`). Here we have provided a helper function to draw Sally!
 
 ~~~~
 var showSally = function(faceParams) {
-	var canvas = Draw(400, 400, true);
-	canvas.circle(200,200,200, 10, '#ffa64d')
-	canvas.squiggle(50,100,51,99, 150,100,149,99)
+  var canvas = Draw(400, 400, true);
+  canvas.circle(200,200,200, 10, '#ffa64d')
+  //eyes:
+  canvas.circle(100,150,20, 10)
+  canvas.circle(300,150,20, 10)
+  //eyebrows:
+  canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
+  canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
+  //mouth:
+  canvas.squiggle(50,250, 0,faceParams.ma, 350,250, 0,faceParams.ma)
+  canvas.squiggle(50,250, 0,faceParams.ma+faceParams.mo, 350,250, 0,faceParams.ma+faceParams.mo)
 }
 
-showSally({mw: 1})
+showSally({ma: 0, mo: 10, eh: 0, ea: 0})
+showSally({ma: 50, mo: 10, eh: 0, ea: 0})
+showSally({ma: 60, mo: 30, eh: 10, ea: 10})
+showSally({ma: -30, mo: 10, eh: 20, ea: -10})
+~~~~
 
+For fun, play around with the four parameters: can you make Sally look really happy? Mad? Sad? Worried? Surprised? Friendly? What else?
+
+Ok, now to connect back to your intuitive theory of emotions. Fill in the function `emoDisplay` to connect an emotion to how it will be displayed.
+
+~~~~
+var showSally = function(faceParams) {
+  var canvas = Draw(400, 400, true);
+  canvas.circle(200,200,200, 10, '#ffa64d')
+  //eyes:
+  canvas.circle(100,150,20, 10)
+  canvas.circle(300,150,20, 10)
+  //eyebrows:
+  canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
+  canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
+  //mouth:
+  canvas.squiggle(50,250, 0,faceParams.ma, 350,250, 0,faceParams.ma)
+  canvas.squiggle(50,250, 0,faceParams.ma+faceParams.mo, 350,250, 0,faceParams.ma+faceParams.mo)
+}
 
 var emoDisplay = function(emotion) {
 	...
-	return {mw: ..., ma: ..., mo: ..., eh: ..., ea: ...}}
+	return {ma: ..., mo: ..., eh: ..., ea: ...}}
+
+showSally(emoDisplay(10))
 ~~~~
 
 Sometimes extreme positive and negative emotions lead to similar facial expressions. Does your model capture this?
 
+How does emotion attribution from emotional displays work? When the observer sees Sally's face, he will attempt to infer her (unobservable) emotion state. Extend your model to capture this inference:
 
+~~~~
+var showSally = function(faceParams) {
+  var canvas = Draw(400, 400, true);
+  canvas.circle(200,200,200, 10, '#ffa64d')
+  //eyes:
+  canvas.circle(100,150,20, 10)
+  canvas.circle(300,150,20, 10)
+  //eyebrows:
+  canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
+  canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
+  //mouth:
+  canvas.squiggle(50,250, 0,faceParams.ma, 350,250, 0,faceParams.ma)
+  canvas.squiggle(50,250, 0,faceParams.ma+faceParams.mo, 350,250, 0,faceParams.ma+faceParams.mo)
+}
+
+var emoDisplay = function(emotion) {
+	...
+	return {ma: ..., mo: ..., eh: ..., ea: ...}}
+
+var observedFace = {ma: 60, mo: 30, eh: 10, ea: 10}
+
+//what emotion will an observer infer from this face?
+
+~~~~
 
 Some people express emotions more, or to different degrees. (Everyone has that one really stoic friend who barely moves his mouth when he laughs, right?) How can you incorporate these individual differences into your model?
 
@@ -183,7 +240,7 @@ Finally, combine your model of facial expressions with your model above of appra
 ~~~~
 ~~~~
 
-Now explore the emotion attributions this model predicts. How do the outcome and the observed facial display trade off? 
+Explore the emotion attributions this model predicts. How do the outcome and the observed facial display trade off? 
 
 
 # Other actions
