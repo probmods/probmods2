@@ -13,10 +13,9 @@ custom_css:
 - /assets/css/draw.css
 ---
 
-<!-- revision notes:
+<!-- 
 
-  - do we really want all those fancy graphics?
-  - add something about inference heuristics (and default Infer)?
+  TODO: add something about inference heuristics (and default Infer)?
 
 -->
 
@@ -520,7 +519,10 @@ var transition = function(state){
 For background on MH and MCMC, see the excellent introductions by David MacKay ([Chapter 29](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/356.384.pdf) and [30](http://www.inference.phy.cam.ac.uk/mackay/itprnn/ps/387.412.pdf) of Information Theory, Inference, and Learning Algorithms) or [Radford Neal](http://www.cs.utoronto.ca/~radford/review.abstract.html).
 -->
 
+
 <!-- TODO: mention lag (and autocorrelation). say something about acceptance rate. -->
+
+
 
 ### Hamiltonian Monte Carlo
 
@@ -590,6 +592,67 @@ There are a couple of caveats to keep in mind when using HMC:
 A particle filter -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintains a collection of samples (particles) that are re-sampled upon encountering new evidence. They are particularly useful for models where beliefs can be incrementally updated as new observations come in. 
 
 <!-- TODO: walk through a simple example first. a list of Gaussian draws with pairwise constraints to be similar. show how writing observe/factor all at end behaves differently than interleaving sample and observe. -->
+
+Let's consider another simple model, where five real numbers are constrained to be close to their neighbors:
+
+~~~~
+var pairwiseSameModel = function() {
+  var a = uniform(0, 1)
+  var b = uniform(0, 1)
+  var c = uniform(0, 1)
+  var d = uniform(0, 1)
+  var e = uniform(0, 1)
+  observe(Gaussian({mu: 0, sigma: 0.005}), a-b)
+  observe(Gaussian({mu: 0, sigma: 0.005}), b-c)
+  observe(Gaussian({mu: 0, sigma: 0.005}), c-d)
+  observe(Gaussian({mu: 0, sigma: 0.005}), d-e)
+  return [a,b,c,d,e]
+};
+
+var opts = {method: 'MCMC',
+            samples: 100,
+            callbacks: [MCMC_Callbacks.finalAccept]}
+var post = Infer(opts, pairwiseSameModel)
+
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+
+viz(marginalize(post,function(x){x[0]}))
+~~~~
+
+We can easily tell that the marginal distribution on the first number *should* be approximately uniform, yet the sampled values are nowhere close to that. This is another case where the MH procedure finds it difficult to accept new states. Intuitively, rather than choosing the five numbers at once, we could choose one number then use the pairwise similarity constraint to choose the next number close to the first, and so on. Particle filtering will be a (mathematically correct) version of this idea, but only if we rewrite the model to interleave the random choices with the observations:
+
+~~~~
+var pairwiseSameModel = function() {
+  var a = uniform(0, 1)
+  var b = uniform(0, 1)
+  observe(Gaussian({mu: 0, sigma: 0.005}), a-b)
+  var c = uniform(0, 1)
+  observe(Gaussian({mu: 0, sigma: 0.005}), b-c)
+  var d = uniform(0, 1)
+  observe(Gaussian({mu: 0, sigma: 0.005}), c-d)
+  var e = uniform(0, 1)
+  observe(Gaussian({mu: 0, sigma: 0.005}), d-e)
+  return [a,b,c,d,e]
+};
+
+var opts = {method: 'SMC',
+            particles: 1000}
+var post = Infer(opts, pairwiseSameModel)
+
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+print(sample(post))
+
+viz(marginalize(post,function(x){x[0]}))
+~~~~
 
 
 <!--
@@ -702,7 +765,7 @@ In earlier chapters we introduced the `factor` and `observe` keywords as soft al
 
 When a particle filter encounters new evidence, it updates its collection of particles (estimates). Those particles that predict the new data well are likely to be retained or even multiplied. Those particles that do not predict the new data well are likely to be eliminated. Thus, particle filters integrate new data with prior beliefs. This makes them particularly well-suited for programs that interleave inference and observation. 
 
-Consider a simple radar detection example, where the aim is to infer the trajectory of a moving object--the program receives a sequence of noisy observations and must infer the underlying sequence of true object locations. 
+Consider a more complex example, motivated by radar detection, where the aim is to infer the trajectory of a moving object--the program receives a sequence of noisy observations and must infer the underlying sequence of true object locations. 
 
 The code below generates observations from a randomly-sampled underlying trajectory. Our program assumes that the object's motion is governed by a momentum term which is a function of its previous two locations; this tends to produce smoother trajectories.
 
@@ -891,7 +954,7 @@ drawLines(canvas, inferredTrajectory[0], inferredTrajectory.slice(1), "blue") //
 drawLines(canvas, trueLocs[0], trueLocs.slice(1), "green") // true
 ~~~~
 
-Again, the actual trajectory is in green, the observations are in grey, and the inferred trajectory is in blue. Try increasing or decreasing the number of particles to see how this affects inference. 
+Again, the actual trajectory is in green, the observations are in grey, and the inferred trajectory is in blue. Try increasing or decreasing the number of particles to see how this affects inference. Also try using MH or HMC for inference.
 
 
 # Variational Inference
