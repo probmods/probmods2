@@ -228,23 +228,29 @@ var observedFace = {ma: 60, mo: 30, eh: 10, ea: 10}
 
 ~~~~
 
-Some people express emotions more, or to different degrees. (Everyone has that one really stoic friend who barely moves his mouth when he laughs, right?) How can you incorporate these individual differences into your model?
+Combine your model of facial expressions with your model above of appraisal: 
+
+~~~~
+~~~~
+
+Explore the emotion attributions this model predicts. How do the outcome and the observed facial expressions trade off? A model like this can be used to capture the inferences people make in several "directions": from outcome and expression to emotion, from expression to outcome (via emotion), etc. Try a few of these inferences. 
+
+Some people express emotions to different degrees, or just differently, in their facial expressions. (Everyone has that one really stoic friend who barely moves his mouth when he laughs, right?) How can you incorporate these individual differences into your model?
 
 ~~~~
 ~~~~
 
 Notice that it now takes more observations from a person to make a confident attribution of their emotion from their facial expression! Why?
 
-Finally, combine your model of facial expressions with your model above of appraisal. 
 
-~~~~
-~~~~
+## Other things to consider
 
-Explore the emotion attributions this model predicts. How do the outcome and the observed facial display trade off? 
+- When considering the range of expressions of even the simple cartoon Sally above, you may get the feeling that more than a single dimension is required. For instance, what unobserved emotion value would give rise to a "neutral surprised face"? How many dimensions do you think are required?
+- There is debate among affective scientists how the complex emotional concepts we describe in natural language (happy, elated, pleased, loving; sad, depressed, anguished, angry, hangry) relate to the underlying dimensions of emotion experience. The intuitive theory of emotion can reflect these opinions, but it is also possible for the theory people have of others' emotions to diverge from how emotions "really work". This is an empirical question!
 
 
 # Other actions
 
-Some actions, unlike emotion displays, might be influenced by emotions, but not fully determined by them. In these cases the observer may have a difficult inference problem: should an action be explained by emotion, by desires or beliefs, or by some interaction of them?
+Some actions, unlike emotion displays, might be influenced by emotions, but not fully determined by them. (Well... largely determined by them.) In these cases the observer may have a difficult inference problem: should an action be explained by emotion, by desires or beliefs, or by some interaction of these factors?
 
-Come up with a class of actions that you think is comes about by some combination of emotion and rational deliberation. Make a model that describes this causal process and explore the inferences an observer would make when seeing these actions.
+Come up with a class of actions that you think arises from some combination of emotion and rational deliberation. Make a model that describes this causal process and explore the inferences an observer would make when seeing these actions.
