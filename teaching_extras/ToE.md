@@ -150,21 +150,26 @@ Now play with different scenarios (e.g. change the outcomes from the vending mac
 
 Some things that people do are a (somewhat) direct result of their emotional experience. This includes facial expressions, body language, and perhaps some verbal ejaculations (e.g. grunts, cursing). This type of action is called an *emotion display*. Because emotion displays depend only on the emotion, they require a simple causal model, `emoDisplay(emotion)`, but they can be perceptually quite complex.
 
-Let's think about facial expressions. For simplicity, let's imagine a facial expression is determined by five numbers: mouth width (`mw`), mouth angle (`ma`), mouth openness (`mo`), eyebrow height (`eh`), eyebrow angle (`ea`).
+Let's think about facial expressions. For simplicity, let's imagine a facial expression is determined by five numbers: mouth width (`mw`), mouth angle (`ma`), mouth openness (`mo`), eyebrow height (`eh`), eyebrow angle (`ea`). 
 
 ~~~~
 var showSally = function(faceParams) {
 	var canvas = Draw(400, 400, true);
-	canvas.circle(200,200,100)
-	canvas.squiggle()
+	canvas.circle(200,200,200, 10, '#ffa64d')
+	canvas.squiggle(50,100,51,99, 150,100,149,99)
 }
+
+showSally({mw: 1})
 
 
 var emoDisplay = function(emotion) {
 	...
 	return {mw: ..., ma: ..., mo: ..., eh: ..., ea: ...}}
 ~~~~
-(Sometimes extreme positive and negative emotions lead to similar facial expressions. Does your model capture this?)
+
+Sometimes extreme positive and negative emotions lead to similar facial expressions. Does your model capture this?
+
+
 
 Some people express emotions more, or to different degrees. (Everyone has that one really stoic friend who barely moves his mouth when he laughs, right?) How can you incorporate these individual differences into your model?
 
