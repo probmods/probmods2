@@ -587,7 +587,13 @@ There are a couple of caveats to keep in mind when using HMC:
 
 # Particle Filters
 
-Particle filters -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintain a collection of samples (particles) that are resampled upon encountering new evidence. They are particularly useful for models that incrementally update beliefs as new observations come in. Before considering such models, though, let's get a sense of how particle filters work. Below, we apply a particle filter to our 2D image rendering model, using `method: 'SMC'`.
+A particle filter -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintains a collection of samples (particles) that are re-sampled upon encountering new evidence. They are particularly useful for models where beliefs can be incrementally updated as new observations come in. 
+
+<!-- TODO: walk through a simple example first. a list of Gaussian draws with pairwise constraints to be similar. show how writing observe/factor all at end behaves differently than interleaving sample and observe. -->
+
+
+<!--
+Before considering such models, though, let's get a sense of how particle filters work. Below, we apply a particle filter to our 2D image rendering model, using `method: 'SMC'`.
 
 ~~~~
 ///fold: 2D image drawing
@@ -640,7 +646,8 @@ Try running this program multiple times. Note that while each run produces diffe
 
 Notice the variable `numParticles`. This sets the number of estimates (particles) drawn at each inference step. More particles tends to mean more precise estimates. Try adjusting `numParticles` in order to see the difference in accuracy.
 
-For another example, consider inferring the 2D location of a static object given several noisy observations of its position, i.e. from a radar detector:
+
+Consider inferring the 2D location of a static object given several noisy observations of its position, i.e. from a radar detector:
 
 ~~~~
 ///fold: helper drawing function
@@ -684,19 +691,20 @@ drawPoints(canvas, [trueLoc], 'green'); // actual location
 posEstimate;
 ~~~~
 
-We display the true location (`trueLoc`) in green, the observations in grey, and the inferred location (`posEstimate`) in blue. Again, try adjusting the number of particles (`numParticles`) and number of observations (`numObservations`) to see how these affect accuracy. 
+We display the true location (`trueLoc`) in green, the observations in grey, and the inferred location (`posEstimate`) in blue. Try adjusting the number of particles (`numParticles`) and number of observations (`numObservations`) to see how these affect accuracy. 
+-->
 
+<!--
 ## Interlude on `factor`/`observe` vs. `condition`
 
 In earlier chapters we introduced the `factor` and `observe` keywords as soft alternatives to the hard `condition` statement in WebPPL.  While the notion of `condition`ing on an observation being true is conceptually straight-forward, it should now be clearer from the details of algorithms what its computational drawbacks might be. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on exactly the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` and `observe` provide a much softer constraint: parameter values that do not give rise to our observations are lower-probability, but not impossible. 
-
-## Incremental inference based on incremental evidence
+-->
 
 When a particle filter encounters new evidence, it updates its collection of particles (estimates). Those particles that predict the new data well are likely to be retained or even multiplied. Those particles that do not predict the new data well are likely to be eliminated. Thus, particle filters integrate new data with prior beliefs. This makes them particularly well-suited for programs that interleave inference and observation. 
 
-Below, we extend the the radar detection example to infer the trajectory of a moving object, rather than the position of a static one--the program receives a sequence of noisy observations and must infer the underlying sequence of true object locations. Our program assumes that the object's motion is governed by a momentum term which is a function of its previous two locations; this tends to produce smoother trajectories.
+Consider a simple radar detection example, where the aim is to infer the trajectory of a moving object--the program receives a sequence of noisy observations and must infer the underlying sequence of true object locations. 
 
-The code below generates observations from a randomly-sampled underlying trajectory (notice that we only have one observation per time step):
+The code below generates observations from a randomly-sampled underlying trajectory. Our program assumes that the object's motion is governed by a momentum term which is a function of its previous two locations; this tends to produce smoother trajectories.
 
 ~~~~
 ///fold: helper functions for drawing
@@ -888,12 +896,42 @@ Again, the actual trajectory is in green, the observations are in grey, and the 
 
 # Variational Inference
 
-The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent the posterior distribution. This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can require a very many expensive samples. 
+The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent a conditional distribution. 
+Another way to represent a distribution is by finding the closest approximation among a set (or "family") of simpler distributions. This is the approach taken by *variational inference*. At a high level, we declare a family of models that has the same choices as our target model, but doesn't have any conditions (i.e. no `condition`, `observe`, or `factor`); we then try to find the member of this family closest to our target use it as the result of `Infer`. 
 
-On the other side of the same coin, we have [*parametric*](https://en.wikipedia.org/wiki/Parametric_statistics) representations--that is, we can try to design and fit a parameterized density function to approximate the posterior distribution. By definition a parametric function can be described by some finite number of parameters. For instance, a Gaussian is fully described by two numbers: its mean and standard deviation. By approximating a complex posterior distribution within a parametric family, we can often acheive reasonabe result much more quickly. Unlike Monte Carlo methods, however, if the true posterior is badly fit by the family we will never get good results.
+## Parametrized families 
+
+In WebPPL we declare parameters of a family with `param()`. For instance, here is a family of Gaussian distributions with fixed variance but different means:
+
+~~~~.norun
+Gaussian({mu: param(), sigma: 0.1})
+~~~~
+
+Because we want to make sure the family of distributions has the same choices as the target model, we define the two together. This is done with `guide` annotations to `sample` statements:
+
+~~~~
+var gaussianModel = function() {
+  var mu = sample(Gaussian(0, 20))
+  var sigma = Math.exp(sample(Gaussian(0, 1)) // ensure sigma > 0
+  map(function(d) {
+    observe(Gaussian({mu: mu, sigma: sigma}), d)
+  }, data)
+  return {mu: mu, sigma: sigma}
+}
+~~~~
+
+
+## Optimizing parameters
+
+<!--
+This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can require a very many expensive samples. 
+
+On the other side of the same coin, we have [*parametric*](https://en.wikipedia.org/wiki/Parametric_statistics) representations--that is, we can try to design and fit a parameterized density function to approximate the posterior distribution. 
 
 Thus, if we believe we can fit the distribution of interest reasonably well parametrically, there are a number of advantages to doing so. This is the approach taken by the family of [variational inference](http://docs.webppl.org/en/master/inference.html#optimization) methods, and WebPPL provides a version of these algorithms via the `optimize` inference option (the name 'optimize' comes from the fact that we're optimizing the parameters of a density function to make it as close as possible to the true posterior).
-<!-- TODO: explain inference as optimizatio more clearly. -->
+-->
+
+
 Below, we use `optimize` to fit the hyperparameters of a Gaussian distribution from data:
 
 ~~~~
@@ -909,7 +947,7 @@ var gaussianModel = function() {
     observe(Gaussian({mu: mu, sigma: sigma}), d)
   }, data)
   return {mu: mu, sigma: sigma}
-};
+}
 
 var post = Infer({
   method: 'optimize',
@@ -926,6 +964,7 @@ viz.marginals(post)
 ~~~~
 
 Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to converge.
+
 
 How does `optimize` work? By default, it takes the given arguments of random choices in the program (in this case, the arguments `(0, 20)` and `(0, 1)` to the two `gaussian` random choices used as priors) and replaces with them with free parameters which it then optimizes to bring the resulting distribution as close as possible to the true posterior. This approach is also known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). 
 
@@ -1010,6 +1049,9 @@ viz.heatMap(post)
 ~~~~
 
 Here we have explicitly described a linear dependence of the mean of `illumination` on `reflectance`. Can you think of ways to adjust the guide functions to even better capture the true posterior?
+
+
+By definition a parametric function can be described by some finite number of parameters. For instance, a Gaussian is fully described by two numbers: its mean and standard deviation. By approximating a complex posterior distribution within a parametric family, we can often achieve reasonable results much more quickly than Monte Carlo methods. Unlike Monte Carlo methods, however, if the true posterior is badly fit by the family we will never get good results!
 
 <!--
 ## Amortized variational families
