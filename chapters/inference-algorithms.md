@@ -289,7 +289,7 @@ Next, we provide more intuition on how MCMC works.
 
 We have already seen that samples from a (conditional) distribution can be an effective way to represent the results of inference -- when rejection sampling is feasible it is an excellent approach. Other methods have been developed to take *approximate* samples from a conditional distribution. One popular method uses Markov chains.
 
-### Markov chains as samplers
+## Markov chains as samplers
 
 <!-- TODO: This discussion hasn't felt that useful to me recently. Revise and shorten? -->
 
@@ -399,63 +399,11 @@ viz.table(post)
 Markov chain Monte Carlo (MCMC) is an approximate inference method based on identifying a Markov chain whose stationary distribution matches the conditional distribution you'd like to estimate. If such a transition distribution can be identified, we simply run it forward to generate samples from the target distribution.
 
 <!--
-As we have already seen, each successive sample from a Markov chain is highly correlated with the prior state. (Why?). To see another example, let's return to our attempt to match the 2D image. This time, we will take 50 MCMC samples:
-
-~~~~
-///fold:
-var targetImage = Draw(50, 50, false);
-loadImage(targetImage, "../assets/img/box.png");
-
-var drawLines = function(drawObj, lines){
-  var line = lines[0];
-  drawObj.line(line[0], line[1], line[2], line[3]);
-  if (lines.length > 1) {
-    drawLines(drawObj, lines.slice(1));
-  }
-};
-///
-
-var makeLines = function(n, lines, prevScore){
-  // Add a random line to the set of lines
-  var x1 = randomInteger(50);
-  var y1 = randomInteger(50);
-  var x2 = randomInteger(50);
-  var y2 = randomInteger(50);
-  var newLines = lines.concat([[x1, y1, x2, y2]]);
-  // Compute image from set of lines
-  var generatedImage = Draw(50, 50, false);
-  drawLines(generatedImage, newLines);
-  // Factor prefers images that are close to target image
-  var newScore = -targetImage.distance(generatedImage)/1000;
-  factor(newScore - prevScore);
-  generatedImage.destroy();
-  // Generate remaining lines (unless done)
-  return (n==1) ? newLines : makeLines(n-1, newLines, newScore);
-};
-
-var lineDist = Infer(
-  { method: 'MCMC', samples: 50},
-  function(){
-    var lines = makeLines(4, [], 0);
-    var finalGeneratedImage = Draw(50, 50, true);
-    drawLines(finalGeneratedImage, lines);
-    return lines;
-  });
-
-viz.table(lineDist);
-~~~~
-
-As you can see, each successive sample is highly similar to the previous one. Since the first sample is chosen randomly, the sequence you see will be very different if you re-run the model. If you run the chain long enough, these local correlations wash out. However, that can result in a very large collection of samples. For convenience, modelers sometimes record only every Nth states in the chain. WebPPL provides an option for MCMC called `'lag'`, which we actually saw in the first example from this section.
--->
-
-
-
-<!--
 To construct a Markov chain that converges to a stationary distribution of interest, we also need to ensure that any state can be reached from any other state in a finite number of steps. This requirement is called *ergodicity*. If a chain is not ergodic, it may still leave the stationary distribution unchanged when the transition operator is applied, but the chain will not reliably converge to the stationary distribution when initialized with a state sampled from an arbitrary distribution.
 -->
 
 
-### Metropolis-Hastings
+## Metropolis-Hastings
 
 Fortunately, it turns out that for any given (conditional) distribution there are Markov chains with a matching stationary distribution. There are a number of methods for finding an appropriate Markov chain. One particularly common method is *Metropolis Hastings* recipe. 
 
@@ -520,11 +468,10 @@ For background on MH and MCMC, see the excellent introductions by David MacKay (
 -->
 
 
-<!-- TODO: mention lag (and autocorrelation). say something about acceptance rate. -->
 
 
 
-### Hamiltonian Monte Carlo
+## Hamiltonian Monte Carlo
 
 WebPPL's `method:'MCMC'` uses *Metropolis-Hastings* by default. However, it is not the only option, nor is it always the best. When the input to a `factor` statement is a function of multiple variables, those variables become correlated in the posterior distribution. If the induced correlation is particularly strong, MCMC can sometimes become 'stuck.' In controlling the random walk, Metropolis-Hastings choses a new point in probability space to go to and then decides whether or not to go based on the probability of the new point. If it has difficulty finding new points with reasonable probability, it will get stuck and simply stay where it is. Given an infinite amount of time, Metropolis-Hastings will recover. However, the first N samples will be heavily dependent on where the chain started (the first sample) and will be a poor approximation of the true posterior. 
 
@@ -586,12 +533,19 @@ There are a couple of caveats to keep in mind when using HMC:
  - Its parameters can be extremely sensitive. Try increasing the `stepSize` option to `0.004` and see how the output samples degenerate. 
  - It is only applicable to continuous random choices, due to its gradient-based nature. (You can use WebPPl's HMC with models that include discrete choices: under the hood, this will alternate between HMC for the continuous choices and MH for the discrete choices.)
 
+## Some technicalities and practicalities
+
+- The successive samples generated by a single MCMC chain can be very similar, technically speaking they have high autocorrelation. A way of limiting the effects of this autocorrelation is to simple thin out the samples. This corresponds to the `lag` parameter to the `MCMC` inference method.
+- In MH autocorrelation often comes from too many rejected proposals. To monitor this we can keep an eye on the acceptance rate. When it is too low (rule of thumb: below $$0.3$$ for MH, below $$0.9$$ for HMC) we will need to adjust the parameters of the algorithm or switch to a different method.
+- For MH, and related techniques, the very first state of a Markov chain needs to be possible (have non-zero probability according to the target model), otherwise transition probabilities are not well defined. This can be surprisingly hard, especially when the hard `condition` operator is used. Switching to `observe`, where possible, solves this problem (and also improves efficiency during sampling).
+- In order for MCMC to converge to a stationary distribution that accurately reflects the target model, it must be possible to reach any (possible) state from any other eventually. This condition is called *ergodicity*. It is mathematically important, but not something practitioners usually need to worry about. (It can generally be guaranteed by randomly restarting the chain occasionally, though this impacts efficiency.)
+
 
 # Particle Filters
 
-A particle filter -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintains a collection of samples (particles) that are re-sampled upon encountering new evidence. They are particularly useful for models where beliefs can be incrementally updated as new observations come in. 
-
-<!-- TODO: walk through a simple example first. a list of Gaussian draws with pairwise constraints to be similar. show how writing observe/factor all at end behaves differently than interleaving sample and observe. -->
+A particle filter -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintains a collection of samples (aka particles) *simultaneously* in parallel while executing the model. (This is different than MCMC, where samples are complete executions, each constructed sequentially from the last.)
+The particles are "re-sampled" upon encountering new evidence, in order to adjust the numbers so that the population will be approximately distributed according to the model. 
+SMC is particularly useful for models where beliefs can be incrementally updated as new observations come in. 
 
 Let's consider another simple model, where five real numbers are constrained to be close to their neighbors:
 
@@ -653,6 +607,10 @@ print(sample(post))
 
 viz(marginalize(post,function(x){x[0]}))
 ~~~~
+
+Try switching back to the version of the model that does not interleave observations with sampling. Do the samples look worse?
+
+When a particle filter encounters new evidence, it updates its collection of particles. Those particles that predict the new data well are likely to be retained or even multiplied. Those particles that do not predict the new data well are likely to be eliminated. Thus, particle filters integrate new data with prior beliefs. However, if few particles capture the new observation well, the particle filter may be forced to use *only* these few -- this dynamic, called "filter collapse", results in poor samples. Try reducing the number of particles in the above model.
 
 
 <!--
@@ -763,7 +721,7 @@ We display the true location (`trueLoc`) in green, the observations in grey, and
 In earlier chapters we introduced the `factor` and `observe` keywords as soft alternatives to the hard `condition` statement in WebPPL.  While the notion of `condition`ing on an observation being true is conceptually straight-forward, it should now be clearer from the details of algorithms what its computational drawbacks might be. In our model above, any given observation is *a priori* exremely unlikey, since our target can appear anywhere. For obvious reasons, rejection sampling will work poorly, since the chance that a random sample from a Gaussian will take on exactly the value `x` is negligible. Thus, randomly sampling and only retaining the samples where the Gaussian did take on the value `x` is an inefficient strategy. MCMC similarly has difficulty when the vast majority of possible parameter settings have probability 0. (Why?) In contrast, `factor` and `observe` provide a much softer constraint: parameter values that do not give rise to our observations are lower-probability, but not impossible. 
 -->
 
-When a particle filter encounters new evidence, it updates its collection of particles (estimates). Those particles that predict the new data well are likely to be retained or even multiplied. Those particles that do not predict the new data well are likely to be eliminated. Thus, particle filters integrate new data with prior beliefs. This makes them particularly well-suited for programs that interleave inference and observation. 
+
 
 Consider a more complex example, motivated by radar detection, where the aim is to infer the trajectory of a moving object--the program receives a sequence of noisy observations and must infer the underlying sequence of true object locations. 
 
@@ -960,9 +918,9 @@ Again, the actual trajectory is in green, the observations are in grey, and the 
 # Variational Inference
 
 The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent a conditional distribution. 
-Another way to represent a distribution is by finding the closest approximation among a set (or "family") of simpler distributions. This is the approach taken by *variational inference*. At a high level, we declare a family of models that has the same choices as our target model, but doesn't have any conditions (i.e. no `condition`, `observe`, or `factor`); we then try to find the member of this family closest to our target use it as the result of `Infer`. 
+Another way to represent a distribution is by finding the closest approximation among a set (or "family") of simpler distributions. This is the approach taken by *variational inference*. At a high level, we declare a set of models that have the same choices as our target model, but don't have any conditions (i.e. no `condition`, `observe`, or `factor`); we then try to find the member of this set closest to our target model and use it as the result of `Infer`. 
 
-
+To search for a good approximating model, we will eventually use gradient-based techniques. For this reason, we don't want a set of isolated models, but a continuous family.
 In WebPPL we declare parameters of a family with `param()`. For instance, here is a family of Gaussian distributions with fixed variance but different means:
 
 ~~~~.norun
@@ -973,18 +931,37 @@ Because we want to make sure the family of distributions has the same choices as
 
 ~~~~
 var gaussianModel = function() {
-  var mu = sample(Gaussian(0, 20),
+  var mu = sample(Gaussian({mu:0, sigma:20}),
       {guide: function(){Gaussian({mu:param(), sigma:param()})}})
-  var sigma = Math.exp(sample(Gaussian(0, 1),
-      {guide: function(){Gaussian({mu:param(), sigma:param()})}}) 
-  map(function(d) {
-    observe(Gaussian({mu: mu, sigma: sigma}), d)
-  }, data)
+  var sigma = Math.exp(sample(Gaussian({mu:0, sigma:1}),
+      {guide: function(){Gaussian({mu:param(), sigma:param()})}})) 
+  map(function(d) {observe(Gaussian({mu: mu, sigma: sigma}), d)}, 
+    data)
   return {mu: mu, sigma: sigma}
 }
 ~~~~
 
-This represents both the conditional model, a Gaussian of unknown mean and variance with observed samples, and the (unconditional) family.
+This represents both the conditional model, observed data drawn from a Gaussian of unknown mean and variance, and the (unconditional) family: Gaussian of adjustable mean and variance. If we were to separate them out they would look like this:
+
+~~~~.norun
+//target model:
+var gaussianModel = function() {
+  var mu = sample(Gaussian({mu:0, sigma:20}))
+  var sigma = Math.exp(sample(Gaussian({mu:0, sigma:1}))) 
+  map(function(d) {observe(Gaussian({mu: mu, sigma: sigma}), d)}, 
+    data)
+  return {mu: mu, sigma: sigma}
+}
+
+//variational family:
+var guideModelFamily = function() {
+  var mu = sample(Gaussian({mu:param(), sigma:param()}))
+  var sigma = Math.exp(sample(Gaussian({mu:param(), sigma:param()}))) 
+  //Note no observes!
+  return {mu: mu, sigma: sigma}
+}
+~~~~
+
 
 <!--
 This is a [*non-parametric*](https://en.wikipedia.org/wiki/Nonparametric_statistics) representation of the posterior. Non-parametric methods are highly flexible but can require a very many expensive samples. 
@@ -994,7 +971,9 @@ On the other side of the same coin, we have [*parametric*](https://en.wikipedia.
 Thus, if we believe we can fit the distribution of interest reasonably well parametrically, there are a number of advantages to doing so. This is the approach taken by the family of [variational inference](http://docs.webppl.org/en/master/inference.html#optimization) methods, and WebPPL provides a version of these algorithms via the `optimize` inference option (the name 'optimize' comes from the fact that we're optimizing the parameters of a density function to make it as close as possible to the true posterior).
 -->
 
-Once we have specified the target model and the family we'll use to approximate it, our goal is to find the best member of the family -- that is the one closest to the target model. Formally we want the member of the family with smallest Kullback-Liebler distance to the target model. WebPPL has built in algorithms for minimizing this distance via gradient descent. This is called *variational inference*.
+Once we have specified the target model and the family we'll use to approximate it, our goal is to find the best member of the family -- that is the one closest to the target model. 
+Formally we want the member of the family with smallest Kullback-Liebler distance to the target model. 
+WebPPL has built-in algorithms for minimizing this distance via gradient descent. This is called *variational inference*.
 
 Here we use WebPPL inference method `optimize` to do variational inference in the above model:
 
@@ -1005,13 +984,12 @@ var trueSigma = 0.8
 var data = repeat(100, function() { return gaussian(trueMu, trueSigma)})
 
 var gaussianModel = function() {
-  var mu = sample(Gaussian(0, 20),
+  var mu = sample(Gaussian({mu:0, sigma:20}),
       {guide: function(){Gaussian({mu:param(), sigma:param()})}})
-  var sigma = Math.exp(sample(Gaussian(0, 1),
-      {guide: function(){Gaussian({mu:param(), sigma:param()})}}) 
-  map(function(d) {
-    observe(Gaussian({mu: mu, sigma: sigma}), d)
-  }, data)
+  var sigma = Math.exp(sample(Gaussian({mu:0, sigma:1}),
+      {guide: function(){Gaussian({mu:param(), sigma:param()})}})) 
+  map(function(d) {observe(Gaussian({mu: mu, sigma: sigma}), d)}, 
+    data)
   return {mu: mu, sigma: sigma}
 }
 
@@ -1024,6 +1002,8 @@ var post = Infer({
 
 viz.marginals(post)
 ~~~~
+
+Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to give good results.
 
 It is worth knowing that if no `guide` family is provided, WebPPL will fill one in by default:
 
@@ -1035,7 +1015,7 @@ var data = repeat(100, function() { return gaussian(trueMu, trueSigma)})
 
 var gaussianModel = function() {
   var mu = gaussian(0, 20)
-  var sigma = Math.exp(gaussian(0, 1)) // ensure sigma > 0
+  var sigma = Math.exp(gaussian(0, 1))
   map(function(d) {
     observe(Gaussian({mu: mu, sigma: sigma}), d)
   }, data)
@@ -1051,9 +1031,6 @@ var post = Infer({
 
 viz.marginals(post)
 ~~~~
-
-Run this code, then try using MCMC to achieve the same result. You'll notice that MCMC takes significantly more steps/samples to converge.
-
 
 The default guide family is constructed by replacing the arguments of random choices in the program with free parameters, which it then optimizes. This approach is known as *mean-field variational inference*: approximating the posterior with a product of independent distributions (one for each random choice in the program). 
 Though it can be very useful, the mean-field approximation necessarily fails to capture correlation between variables. To see this, return to the model we used to explain the checkershaddow illusion:
@@ -1137,7 +1114,6 @@ viz.heatMap(post)
 ~~~~
 
 Here we have explicitly described a linear dependence of the mean of `illumination` on `reflectance`. Can you think of ways to adjust the guide functions to even better capture the true posterior?
-
 
 By definition a parametric function can be described by some finite number of parameters. For instance, a Gaussian is fully described by two numbers: its mean and standard deviation. By approximating a complex posterior distribution within a parametric family, we can often achieve reasonable results much more quickly than Monte Carlo methods. Unlike Monte Carlo methods, however, if the true posterior is badly fit by the family we will never get good results!
 
