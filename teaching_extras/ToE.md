@@ -20,129 +20,107 @@ First we have to decide what this function should return -- what is a (represent
 Intuitively, an emotional state is positive or negative, and can vary in degree -- that is it can be captured with a single real number.
 Affective scientists have argued that emotion is experienced in a two dimensional space of valence and arousal. However these two dimensions are tightly related (in a roughly quadratic shape), so we will simplify to one dimension for now. 
 
-Let's return to our friend Sally and her vending machine. We have adjusted the model of action choice slightly to depend on a real-valued utility function, instead of a Boolean goal.
+Let's return to our friend Sally and her vending machine. Rather than just thinking about Sally's goal, we'll also think about how *much* she wants different outcomes, by using a utility function:
 
-~~~~
-var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
-
-var chooseAction = function(utilityFn, transition, state, alpha) {
-  var state = (state==undefined)?'start':state
-  var alpha = (alpha==undefined)?1:alpha
-  return Infer(function() {
-    var action = sample(actionPrior)
-    factor(alpha * utilityFn(transition(state, action)))
-    return action
-  })
-}
-
-var vendingMachine = function(state, action) {
+~~~~.norun
+//Sally's belief (about the vending machine):
+var vendingMachine = function(action) {
   return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
           action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
           'nothing')
 }
 
+//Sally's desire, represented now as a utility function:
 var sallyDesire = function(state){ return state=='cookie' ? 10 : 1}
-
 ~~~~
 
-One possibility is thus that appraisal simply returns how good or bad the outcome was for Sally.
+Imagine that Sally presses button 'b' and gets a cookie. How happy is she?
+As we see in the diagram above, emotion comes from an `appraisal` function, which depends on the outcome (what actually happened -- her actions and what she got).
+One possibility is that appraisal simply returns how good or bad the outcome was for Sally.
 Code a version of this simple appraisal model:
 
 ~~~~
-var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
-
-var chooseAction = function(utilityFn, transition, state, alpha) {
-  var state = (state==undefined)?'start':state
-  var alpha = (alpha==undefined)?1:alpha
-  return Infer(function() {
-    var action = sample(actionPrior)
-    factor(alpha * utilityFn(transition(state, action)))
-    return action
-  })
-}
-
-var vendingMachine = function(state, action) {
+//Sally's belief (about the vending machine):
+var vendingMachine = function(action) {
   return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
           action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
           'nothing')
 }
 
+//Sally's desire, represented now as a utility function:
 var sallyDesire = function(state){ return state=='cookie' ? 10 : 1}
 
-var appraisal = function(...) {...}
+var appraisal = function(outcomeState,action) {...}
 
+//Let's see how Sally feels about different outcomes:
+print(appraisal('cookie', 'a'))
+print(appraisal('cookie', 'b'))
+print(appraisal('bagel', 'a'))
+print(appraisal('bagel', 'b'))
 ~~~~
 
-<!-- put in something on appraisal as expected future reward, instead of current reward? this means that inferences about the current state, which affect expectations about future rewards, can affect emotion. in turn this means reevaluating current evidence can change emotion -- this is re-appraisal as in CBT -->
-
-However you may have the intuition (as participants in experiments do) that how happy or sad Sally will be depends on not only what happened, but what she *expected* to happen. This is often captured by comparing the true reward (or utility) to the reward expected ahead of the outcome.
+You may have the intuition (as participants in experiments do) that how happy or sad Sally will be depends on not only what happened, but what she *expected* to happen. This is often captured by comparing the true reward (or utility) to the reward expected ahead of the outcome.
 Code a version of this appraisal model (Hint: WebPPL's `expectation` operator may be useful):
 
 ~~~~
-var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
-
-var chooseAction = function(utilityFn, transition, state, alpha) {
-  var state = (state==undefined)?'start':state
-  var alpha = (alpha==undefined)?1:alpha
-  return Infer(function() {
-    var action = sample(actionPrior)
-    factor(alpha * utilityFn(transition(state, action)))
-    return action
-  })
-}
-
-var vendingMachine = function(state, action) {
+//Sally's belief (about the vending machine):
+var vendingMachine = function(action) {
   return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
           action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
           'nothing')
 }
 
+//Sally's desire, represented now as a utility function:
 var sallyDesire = function(state){ return state=='cookie' ? 10 : 1}
 
-var expectedReward = function(...) {...}
+var expectedReward = function(action) {...}
 
-var appraisal = function(...) {...}
+var appraisal = function(outcomeState,action) {...}
 
+//Let's see how Sally feels about different outcomes:
+print(appraisal('cookie', 'a'))
+print(appraisal('cookie', 'b'))
+print(appraisal('bagel', 'a'))
+print(appraisal('bagel', 'b'))
 ~~~~
 
-There are in fact several elements of outcome expectations that we can separate out. Some outcomes are unexpected but don't yield unexpected reward, other outcomes are only a bit unexpected but lead to very different reward. Appraisal could depend on these pieces (surprise, etc) to different extents. 
-Code a version of the appraisal model where you can change the reliance of emotion on actual reward, expected reward, surprise (and any other factors you'd like).
+Try changing the probabilities of different outcomes. Does Sally's emotion change in the ways you'd expect?
+
+There are, in fact, several elements of outcome expectations that we can separate out. Some outcomes are unexpected but don't yield unexpected reward, other outcomes are only a bit unexpected but lead to very different reward. Appraisal could depend on these pieces (surprise, etc) to different extents. 
+Code a version of the appraisal model where you can change the reliance of emotion on actual reward, expected reward, surprise (and any other factors you'd like): 
 
 ~~~~
-var actionPrior = Categorical({vs: ['a', 'b'], ps: [.5, .5]})
-
-var chooseAction = function(utilityFn, transition, state, alpha) {
-  var state = (state==undefined)?'start':state
-  var alpha = (alpha==undefined)?1:alpha
-  return Infer(function() {
-    var action = sample(actionPrior)
-    factor(alpha * utilityFn(transition(state, action)))
-    return action
-  })
-}
-
-var vendingMachine = function(state, action) {
+//Sally's belief (about the vending machine):
+var vendingMachine = function(action) {
   return (action == 'a' ? categorical({vs: ['bagel', 'cookie'], ps: [.9, .1]}) :
           action == 'b' ? categorical({vs: ['bagel', 'cookie'], ps: [.1, .9]}) :
           'nothing')
 }
 
+//Sally's desire, represented now as a utility function:
 var sallyDesire = function(state){ return state=='cookie' ? 10 : 1}
 
-var expectedReward = function(...) {...}
+var expectedReward = function(action) {...}
 
-var surprise = function(...) {...}
+var surprise = function(outcomeState,action) {...}
 
-var appraisal = function(...) {...}
+var appraisal = function(outcomeState,action) {...}
 
+//Let's see how Sally feels about different outcomes:
+print(appraisal('cookie', 'a'))
+print(appraisal('cookie', 'b'))
+print(appraisal('bagel', 'a'))
+print(appraisal('bagel', 'b'))
 ~~~~
 
-Now play with different scenarios (e.g. change the outcomes from the vending machine, the probabilities, or Sally's utilities). Can you find cases where your intuitions of what Sally will feel constrain the `appraisal` model? That is what experiment would you run in order to distinguish among your hypotheses about how people predict other people's emotions from the situation they are in?
+Now play with different scenarios (e.g. change the outcomes from the vending machine, the probabilities, or Sally's utilities). You may want to extend the vending machine (and utility function) with additional outcomes, in order to explore differences between these quantities. Can you find cases where your intuitions of what Sally will feel constrain the `appraisal` model? That is, what experiment would you run in order to distinguish among your hypotheses about how people predict other people's emotions from the situation they are in?
+
 
 ## Other things to consider
 
 - Emotions at one moment of time are influenced by emotions at past moments. How would you incorporate this temporal dynamics into the theory of emotion?
-- Appraisal in the moment likely depends not on reward, or reward prediction error, for the current moment, but on expected future reward. This means that inferences about the current state, which affect expectations about future rewards, can affect emotion. So, for instance if Sally gets a package with a picture of a bagel on the front, she may think she will have to eat a bagel and be sad; if she then reads the fine print "Delicious cookie by San Fran Bagel Co" she may change her belief about what's in the bag and become happy. This is an example of *reappraisal*, where new information or interpretations can change emotional experience. Reappraisal in an important part of cognitive behavioral therapy... is it also a part of your intuitive theory of emotions?
+- Above we have assumed that Sally's emotion will depend on what she expected given her actual action, but not on other actions she *could have taken*. Intuitively the negative emotion of *regret* depends on counter-factual actions: what would have happened had I acted differently. How would you incorporate this into your model? Should it matter how "reasonable" the initial action was compared to alternatives? 
+- Appraisal in the moment likely depends not on reward (or reward prediction error) for the current moment, but on expected future reward. This means that inferences about the current state, which affect expectations about future rewards, can affect emotion. So, for instance if Sally gets a package with a picture of a bagel on the front, she may think she will have to eat a bagel and be sad; if she then reads the fine print "Delicious cookie by San Fran Bagel Co" she may change her belief about what's in the bag and become happy. This is an example of *reappraisal*, where new information or interpretations can change emotional experience. Reappraisal in an important part of cognitive behavioral therapy... is it also a part of your intuitive theory of emotions?
 
 
 
@@ -154,25 +132,25 @@ Let's think about facial expressions. For simplicity, let's imagine a facial exp
 
 ~~~~
 var showSally = function(faceParams) {
-  var canvas = Draw(400, 400, true);
-  canvas.circle(200,200,200, 10, '#ffa64d')
+  var canvas = Draw(200, 200, true);
+  canvas.circle(100,100,100, 5, '#ffa64d')
   //eyes:
-  canvas.circle(100,150,20,'white','white')
-  canvas.circle(105,150,10)
-  canvas.circle(300,150,20,'white','white')
-  canvas.circle(305,150,10)
+  canvas.circle(50,75,10,'white','white')
+  canvas.circle(52,75,5)
+  canvas.circle(150,75,10,'white','white')
+  canvas.circle(152,75,5)
   //eyebrows:
-  canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
-  canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
+  canvas.squiggle(40,60-faceParams.eh, 0,0, 60,60-faceParams.eh-faceParams.ea, 0,0)
+  canvas.squiggle(140,60-faceParams.eh-faceParams.ea, 0,0, 160,60-faceParams.eh, 0,0)
   //mouth:
-  canvas.squiggle(50,250, 0,faceParams.ma, 350,250, 0,faceParams.ma)
-  canvas.squiggle(50,250, 0,faceParams.ma+faceParams.mo, 350,250, 0,faceParams.ma+faceParams.mo)
+  canvas.squiggle(25,125, 0,faceParams.ma, 175,125, 0,faceParams.ma)
+  canvas.squiggle(25,125, 0,faceParams.ma+faceParams.mo, 175,125, 0,faceParams.ma+faceParams.mo)
 }
 
-showSally({ma: 0, mo: 10, eh: 0, ea: 0})
-showSally({ma: 50, mo: 10, eh: 0, ea: 0})
-showSally({ma: 60, mo: 30, eh: 10, ea: 10})
-showSally({ma: -30, mo: 10, eh: 20, ea: -10})
+showSally({ma: 0, mo: 5, eh: 0, ea: 0})
+showSally({ma: 25, mo: 5, eh: 0, ea: 0})
+showSally({ma: 30, mo: 20, eh: 5, ea: 5})
+showSally({ma: -15, mo: 5, eh: 10, ea: -5})
 ~~~~
 
 For fun, play around with the four parameters: can you make Sally look really happy? Mad? Sad? Worried? Surprised? Friendly? What else?
@@ -180,21 +158,23 @@ For fun, play around with the four parameters: can you make Sally look really ha
 Ok, now to connect back to your intuitive theory of emotions. Fill in the function `emoDisplay` to connect an emotion to how it will be displayed.
 
 ~~~~
+///fold:
 var showSally = function(faceParams) {
-  var canvas = Draw(400, 400, true);
-  canvas.circle(200,200,200, 10, '#ffa64d')
+  var canvas = Draw(200, 200, true);
+  canvas.circle(100,100,100, 5, '#ffa64d')
   //eyes:
-  canvas.circle(100,150,20,'white','white')
-  canvas.circle(105,150,10)
-  canvas.circle(300,150,20,'white','white')
-  canvas.circle(305,150,10)
+  canvas.circle(50,75,10,'white','white')
+  canvas.circle(52,75,5)
+  canvas.circle(150,75,10,'white','white')
+  canvas.circle(152,75,5)
   //eyebrows:
-  canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
-  canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
+  canvas.squiggle(40,60-faceParams.eh, 0,0, 60,60-faceParams.eh-faceParams.ea, 0,0)
+  canvas.squiggle(140,60-faceParams.eh-faceParams.ea, 0,0, 160,60-faceParams.eh, 0,0)
   //mouth:
-  canvas.squiggle(50,250, 0,faceParams.ma, 350,250, 0,faceParams.ma)
-  canvas.squiggle(50,250, 0,faceParams.ma+faceParams.mo, 350,250, 0,faceParams.ma+faceParams.mo)
+  canvas.squiggle(25,125, 0,faceParams.ma, 175,125, 0,faceParams.ma)
+  canvas.squiggle(25,125, 0,faceParams.ma+faceParams.mo, 175,125, 0,faceParams.ma+faceParams.mo)
 }
+///
 
 var emoDisplay = function(emotion) {
 	...
@@ -205,30 +185,32 @@ showSally(emoDisplay(10))
 
 Sometimes extreme positive and negative emotions lead to similar facial expressions. Does your model capture this?
 
-How does emotion attribution from emotional displays work? When the observer sees Sally's face, he will attempt to infer her (unobservable) emotion state. Extend your model to capture this inference:
+How does emotion attribution from emotional displays work? When the observer sees Sally's face, he will attempt to infer her (unobservable) emotion state. Extend your model to capture this inference (Hint: to capture an observation that, for example, `ma=30` you may want to use a slightly noise observe, `observe(Gaussian({mu: ma, sigma:0.1}), 30)`):
 
 ~~~~
+///fold:
 var showSally = function(faceParams) {
-  var canvas = Draw(400, 400, true);
-  canvas.circle(200,200,200, 10, '#ffa64d')
+  var canvas = Draw(200, 200, true);
+  canvas.circle(100,100,100, 5, '#ffa64d')
   //eyes:
-  canvas.circle(100,150,20,'white','white')
-  canvas.circle(105,150,10)
-  canvas.circle(300,150,20,'white','white')
-  canvas.circle(305,150,10)
+  canvas.circle(50,75,10,'white','white')
+  canvas.circle(52,75,5)
+  canvas.circle(150,75,10,'white','white')
+  canvas.circle(152,75,5)
   //eyebrows:
-  canvas.squiggle(85,120-faceParams.eh, 0,0, 115,120-faceParams.eh-faceParams.ea, 0,0)
-  canvas.squiggle(285,120-faceParams.eh-faceParams.ea, 0,0, 315,120-faceParams.eh, 0,0)
+  canvas.squiggle(40,60-faceParams.eh, 0,0, 60,60-faceParams.eh-faceParams.ea, 0,0)
+  canvas.squiggle(140,60-faceParams.eh-faceParams.ea, 0,0, 160,60-faceParams.eh, 0,0)
   //mouth:
-  canvas.squiggle(50,250, 0,faceParams.ma, 350,250, 0,faceParams.ma)
-  canvas.squiggle(50,250, 0,faceParams.ma+faceParams.mo, 350,250, 0,faceParams.ma+faceParams.mo)
+  canvas.squiggle(25,125, 0,faceParams.ma, 175,125, 0,faceParams.ma)
+  canvas.squiggle(25,125, 0,faceParams.ma+faceParams.mo, 175,125, 0,faceParams.ma+faceParams.mo)
 }
+///
 
 var emoDisplay = function(emotion) {
 	...
 	return {ma: ..., mo: ..., eh: ..., ea: ...}}
 
-var observedFace = {ma: 60, mo: 30, eh: 10, ea: 10}
+var observedFace = {ma: 30, mo: 15, eh: 5, ea: 5}
 
 //what emotion will an observer infer from this face?
 
