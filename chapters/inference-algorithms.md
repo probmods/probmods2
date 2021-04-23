@@ -943,7 +943,7 @@ var gaussianModel = function() {
 
 This represents both the conditional model, observed data drawn from a Gaussian of unknown mean and variance, and the (unconditional) family: Gaussian of adjustable mean and variance. If we were to separate them out they would look like this:
 
-~~~~.norun
+~~~~
 //target model:
 var gaussianModel = function() {
   var mu = sample(Gaussian({mu:0, sigma:20}))
@@ -985,9 +985,9 @@ var data = repeat(100, function() { return gaussian(trueMu, trueSigma)})
 
 var gaussianModel = function() {
   var mu = sample(Gaussian({mu:0, sigma:20}),
-      {guide: function(){Gaussian({mu:param(), sigma:param()})}})
+      {guide: function(){Gaussian({mu:param(), sigma:Math.exp(param())})}})
   var sigma = Math.exp(sample(Gaussian({mu:0, sigma:1}),
-      {guide: function(){Gaussian({mu:param(), sigma:param()})}})) 
+      {guide: function(){Gaussian({mu:param(), sigma:Math.exp(param())})}})) 
   map(function(d) {observe(Gaussian({mu: mu, sigma: sigma}), d)}, 
     data)
   return {mu: mu, sigma: sigma}
@@ -1121,6 +1121,11 @@ By definition a parametric function can be described by some finite number of pa
 ## Amortized variational families
 -->
 
+## Some technicalities and practicalities
+
+- You might wonder why the results of variational inference look "bumpy" when the approximating family is, for example, nice smooth Gaussians? This is because optimization finds the best approximating guide model, but the marginal distribution on return values of this best guide must still be estimated. In WebPPL this final step is done by forward sampling from the guide model, hence the final result is still samples.
+- Performance of variational inference can depend a lot on the parameters of the optimizer, especially the step size. 
+- Even though guide models must not observe data (or factor/condition), they *can* actually depend on the data that is observed in the target model. This is sometimes called *amortized* inference.
 
 
 <!-- The following is copied and partly edited from summer school. However, changes in how optimization works in WebPPL means that a lot of this code no longer runs and needs some tlc.
