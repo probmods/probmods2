@@ -1,7 +1,9 @@
 ---
-layout: solutions
+layout: exercise
 title: Algorithms for Inference - solutions
 description: MCMC, etc.
+custom_js:
+- assets/js/custom.js
 ---
 
 ## Exercise 1. Sampling Implicit Curves
@@ -38,81 +40,16 @@ viz.auto(post);
 
 ### a) 
 
-> Try using MCMC with Metropolis-Hastings instead of rejection sampling. You'll notice that it does not fare as well as rejection sampling. Why not?
-
-Once M-H finds a state with reasonable probability, its proposals will fix one variable and try to change the other. since any proposals along straight vertical or horizontal lines are going to be states with much lower probability (almost every state is very low probability in this model), it is going to tend to get stuck in place and rarely sample new states. In contrast, every accepted sample in rejection sampling is likely to be unique. This can be demonstrated with the following code
-
-~~~~
-var postr = Infer({method: 'rejection', samples: 1000}, model);
-var postm = Infer({method: 'MCMC', samples: 1000}, model);
-print("Rejection sampling:")
-print("Distinct locations sampled: " + Object.keys(postr.getDist()).length)
-viz.auto(postr);
-
-print("Metropolis-Hastings sampling:")
-print("Distinct locations sampled: " + Object.keys(postm.getDist()).length)
-viz.auto(postm);
-~~~~
-
-![](Figures/inference-process-1.PNG)
-
-Metropolis-Hastings sampling:
-
-![](Figures/inference-process-2.PNG)
- 
-### b)
-
-Change the *model* to make MH successfully trace the curves. Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling. Why does this work better?
-
-HINT: is there a way you can sample a single (x,y) pair instead of separately sampling x and then y? You might want to check out the distribution [DiagCovGaussian()](https://webppl.readthedocs.io/en/master/distributions.html#DiagCovGaussian) in the docs. Note that it expects parameters to be [Vectors](https://webppl.readthedocs.io/en/master/functions/tensors.html#Vector) and you can extract elements from vectors with `T.get` (`T` is webppl shorthand for `ad.tensor`: for more information on tensor functions, see [adnn docs](https://github.com/dritchie/adnn/blob/master/ad/README.md#available-ad-primitive-functions)).
-
-#### Solution #1: Find a better proposal distribution
+> Try using MCMC with Metropolis-Hastings instead of rejection sampling.
+> You'll notice that it does not fare as well as rejection sampling. Why not?
 
 ~~~~
-// Using multivariate gaussian
-var curve = function(x, y) {
+///fold:
+var onCurve = function(x, y) {
   var x2 = x*x;
   var term1 = y - Math.pow(x2, 1/3);
-  return x2 + term1*term1 - 1;
-};
-var xbounds = [-1, 1];
-var ybounds = [-1, 1.6];
-
-var xmu = 0.5 * (xbounds[0] + xbounds[1]);
-var ymu = 0.5 * (ybounds[0] + ybounds[1]);
-var xsigma = 0.5 * (xbounds[1] - xbounds[0]);
-var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
-
-var mu = Vector([xmu, ymu]);
-var sigma = Vector([xsigma, ysigma]);
-
-var model = function() {
-  var xy = sample(DiagCovGaussian({mu: mu, sigma: sigma}));
-  var x = T.get(xy, 0);
-  var y = T.get(xy, 1);
-  var c_xy = curve(x, y);
-  condition(Math.abs(c_xy) < 0.01);
-  return {x: x, y: y};
-};
-
-var post = Infer({method: 'MCMC', samples: 30000}, model);
-viz.auto(post);
-~~~~
-
-This model *jointly* samples x and y which allows us to better model their dependence. Note that this still requires many, many more samples than does rejection sampling, and provides less accurate results.
-
-![](Figures/inference-process-3.PNG)
-
-Now change the the inference *algorithm* (with the original model) to successfully trace the curves. What parameters did you try, and what worked best?
-
-#### Solution: Use Hamiltonian MCMC
-
-~~~~
-// Solution 2: Using HMC
-var curve = function(x, y) {
-  var x2 = x*x;
-  var term1 = y - Math.pow(x2, 1/3);
-  return x2 + term1*term1 - 1;
+  var crossSection = x2 + term1*term1 - 1;
+  return Math.abs(crossSection) < 0.01;
 };
 var xbounds = [-1, 1];
 var ybounds = [-1, 1.6];
@@ -125,169 +62,289 @@ var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
 var model = function() {
   var x = gaussian(xmu, xsigma);
   var y = gaussian(ymu, ysigma);
-  var c_xy = curve(x, y);
-  condition(Math.abs(c_xy) < 0.01);
+  condition(onCurve(x, y));
   return {x: x, y: y};
 };
+///
 
-var post = Infer({
-  method: 'MCMC',
-  kernel: { HMC: { stepSize: 0.1, steps: 10 } },
-  samples: 10000
-}, model);
+var post = Infer({method: 'MCMC',
+                  samples: 10000,
+                  lag: 10}, model);
 viz.auto(post);
 ~~~~
 
-![](Figures/inference-process-4.PNG)
+Once the MH algorithm finds a state with reasonable probability, its proposals will fix one variable and try to change the other.
+Since any proposals along straight vertical or horizontal lines are going to be states with much lower probability (almost every state is very low probability in this model), it is going to get stuck in a local optimum and rarely sample new states.
+In contrast, every accepted sample in rejection sampling is likely to be unique.
 
-A `stepSize=1` and `steps=10` for HMC gave good results.
+ 
+### b)
+
+> Change the *model* to make MH successfully trace the curves.
+> Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.
+> Why does this work better?
+
+> You may find the following piece of code useful.
+
+~~~~
+var a = diagCovGaussian({mu: Vector([0, 100]),
+                         sigma: Vector([1, 10])});
+display(T.get(a, 0));
+display(T.get(a, 1));
+~~~~
+
+~~~~
+///fold:
+var onCurve = function(x, y) {
+  var x2 = x*x;
+  var term1 = y - Math.pow(x2, 1/3);
+  var crossSection = x2 + term1*term1 - 1;
+  return Math.abs(crossSection) < 0.01;
+};
+var xbounds = [-1, 1];
+var ybounds = [-1, 1.6];
+
+var xmu = 0.5 * (xbounds[0] + xbounds[1]);
+var ymu = 0.5 * (ybounds[0] + ybounds[1]);
+var xsigma = 0.5 * (xbounds[1] - xbounds[0]);
+var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
+///
+
+var model = function() {
+  var xy = diagCovGaussian({mu: Vector([xmu, xsigma]),
+                            sigma: Vector([ymu, ysigma])});
+  var x = T.get(xy, 0);
+  var y = T.get(xy, 1);
+  condition(onCurve(x, y));
+  return {x: x, y: y};
+};
+
+var post = Infer({method: 'MCMC',
+                  samples: 1000,
+                  lag: 100}, model);
+viz.auto(post);
+~~~~
+
+This model *jointly* samples x and y which allows us to better model their dependence.
+Note that this still requires many, many more samples than does rejection sampling, and provides less accurate results.
+
+### Exercise 1.3
+
+> Using the original model (not the modified one in 1.2), change the inference *algorithm* to HMC to successfully trace the curves.
+> What parameters work best?
+> *Why* does this inference algorithm work better than MH?
+
+> HINT: start with the default parameters specified in the HMC [docs](https://webppl.readthedocs.io/en/master/inference/methods.html#mcmc) and play with different values.
+
+~~~~
+///fold:
+var onCurve = function(x, y) {
+  var x2 = x*x;
+  var term1 = y - Math.pow(x2, 1/3);
+  var crossSection = x2 + term1*term1 - 1;
+  return Math.abs(crossSection) < 0.01;
+};
+var xbounds = [-1, 1];
+var ybounds = [-1, 1.6];
+
+var xmu = 0.5 * (xbounds[0] + xbounds[1]);
+var ymu = 0.5 * (ybounds[0] + ybounds[1]);
+var xsigma = 0.5 * (xbounds[1] - xbounds[0]);
+var ysigma = 0.5 * (ybounds[1] - ybounds[0]);
+
+var model = function() {
+  var x = gaussian(xmu, xsigma);
+  var y = gaussian(ymu, ysigma);
+  condition(onCurve(x, y));
+  return {x: x, y: y};
+};
+///
+
+var opts = {method: 'MCMC',
+            samples: 10000,
+            callbacks: [MCMC_Callbacks.finalAccept],
+            kernel: {HMC : { steps: 10, stepSize: .5 }} }
+var post = Infer(opts, model);
+viz.auto(post);
+~~~~
+
+Steps 10 and stepSize 0.5 gave good results.
+HMC works better in this case than MH because HMC makes proposals to all the variables at once using gradients to go "in a good direction".
+The single-site MH in WebPPL makes individual proposals to each random variable, so when the proposals are strongly correlated (a posteriori), they mostly get rejected.
+Even making MH proposals to all the variables at once, without gradients, it is very unlikely that the correlated variables will jointly move in the "right directions".
 
 
 ## Exercise 2. Properties and pitfalls of Metropolis-Hastings
 
-Consider a very simple function that interpolates between two endpoints. 
+> Consider a very simple function that interpolates between two endpoints.
 
-Suppose one endpoint is fixed at `-10`, but we have uncertainty over the value of the other endpoint and the interpolation weight between them. By conditioning on the resulting value being close to 0, we can infer what the free variables must have been:
+> Suppose one endpoint is fixed at `-10`, but we have uncertainty over the value of the other endpoint and the interpolation weight between them.
+> By conditioning on the resulting value being close to 0, we can infer what the free variables must have been.
 
 ~~~~
 var interpolate = function(point1, point2, interpolationWeight) {
   return (point1 * interpolationWeight +
-          point2 * (1 - interpolationWeight))
+          point2 * (1 - interpolationWeight));
 }
 
 var model = function(){
   var point1 = -10;
-  var point2 = uniform(-100,100);
-  var interpolationWeight = uniform(0,1);
+  var point2 = uniform(-100, 100);
+  var interpolationWeight = uniform(0, 1);
   var pointInMiddle = interpolate(point1, point2, interpolationWeight);
-  observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle)
-  return {point2, interpolationWeight, pointInMiddle}
+  observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle);
+  return {point2, interpolationWeight, pointInMiddle};
 }
 
-var posterior = Infer({
-  method: 'MCMC',
-  samples: 5000,
-  lag: 100,
-}, model)
-
+var posterior = Infer({method: 'MCMC', samples: 5000, lag: 100}, model);
 var samples = posterior.samples;
-viz(marginalize(posterior, function(x) {return x.pointInMiddle}))
+viz(marginalize(posterior, function(x) { x.pointInMiddle }));
 
 // Store these for future use
-editor.put("posterior", posterior)
-editor.put("samples", samples)
+editor.put("posterior", posterior);
+editor.put("samples", samples);
 ~~~~
 
-By looking at the marginal distribution of `pointInMiddle`, we can see that `Infer()` successfully finds values of `point2` and `interpolationWeight` that satisfy our condition. 
+> By looking at the marginal distribution of `pointInMiddle`, we can see that `Infer()` successfully finds values of `point2` and `interpolationWeight` that satisfy our condition.
 
-### a)
+### Exercise 2.1
 
-Visualize the separate marginal distributions of `point2` and `interpolationWeight`. How would you describe their shapes, compared to the marginal distribution of `pointInMiddle`? 
+> Visualize the separate marginal distributions of `point2` and `interpolationWeight`.
+> How would you describe their shapes, compared to the marginal distribution of `pointInMiddle`?
 
-#### Solution
+> HINT: use the [marginalize](http://docs.webppl.org/en/master/functions/other.html#marginalize) helper to elegantly construct these marginal distributions
+
 ~~~~
-var posterior = editor.get("posterior")
-viz(marginalize(posterior, function(x) {return x.point2}))
-viz(marginalize(posterior, function(x) {return x.interpolationWeight}))
+var posterior = editor.get("posterior");
+viz(marginalize(posterior, function(x) {return x.point2}));
+viz(marginalize(posterior, function(x) {return x.interpolationWeight}));
 ~~~~
 
-Whereas `pointInMiddle` is peakd around 0. `point2` and `interpolationWeight` appear to be bimodal.
+Whereas `pointInMiddle` is peaked around 0,
+`point2` and `interpolationWeight` appear to be multimodal.
 
-Now visualize the *joint* marginal distribution of point2 and interpolationWeight. What does this tell you about their dependence?
 
-HINT: use the [marginalize](http://docs.webppl.org/en/master/functions/other.html#marginalize) helper to elegantly construct these marginal distributions
+### Exercise 2.2
 
-#### Solution
+Visualize the *joint* marginal distribution of point2 and interpolationWeight.
+What does this tell you about their dependence?
+
 ~~~~
-var posterior = editor.get("posterior")
+var posterior = editor.get("posterior");
 viz(marginalize(posterior, function(x) {
-  return {'point2': x.point2, 'inter': x.interpolationWeight }
-  }))
+  return {'point2': x.point2, 'inter': x.interpolationWeight};
+}));
 ~~~~
-Both variables have a close dependence. When `point2` is large then `interploation` weight also needs to increase if we want our model to be close to 0.
 
-### b)
+Both variables have a close dependence.
+If `point2` is large, `interpolation` weight needs to also be large to in order to bring the
+interpolation point to 0.
 
-WebPPL also exposes the list of MCMC samples that the density plots above are built from. This is saved in the `samples` variable. Decrease the number of samples to `50` (and the `lag` to 0) and plot `pointInMiddle` as a function of the sample number. Run this several times to get a feel for the shape of this curve. What do you notice? What property of MCMC are you observing?
+### Exercise 2.3
 
-HINT: this will require some 'data munging' on the array of samples. Some useful functions will be [`map`](http://docs.webppl.org/en/master/functions/arrays.html#map), `_.range()`, and `viz.line` which takes arrays `x` and `y`.
+WebPPL also exposes the list of MCMC samples that the density plots above are built from.
+This is saved in `posterior.samples`.
+Set `samples = 100` and `lag = 0`, then plot `pointInMiddle` as a function of the sample number.
+Run this several times to get a feel for the shape of this curve.
+What do you notice about the samples generated by MCMC?
 
-#### Solution
+HINT: this will require some 'data munging' on the array of samples.
+Some useful functions will be [`map`](http://docs.webppl.org/en/master/functions/arrays.html#map), `_.range()`, and `viz.line` which takes arrays `x` and `y`.
+
 ~~~~
-var samples = editor.get("samples")
-var getPointInMiddleSamples = function(d) {
-  return d["value"]["pointInMiddle"]
-} 
-var samples2 = map(getPointInMiddleSamples, samples)
-viz.line(_.range(samples2.length), 
-         samples2)
-~~~~
-The starting point of our chain varies a lot in for the first few example, but then converges. This is because our MCMC chain is initialized randomly.
-
-### c) 
-
-Try re-writing the model to use rejection sampling. Note that you will need to find a way to turn the `observe` statement into a `condition` statement (Hint: See Exercise #1). Is using rejection sampling here a good idea? Why or why not?
-
-### Solution
-~~~~
+///fold:
 var interpolate = function(point1, point2, interpolationWeight) {
   return (point1 * interpolationWeight +
-          point2 * (1 - interpolationWeight))
+          point2 * (1 - interpolationWeight));
 }
 
 var model = function(){
   var point1 = -10;
-  var point2 = uniform(-100,100);
-  var interpolationWeight = uniform(0,1);
+  var point2 = uniform(-100, 100);
+  var interpolationWeight = uniform(0, 1);
   var pointInMiddle = interpolate(point1, point2, interpolationWeight);
+  observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle);
+  return {point2, interpolationWeight, pointInMiddle};
+}
+///
 
+var posterior = Infer({method: 'MCMC', samples: 100, lag: 0}, model);
+var samples = map(function(d) { d["value"]["pointInMiddle"] }, posterior.samples);
+viz.line(_.range(samples.length), samples);
+~~~~
+
+The starting point of our chain is highly variable in for the first few samples before it converges to around 0, our observed `pointInMiddle`.
+This is because our MCMC chain is initialized randomly and needs iterations reach a steady state.
+One way to fix this is to add a burn-in parameter, telling the MCMC sampler to throw away these early samples.
+
+### Exercise 2.4
+
+Rewrite the code to use rejection sampling.
+Note that you will need to find a way to turn the `observe` statement into a `condition` statement (Hint: See Exercise #1).
+Is using rejection sampling here a good idea?
+Why or why not?
+
+~~~~
+///fold:
+var interpolate = function(point1, point2, interpolationWeight) {
+  return (point1 * interpolationWeight +
+          point2 * (1 - interpolationWeight));
+}
+///
+
+var model = function(){
+  var point1 = -10;
+  var point2 = uniform(-100, 100);
+  var interpolationWeight = uniform(0, 1);
+  var pointInMiddle = interpolate(point1, point2, interpolationWeight);
   condition(Math.abs(pointInMiddle) < 0.01)
-  return {point2, interpolationWeight, pointInMiddle}
+  return {point2, interpolationWeight, pointInMiddle};
 }
 
-var posterior = Infer({
-  method: 'rejection',
-  samples: 1000
-}, model)
-viz(posterior)
+viz.marginals(Infer({method: 'rejection', samples: 1000}, model));
 ~~~~
 
-Rejection sampling doesn't work well here in part because the range of `point2` is very wide [-100, 100]. Since our prior is uniform we are sampling points that are almost always rejected.
+Rejection sampling doesn't work well here because the range of `point2` is very wide [-100, 100],
+so the proposed samples are almost always rejected. 
 
-### d)
 
-> Add `verbose: true` to the list of options when you run `MH`. What is the acceptance rate over time (i.e. what proportion of proposals are actually accepted in the chain?). What about the model puts it at this level? 
+### Exercise 2.5
 
-The acceptance overall is quite low -- on average less than `0.05`. Since MH is generating proposals by sampling from the prior and our prior over `point2` is Uniform over a large range, we are rejecting most of the proposals.
+> Using `verbose: true` in our `MH` algorithm, we can observe the proportion of proposals actually accepted.
+> What is the acceptance rate over time and what about the model puts it at this level?
 
-> Consider the list of built-in drift kernels [here](https://webppl.readthedocs.io/en/master/driftkernels.html?highlight=drift%20kernel#helpers). Which of these would be appropriate to use in your model in place of the current uniform prior from which `point2` is sampled? After using that kernel in your model, what effect do you observe on the acceptence rate, and why?
+> Consider the list of built-in drift kernels [here](https://webppl.readthedocs.io/en/master/driftkernels.html?highlight=drift%20kernel#helpers).
+> Which of these would be appropriate to use in your model in place of the current uniform prior from which `point2` is sampled?
+> Replace `uniform(-100, 100)` with a drift kernel and adjust the `width` parameter to raise the acceptance rate.
+> Why does using this drift kernel influence the acceptance rate?
+> What is a drawback of this approach?
 
 ~~~~
+///fold:
 var interpolate = function(point1, point2, interpolationWeight) {
   return (point1 * interpolationWeight +
-          point2 * (1 - interpolationWeight))
+          point2 * (1 - interpolationWeight));
 }
+///
 
 var model = function(){
   var point1 = -10;
-  var point2 = uniformDrift({a: -100, b: 100, w: 20});
-  var interpolationWeight = uniform(0,1);
+  var point2 = uniformDrift({a: -100, b: 100, width: .1});
+  var interpolationWeight = uniform(0, 1);
   var pointInMiddle = interpolate(point1, point2, interpolationWeight);
-  observe(Gaussian({mu: 0, sigma: 0.1}), pointInMiddle)
-  return {point2, interpolationWeight, pointInMiddle}
+  observe(Gaussian({mu: 0, sigma:0.1}), pointInMiddle);
+  return {point2, interpolationWeight, pointInMiddle};
 }
 
-var params = {
-  method: 'MCMC',
-  kernel: 'MH',
-  samples: 500,
-  verbose: true
-}
-
-var posterior = Infer(params, model)
+var posterior = Infer({method: 'MCMC',
+                       samples: 500,
+                       verbose: true}, model);
 ~~~~
 
-Using a drift kernel like uniformDrift means that we will sample proposals from distributions centered at the previous value of our random choice. This produces a random walk that allows MH to more efficiently explore areas of high probability. We notice that the acceptance on average is about an order of magnitude larger!
+Using a drift kernel like uniformDrift means that we will sample proposals from distributions centered at the previous value of our random choice.
+This produces a random walk that allows MH to more efficiently explore areas of high probability.
+We notice that the acceptance on average is about an order of magnitude larger when using a width of 0.1!
+One drawback of this approach is that we will get a much narrower set of samples.
 
 <!-- =============================================
 
