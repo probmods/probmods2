@@ -169,6 +169,9 @@ viz.auto(post);
 ~~~~
 
 Steps 10 and stepSize 0.5 gave good results.
+HMC works better in this case than MH because HMC makes proposals to all the variables at once using gradients to go "in a good direction".
+The single-site MH in WebPPL makes individual proposals to each random variable, so when the proposals are strongly correlated (a posteriori), they mostly get rejected.
+Even making MH proposals to all the variables at once, without gradients, it is very unlikely that the correlated variables will jointly move in the "right directions".
 
 
 ## Exercise 2. Properties and pitfalls of Metropolis-Hastings
