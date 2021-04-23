@@ -1128,6 +1128,20 @@ By definition a parametric function can be described by some finite number of pa
 - Even though guide models must not observe data (or factor/condition), they *can* actually depend on the data that is observed in the target model. This is sometimes called *amortized* inference.
 
 
+# Heuristics for choosing an algorithm
+
+Given this zoo of different algorithms for doing inference, which should you choose? Here is a simple checklist that can be useful:
+
+- Can you use `enumerate`? If so this is the best choice. It won't work if you have continuous choices or especially huge discrete state spaces.
+- Can you do rejection sampling? Try taking one sample and see how long it takes. If it's reasonable, this is the next best option.
+- Do you want inference to be fast and can tolerate bias? If so, try variational inference. Start with mean field and then make fancier guide families as you understand your model better.
+- If you notice that your model has observations interleaved with sampling (or can be written that way), then give SMC a shot. Keep an eye out for filter collapse.
+- MCMC tends to be a good fall back (if you run it long enough, it'll do well...). HMC tends to be better when your model has continuous variables. Tune step size carefully by looking at acceptance rate.
+
+In fact, this decision heuristic is pretty much what WebPPL `Infer` does when no method is specified!
+
+This is unfortunately not an exhaustive procedure, and some of the steps can require intuition. (E.g. how do you know if your variational algorithm is working?) There is a great deal written about diagnostics and rules of thumb for each inference algorithm!
+
 <!-- The following is copied and partly edited from summer school. However, changes in how optimization works in WebPPL means that a lot of this code no longer runs and needs some tlc.
 
 #### Example: Topic models
