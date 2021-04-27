@@ -89,12 +89,12 @@ The posterior looks similar to beta(6, 11).
 > 5. Set k = 4, n = 10, and the prior to beta(1, 1). 
      What values of `a` and `b` would of beta(a, b) would the posterior look like?
 
-beta(5, 11)
+beta(5, 7)
 
 > 6. Set k = 10 and n = 20.
      What values of `a` and `b` would a prior of beta(a, b) make the posterior look like beta(12, 10)?
 
-beta(3, 1)
+beta(2, 0). Since 0 isn't a valid parameter for beta, we could do something like beta(2, 0.01). 
 
 > 7. Based on these observations (and any others you may have tried),
      what is the relationship between the beta distribution and the binomial distribution?
