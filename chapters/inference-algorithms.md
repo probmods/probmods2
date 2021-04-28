@@ -501,7 +501,7 @@ print(sample(post))
 The output box displays 10 random samples from the posterior. You'll notice that they are all very similiar, despite there being many distinct ways for ten real numbers to sum to 5. The reason is technical but straight-forward.  The default version of MCMC used by WebPPL is Metropolis Hastings (MH). As described above, MH proposes new states and then uses the MH acceptance rule to decide whether to move there.
 The program above uses the `callbacks` option to `MCMC` to display the final acceptance ratio (i.e. the percentage of proposed samples that were accepted)--we see it is around 1-2%. This means there are few "new" states accepted by the Markov chain.
 
-To deal with situations like this one, WebPPL provides an implementation of [Hamiltonian Monte Carlo](http://docs.webppl.org/en/master/inference.html#kernels) (HMC). HMC automatically computes the gradient of the target distribution with respect to the random choices made by the program. It uses this gradient information to make coordinated proposals to all the random choices. This can yield much better proposals for MH.
+To deal with situations like this one, WebPPL provides an implementation of [Hamiltonian Monte Carlo](https://webppl.readthedocs.io/en/master/inference/methods.html?highlight=kernels#kernels) (HMC). HMC automatically computes the gradient of the target distribution with respect to the random choices made by the program. It uses this gradient information to make coordinated proposals to all the random choices. This can yield much better proposals for MH.
 Below, we apply HMC to `constrainedSumModel`:
 
 ~~~~
