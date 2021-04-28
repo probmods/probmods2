@@ -73,8 +73,8 @@ var metrics = function(foo, trials, trueExp) {
 
 var innerOpt = {method: 'enumerate'}
 var inner = function(A) {Infer(innerOpt, function(){
-  var C = flip(0.1)
-  var D = flip(0.1)
+  var C = flip(0.3)
+  var D = flip(0.3)
   var w = flip( (C*A+D)/2 )
   condition(w)
   return C
@@ -86,8 +86,8 @@ var innerAFalse = ...
                        
 var outerOpt = {method: 'enumerate'}
 var outer = function(){Infer(outerOpt, function(){
-    var A = flip(0.1)
-    var B = flip(0.1)
+    var A = flip(0.3)
+    var B = flip(0.3)
     //adjust this to use the precomputed values:
     var C = sample(inner(A))
     condition(A+B+C >= 2)
@@ -125,8 +125,8 @@ var metrics = function(foo, trials, trueExp) {
 
 var innerOpt = {method: 'enumerate'}
 var inner = function(A) {Infer(innerOpt, function(){
-  var C = flip(0.1)
-  var D = flip(0.1)
+  var C = flip(0.3)
+  var D = flip(0.3)
   var p = (C*A+D)/2
   var w = flip( p<0?0 : p>1?1 : p)
   condition(w)
