@@ -24,21 +24,8 @@ a) As the number of particles increases, what happens to a particle filter's acc
 
 b) Describe a phenomenon that particle filters be particularly good for modeling. Why do you think a particle filter would be helpful?
 
-## 3. Evolutionary algorithms, Bayesian inference, and the mind
-
-@suchow2017evolution
-
-#### Reading questions:
-
-a) In what way is evolutionary dynamics like Bayesian inference?
-
-b) A number of different inference algorithms are discussed. What are the consequences of one of them being used for a particular process (like working memory) as opposed to another one?
 
 ## Extras
 ### Extra math
 **Algorithms for Inference** For a somewhat longer, mathier disucssion of MCMC algorithms, see @andrieu2003introduction.
 
-### Extra applications
-**One and Done** :One concern about Bayesian models is that inference takes too long. But what if you actually didn't need to run MCMC that long? @vul2014one
-
-**Perceptual instability as MCMC** Could sampling explain perceptual instability? @gershman2009perceptual
