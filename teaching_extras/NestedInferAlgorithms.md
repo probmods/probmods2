@@ -123,12 +123,15 @@ var metrics = function(foo, trials, trueExp) {
 }
 ///
 
+var sigmoid = function(x){1/(1+Math.exp(-x))}
+
+
 var innerOpt = {method: 'enumerate'}
 var inner = function(A) {Infer(innerOpt, function(){
-  var C = flip(0.3)
-  var D = flip(0.3)
-  var p = (C*A+D)/2
-  var w = flip( p<0?0 : p>1?1 : p)
+  var C = flip(sigmoid(A))
+  var D = flip(0.1)
+  var p = (C+D)/2
+  var w = flip( p )
   condition(w)
   return C
 })}
