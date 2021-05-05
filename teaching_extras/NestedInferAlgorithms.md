@@ -130,8 +130,7 @@ var innerOpt = {method: 'enumerate'}
 var inner = function(A) {Infer(innerOpt, function(){
   var C = flip(sigmoid(A))
   var D = flip(0.1)
-  var p = (C+D)/2
-  var w = flip( p )
+  var w = flip( (C+D)/2 )
   condition(w)
   return C
 })}
