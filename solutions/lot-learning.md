@@ -157,7 +157,7 @@ It seems reasonable that people are less likely to consider sequences made from 
 
 
 
-## Exercise 2: Role-governed concepts
+## Exercise 2: Role-governed concepts (optional)
 
 In the Rational Rules model we saw in the chapter, concepts were defined in terms of the features of single objects (e.g. "it's a raven if it has black wings").
 Psychologists have suggested that many concepts are not defined by the features of a single objects, but instead by the relations the object has to other objects.
