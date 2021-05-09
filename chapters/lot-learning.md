@@ -15,7 +15,7 @@ var randomConstant = function() {
 }
 
 var randomCombination = function(f,g) {
-  var op = uniformDraw(['+','-','*','/','^']);
+  var op = uniformDraw(['+','-','*','/','**']);
   return '('+f+op+g+')'
 }
 
@@ -37,7 +37,7 @@ var randomConstant = function() {
 }
 
 var randomCombination = function(f,g) {
-  var op = uniformDraw(['+','-','*','/','^']);
+  var op = uniformDraw(['+','-','*','/','**']);
   return '('+f+op+g+')'
 }
 
@@ -56,89 +56,55 @@ viz.table(Infer({method: 'enumerate', maxExecutions: 100}, function() {
 
 If we now interpret our strings as *hypotheses*, we have compactly defined an infinite hypothesis space and its prior.
 
-## Example: Inferring an Arithmetic Expression
+## Inferring an Arithmetic Function
 
-Consider the following WebPPL program, which induces an arithmetic function from examples. It is much as above, except that we include a variable among the primitives (to make it a function). We also construct a nested array, instead of a simple string, and include a function `runify` that converts the array into a javascript function.
-(The helper function `prettify`, above the fold, makes the nested array pretty to look at.)
+Consider the following WebPPL program, which induces an arithmetic function from examples. The basic generative process is similar to the above, but we include the identity function ('x'), making the resulting expression a function of 'x'.
+At every step we create a runnable function form (`fn`) and also the previous nice string form (`expr`).
 
 ~~~~
-///fold:
-// make expressions easier to look at
-var prettify = function(e) {
-  if (e == 'x' || _.isNumber(e)) {
-    return e
-  } else {
-    var op = e[0]
-    var arg1 = prettify(e[1])
-    var prettyarg1 = (!_.isArray(e[1]) ? arg1 : '(' + arg1 + ')')
-    var arg2 = prettify(e[2])
-    var prettyarg2 = (!_.isArray(e[2]) ? arg2 : '(' + arg2 + ')')
-    return prettyarg1 + ' ' + op + ' ' + prettyarg2
-  }
-}
-///
+var plus = {fn: function(a,b) {return a + b}, expr: '+'}
+var multiply = {fn: function(a,b) {return Math.round(a * b,0)}, expr: '*'}
+var divide = {fn: function(a,b) {return Math.round(a/b,0)}, expr: '/'}
+var minus = {fn: function(a,b) {return a - b}, expr: '-'}
+var power = {fn: function(a,b) {return Math.pow(a,b)}, expr: '**'}
+var binaryOps = [plus, multiply, divide, minus, power]
 
-// make expressions runnable
-var runify = function(e) {
-  //helper functions:
-  var plus = function(a,b) {return a + b}
-  var multiply = function(a,b) {return Math.round(a * b,0)}
-  var divide = function(a,b) {return Math.round(a/b,0)}
-  var minus = function(a,b) {return a - b}
-  var power = function(a,b) {return Math.pow(a,b)}
-  var identity = function(a) {return a}
-  
-  if (e == 'x') {
-    return identity
-  } else if (_.isNumber(e)) {
-    return function(z) { return e }
-  } else {
-    var op = (e[0] == '+') ? plus : 
-             (e[0] == '-') ? minus :
-             (e[0] == '*') ? multiply :
-             (e[0] == '/') ? divide :
-              power
-    var arg1Fn = runify(e[1])
-    var arg2Fn = runify(e[2])
-    return function(z) {
-      return op(arg1Fn(z),arg2Fn(z))
-    }
-  }
-}
+var identity = {fn: function(x) {return x}, expr: 'x'}
 
 var randomConstantFunction = function() {
-  return uniformDraw(_.range(10))
+  var c = uniformDraw(_.range(10))
+  return {fn: function(x){return c}, expr: c}
 }
 
 var randomCombination = function(f,g) {
-  var op = uniformDraw(['+','-','*','/','^']);
-  return [op, f, g];
+  var op = uniformDraw(binaryOps);
+  var opfn = op.fn
+  var ffn = f.fn
+  var gfn = g.fn
+  return {fn: function(x){return opfn(ffn(x),gfn(x))}, 
+          expr: f.expr+op.expr+g.expr}
 }
 
 // sample an arithmetic expression
 var randomArithmeticExpression = function() {
   if (flip()) {
-    return randomCombination(randomArithmeticExpression(), randomArithmeticExpression())
+    return randomCombination(randomArithmeticExpression(), 
+                             randomArithmeticExpression())
   } else {
-    if (flip()) {
-      return 'x'
-    } else {
-      return randomConstantFunction()
-    }
+    return flip() ? identity : randomConstantFunction()
   }
 }
 
 viz.table(Infer({method: 'enumerate', maxExecutions: 1000}, function() {
   var e = randomArithmeticExpression();
-  var s = prettify(e);
-  var f = runify(e);
+  var f = e.fn
   condition(f(1) == 3);
 
-  return {s: s};
+  return {expr: e.expr};
 }))
 ~~~~
 
-This model can learn any function consisting of the integers 0 to 9 and the operations add, subtract, multiply, divide, and raise to a power. 
+This model can learn any function consisting of the integers 0 to 9 and the operations add, subtract, multiply, divide, and power. 
 The condition in this case asks for an arithmetic expression on variable `x` such that it evaluates to `3` when `x` is `1`. There are many extensionally equivalent ways to satisfy the condition, for instance the expressions `3`, `1 + 2`, and `x + 2`, but because the more complex expressions require more choices to generate, they are chosen less often. 
 
 Notice that the model puts the most probability on a function that always returns `3` ($$f(x) = 3$$). This is the simplest hypothesis consistent with the data. Let's see what happens if we have more data -- try changing the condition in the above query to `condition(f(1) == 3 && f(2) == 4)`, then to `condition(f(1) == 3 && f(2) == 6)`.
