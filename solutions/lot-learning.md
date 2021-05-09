@@ -12,79 +12,49 @@ title: Learning as conditional inference - solutions
 
 ~~~~
 ///fold:
-// make expressions easier to look at
-var prettify = function(e) {
-  if (e == 'x' || _.isNumber(e)) {
-    return e
-  } else {
-    var op = e[0]
-    var arg1 = prettify(e[1])
-    var prettyarg1 = (!_.isArray(e[1]) ? arg1 : '(' + arg1 + ')')
-    var arg2 = prettify(e[2])
-    var prettyarg2 = (!_.isArray(e[2]) ? arg2 : '(' + arg2 + ')')
-    return prettyarg1 + ' ' + op + ' ' + prettyarg2
-  }
-}
+var plus = {fn: function(a,b) {return a + b}, expr: '+'}
+var multiply = {fn: function(a,b) {return Math.round(a * b,0)}, expr: '*'}
+var divide = {fn: function(a,b) {return Math.round(a/b,0)}, expr: '/'}
+var minus = {fn: function(a,b) {return a - b}, expr: '-'}
+var power = {fn: function(a,b) {return Math.pow(a,b)}, expr: '**'}
+var binaryOps = [plus, multiply, divide, minus, power]
 
-// make expressions runnable
-var runify = function(e) {
-  //helper functions:
-  var plus = function(a,b) {return a + b}
-  var multiply = function(a,b) {return Math.round(a * b,0)}
-  var divide = function(a,b) {return Math.round(a/b,0)}
-  var minus = function(a,b) {return a - b}
-  var power = function(a,b) {return Math.pow(a,b)}
-  var identity = function(a) {return a}
-  
-  if (e == 'x') {
-    return identity
-  } else if (_.isNumber(e)) {
-    return function(z) { return e }
-  } else {
-    var op = (e[0] == '+') ? plus : 
-             (e[0] == '-') ? minus :
-             (e[0] == '*') ? multiply :
-             (e[0] == '/') ? divide :
-              power
-    var arg1Fn = runify(e[1])
-    var arg2Fn = runify(e[2])
-    return function(z) {
-      return op(arg1Fn(z),arg2Fn(z))
-    }
-  }
-}
+var identity = {fn: function(x) {return x}, expr: 'x'}
 
 var randomConstantFunction = function() {
-  return uniformDraw(_.range(10))
+  var c = uniformDraw(_.range(10))
+  return {fn: function(x){return c}, expr: c}
 }
 
 var randomCombination = function(f,g) {
-  var op = uniformDraw(['+','-','*','/','^']);
-  return [op, f, g];
+  var op = uniformDraw(binaryOps);
+  var opfn = op.fn
+  var ffn = f.fn
+  var gfn = g.fn
+  return {fn: function(x){return opfn(ffn(x),gfn(x))}, 
+          expr: f.expr+op.expr+g.expr}
 }
 
 // sample an arithmetic expression
 var randomArithmeticExpression = function() {
   if (flip()) {
-    return randomCombination(randomArithmeticExpression(), randomArithmeticExpression())
+    return randomCombination(randomArithmeticExpression(), 
+                             randomArithmeticExpression())
   } else {
-    if (flip()) {
-      return 'x'
-    } else {
-      return randomConstantFunction()
-    }
+    return flip() ? identity : randomConstantFunction()
   }
 }
 ///
 
-viz.table(Infer({method: 'enumerate', maxExecutions: 10000}, function() {
+viz.table(Infer({method: 'enumerate', maxExecutions: 1000}, function() {
   var e = randomArithmeticExpression();
-  var s = prettify(e);
-  var f = runify(e);
+  var f = e.fn;
   
   condition(f(1) == 1);
   condition(f(2) == 4);
-  return f(3);
+  
+  return f(3); // use this for Exercise 1.1
+//   return e.expr; // use this for Exercise 1.2
 }))
 ~~~~
 
@@ -95,33 +65,18 @@ viz.table(Infer({method: 'enumerate', maxExecutions: 10000}, function() {
 > However, it also puts significant probability on `27`.
 > Explain why these two numbers have the highest posterior probabilities.
 
-These results are largely due to the high probability of the functions `x * x` and `x ^ x`, which return `9` and `27` for `f(3)`, respectively.
+These results are largely due to the high probability of the functions `x * x` and `x ** x`, which return `9` and `27` for `f(3)`, respectively.
 
 
 ### Exercise 1.2
 
-> Why is the probability of `x ^ 2` is so much lower than `x * x`?
+> Why is the probability of `x ** 2` is so much lower than `x * x`?
 
-> HINT: Think about the probability assigned to `x ^ 2`.
+> HINT: Think about the probability assigned to `x ** 2`.
 
 The two expressions differ in the final draw from the recursive function `randomArithmeticExpression`.
 On each step through the function, there is a 0.3 * 0.5 = 0.15 chance of returning `x`, but only a 0.3 * 0.5 * 0.1 = 0.015 chance of drawing `2`.
 In general, drawing an `x` is much likely than drawing any particular number.
-
-We can check these with the following modification:
-
-~~~~norun
-viz.table(Infer({method: 'enumerate', maxExecutions: 10000}, function() {
-  var e = randomArithmeticExpression();
-  var s = prettify(e);
-  var f = runify(e);
-  
-  condition(f(1) == 1);
-  condition(f(2) == 4);
-  
-  return s;
-}))
-~~~~
 
 ### Exercise 1.3
 
@@ -135,8 +90,12 @@ We could decrease the probability of the latter function by decreasing the proba
 
 ~~~~norun
 var randomCombination = function(f,g) {
-  var op = categorical({vs: ['+','-','*','/','^'], ps: [.24, .24, .24, .24, .04]});
-  return [op, f, g];
+  var op = categorical({vs: binaryOps, ps: [.24, .24, .24, .24, .04]});
+  var opfn = op.fn
+  var ffn = f.fn
+  var gfn = g.fn
+  return {fn: function(x){return opfn(ffn(x),gfn(x))}, 
+          expr: f.expr+op.expr+g.expr}
 }
 ~~~~
 
