@@ -26,30 +26,18 @@ var prettify = function(e) {
   }
 }
 
-var plus = function(a,b) {
-  return a + b;
-}
-
-var multiply = function(a,b) {
-  return Math.round(a * b,0);
-}
-
-var divide = function(a,b) {
-  return Math.round(a/b,0);
-}
-
-var minus = function(a,b) {
-  return a - b;
-}
-
-var power = function(a,b) {
-  return Math.pow(a,b);
-}
-
 // make expressions runnable
 var runify = function(e) {
+  //helper functions:
+  var plus = function(a,b) {return a + b}
+  var multiply = function(a,b) {return Math.round(a * b,0)}
+  var divide = function(a,b) {return Math.round(a/b,0)}
+  var minus = function(a,b) {return a - b}
+  var power = function(a,b) {return Math.pow(a,b)}
+  var identity = function(a) {return a}
+  
   if (e == 'x') {
-    return function(z) { return z }
+    return identity
   } else if (_.isNumber(e)) {
     return function(z) { return e }
   } else {
@@ -57,7 +45,7 @@ var runify = function(e) {
              (e[0] == '-') ? minus :
              (e[0] == '*') ? multiply :
              (e[0] == '/') ? divide :
-              power;
+              power
     var arg1Fn = runify(e[1])
     var arg2Fn = runify(e[2])
     return function(z) {
@@ -77,7 +65,7 @@ var randomCombination = function(f,g) {
 
 // sample an arithmetic expression
 var randomArithmeticExpression = function() {
-  if (flip(0.3)) {
+  if (flip()) {
     return randomCombination(randomArithmeticExpression(), randomArithmeticExpression())
   } else {
     if (flip()) {
@@ -96,22 +84,23 @@ viz.table(Infer({method: 'enumerate', maxExecutions: 10000}, function() {
   
   condition(f(1) == 1);
   condition(f(2) == 4);
-  
-  return {'f(3)': f(3)};
+  return f(3);
 }))
 ~~~~
 
 ### Exercise 1.1
 
-Why is the probability of `x * 2` is so much lower than `x * x`?
-
-HINT: Think about the probability assigned to `x ^ 2`.
-
-### Exercise 1.2
-
 Not surprisingly, the model predicts `9` as the most likely result for `f(3)`.
 However, it also puts significant probability on `27`.
 Explain why these two numbers have the highest posterior probabilities.
+
+
+### Exercise 1.2
+
+Why is the probability of `x ^ 2` is so much lower than `x * x`?
+
+HINT: Think about the probability assigned to `x ^ 2`.
+
 
 ### Exercise 1.3
 
