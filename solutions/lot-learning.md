@@ -72,11 +72,10 @@ These results are largely due to the high probability of the functions `x * x` a
 
 > Why is the probability of `x ** 2` is so much lower than `x * x`?
 
-> HINT: Think about the probability assigned to `x ** 2`.
-
 The two expressions differ in the final draw from the recursive function `randomArithmeticExpression`.
 On each step through the function, there is a 0.3 * 0.5 = 0.15 chance of returning `x`, but only a 0.3 * 0.5 * 0.1 = 0.015 chance of drawing `2`.
 In general, drawing an `x` is much likely than drawing any particular number.
+
 
 ### Exercise 1.3
 
