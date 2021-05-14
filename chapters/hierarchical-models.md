@@ -16,29 +16,21 @@ The task is challenging because real-world categories are not homogeneous.  A ba
 *car* actually spans many different subtypes: e.g., *poodle*, *Dalmatian*, *Labrador*, and such, or
 *sedan*, *coupe*, *convertible*, *wagon*, and so on.  The child observes examples of these sub-kinds or *subordinate*-level categories: a few poodles, one Dalmatian, three Labradors, etc. From this data she must infer what it means to be a dog in general, in addition to what each of these different kinds of dog is like.  Knowledge about the prototype level includes understanding what it means to be a prototypical dog and what it means to be non-prototypical, but still a dog. This will involve understanding that dogs come in different breeds which share features between them, but also differ systematically as well.
 
-As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag has a certain "prototypical" mixture of colors. This generative process is represented in the following WebPPL example (for a refresher on the Dirichlet distribution, see the [Appendix]({{site.baseurl}}/chapters/appendix-useful-distributions.html)).
+As a simplification of this situation consider the following generative process. We will draw marbles out of several different bags. There are five marble colors. Each bag contains a certain mixture of colors. This generative process is represented in the following WebPPL example (for a refresher on the Dirichlet distribution, see the [Appendix]({{site.baseurl}}/chapters/appendix-useful-distributions.html)).
 
 ~~~~
 var colors = ['black', 'blue', 'green', 'orange', 'red'];
 
 var makeBag = mem(function(bagName){
-  return Categorical({
-    ps: dirichlet(ones([colors.length, 1])),
-    vs: colors
-  })
+  var colorProbs = dirichlet(ones([colors.length, 1]))
+  return Categorical({vs: colors, ps: colorProbs})
 })
 
-var drawMarbles = function(bagName, numDraws){
-  var prototype = makeBag(bagName);
-  return repeat(numDraws, function(){return sample(prototype)});
-}
-
-viz(drawMarbles('bagA', 100))
-viz(drawMarbles('bagA', 100))
-viz(drawMarbles('bagA', 100))
-viz(drawMarbles('bagB', 100))
+viz(repeat(100, function(){sample(makeBag('bagA'))}))
+viz(repeat(100, function(){sample(makeBag('bagA'))}))
+viz(repeat(100, function(){sample(makeBag('bagA'))}))
+viz(repeat(100, function(){sample(makeBag('bagB'))}))
 ~~~~
-
 
 As this examples shows, `mem` is particularly useful when writing hierarchical models because it allows us to associate arbitrary random draws with categories across entire runs of the program. In this case it allows us to associate a particular mixture of marble colors with each bag. The mixture is drawn once, and then remains the same thereafter for that bag. Intuitively, you can see how each sample is sufficient to learn a lot about what that bag is like; there is typically a fair amount of similarity between the empirical color distributions in each of the four samples from `bagA`.  In contrast, you should see a different distribution of samples from `bagB`.
 
@@ -88,7 +80,7 @@ viz.marginals(predictives)
 Inference suggests that the first two bags are predominantly blue, and the third is probably blue and organge. In all cases there is a fair amount of residual uncertainty about what other colors might be seen. Nothing significant is learned about `bagN` as it has no observations.
 This generative model describes the prototypical mixture in each bag, but it does not attempt learn a common higher-order prototype. It is like learning separate prototypes for subordinate classes *poodle*, *Dalmatian*, and *Labrador*, without learning a prototype for the higher-level kind *dog*. Yet your intuition may suggest that all the bags are predominantly blue, allowing you to make stronger inferences, especially about `bag3` and `bagN`.
 
-Let us introduce another level of abstraction: a global prototype that provides a prior on the specific prototype mixtures of each bag.
+Let us introduce another level of abstraction: a global prototype that provides a prior on the specific mixtures of each bag.
 
 ~~~~
 ///fold:
@@ -114,8 +106,9 @@ var observedData = [
 
 var predictives = Infer({method: 'MCMC', samples: 20000}, function(){
   // we make a global prototype which is a dirichlet sample scaled to total 5.
-  var prototype = T.mul(dirichlet(ones([5, 1])), 5)
-  // T.mul(d,x) multiplies the probabilities in `d` by x
+  // T.mul(d,x) multiplies the values in vector `d` by x
+  var phi = dirichlet(ones([colors.length, 1]))
+  var prototype = T.mul(phi, colors.length)
 
   var makeBag = mem(function(bag){
     var colorProbs = dirichlet(prototype)
@@ -161,8 +154,13 @@ var posterior = function(observedData) {
       return dirichlet(prototype)
     })
 
+    var makeBag = mem(function(bag){
+      var colorProbs = bagProbs(bag)
+      return Categorical({vs: colors, ps: colorProbs})
+    })
+
     var obsFn = function(datum){
-      observe(Categorical({vs: colors, ps: bagProbs(datum.bag)}), datum.draw)
+      observe(makeBag(datum.bag), datum.draw)
     }
 
     mapData({data: observedData}, obsFn)
@@ -297,7 +295,7 @@ var observedData = [
 
 var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
   // the global prototype mixture:
-  var phi = dirichlet(ones([5, 1]))
+  var phi = dirichlet(ones([colors.length, 1]))
   // regularity parameters: how strongly we expect the global prototype to project
   // (ie. determine the local prototypes):
   var alpha = gamma(2,2)
@@ -318,7 +316,7 @@ var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
           bag3: sample(makeBag('bag3')), bag4: sample(makeBag('bag4')),
           bagN: sample(makeBag('bagN')),
           alpha: alpha}
-});
+})
 
 viz.marginals(predictives)
 ~~~~
@@ -329,9 +327,10 @@ To see that this is real one-shot learning, contrast with the predictive distrib
 
 We have also generated the posterior distribution on `alpha`, representing how strongly the prototype distribution captured in `phi`, constrains each individual bag -- how much each individual bag is expected to look like the prototype of the population. You should see that the inferred values of `alpha` are typically significantly less than 1.  This means roughly that the learned prototype in `phi` should exert less influence on prototype estimation for a new bag than a single observation.  Hence the first observation we make for a new bag mostly determines a strong inference about what that bag is like.
 
-Now change the `observedData` in the above model as follows:
+Now we change the `observedData` :
 
-~~~~norun
+~~~~
+
 var observedData = [
 {bag: 'bag1', draw: 'blue'}, {bag: 'bag1', draw: 'red'}, {bag: 'bag1', draw: 'green'},
 {bag: 'bag1', draw: 'black'}, {bag: 'bag1', draw: 'red'}, {bag: 'bag1', draw: 'blue'},
@@ -340,9 +339,40 @@ var observedData = [
 {bag: 'bag3', draw: 'red'}, {bag: 'bag3', draw: 'green'}, {bag: 'bag3', draw: 'blue'},
 {bag: 'bag3', draw: 'blue'}, {bag: 'bag3', draw: 'black'}, {bag: 'bag3', draw: 'green'},
 {bag: 'bag4', draw: 'orange'}]
+
+///fold:
+var colors = ['black', 'blue', 'green', 'orange', 'red'];
+
+var predictives = Infer({method: 'MCMC', samples: 30000}, function(){
+  // the global prototype mixture:
+  var phi = dirichlet(ones([colors.length, 1]))
+  // regularity parameters: how strongly we expect the global prototype to project
+  // (ie. determine the local prototypes):
+  var alpha = gamma(2,2)
+  var prototype = T.mul(phi, alpha)
+
+  var makeBag = mem(function(bag){
+    var colorProbs = dirichlet(prototype)
+    return Categorical({vs: colors, ps: colorProbs})
+  })
+
+  var obsFn = function(datum){
+    observe(makeBag(datum.bag), datum.draw)
+  }
+
+  mapData({data: observedData}, obsFn)
+
+  return {bag1: sample(makeBag('bag1')), bag2: sample(makeBag('bag2')),
+          bag3: sample(makeBag('bag3')), bag4: sample(makeBag('bag4')),
+          bagN: sample(makeBag('bagN')),
+          alpha: alpha}
+})
+///
+
+viz.marginals(predictives)
 ~~~~
 
-Intuitively, the observations for bags one, two and three should now suggest a very different overhypothesis: that marble color, instead of being homogeneous within bags but variable across bags, is instead variable within bags to about the same degree that it varies in the population as a whole.  We can see this inference represented via two coupled effects.  First, the inferred value of `alpha` is now significantly *greater* than 1, asserting that the population distribution as a whole, `phi`, now exerts a strong constraint on what any individual bag looks like.  Second, for a new `'bag4` which has been observed only once, with a single orange marble, that draw is now no longer very influential on the color distribution we expect to see from that bag; the broad distribution in `phi` exerts a much stronger influence than the single observation.
+Intuitively, the observations for bags one, two and three should now suggest a very different overhypothesis: that marble color, instead of being homogeneous within bags but variable across bags, is instead variable within bags to about the same degree that it varies in the population as a whole.  We can see this inference represented via two coupled effects.  First, the inferred value of `alpha` is now significantly *greater* than 1, asserting that the population distribution as a whole, `phi`, now exerts a strong constraint on what any individual bag looks like.  Second, for a new `'bag4'` which has been observed only once, with a single orange marble, that draw is now no longer very influential on the color distribution we expect to see from that bag; the broad distribution in `phi` exerts a much stronger influence than the single observation.
 
 # Example: The Shape Bias
 
