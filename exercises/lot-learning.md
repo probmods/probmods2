@@ -69,8 +69,6 @@ Explain why these two numbers have the highest posterior probabilities.
 
 Why is the probability of `x ** 2` is so much lower than `x * x`?
 
-HINT: Think about the probability assigned to `x ^ 2`.
-
 
 ### Exercise 1.3
 
