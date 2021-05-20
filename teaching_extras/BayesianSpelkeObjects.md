@@ -1,6 +1,9 @@
 ---
 layout: exercise
 title: Bayesian principles of object perception
+custom_js:
+- assets/js/draw.js
+- assets/js/paper-full.js
 ---
 
 Below is a version of the simple object-based-vision model from the chapter, extended a bit to allow longer movies, more colors, etc.
