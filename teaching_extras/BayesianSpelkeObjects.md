@@ -12,6 +12,16 @@ Below is a version of the simple object-based-vision model from the chapter, ext
 var xSize = 4, ySize = 2
 var background = _.flatten(map(function(x){map(function(y){return {x:x,y:y,color:0}},
                                                    _.range(ySize))},_.range(xSize)))
+//helper to make picture of the movie frames, for fun:
+var drawMovie = function(movie){
+  var canvas = Draw(movie.length*20*(xSize+2), 20*(ySize+1), true);
+  var colormap = ['black','red','green','blue']
+  var drawImage = function(frame,image) {
+    var offset = frame*20*(xSize+2)
+    map(function(p){canvas.rectangle(offset+20*p.x,20*p.y,offset+20*(p.x+1),20*(p.y+1),0,colormap[p.color])},image)
+  }
+  mapIndexed(drawImage,movie)
+}
 
 // layer an object onto a "background" image. Note that the object occludes the background.
 var layer = function(object, image) {
@@ -58,10 +68,12 @@ var numObjects = function(observedMovie){
     return {numObjects}
 })}
 
+var obsMovie = [layer({xLoc:1,yLoc:0,hSize:1,vSize:2,color:1},background),
+                layer({xLoc:2,yLoc:0,hSize:1,vSize:2,color:1},background),
+                layer({xLoc:3,yLoc:0,hSize:1,vSize:2,color:1},background)]
+drawMovie(obsMovie)
 
-viz.table(numObjects([layer({xLoc:1,yLoc:0,hSize:1,vSize:2,color:1},background),
-                      layer({xLoc:2,yLoc:0,hSize:1,vSize:2,color:1},background),
-                      layer({xLoc:3,yLoc:0,hSize:1,vSize:2,color:1},background)]))
+viz.table(numObjects())
 ~~~~
 
 Explore how the strength of the Occam's razor (i.e. the preference for one object over two) depends on various aspects of the simulation:
