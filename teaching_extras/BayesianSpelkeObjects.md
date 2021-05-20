@@ -6,7 +6,7 @@ title: Bayesian principles of object perception
 Below is a version of the simple object-based-vision model from the chapter, extended a bit to allow longer movies, more colors, etc.
 
 ~~~~
-var xSize = 4, ySize = 4
+var xSize = 4, ySize = 2
 var background = _.flatten(map(function(x){map(function(y){return {x:x,y:y,color:0}},
                                                    _.range(ySize))},_.range(xSize)))
 
@@ -81,7 +81,7 @@ The above exploration focussed on inferring the unobservable property of connect
 Below we've assigned a `drift` property to each object that governs its motion dynamics: does it tend to drift left, right or neutral. (We've also simplified by assuming a single object.)
 
 ~~~~
-var xSize = 4, ySize = 4
+var xSize = 4, ySize = 2
 var background = _.flatten(map(function(x){map(function(y){return {x:x,y:y,color:0}},
                                                    _.range(ySize))},_.range(xSize)))
 
