@@ -18,7 +18,7 @@ var drawMovie = function(movie){
   var colormap = ['black','red','green','blue']
   var drawImage = function(frame,image) {
     var offset = frame*20*(xSize+2)
-    map(function(p){canvas.rectangle(offset+20*p.x,20*p.y,offset+20*(p.x+1),20*(p.y+1),0,colormap[p.color])},image)
+    map(function(p){canvas.rectangle(offset+20*p.x,20*p.y,offset+20*(p.x+1),20*(p.y+1),1,colormap[p.color])},image)
   }
   mapIndexed(drawImage,movie)
 }
@@ -73,7 +73,7 @@ var obsMovie = [layer({xLoc:1,yLoc:0,hSize:1,vSize:2,color:1},background),
                 layer({xLoc:3,yLoc:0,hSize:1,vSize:2,color:1},background)]
 drawMovie(obsMovie)
 
-viz.table(numObjects())
+viz.table(numObjects(obsMovie))
 ~~~~
 
 Explore how the strength of the Occam's razor (i.e. the preference for one object over two) depends on various aspects of the simulation:
