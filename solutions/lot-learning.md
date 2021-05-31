@@ -1,6 +1,6 @@
 ---
 layout: exercise
-title: Learning as conditional inference - solutions
+title: Learning with a language of thought - solutions
 ---
 
 ## Exercise 1: Inferring Functions

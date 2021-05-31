@@ -299,7 +299,7 @@ once we have `[3, 5, 6, 7, 9]`.
 
 Answers may vary. The authors mention that a common hypothesis are rules involving "numbers [ending/starting] in 3".
 
-#### e) Challenge!
+### Exercise 1.5 (Challenge!)
 
 Can you replicate the results from the paper (reproduced in figure below) by adding in the other hypotheses from the paper?
 
