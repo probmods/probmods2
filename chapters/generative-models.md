@@ -416,7 +416,7 @@ If there are two alternative sequences of choices that lead to the same return v
 We can write this using probability notation as: $$P(A) = \sum_{B} P(A,B)$$, where we view $$A$$ as the final value and $$B$$ as a random choice on the way to that value.
 Using the product rule we can determine that the probability in the example above is 0.25 for each sequence that leads to return value `true`, then, by the sum rule, the probability of `true` is 0.25+0.25+0.25=0.75.
 
-Using the sum rule to compute the probability of a final value is called is sometimes called *marginalization*, because the final distribution is the marginal distribution on final values.
+Using the sum rule to compute the probability of a final value is sometimes called *marginalization*, because the final distribution is the marginal distribution on final values.
 From the point of view of sampling processes marginalization is simply ignoring (or not looking at) intermediate random values that are created on the way to a final return value.
 From the point of view of directly computing probabilities, marginalization is summing over all the possible "histories" that could lead to a return value.
 Putting the product and sum rules together, the marginal probability of return values from a program that we have explored above is the sum over sampling histories of the product over choice probabilities---a computation that can quickly grow unmanageable, but can be approximated by `Infer`.
