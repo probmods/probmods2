@@ -380,7 +380,7 @@ The probability of two random choices is the product of their individual probabi
 The probability of several random choices together is often called the *joint probability* and written as $$P(A,B)$$.
 Since the first and second random choices must each have their specified values in order to get `[true, false]` in the example, the joint probability is their product: 0.25.
 
-We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, we can visualize the the exact probability of `[true, false]` resulting from this program using `Infer`:
+We must be careful when applying this rule, since the probability of a choice can depend on the probabilities of previous choices. For instance, we can visualize the exact probability of `[true, false]` resulting from this program using `Infer`:
 
 ~~~~
 var A = flip()
