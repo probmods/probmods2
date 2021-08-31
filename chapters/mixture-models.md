@@ -122,94 +122,6 @@ var predictives = Infer({method: 'MCMC', samples: 200, lag: 100}, function(){
 viz(predictives)
 ~~~~
 
-## Example: Topic Models
-
-One very popular class of mixture-based approaches are *topic models*,
-which are used for document classification, clustering, and
-retrieval. The simplest kind of topic models make the assumption that
-documents can be represented as *bags of words* &mdash; unordered
-collections of the words that the document contains. In topic models,
-each document is associated with a mixture over *topics*, each of
-which is itself a distribution over words.
-
-One popular kind of bag-of-words topic model is known as *Latent Dirichlet Allocation*
-(LDA, @Blei2003). The
-generative process for this model can be described as follows. For
-each document, mixture weights over a set of $$K$$ topics are
-drawn from a Dirichlet prior. Then $$N$$ topics are sampled
-for the document&mdash;one for each word. Each topic itself is
-associated with a distribution over words, and this distribution is
-drawn from a Dirichlet prior. For each of the $$N$$ topics
-drawn for the document, a word is sampled from the corresponding
-multinomial distribution. This is shown in the WebPPL code below.
-
-~~~~
-///fold:
-var expectationOver = function(topicID, results) {
-  return function(i) {
-    return expectation(results, function(v) {return T.get(v[topicID], i)})
-  }
-}
-///
-var vocabulary = ['DNA', 'evolution', 'parsing', 'phonology'];
-var eta = ones([vocabulary.length, 1])
-
-var numTopics = 2
-var alpha = ones([numTopics, 1])
-
-var corpus = [
-  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
-  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
-  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
-  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
-  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
-  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' ')
-]
-
-var model = function() {
-
-  var topics = repeat(numTopics, function() {
-    return dirichlet({alpha: eta})
-  })
-
-  mapData({data: corpus}, function(doc) {
-    var topicDist = dirichlet({alpha: alpha})
-    mapData({data: doc}, function(word) {
-      var z = sample(Discrete({ps: topicDist}))
-      var topic = topics[z]
-      observe(Categorical({ps: topic, vs: vocabulary}), word)
-    })
-  })
-
-  return topics
-}
-
-var results = Infer({method: 'MCMC', samples: 20000}, model)
-
-//plot expected probability of each word, for each topic:
-var vocabRange = _.range(vocabulary.length)
-print('topic 0 distribution')
-viz.bar(vocabulary, map(expectationOver(0, results), vocabRange))
-print('topic 1 distribution')
-viz.bar(vocabulary, map(expectationOver(1, results), vocabRange))
-~~~~
-
-In this simple example, there are two topics `topic1` and
-`topic2`, and four words. These words are deliberately chosen
-to represent one of two possible subjects that a document can be
-about: One can be thought of as 'biology' (i.e., `DNA` and
-`evolution`), and the other can be thought of as 'linguistics'
-(i.e., `parsing` and `syntax`).
-
-The documents consist of lists of individual words from one or the
-other topic. Based on the co-occurrence of words within individual
-documents, the model is able to learn that one of the topics should
-put high probability on the biological words and the other topic
-should put high probability on the linguistic words. It is able to
-learn this because different kinds of documents represent stable
-mixture of different kinds of topics which in turn represent stable
-distributions over words.
-
 ## Example: Categorical Perception of Speech Sounds
 
 <!--
@@ -301,6 +213,95 @@ Notice that the perceived distances between input sounds are skewed relative to 
 
 <img src='{{site.baseurl}}/assets/img/Pme.png' />
 
+## Example: Topic Models
+
+One very popular class of mixture-based approaches are *topic models*,
+which are used for document classification, clustering, and
+retrieval. The simplest kind of topic models make the assumption that
+documents can be represented as *bags of words* &mdash; unordered
+collections of the words that the document contains. In topic models,
+each document is associated with a mixture over *topics*, each of
+which is itself a distribution over words. (Sometimes models like this, where the observations are a mixture of different mixtures is called an *admixture* model.)
+
+One popular kind of bag-of-words topic model is known as *Latent Dirichlet Allocation*
+(LDA, @Blei2003). The
+generative process for this model can be described as follows. For
+each document, mixture weights over a set of $$K$$ topics are
+drawn from a Dirichlet prior. Then $$N$$ topics are sampled
+for the document&mdash;one for each word. Each topic itself is
+associated with a distribution over words, and this distribution is
+drawn from a Dirichlet prior. For each of the $$N$$ topics
+drawn for the document, a word is sampled from the corresponding
+multinomial distribution. This is shown in the WebPPL code below.
+
+~~~~
+///fold:
+var expectationOver = function(topicID, results) {
+  return function(i) {
+    return expectation(results, function(v) {return T.get(v[topicID], i)})
+  }
+}
+///
+var vocabulary = ['DNA', 'evolution', 'parsing', 'phonology'];
+var eta = ones([vocabulary.length, 1])
+
+var numTopics = 2
+var alpha = ones([numTopics, 1])
+
+var corpus = [
+  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
+  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
+  'DNA evolution DNA evolution DNA evolution DNA evolution DNA evolution'.split(' '),
+  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
+  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' '),
+  'parsing phonology parsing phonology parsing phonology parsing phonology parsing phonology'.split(' ')
+]
+
+var model = function() {
+
+  var topics = repeat(numTopics, function() {
+    return dirichlet({alpha: eta})
+  })
+
+  mapData({data: corpus}, function(doc) {
+    var topicDist = dirichlet({alpha: alpha})
+    mapData({data: doc}, function(word) {
+      var z = sample(Discrete({ps: topicDist}))
+      var topic = topics[z]
+      observe(Categorical({ps: topic, vs: vocabulary}), word)
+    })
+  })
+
+  return topics
+}
+
+var results = Infer({method: 'MCMC', samples: 20000}, model)
+
+//plot expected probability of each word, for each topic:
+var vocabRange = _.range(vocabulary.length)
+print('topic 0 distribution')
+viz.bar(vocabulary, map(expectationOver(0, results), vocabRange))
+print('topic 1 distribution')
+viz.bar(vocabulary, map(expectationOver(1, results), vocabRange))
+~~~~
+
+In this simple example, there are two topics `topic1` and
+`topic2`, and four words. These words are deliberately chosen
+to represent one of two possible subjects that a document can be
+about: One can be thought of as 'biology' (i.e., `DNA` and
+`evolution`), and the other can be thought of as 'linguistics'
+(i.e., `parsing` and `syntax`).
+
+The documents consist of lists of individual words from one or the
+other topic. Based on the co-occurrence of words within individual
+documents, the model is able to learn that one of the topics should
+put high probability on the biological words and the other topic
+should put high probability on the linguistic words. It is able to
+learn this because different kinds of documents represent stable
+mixture of different kinds of topics which in turn represent stable
+distributions over words.
+
+
 # Unknown Numbers of Categories
 
 The models above describe how a learner can simultaneously learn which category each object belongs to, the typical properties of objects in that category, and even global parameters about kinds of objects in general. However, it suffers from a serious flaw: the number of categories was fixed. This is as if a learner, after finding out there are cats, dogs, and mice, must force an elephant into one of these categories, for want of more categories to work with.
@@ -357,7 +358,7 @@ For the prior on `numBags` we used the [*Poisson distribution*](http://en.wikipe
 
 ## Infinite mixtures
 
-Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. An alternative is to use *infinite* mixture models. In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an infinite model we construct assume a truly infinite numbers of categories.
+Unbounded models give a straightforward way to represent uncertainty over the number of categories in the world. However, inference in these models often presents difficulties. An alternative is to use *infinite* mixture models. In an unbounded model, there are a finite number of categories whose number is drawn from an unbounded prior distribution, such as the Poisson prior that we just examined. In an infinite model we assume an *infinite number* of categories (most not yet observed).
 
 To understand how we can work with an infinite set of categories in a finite computer, let's first revisit the Discrete distribution.
 
@@ -387,7 +388,7 @@ viz(repeat(5000, function(){
 }))
 ~~~~
 
-In the above mixture model examples, we generally expressed uncertainty about the probability pf each category by putting a Dirichlet prior on the probabilities passed to a Discrete distribution:
+In the above mixture model examples, we generally expressed uncertainty about the probability of each category by putting a Dirichlet prior on the probabilities passed to a Discrete distribution:
 
 ~~~~
 var probs = T.toScalars(dirichlet(ones([4, 1])))
@@ -405,7 +406,7 @@ viz(repeat(5000, function(){
 }))
 ~~~~
 
-However `residuals(probs)` returns the same, random, residuals each time. It makes sense to sample it only once -- and why not sample the residuals directly? Since we know that the residual probability is simply a number between 0 and 1, we could do something like:
+However `residuals(probs)` returns the same, random, residuals each time. It makes sense to compute it only once -- and why not sample the residuals directly? Since we know that the residual probability is simply a number between 0 and 1, we could do something like:
 
 ~~~~
 var residuals = repeat(3, function(){beta(1,1)}).concat([1.0])
@@ -419,7 +420,7 @@ viz(repeat(5000, function(){
 }))
 ~~~~
 
-Notice that we have added a final residual probability of 1.0 to the array of residuals. This is to make sure we stop at the end! It is kind of ugly, though, and breaks the prior symmetry between the final number and the ones before. 
+Notice that we have added a final residual probability of 1.0 to the array of residuals. This is to make sure we stop at the end! It is kind of ugly, though, and breaks the symmetry between the final number and the ones before. 
 After staring at the above code you might have an idea: why bother stopping? If we had an infinite set of residual probs we could still call `mySampleDiscrete`, and we would eventually stop each time. We can get the effect of an infinite set by using `mem` to only construct a particular value when we need it:
 
 ~~~~
@@ -434,9 +435,8 @@ viz(repeat(5000, function(){
 }))
 ~~~~
 
-We've just constructed an infinite analog of the Dirichlet-Discrete pattern, it is called a *Dirichlet Process* or DP (more technically this is a GEM: a DP over integers).
-
-(Notice that we have derived the DP by generalizing the Discrete distribution, but we've arrived at something that also looks like a Geometric distribution with heterogenous stopping probabilities.)
+We've just constructed an infinite analog of the Dirichlet-Discrete pattern, it is called a *Dirichlet Process* (DP, more technically this is a GEM: a DP over integers).
+We have derived the DP by generalizing the Discrete distribution, but we've arrived at something that also looks like a Geometric distribution with heterogeneous stopping probabilities, which is an alternative derivation.
 
 We can use the DP to construct an *infinite mixture model*:
 
@@ -476,9 +476,9 @@ var results = Infer({method: 'MCMC', samples: 200, lag: 100}, function() {
 viz.marginals(results)
 ~~~~
 
-Like the unbounded mixture above, there are an infinite set of possible catgories (here, bags). Unlike the unbounded mixture model the number of bags is never explicitly constructed. Instead, the set of categories is thought of as always an infinite set, though because they are constructed as needed only a finite number will ever be explicitly constructed. (Technically, these models are called infinite because the expected number of categories used goes to infinity as the number of observations goes to infinity.)
+Like the unbounded mixture above, there are an infinite set of possible catgories (here, bags). Unlike the unbounded mixture model the number of bags is never explicitly constructed. Instead, the set of categories is thought of as an infinite set; because they are constructed as needed only a finite number will ever be explicitly constructed. (Technically, these models are called infinite because the expected number of categories used goes to infinity as the number of observations goes to infinity.)
 
-Notice that unlike the unbounded mixture model case above, we were able to use MCMC for inference here. Slightly easier inference approaches, as well as certain pleasant mathematical properties, are the primary reason that many researchers have explored infinite micture models.
+Notice that unlike the unbounded mixture model case above, we were able to use MCMC for inference here. Slightly easier inference approaches, as well as certain pleasant mathematical properties, are the primary reason that many researchers have explored infinite mixture models.
 
 <!--TODO: DPmem? Mention other non-parametrics? Include any examples?-->
 
