@@ -3,9 +3,21 @@ layout: exercise
 title: Falling leaves
 ---
 
+## How to do these exercises
+
+1. Introduce yourselves! If you've not met yet, give some background and a fun fact.
+2. Choose a driver -- this person will be typing and runing code for the group, and should share screen. (It's ok to switch the driver part way through.)
+3. Those who aren't driving should help navigate! Don't be passive, the driver needs your help.
+4. These exercises are designed to be more about discussion and sense-making than coding. Ask 'what if' and 'why does that happen'!
+5. Help each other learn. Keep everyone involved. Be kind!
+
+
+## Falling leaves
+
 You want to understand where leaves fall under a tree in your yard. 
 
-You imagine a single leaf falling and decide to treat time as discrete steps, and position as a single real number. At each step the current position changes to a new position. Write a simple version of this `step` function:
+You imagine a single leaf falling and decide to treat time as discrete steps and position as a single real number. At each step the current horizontal (`x`) position changes to a new position, while the leaf moves down one vertical step. 
+Write a simple version of the `step` function that takes the current `x` and returns the next:
 
 ~~~~
 var step = function(x) {
