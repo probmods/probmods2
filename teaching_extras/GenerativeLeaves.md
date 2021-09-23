@@ -16,8 +16,7 @@ title: Falling leaves
 
 You want to understand where leaves fall under a tree in your yard. 
 
-You imagine a single leaf falling and decide to treat time as discrete steps and position as a single real number. At each step the current horizontal (`x`) position changes to a new position, while the leaf moves down one vertical step. 
-Write a simple version of the `step` function that takes the current `x` and returns the next:
+You imagine a single leaf falling and decide to treat time as discrete steps and horizontal position as a single real number. At each step the current horizontal position, `x`, changes to a new position, while the leaf moves down one vertical step. Write a simple version of the `step` function that takes the current `x` and returns the next:
 
 ~~~~
 var step = function(x) {
