@@ -12,9 +12,72 @@ In a reference game the goal, for both listener and speaker, is for the listener
 The usual RSA formulation hides this structure slightly by describing the speaker utility in terms of the information provided to the listener. This **standard utility** is $$U=\log P_L(o|u)$$, or in WebPPL code it is the line `factor(alpha * (literalListener(utterance).score(obj)))` in the speaker model.
 
 However, we could think of the value of a speech act for the speaker as the expected payoff from whatever action the listener takes (after hearing the utterance).
-Reformulate the RSA model to directly model the listener taking the action of choosing an object, and the speaker utility as depending on the game payoff -- whether the listener's choice is correct. 
+Reformulate the RSA model to directly model the listener taking the action of choosing an object, and the speaker utility as depending on the game payoff -- whether the listener's choice is correct. Template code is given below (though there are several ways to do this):
 
 ~~~
+// set of states (here: objects of reference)
+// we represent objects as JavaScript objects to demarcate them from utterances
+// internally we treat objects as strings nonetheless
+var objects = [{color: "blue", shape: "square", string: "blue square"},
+               {color: "blue", shape: "circle", string: "blue circle"},
+               {color: "green", shape: "square", string: "green square"}]
+
+// prior over world states
+var objectPrior = function() {
+  var obj = uniformDraw(objects)
+  return obj.string 
+}
+
+// set of utterances
+var utterances = ["blue", "green", "square", "circle"]
+
+// utterance cost function
+var cost = function(utterance) {
+  return 0;
+};
+
+// meaning function to interpret the utterances
+var meaning = function(utterance, obj){
+  _.includes(obj, utterance)
+}
+
+// literal listener
+var literalListener = function(utterance){
+  Infer(function(){
+    var obj = objectPrior();
+    condition(meaning(utterance, obj))
+    return obj
+  })
+}
+
+// set speaker optimality
+var alpha = 1
+
+// pragmatic speaker
+var speaker = function(obj){
+  Infer(function(){
+    var utterance = uniformDraw(utterances)
+//     "action-directed utiltity"
+    var ListenerChoice = ...
+    var payoff = ...
+    factor(alpha * (payoff - cost(utterance)))
+//     "standard utility:"
+//     factor(alpha * (literalListener(utterance).score(obj) - cost(utterance)))
+    return utterance
+  })
+}
+
+// pragmatic listener
+var pragmaticListener = function(utterance){
+  Infer(function(){
+    var obj = objectPrior()
+    observe(speaker(obj),utterance)
+    return obj
+  })
+}
+
+viz.table(speaker("blue circle"))
+viz.table(pragmaticListener("blue"))
 ~~~
 
 Convince yourself that this action-directed formulation of the utility is equivalent to the standard information formulation of RSA. (You should at least compare simulations, but you'll understand better if you write out the math for both versions.) What do you have to assume about the payoff when the listener chooses incorrectly in order for the equivalence to hold? Discuss how this assumption fits, or doesn't, with the actual payoff of a game, and what this means about langauge.
