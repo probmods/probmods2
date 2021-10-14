@@ -3,17 +3,16 @@ layout: exercise
 title: On meaning in RSA
 ---
 
-At it's core the RSA frameowork describes langauge use in a way that is fairly agnostic to the details of the language semantics. Indeed, RSA only assumes that there is a `meaning` function describing the relationship between utterances and situations (or worlds). 
+At it's core the RSA framework describes language use in a way that is fairly agnostic to the details of the language semantics. Indeed, RSA only assumes that there is a `meaning` function describing the relationship between utterances and situations (or worlds). 
 
-Traditional compositional semantics builds up a meaning function by composing partial meanings along the way. Using composition allows fairly complex meaning functions to be specified compactly. For instance, if we want to allow utterances in which some number of adjectives modify a noun, we don't want to specify meaning separately for ever combination. 
-For simplicity assume that these are *intersective* adjectives that combine by conjunction. 
+Traditional compositional semantics builds up a meaning function by composing partial meanings along the way. Using composition allows fairly complex meaning functions to be specified compactly. For instance, if we want to allow utterances in which some number of adjectives modify a noun, we don't want to specify meaning separately for every combination. 
+For simplicity start with *intersective* adjectives that combine by conjunction. 
 Look through the meaning function below. How are the meanings of individual words composed? Try adding some additional adjectives!
 
 ~~~
 // set of states (here: objects of reference)
-// we represent objects as JavaScript objects to demarcate them from utterances.
+// we represent objects as JavaScript objects.
 // we will assume that if an object doesn't have a key then this property is false.
-// we give each object a string name to make it eaiser to manipulate them.
 var objects = [{blue: true, square: true, thing: true, name: "blue square"},
                {blue: true, circle: true, thing: true, name: "blue circle"},
                {green: true, square: true, thing: true, name: "green square"}]
@@ -89,7 +88,7 @@ What does the pragmatics do with this flexibility? Revise the above to have a gr
 ~~~
 ~~~
 
-How will the choice of referring expression by the speaker depend on how good the target is as a member of each category? Play around with varying the typicality of the different objects for the different proprties!
+How will the choice of referring expression by the speaker depend on how good the target is as a member of each category? Play around with varying the typicality of the different objects for the different properties! Degen, etal (2020) further develop this type of model, showing it can account for apparent violations of Grice's maxim of quantity -- people sometimes provide more information than appears necessary.
 
 
 ### Dog dogs
@@ -116,7 +115,7 @@ var literalListener = function(utterance){
 }
 ~~~ 
 
-We have replaced the (potentially stochastic) meaning function with the expected value of the meaning function. Convince yourself that this is an equivalent formulation. You might want to write down the probabilities involved explcitly; alternatively, you might want to reason about what a rejection sampler would do.
+We have replaced the (potentially stochastic) meaning function with the expected value of the meaning function. Convince yourself that this is an equivalent formulation. You might want to write down the probabilities involved explicitly; alternatively, you might want to reason about what a rejection sampler would do.
 
 Once we have switched to expected meaning, it is reasonable to ask when we can push the expectation further into the meaning function. Can we replace the stochastic meaning of each word with a (deterministic, but real-valued) expected meaning? If we do so are composition laws preserved? Sometimes this is certainly the case: modify the conjunctive semantics above to use the expected truth value of each word. What operation replaces conjunction?
 
@@ -129,7 +128,7 @@ A complete sentence, one that can intuitively be true or false, requires a verb.
 But in the right context we can convey an equivalent meaning with a fragmentary utterance, for instance just "dog". What do we need from semantics for communication with fragments to work?
 
 Under a traditional, compositional semantics only complete sentences can be evaluated in a world to get a Boolean value. 
-That is, the `meaning` function can only interpret complete sentences. (This is true whether the semantics is deterministic or stochastic.) In this case the only feasible way to interpret a fragment is if the listener *fills in* what must have been missing. On coherent way for a listener to do this is to assume a *noisy communication channel* that has deleted some words, and to jointly infer the true utterance and the world state. Fill in the missing condition in the model below to express the generative model that the `noise` function may have deleted words before they got to the listener:
+That is, the `meaning` function can only interpret complete sentences. (This is true whether the semantics is deterministic or stochastic.) In this case the only feasible way to interpret a fragment is if the listener *fills in* what must have been missing. One coherent way for a listener to do this is to assume a *noisy communication channel* that has deleted some words, and to jointly infer the true utterance and the world state. Fill in the missing condition in the model below to express the generative model that the `noise` function may have deleted words before they got to the listener:
 
 ~~~
 ///fold:
@@ -206,10 +205,10 @@ var pragmaticListener = function(utterance){
 }
 ~~~
 
-In the earlier version (above) the utterance "blue" couldn't be interpreted because it wasn't in the set of possible utterances. (And it wasn't in the set of possible utterances because we wished to respect English grammar, which requires a noun for an adjective to modify.) Verify that this utterance can now be understood by the pragmatic listener. You can also examine how the listener completes the fragment into a full utterance. How is this affected by the context? 
+In the model considered earlier, the utterance "blue" couldn't be interpreted because it wasn't in the set of possible utterances. (And it wasn't in the set of possible utterances because we wished to respect English grammar, which requires a noun for an adjective to modify.) Verify that this utterance can now be understood by the pragmatic listener. You can also examine how the listener completes the fragment into a full utterance. How is this affected by the context? 
 
-(Bergen and Goodman (2015) further refine this noisy channel model by assuming speakers can take an action, roughly adding emphasis, that can reduce the probability that a listener will mishear a word. The pragmatic listener can make strong inferences from the fact that a speaker took pains to get a specific word across. This gives rise to certain *focus effects*, such as the interpretation difference between "the *big* dog" and "the big *dog*".)
+(Bergen and Goodman (2015) further refine this noisy channel model by assuming speakers can take an action, roughly adding emphasis, that will reduce the probability that a listener will mishear a word. The pragmatic listener can make strong inferences from the fact that a speaker took pains to get a specific word across. This gives rise to certain *focus effects*, such as the interpretation difference between "the *big* dog" and "the big *dog*".)
 
-A very different approach to interpreting fragments is to ask that the semantics always assigns some meaning even to fragments. This makes most sense when the semantics is already real valued, as in the expected meaning formulation above. Indeed, modern deep learning models of utterance interpretation generally have the property that any sequence of words can be assigned a (real-valued) meaning. Sentence fragments are thus automatically understood. This approach differs from the above noisy channel approach in that fragments are handled already in the literal listener, whereas the noisy channel models them as part of pragmatic inference. Discuss the benefits and drawbacks of the two approaches.
+A very different approach to interpreting fragments is to ask that the semantics always assigns some meaning even to fragments. This makes most sense when the semantics is already real-valued, as in the expected-meaning formulation above. For instance, modern deep learning models of utterance interpretation generally have the property that any sequence of words can be assigned a (real-valued) meaning. Sentence fragments are thus automatically understood. This approach differs from the above noisy channel approach in that fragments are handled already in the literal listener, whereas the noisy channel models them as part of pragmatic inference. Discuss the benefits and drawbacks of the two approaches.
 
 
