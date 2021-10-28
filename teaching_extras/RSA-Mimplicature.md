@@ -13,22 +13,23 @@ Suppose we have two utterance that mean the same thing, but one is less costly.
 Suppose also that we have to objects that could be referred to, but one is more likely (or more salient). Does the cheaper phrase go with the more likely target? We implement this in standard RSA:
 
 ~~~
-//two objects, one is an priori more likely referent
+//two objects, one is an priori more likely referent, the other is marked because it's unusual.
 var objectPrior = function() {
-  return categorical({vs: ["plain thing", "marked thing"], ps: [0.3, 0.7]})
+  return categorical({vs: ["plain thing", "marked thing"], ps: [0.7, 0.3]})
 }
 
-// two words, one is longer
-var utterances = ["thing", "tthhiing"]
+// two words, one is longer. "thing" and "tthhiing" both apply to both objects.
+var lexicon = {thing: ["plain thing", "marked thing"], tthhiing: ["plain thing", "marked thing"]}
 
-// utterance cost function
+var utterances = _.keys(lexicon)
+
 var cost = function(utterance) {
   return utterance.length
 }
 
-// "thing" and "tthhiing" both apply to both objects
+//meaning function, check if object is in word extension, with a little noise
 var meaning = function(utterance, obj){
-  return true
+  return _.includes(lexicon[utterance], obj)?flip(0.9):flip(0.1)
 }
 
 // literal listener
@@ -65,7 +66,7 @@ viz.table(pragmaticListener("thing"))
 viz.table(pragmaticListener("tthhiing"))
 ~~~
 
-Standard RSA predicts that objects interpretations match prior probabilities for both words. How can we break the symmetry in interpretation, without building it in *a priori* in the meanings? One method, *lexical uncertainty* (Bergen, Levy, Goodman), posits that each word might have a more specific meaning -- applying to only one object -- but the listener doesn't know which. When a pragmatic listener isn't sure how a speaker uses words they have to infer this jointly with the intended object. Implement this lexical uncertainty idea:
+Standard RSA predicts that objects interpretations match prior probabilities for both words. How can we break the symmetry in interpretation, without building it in *a priori* in the meanings? One method, *lexical uncertainty* (Bergen, Levy, Goodman, 2016), posits that each word might have a more specific meaning -- applying to only one object -- but the listener doesn't know which. When a pragmatic listener isn't sure how a speaker uses words they have to infer this jointly with the intended object. Implement this lexical uncertainty idea:
 
 ~~~
 
@@ -73,10 +74,7 @@ Standard RSA predicts that objects interpretations match prior probabilities for
 
 Does the M-implicature now arise? How much does this depend on the possible meanings your listener entertains? Does the M-implicature still arise if the literal listener infers the meanings (instead of the pragmatic listener)?
 
-More generally, we can introduce free variables into the meaning function that are to be filled in based on context.
-Lifting these variables from the literal listener to the pragmatic listener yields a variety of interesting effects.
-
-### Direct or indirect causation
+## Direct or indirect causation
 
 When you hear "John caused the vase to break" you probably imagine an atypical or more complex situation than when you hear "John broke the vase". This could indicate that the lexical semantics of "break" is subtly different than "cause to break". An alternative hypothesis is that these are the same, but an M-implicature arises due to their different lengths.
 
@@ -95,13 +93,12 @@ For simplicity, assume that both utterances could refer to either *john bumped t
 ~~~
 
 
-### Other M-implicatures
+## Other M-implicatures
 
 Notice that in the above causation example the lexical uncertainty arose out of ambiguity: it was ambiguous whether "John" in the sentence "John broke the vase" referred to the event of John bumping the vase (`JBV`) or John bumping the lamp (`JBL`). By resolving this ambiguity at the pragmatic listener level we introduced the opportunity for M-implicature.
 
 This analysis suggests that any ambiguity in meaning could in principle give rise to M-implicature. Come up with several sources of ambiguity in language and see whether you think they can lead to M-implicature! 
 
-## Vagueness
+So far we've talked about ambiguity in terms of uncertainty about the whole lexicon. An alternative, and equivalent, formulation is to introduce *free variables* into the meaning function. These free variables represent under-specification in the semantics that can be filled in by context. Lifting these variables from the literal listener to the pragmatic listener yields a variety of interesting effects, such as vagueness (See Lassiter and Goodman, 2015).
 
-...TBD
 
