@@ -55,7 +55,7 @@ S1("big blue circle")
 ~~~~
 
 Notice that the meaning function defined above will return a value from a partial utterance.
-How can we use this incremental meaning to select informative utterances a little bit at a time? We repeatedly use an RSA speaker where the "action" is to extend the prefix with an additional word. Before running the below model examine the stricture of the computation -- notice how the recursive extension of the utterance has been "lifted" outside the speaker inference.
+How can we use this incremental meaning to select informative utterances a little bit at a time? We repeatedly use an RSA speaker where the "action" is to extend the prefix with an additional word. Before running the below model examine the structure of the computation -- notice how the recursive extension of the utterance has been "lifted" outside the speaker inference.
 
 ~~~~
 // we represent objects as strings of properties.
