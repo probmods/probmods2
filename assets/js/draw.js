@@ -62,6 +62,25 @@ DrawObject.prototype.line = function(x1, y1, x2, y2, strokeWidth, opacity, color
   this.redraw();
 };
 
+DrawObject.prototype.squiggle = function(x1, y1, hx1, hy1, x2, y2, hx2, hy2, strokeWidth, opacity, color){
+  var firstSegment = new this.paper.Segment({
+      point: [x1,y1],
+      handleOut: [hx1,hy1]
+  });
+  var secondSegment = new this.paper.Segment({
+      point: [x2,y2],
+      handleIn: [hx2,hy2]
+  });
+  var path = new this.paper.Path({
+      segments: [firstSegment, secondSegment],
+      strokeColor: 'black'
+  });
+  path.strokeColor = color || 'black';
+  path.strokeWidth = strokeWidth || 8;
+  path.opacity = opacity || 0.6;
+  this.redraw();
+};
+
 DrawObject.prototype.redraw = function(){
   this.paper.view.draw();
 };

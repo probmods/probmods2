@@ -1,8 +1,10 @@
 _site
 .sass-cache
 .jekyll-metadata
+.jekyll-cache
 _corn
 _prod
 .DS_Store
 node_modules
 package-lock.json
+.idea/
