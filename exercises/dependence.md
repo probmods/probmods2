@@ -9,7 +9,7 @@ For each of the following programs:
 
 * Draw the dependency diagram (Bayes net). If you don't have software on your computer for doing this, Google Docs has a decent interface for creating drawings.
 
-* Use informal evaluation order reasoning and the intervention method to determine causal dependency between A and B.
+* Use informal causal dependence order reasoning and the intervention method to determine causal dependency between A and B.
 
 * Use conditioning to determine whether A and B are statistically dependent.
 
