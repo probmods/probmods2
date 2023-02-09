@@ -290,7 +290,7 @@ Most people are nice. Nice people smile a lot, other people smile less. Alice sm
 
 > Extend `smilesModel` to create a version of the model considers two additional factors:
 
-> 1. People will smile 80% of the time if they want something from you and 50% if they do not.
+> 1. Wanting something causes people to smile 80\% of the time. 
 > 2. *Nice* people will only want something from you 20% of the time; non-nice people 50% of the time.
 
 > Don't forget that nice people also smile more often!
