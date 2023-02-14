@@ -8,7 +8,7 @@ title: Social Cognition - readings
 Read [this chapter](http://www.problang.org/chapters/07-generics.html) from another WebPPL textbook that extends the scalar implicature model we saw in the chapter to handle generics.
 
 #### Reading questions:
-a) How does the notion of 'informativity' help the model determine a meaning for generics?
+a) H. Paul Grice argued that listeners believe speakers will be as informative as possible. One way to measure informativity is in terms of the degree to which the listener's beliefs would be updated (presumably correctly). How does the notion of 'informativity' help  the model determine a meaning for generics?
 
 From ChatGPT:
 

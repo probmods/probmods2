@@ -802,11 +802,11 @@ If you run the code above, you should see that our numbers match.
 
 Let's return to our scalar implicature example. By converting conditions to factors, we can reformulate this model in a more general way. 
 
-The listener infers the probability of utterance $u$ having meaning $m$ as proportional to the probability the speaker would have uttered $u$ to convey $m$ times the prior probability that someone might want to convey $m$:
+The listener infers the probability of utterance $$u$$ having meaning $$m$$ as proportional to the probability the speaker would have uttered $$u$$ to convey $$m$$ times the prior probability that someone might want to convey $m$:
 
 $$P_{L}(m\mid u) \propto P_{S}(u\mid m) \cdot P(m)$$
 
-To define $P_{S}(u\mid m)$, let's assume that speakers put utility on listeners gaining tru knowledge. So $U_{S}$: 
+To define $$P_{S}(u\mid m)$$, let's assume that speakers put utility on listeners gaining true knowledge. So $U_{S}$: 
 
 $$U_{S}(u; m) = log(L(m\mid u)) - C(u)$$
 
@@ -854,7 +854,6 @@ var listener = function(words, depth) {
 print("Pragmatic listener's interpretation of 'some':")
 viz(listener( "some", 1))
 ~~~~
-
 
 
 <!--
