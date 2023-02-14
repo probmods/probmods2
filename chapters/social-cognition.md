@@ -758,6 +758,105 @@ viz.auto(listener("some", 1))
 
 We see that if the listener hears "some" the probability of three out of three is low, even though the basic meaning of "some" is equally consistent with 3/3, 1/3, and 2/3. This is called the "some but not all" implicature.
 
+### Softmax
+
+So far, our models assume that people always have an option available that will get them what they want, that all undesired options are equally undesirable, and that people will also choose a behavior that gets them what they want. The first two assumptions assumption is implausible and the third one turns out to be wrong: people are actually ``soft-maximizers`` and choose an action with probability proportional to the reward. (Why this is the case is a fascinating area of psychology we will not explore here.)
+
+WebPPL allows us to switch from a strict maximizer to a soft-maximizer by using `factor` instead of `condition`. `factor` is more general than `condition` and was described in ["Conditioning"](conditioning.html). As described there, `factor(score)` adds `score` to the log probability of the current distribution.
+
+Let's try an example:
+
+~~~~
+var dist1 = Infer({method: 'enumerate'},
+  function () {
+    var A = flip()
+    return A
+});
+
+var dist2 = Infer({method: 'enumerate'},
+  function () {
+    var A = flip()
+    A ? factor(1) : factor(0)
+    return A
+});
+
+viz(dist1)
+viz(dist2)
+~~~~
+
+Consider that the probability of heads and tails in `dist1` are both .5. Adding 1 to the log probability of heads means
+
+$$log(P(H)) + 1 = log(.5) + 1 \approx .307$$
+
+Adding 0 to the log probability of tails means
+
+$$log(P(T)) + 0 = log(.5) \approx -.693$$
+
+Of course, these two probabilities no longer sum to 1, so we need to normalize:
+
+$$P(H) = \frac{P(H)}{P(H) + P(T)} \approx \frac{e^.307}{e^.307 + e^{-.693}} \approx .731$$
+
+If you run the code above, you should see that our numbers match.
+
+#### Example: Scalar Implicature, Part 2
+
+Let's return to our scalar implicature example. By converting conditions to factors, we can reformulate this model in a more general way. 
+
+The listener infers the probability of utterance $u$ having meaning $m$ as proportional to the probability the speaker would have uttered $u$ to convey $m$ times the prior probability that someone might want to convey $m$:
+
+$$P_{L}(m\mid u) \propto P_{S}(u\mid m) \cdot P(m)$$
+
+To define $P_{S}(u\mid m)$, let's assume that speakers put utility on listeners gaining tru knowledge. So $U_{S}$: 
+
+$$U_{S}(u; m) = log(L(m\mid u)) - C(u)$$
+
+Speaker utility increases the more probability the listener puts on the intended meaning and decreases according to utterance "cost". This encodes a very real trade-off: unambiguous speech is great for the listener but often requires more effort on the part of the speaker. Researchers have implemented the cost function differently, but a simple first-pass option is to consider either word frequency (lower frequency words have higher cost) or length (longer sentences have higher cost). A more psycholinguistically-informed model might use a more articulated cost function.
+
+Now let's update our model, ignoring the issue of utterance cost. Notice it's basically the same model, with except that the speaker function uses a factor. 
+
+~~~~
+var allSprouted = function(state) {return state == 3}
+var someSprouted = function(state) {return state > 0}
+var noneSprouted = function(state) {return state == 0}
+var meaning = function(words) {
+  return (words == 'all' ? allSprouted :
+          words == 'some' ? someSprouted :
+          words == 'none' ? noneSprouted :
+          console.error("unknown words"))
+}
+
+var statePrior = Categorical({vs: [0,1,2,3],
+                              ps: [1/4, 1/4, 1/4, 1/4]})
+var sentencePrior = Categorical({vs: ["all", "some", "none"],
+                                 ps: [1/3, 1/3, 1/3]})
+
+//speaker maximization
+var alpha = 1
+
+var speaker = function(state, depth) {
+  return Infer({function() {
+    var words = sample(sentencePrior)
+    factor(alpha*listener(words, depth).score(state))
+    return words
+  })
+};
+
+var listener = function(words, depth) {
+  return Infer({function() {
+    var state = sample(statePrior);
+    var wordsMeaning = meaning(words)
+    condition(depth == 0 ? wordsMeaning(state) :
+              _.isEqual(words, sample(speaker(state, depth - 1))))
+    return state;
+  })
+};
+
+print("Pragmatic listener's interpretation of 'some':")
+viz(listener( "some", 1))
+~~~~
+
+
+
 <!--
 ### Compositional Meanings
 -->
