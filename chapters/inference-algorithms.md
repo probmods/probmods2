@@ -52,7 +52,7 @@ var time = function(foo, trials) {
 time(infModel, 10)
 ~~~~
 
-Even for this simple program, lowering the baserate by just one order of magnitude, to $$0.01$$, will make rejection sampling impractical.
+Even for this simple program, lowering the baserate by just one order of magnitude, to $$0.01$$, dramatically increases the amount of time the program takes (try it). 
 
 Another option that we've seen before is to enumerate all of the possible executions of the model, using the rules of probability to calculate the conditional distribution:
 
@@ -81,7 +81,7 @@ var infModel = function(){
 time(infModel, 10)
 ~~~~
 
-Notice that the time it takes for this program to run doesn't depend on the baserate. Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this we modify the model to allow a flexible number of `flip` choices:
+Notice that the time it takes for this program to run doesn't depend on the baserate (use the code above to prove this to yourself). Unfortunately it does depend critically on the number of random choices in an execution history: the number of possible histories that must be considered grows exponentially in the number of random choices. To see this we modify the model to allow a flexible number of `flip` choices:
 
 ~~~~
 ///fold:
@@ -106,6 +106,8 @@ var infModel = function(){
 
 time(infModel, 10)
 ~~~~
+
+Try trippling the number of flips. You should see that this increases the runtime by about 30x. 
 
 The dependence on size of the execution space renders enumeration impractical for many models. In addition, enumeration isn't feasible at all when the model contains a continuous distribution (because there are uncountably many value that would need to be enumerated). Try inserting `var x = gaussian(0,1)` in the above model.
 
@@ -135,8 +137,7 @@ var infModel = function(){
 time(infModel, 10)
 ~~~~
 
-See what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference will not slow down appreciably (but results will become less stable). Unlike enumeration, inference should also not slow down exponentially as the size of the state space is increased.
-This is an example of the kind of trade offs that are common between different inference algorithms.
+See what happens in the above inference as you lower the baserate. Unlike rejection sampling, inference slows down only moderately (but results will become less stable). Unlike enumeration, tripling the number of flips has only a mild impact on runtime (try it). This is an example of the kind of trade offs that are common between different inference algorithms.
 
 The varying performance characteristics of different algorithms for (approximate) inference mean that getting accurate results for complex models can depend on choosing the right algorithm (with the right parameters). In what follows we aim to gain some intuition for how and when algorithms work, without being exhaustive.
 
@@ -408,7 +409,7 @@ To construct a Markov chain that converges to a stationary distribution of inter
 Fortunately, it turns out that for any given (conditional) distribution there are Markov chains with a matching stationary distribution. There are a number of methods for finding an appropriate Markov chain. One particularly common method is *Metropolis Hastings* recipe. 
 
 To create the necessary transition function, we first create a *proposal distribution*, $$q(x\rightarrow x')$$, which does not need to have the target distribution as its stationary distribution, but should be easy to sample from (otherwise it will be unwieldy to use!). A common option for continuous state spaces is to sample a new state from a multivariate Gaussian centered on the current state. To turn a proposal distribution into a transition function with the right stationary distribution, we either accepting or reject the proposed transition with probability: $$\min\left(1, \frac{p(x')q(x'\rightarrow x)}{p(x)q(x\rightarrow x')}\right).$$
-That is, we flip a coin with that probability: if it comes up heads our next state is $x'$, otherwise our next state is still $$x$$.
+That is, we flip a coin with that probability: if it comes up heads our next state is $$x'$$, otherwise our next state is still $$x$$.
 
 Such a transition function not only satisfies the *balance condition*, it actually satisfies a stronger condition, *detailed balance*. Specifically, $$p(x)\pi(x \rightarrow x') = p(x')\pi(x' \rightarrow x)$$.
 (To show that detailed balance implies balance, substitute the right-hand side of the detailed balance equation into the balance equation, replacing the summand, and then simplify.) It can be shown that the *Metropolis-hastings algorithm* gives a transition probability (i.e. $$\pi(x\rightarrow x')$$) that satisfies detailed balance and thus balance. (Recommended exercise: prove this fact. Hint: the probability of transitioning depends on first proposing a given new state, then accepting it; if you don't accept the proposal you "transition" to the original state.)
@@ -546,6 +547,8 @@ There are a couple of caveats to keep in mind when using HMC:
 A particle filter -- also known as [Sequential Monte Carlo](http://docs.webppl.org/en/master/inference.html#smc) -- maintains a collection of samples (aka particles) *simultaneously* in parallel while executing the model. (This is different than MCMC, where samples are complete executions, each constructed sequentially from the last.)
 The particles are "re-sampled" upon encountering new evidence, in order to adjust the numbers so that the population will be approximately distributed according to the model. 
 SMC is particularly useful for models where beliefs can be incrementally updated as new observations come in. 
+
+It is recommended that you watch [Particle Filters Explained without Equations](https://www.youtube.com/watch?v=aUkBa1zMKv4) before continuing on, in order to develop some intuitions for how particle filters work. 
 
 Let's consider another simple model, where five real numbers are constrained to be close to their neighbors:
 
