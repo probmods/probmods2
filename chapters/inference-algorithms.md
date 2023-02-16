@@ -920,8 +920,11 @@ Again, the actual trajectory is in green, the observations are in grey, and the 
 
 # Variational Inference
 
-The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent a conditional distribution. 
-Another way to represent a distribution is by finding the closest approximation among a set (or "family") of simpler distributions. This is the approach taken by *variational inference*. At a high level, we declare a set of models that have the same choices as our target model, but don't have any conditions (i.e. no `condition`, `observe`, or `factor`); we then try to find the member of this set closest to our target model and use it as the result of `Infer`. 
+The previous parts of this chapter focused on Monte Carlo methods for approximate inference: algorithms that generate a (large) collection of samples to represent a conditional distribution. An advantage of this method is that it is guaranteed to give you the right answer in the long run. A disadvantage is that the long run is a very long time (potentially long after the heat death of the universe). Even in the best cases, Monte Carlo methods tend to be computationally intensive and slow.
+
+*Variational inference* involves reprsenting the distribution you want (the probability distribution) by finding the closest approximation among a set (or "family") of simpler distributions. This is generally much faster, though with the disadvantage that the answer is often guaranteed to be wrong. (Since Monte Carlo is only guaranteed to be correct in the long run, in practice this difference is not always that meaningful.) 
+
+At a high level, we declare a set of models that have the same choices as our target model, but don't have any conditions (i.e. no `condition`, `observe`, or `factor`); we then try to find the member of this set closest to our target model and use it as the result of `Infer`. 
 
 To search for a good approximating model, we will eventually use gradient-based techniques. For this reason, we don't want a set of isolated models, but a continuous family.
 In WebPPL we declare parameters of a family with `param()`. For instance, here is a family of Gaussian distributions with fixed variance but different means:
