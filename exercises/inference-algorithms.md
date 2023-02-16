@@ -38,7 +38,7 @@ var post = Infer({method: 'rejection', samples: 1000}, model);
 viz.auto(post);
 ~~~~
 
-### Exercise 1.1) 
+### Exercise 1.1 
 
 Try using MCMC with Metropolis-Hastings instead of rejection sampling.
 You'll notice that it does not fare as well as rejection sampling. Why not?
@@ -71,19 +71,27 @@ var post = Infer({method: 'rejection', samples: 1000}, model);
 viz.auto(post);
 ~~~~
 
-### Exercise 1.2)
+### Exercise 1.2
 
 Change the *model* to make MH successfully trace the curves.
 Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.
 Why does this work better?
 
-You may find the following piece of code useful.
+You may find the following piece of code useful. 
 
 ~~~~
 var a = diagCovGaussian({mu: Vector([0, 100]),
                          sigma: Vector([1, 10])});
 display(T.get(a, 0));
 display(T.get(a, 1));
+~~~~
+
+Note that `T.get()` is just a helper function to get specific values out of the return value of diagCovGaussian(). See what that output looks like:
+
+~~~~
+var a = diagCovGaussian({mu: Vector([0, 100]),
+                         sigma: Vector([1, 10])});
+a
 ~~~~
 
 ~~~~
@@ -293,6 +301,82 @@ var model = function(){
 var posterior = Infer({method: 'MCMC',
                        samples: 500,
                        verbose: true}, model);
+~~~~
+
+# Exercise 3: Cross-situational learning
+
+When children hear an object being named, the data is often ambiguous. There are multiple things the parent could be talking about. Which one does the word belong to?
+
+A common paradigm for studying this problem is the cross-situational learning study. On the first trial, the subject may see a dog and a cat and hear the word `dax`. Does `dax` refer to dogs or cats? There's no way to know. 
+
+Suppose on the second trial, however, the subject sees a dog and a bird and hears the word `dax`. Now, your intuition is probably that `dax` refers to dogs. 
+
+#### Exercise 3.1
+
+Implement a simple model that achieves this result.
+
+~~~~
+var names = ["dax", "blicket", "gorper", "greeble", "freeble"]
+
+var objName = mem(function(obj) {
+  sample(Categorical({vs: names, ps: [.2, .2, .2, .2, .2]}))
+})
+
+var nameOne = function(obj1, obj2){
+  return flip() ? objName(obj1) : objName(obj2)
+}
+
+var clmodel = function() {
+  // your model goes here
+  return objName("dog")
+}
+
+var posterior = Infer(clmodel)
+viz(posterior)
+~~~~
+
+#### Exercise 3.2
+
+An obvious concern about cross-situational learning is that it may require a lot of memory. Suppose the following trial structure:
+
+1. objects: dog, cat, word: dax
+2. objects: dog, bird, word: blicket
+3. objects: dog, cow, word: greeble
+4. objects: dog, platypus, word: freeble
+5. objects: dog, ostrich, word: dax
+
+You should still place very high probability on a dog being called a "dax". Show that this holds in your model. Is the probability as high as it was previously? If not, why not?
+
+~~~~
+var names = ["dax", "blicket", "gorper", "greeble", "freeble"]
+
+var objName = mem(function(obj) {
+  sample(Categorical({vs: names, ps: [.2, .2, .2, .2, .2]}))
+})
+
+var nameOne = function(obj1, obj2){
+  return flip() ? objName(obj1) : objName(obj2)
+}
+
+var clmodel = function() {
+  // your model goes here
+  return objName("dog")
+}
+
+var posterior = Infer(clmodel)
+viz(posterior)
+~~~~
+
+#### Exercise 3.3
+
+In a thought-provoking paper titled "[Propose but verify](https://www.sciencedirect.com/science/article/pii/S0010028512000795?casa_token=nz-cJhc201oAAAAA:R2uj-uguW3RBr37sqNuHw9FaooZio0UL787yJmqI5nGlwc89nd-tMabrBszCZtYNHyHLNcbzqQ)", John Trueswell, Tamara Medina, Alon Hafri, and Lila Gleitman argue that cross-situational models like the one above require too much memory. It's unrealistic to suppose that learners remember all prior encounters with objects and words! 
+
+Instead, they argue that at any given time, learners are entertaining a single possible meaning for any given word. If later evidence disproves their working definition, they throw it out and start over. 
+
+Rewrite your model from Exercise 3.2 to implement this proposal. Hint: Consider how you could do this by changing the inference algorithm, not the model itself. (You may need to change the model, though, for instance to change `condition` statements to `factor` statements just in order to get the model to run.)
+
+~~~~
+// FUBAR
 ~~~~
 
 <!--
