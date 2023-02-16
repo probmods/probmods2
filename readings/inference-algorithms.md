@@ -10,7 +10,7 @@ Read "[Evolution in mind: Evolutionary dynamics, cognitive processes, and Bayesi
 
 #### Reading questions:
 
-a) Suchow and colleagues suggest partical filters are a useful way of thinking about maintenance in working memory, that in fact partical filters are simply a good engineering design for working memory. Why would rejection sampling not work? What about Metropolis-Hastings?
+a) Suchow and colleagues suggest particle filters are a useful way of thinking about maintenance in working memory, that in fact particle filters are simply a good engineering design for working memory. Why would rejection sampling not work? What about Metropolis-Hastings?
 
 ChatGPT actually makes some useful points about the three sampling methods, but doesn't really tie the argument together. Still, you might find it a useful place to start:
 
@@ -24,7 +24,7 @@ ChatGPT actually makes some useful points about the three sampling methods, but 
 
 PS ChatGPT really did misspell "Suchow". It is not entirely clear what to make of that.
 
-b) Suchow and colleagues suggest that Metropolis-Hastings may be a useful way of thinking about creativity, that in fact Metropolis-Hastings may be a useful way of *instantiating* creativity. Why would it work better than rejections sampling? Than partical filters?
+b) Suchow and colleagues suggest that Metropolis-Hastings may be a useful way of thinking about creativity, that in fact Metropolis-Hastings may be a useful way of *instantiating* creativity. Why would it work better than rejections sampling? Than particle filters?
 
 ChatGPT's answer was pretty similar in form to the one for (a), so it is not copied here. 
 
