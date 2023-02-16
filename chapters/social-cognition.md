@@ -834,7 +834,7 @@ var sentencePrior = Categorical({vs: ["all", "some", "none"],
 var alpha = 1
 
 var speaker = function(state, depth) {
-  return Infer({function() {
+  return Infer(function() {
     var words = sample(sentencePrior)
     factor(alpha*listener(words, depth).score(state))
     return words
@@ -842,7 +842,7 @@ var speaker = function(state, depth) {
 };
 
 var listener = function(words, depth) {
-  return Infer({function() {
+  return Infer(function() {
     var state = sample(statePrior);
     var wordsMeaning = meaning(words)
     condition(depth == 0 ? wordsMeaning(state) :
