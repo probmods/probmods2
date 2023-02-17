@@ -18,3 +18,5 @@ a) How do Bayesian computational models differ from other kinds of reasoning sys
 * **Javascript**. Experienced programmers who need an introduction to Javascript may find the [appendix on Javascript](13-appendix-js-basics.html) sufficient. Students who have limited experience programming are encouraged to check out [*Introduction to JavaScript*](https://www.codecademy.com/learn/introduction-to-javascript) from Codeacademy (esp. Chapters 1-8). 
 
 * **Background in Mathematics**. This textbook requires a basic understanding of probability theory. The Khan Academy has a [gentle introduction](https://www.khanacademy.org/math/statistics-probability/probability-library) that should be sufficient for most students. 
+
+* **More WebPPL**. There is also a textbook for WebPPL itself: [The Design and Impliementation of Probabilistic Programming Languages](http://dippl.org/). If you are struggling with WebPPL, the first three chapters may be helpful.

@@ -19,4 +19,4 @@ b) At which of Marr's levels does Theory Theory operate?
 
 * **Bayesian Inference**. For those finding the notion of conditioning confusing, [this video](https://www.youtube.com/watch?v=5NMxiOGL39M) may be helpful.
 
-* **ProbLang.org: Introduction to WebPPL**. For those still struggling with WebPPL, [this overview](http://www.problang.org/chapters/app-06-intro-to-webppl.html) provides a complementary look at the structure of WebPPL programs.
+* **ProbLang.org: Introduction to WebPPL**. For those still struggling with WebPPL, [this overview](http://www.problang.org/chapters/app-06-intro-to-webppl.html) provides a complementary look at the structure of WebPPL programs. Chapters 1-3 are probably the most useful.

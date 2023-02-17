@@ -44,6 +44,8 @@ b) What are the major differences between Gibbs sampling and Metropolis-Hastings
 * **[Empmirical evidence for Markov Chain Monte Carlo in Memory Search](https://escholarship.org/content/qt72r6n6cn/qt72r6n6cn.pdf)** A short paper describing a model closely related to the memory model discussed by Suchow and colleagues. Although it's short, it goes into the math in a bit more detail, which may be helpful.
 
 ### Extra math
-* **Algorithms for Inference** For a somewhat longer, mathier disucssion of MCMC algorithms, see @andrieu2003introduction.
+* **Algorithms for Inference** For a somewhat longer, mathier discussion of MCMC algorithms, see @andrieu2003introduction.
 
 * **[Gibbs sampling for the uninitiated](http://users.umiacs.umd.edu/~resnik/pubs/LAMP-TR-153.pdf)** Gibbs sampling is not really covered in this chapter, but it is important. Readers who want to know more can consult this text.
+
+* **More WebPPL**. The WebPPL textbook [this overview](http://www.problang.org/chapters/app-06-intro-to-webppl.html) has chapters on [Particle Filtering](http://dippl.org/chapters/05-particlefilter.html) as well as [Markov Chain Monte Carlo](http://dippl.org/chapters/06-mcmc.html) (MCMC).
