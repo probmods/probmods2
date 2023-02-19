@@ -1,7 +1,7 @@
 ---
 layout: chapter
 title: Rational process models
-description: The psychological reality of inference algorithms.
+description: Inference in the real world.
 chapter_num: 8
 custom_js:
 - assets/js/box2d.js
