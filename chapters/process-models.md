@@ -13,6 +13,12 @@ custom_css:
 - /assets/css/draw.css
 ---
 
+A major challenge to Bayesian models is that Bayesian inference is often computationally difficult. The most straightforward interpretation of Bayesian models at the algorithmic level is that explicit probabilities for different states are computed and represented. (This is very much like the 'enumerate' method of Infer.) Attempts have been made to model how neural systems might capture these representations, via ideas such as *probabilistic population codes*. (See [Bayesian inference with probabilistic population codes](https://www.nature.com/articles/nn1790), Ma, Beck, Latham, Pouget (2006).) While such methods work well for simple problems, it is difficult to see how they can scale up to real-world cognition.
+<!--
+Population codes and such. Difficulty of computation, scaling.
+-->
+
+<!--
 As we noted in an earlier chapter, there is an interesting parallel between the `Infer` abstraction, which separates model specification from inference method, and the idea of levels of analysis in cognitive science @Marr1982.
 For most of this book we are interested in the *computational* level of describing what people know about the world and what inferences that knowledge licenses.
 That is, we treat the model argument to `infer` as the scientific hypothesis, and the options (including 'method') argument as an engineering detail needed to derive predictions.
@@ -24,6 +30,17 @@ Is it reasonable to interpret the inference algorithms that we borrow from stati
 
 If we take the algorithms for inference as psychological hypotheses, then the approximation and resource-usage characteristics of the algorithms will be the signature phenomena of interest. 
 
+# How is uncertainty represented?
+
+A signature of probabilistic ("Bayesian") cognitive models is the central role of uncertainty. Generative models, our main notion of knowledge, capture uncertain causal processes. After making observations or assumptions, Infer captures uncertain answers. At the computational level we work with this uncertainty by manipulating distribution objects, without needing to explore (much) how they are created or represented. Yet cognitively there is a key algorithmic question: how is uncertainty represented in the human mind?
+
+We have at least three very different possible answers to this question:
+
+- Explicit representation of probabilities.
+- Parametric representation of distribution families.
+- Sampling-based representations.
+-->
+
 <!--TODO: describe some of the research in this direction.
 
  - one and done.
@@ -34,29 +51,6 @@ If we take the algorithms for inference as psychological hypotheses, then the ap
 
   -->
 
-# How is uncertainty represented?
-
-A signature of probabilistic ("Bayesian") cognitive models is the central role of uncertainty. Generative models, our main notion of knowledge, capture uncertain causal processes. After making observations or assumptions, Infer captures uncertain answers. At the computational level we work with this uncertainty by manipulating distribution objects, without needing to explore (much) how they are created or represented. Yet cognitively there is a key algorithmic question: how is uncertainty represented in the human mind?
-
-We have at least three very different possible answers to this question:
-
-- Explicit representation of probabilities.
-- Parametric representation of distribution families.
-- Sampling-based representations.
-
-
-## Explicit representations
-
-The most straightforward interpretation of Bayesian models at the algorithmic level is that explicit probabilities for different states are computed and represented. (This is very much like the 'enumerate' method of Infer.) Attempts have been made to model how neural systems might capture these representations, via ideas such as *probabilistic population codes*. (See [Bayesian inference with probabilistic population codes](https://www.nature.com/articles/nn1790), Ma, Beck, Latham, Pouget (2006).)
-
-Yet it is difficult to see how these explicit representations can scale up to real-world cognition.
-<!--
-Population codes and such. Difficulty of computation, scaling.
--->
-
-## Approximate distribution representations
-
-Another possible representation of uncertainty is via the parameters of a family of distributions. For instance, the mean and covariance of a Gaussian is a flexible and popular (in statistics) way to approximate a complex distirbution. (Indeed, we have seen that a mean-field product of Gaussians can give quick and useful inference result from variational inference.) It is thus possible that all uncertainty is represented in the human mind as parameters of some family. A version of this idea can be seen in the *free energy* hypothesis. (See [The free-energy principle: a unified brain theory?](https://www.nature.com/articles/nrn2787), Friston (2010).)
 
 ## The sampling hypothesis
 
@@ -89,7 +83,7 @@ The maximizing agent chooses the most likely outcome by examining the conditiona
 
 Vul, Goodman, Griffiths, Tenenbaum (2014) further ask how many samples a rational agent *should* use, if they are costly. This analysis explores the trade off between expected reward increase from more precise probability estimates (more samples) with resource savings from less work (fewer samples). The, somewhat surprising, result is that for a wide range of cost and reward assumptions it is optimal to decide based on only one, or a few, samples.
 
-## Inferring human optimality from data
+### Inferring human optimality from data
 
 In "[Rational Use of Cognitive Resources: Levels of Analysis Between the Computational and the Algorithmic](https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/tops.12142)", Griffiths, Lieder, and Goodman note that Bayesian models provide a convenient way of analyzing behavior. That is, we can ask not just whether human cognition is perfectly optimal (it probably isn't), but *how* optimal is it. 
 
@@ -154,6 +148,11 @@ Suppose our subjects weren't so accuracy. We can rewrite the code above so that 
 ![Inferred number of particles](../assets/img/particles_2.svg)
 
 Suppose we fit this model to a real dataset and found the best estimate for number of particles is 7. That would not necessarily mean that humans in fact use particle filtering with approximately 7 particles to learn vocabulary. Rather, it means that human level of accuracy can be captured by such a model. It further suggests that humans are fairly resource-limited in our ability to do cross-situational learning, since accuracy with only 7 particles is not going to be very high. (One could quantify just how limited it is by seeing how accuracy is affected by number of particles in a realistic learning scenario.) 
+
+
+## Approximate distribution representations
+
+Another possible representation of uncertainty is via the parameters of a family of distributions. For instance, the mean and covariance of a Gaussian is a flexible and popular (in statistics) way to approximate a complex distirbution. (Indeed, we have seen that a mean-field product of Gaussians can give quick and useful inference result from variational inference.) It is thus possible that all uncertainty is represented in the human mind as parameters of some family. A version of this idea can be seen in the *free energy* hypothesis. (See [The free-energy principle: a unified brain theory?](https://www.nature.com/articles/nrn2787), Friston (2010).)
 
 <!--
 
