@@ -89,6 +89,71 @@ The maximizing agent chooses the most likely outcome by examining the conditiona
 
 Vul, Goodman, Griffiths, Tenenbaum (2014) further ask how many samples a rational agent *should* use, if they are costly. This analysis explores the trade off between expected reward increase from more precise probability estimates (more samples) with resource savings from less work (fewer samples). The, somewhat surprising, result is that for a wide range of cost and reward assumptions it is optimal to decide based on only one, or a few, samples.
 
+## Inferring human optimality from data
+
+In "[Rational Use of Cognitive Resources: Levels of Analysis Between the Computational and the Algorithmic](https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/tops.12142)", Griffiths, Lieder, and Goodman note that Bayesian models provide a convenient way of analyzing behavior. That is, we can ask not just whether human cognition is perfectly optimal (it probably isn't), but *how* optimal is it. 
+
+Let's return to our cross-situational learning model from the exercises for the "Algorithms for Inference" chapter. Below, it has been refactored so that the number of particles used by human cognition is a free variable. Now, we assume that 10 subjects have all participated in the study, and all of them concluded that the word for dog is "dax". If you run the following code (**warning: it will take a few minutes**), it'll infer the number of particles is probably fairly large. 
+
+~~~~
+var names = ["dax", "blicket", "gorper", "greeble", "freeble"]
+
+var objName = mem(function(obj) {
+  sample(Categorical({vs: names, ps: [.2, .2, .2, .2, .2]}))
+})
+
+var nameOne = function(obj1, obj2){
+  return flip() ? objName(obj1) : objName(obj2)
+}
+
+var clmodel = function() {
+  var dog = objName("dog")
+  var cat = objName("cat")
+  factor(2*(nameOne("dog","cat") == "dax"))
+  var bird = objName("bird")
+  factor(2*(nameOne("dog","bird") == "blicket"))
+  var cow = objName("cow")
+  factor(2*(nameOne("dog","cow") == "greeble"))
+  var platypus = objName("platypus")
+  factor(2*(nameOne("dog","platypus") == "freeble"))
+  var ostrich = objName("platypus")
+  factor(2*(nameOne("dog","ostrich") == "dax"))
+  return objName("dog")
+}
+
+var experiment = Infer({method: "MCMC", samples:250, lag:10}, function(){
+  var npart = sample(RandomInteger({n:50}))+1
+  
+  //5 subjects, all conclude dax=dog
+  var sub1 = Infer({method: "SMC", particles: npart, rejuvSteps: 10}, clmodel).MAP().val
+  var sub2 = Infer({method: "SMC", particles: npart, rejuvSteps: 10}, clmodel).MAP().val
+  var sub3 = Infer({method: "SMC", particles: npart, rejuvSteps: 10}, clmodel).MAP().val
+  var sub4 = Infer({method: "SMC", particles: npart, rejuvSteps: 10}, clmodel).MAP().val
+  var sub5 = Infer({method: "SMC", particles: npart, rejuvSteps: 10}, clmodel).MAP().val
+    
+  factor(5*(sub1 == 'dax'));
+  factor(5*(sub2 == 'dax'));
+  factor(5*(sub3 == 'dax'));
+  factor(5*(sub4 == 'dax'));
+  factor(5*(sub5 == 'dax'));
+  
+  return npart
+})
+
+viz(experiment)
+~~~~
+
+Output from one run looked like this:
+
+![Inferred number of particles](../assets/img/particles_1.svg)
+
+This seems reasonable. We know that if we are using particle filtering, accuracy goes up the more particles one has. Since all five subjects gave the right answer, that suggests a decent number of particles.
+
+Suppose our subjects weren't so accuracy. We can rewrite the code above so that each subject comes to a different conclusion about the word for 'dog': one subject concludes 'dax', one concludes 'greeble', one concludes 'freeble', one concludes 'blicket', and one concludes 'gorper'. In this case, we'll infer the number of particles is probably a lot smaller:
+
+![Inferred number of particles](../assets/img/particles_2.svg)
+
+Suppose we fit this model to a real dataset and found the best estimate for number of particles is 7. That would not necessarily mean that humans in fact use particle filtering with approximately 7 particles to learn vocabulary. Rather, it means that human level of accuracy can be captured by such a model. It further suggests that humans are fairly resource-limited in our ability to do cross-situational learning, since accuracy with only 7 particles is not going to be very high. (One could quantify just how limited it is by seeing how accuracy is affected by number of particles in a realistic learning scenario.) 
 
 <!--
 
