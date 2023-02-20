@@ -81,7 +81,69 @@ viz(repeat(100,sampleAgent))
 
 The maximizing agent chooses the most likely outcome by examining the conditional probability they assign to outcomes -- the result is all such agents choosing 'true'. In contrast, a population of agents that each represents their belief with a single sample will choose 'false' about 30% of the time. This behavioral signature -- *probability matching* -- is in fact a very old and well studied psychological phenomenon. (See for instance, Individual Choice Behavior: A Theoretical Analysis, Luce (1959).)
 
+### How many samples should you take?
+
 Vul, Goodman, Griffiths, Tenenbaum (2014) further ask how many samples a rational agent *should* use, if they are costly. This analysis explores the trade off between expected reward increase from more precise probability estimates (more samples) with resource savings from less work (fewer samples). The, somewhat surprising, result is that for a wide range of cost and reward assumptions it is optimal to decide based on only one, or a few, samples.
+
+Let's use our favorite example: flipping a coin. Suppose this is a trick coin with known weight `w`. Our job is to correctly guess the outcome of the next flip of the coin.
+
+If we want to maximize, we obviously should just round: if `w >= .5` we should guess `heads`; otherwise, `tails` (although, as we just discussed, humans often probability-match rather than maximize, here we're interested in what would be optimal, so we will maximize): 
+
+~~~~
+Infer({method: "forward", samples: 5000}, function(){
+  var w = sample(Uniform({a: 0, b: 1})) //true weight
+  return (flip(w) == (w >= .5))
+})
+~~~~
+
+We can win this bet around 75% of the time.
+
+However, let's assume for the moment that we can't easily calculate the optimal strategy. (For most non-trivial problems, we can't.) Instead, we sample the distribution of heads for our coin. If most of those samples come up `heads`, then we bet `heads`; otherwise, `tails':
+
+~~~~
+var takesamples = function(nsamples){
+  var w = sample(Uniform({a: 0, b: 1})) //true weight
+  var samples = Infer({method: "forward", samples:nsamples}, function(){
+    return flip(w)
+  })
+  return(flip(w) == samples.MAP().val)
+}
+
+Infer({method: "forward", samples: 1000}, function(){takesamples(1000)})
+~~~~
+
+Here, we took 1,000 samples. Not surprisingly, we win our bet nearly 75\% of the time. But what happens if we only take 10 samples?
+
+~~~~
+var takesamples = function(nsamples){
+  var w = sample(Uniform({a: 0, b: 1})) //true weight
+  var samples = Infer({method: "forward", samples:nsamples}, function(){
+    return flip(w)
+  })
+  return(flip(w) == samples.MAP().val)
+}
+
+Infer({method: "forward", samples: 5000}, function(){takesamples(10)})
+~~~~
+
+Impressively, we're still very close to 75%. What if we only took 1 sample?
+
+~~~~
+var takesamples = function(nsamples){
+  var w = sample(Uniform({a: 0, b: 1})) //true weight
+  var samples = Infer({method: "forward", samples:nsamples}, function(){
+    return flip(w)
+  })
+  return(flip(w) == samples.MAP().val)
+}
+
+Infer({method: "forward", samples: 5000}, function(){takesamples(1)})
+~~~~
+
+We are still winning around 2/3 of the time. Obviously, if we have the computational power available and enough time to take the samples, we should take 1,000 samples and maximize our chances of winning. But if samples are costly, it may not be worth taking more than 1.
+
+
+
 
 ### Inferring human optimality from data
 

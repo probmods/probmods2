@@ -139,3 +139,19 @@ Explain what aspects of the inference may or may not be analogous to what people
 ## Exercise 2
 
 Consider the particle filter example from the chapter. Suppose you wanted to apply it to a dataset to determine how many particles humans use during vocabulary learning. Name one limitation that you would run into. 
+
+## Exercise 3
+
+In the chapter, we investigated how many samples we should take when deciding whether to guess `heads` or `tails` for a coin of known weight. Let's consider a related problem. In this case, all we know is the weight of the coin is drawn from a uniform distribution from 0 to 1. We are allowed to flip the coin as many times as we want before guessing the outcome of the next flip. How many flips should we take? 
+
+#### a) 
+
+What's the best-case scenario? That is, suppose you know the actual weight of the coin. How often can you guess the next flip? 
+
+~~~~
+// your code here
+~~~~
+
+#### b)
+
+Now figure out how often you could guess the next flip based on first flipping it 10 times. (Keep in mind that in this scenario, you can do as much inference as you want; no need to restrict samples during inference. It's the number of observations you can make about the coin that we are restricting.)
