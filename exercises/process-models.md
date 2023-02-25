@@ -138,7 +138,7 @@ Explain what aspects of the inference may or may not be analogous to what people
 
 ## Exercise 2
 
-Consider the particle filter example from the chapter. Suppose you wanted to apply it to a dataset to determine how many particles humans use during vocabulary learning. Name one limitation that you would run into. 
+Consider the particle filter example from the chapter that we used to infer the number of hypotheses vocabulary-learners are entertaining. It's straightforward to apply this model to experimental datasets where subjects are learning names of novel objects. What's one problem you might run into in trying to apply it to understand children's actual learning in the real world? 
 
 ## Exercise 3
 
