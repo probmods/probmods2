@@ -155,3 +155,8 @@ What's the best-case scenario? That is, suppose you know the actual weight of th
 #### b)
 
 Now figure out how often you could guess the next flip based on first flipping it 10 times. (Keep in mind that in this scenario, you can do as much inference as you want; no need to restrict samples during inference. It's the number of observations you can make about the coin that we are restricting.)
+
+
+~~~~
+// your code here
+~~~~
