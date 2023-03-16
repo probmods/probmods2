@@ -60,9 +60,11 @@ Try varying the number of flips and the number of heads observed.  You should be
 When exploring learning as a conditional inference, we are particularly interested in the dynamics of how inferred hypotheses change as a function of amount of data (often thought of as time the learner spends acquiring data). We can map out the *trajectory* of learning by plotting a summary of the posterior distribution as a function of the amount of observed data. Here we plot the expectation that the coin is fair in the above example:
 
 ~~~~
+var fairPrior = .999
+
 var fairnessPosterior = function(observedData) {
   return Infer({method: 'enumerate'}, function() {
-    var fair = flip(0.999)
+    var fair = flip(fairPrior)
     var coin = Bernoulli({p: fair ? 0.5 : 0.95})
     var obsFn = function(datum){observe(coin, datum == 'h')}
     mapData({data: observedData}, obsFn)
