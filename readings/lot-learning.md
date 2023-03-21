@@ -5,7 +5,7 @@ title: Learning with a Language of Thought - readings
 
 ## 1. Learning numbers
 
-@piantadosi2012bootstrapping
+[Bootstrapping a language of thought](https://www.sciencedirect.com/science/article/pii/S0010027711002769) by Piantadosi and colleagues.
 
 This is a long paper. Focus on the first 11 pages (through and including Sec. 4.1).
 
