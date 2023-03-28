@@ -26,7 +26,8 @@ var weightPosterior = function(observedData){
 
 var fullDataSet = repeat(50, function() { 'h' });
 var observedDataSizes = [0,1,2,4,6,8,10,12,15,20,25,30,40,50];
-var estimates = map(function(N) { expectation(weightPosterior(fullDataSet.slice(0, N))) }, observedDataSizes);
+var estimates = map(function(N) { expectation(weightPosterior(
+	fullDataSet.slice(0, N))) }, observedDataSizes);
 viz.line(observedDataSizes, estimates);
 ~~~~
 
@@ -50,7 +51,8 @@ var weightPosterior = function(observedData){
 
 var fullDataSet = repeat(50, function() { 'h' });
 var observedDataSizes = [0,1,2,4,6,8,10,12,15,20,25,30,40,50];
-var estimates = map(function(N) { expectation(weightPosterior(fullDataSet.slice(0, N))) }, observedDataSizes);
+var estimates = map(function(N) { expectation(weightPosterior(
+	fullDataSet.slice(0, N))) }, observedDataSizes);
 viz.line(observedDataSizes, estimates);
 ~~~~
 
@@ -75,7 +77,8 @@ var weightPosterior = function(observedData){
 
 var fullDataSet = repeat(50, function() { ['h', 't'] }).flat();
 var observedDataSizes = [0,2,4,6,8,10,20,30,40,50,70,100];
-var estimates = map(function(N) { expectation(weightPosterior(fullDataSet.slice(0,N))) }, observedDataSizes);
+var estimates = map(function(N) { expectation(weightPosterior(
+	fullDataSet.slice(0,N))) }, observedDataSizes);
 viz.line(observedDataSizes, estimates);
 ~~~~
 
@@ -144,7 +147,8 @@ var weightPosterior = function(observedData){
 
 var fullDataSet = repeat(50, function() { ['h', 't'] }).flat();
 var observedDataSizes = [0,2,4,6,8,10,20,30,40,50,70,100];
-var estimates = map(function(N) { expectation(weightPosterior(fullDataSet.slice(0,N))) }, observedDataSizes);
+var estimates = map(function(N) { expectation(weightPosterior(
+	fullDataSet.slice(0,N))) }, observedDataSizes);
 viz.line(observedDataSizes, estimates);
 ~~~~
 
