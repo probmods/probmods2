@@ -6,7 +6,7 @@ description: The power of abstraction.
 
 ## Exercise 1: Pseudocounts and the Dirichlet distribution
 
-In the Bayesian Data Analysis exercises, we explored the Beta distribution by varying its parameters.
+In the Bayesian Data Analysis (BDA) exercises, we explored the Beta distribution by varying its parameters.
 The Dirichlet is a generalization of the Beta distribution to more than two categories
 (see [Appendix](http://probmods.org/chapters/appendix-useful-distributions.html))
 Instead of Beta parameters $$(a, b)$$ governing the probabilities of two categories $$(false/true)$$,
@@ -180,7 +180,7 @@ How many of these apples are likely to be rotten?
 ~~~~
 ~~~~
 
-## Exercise 3: Hierarchical models for BDA
+## Exercise 3: Hierarchical models for Bayesian Data Analysis (BDA)
 
 Imagine that you have conducted an experiment on word reading times to test the hypothesis that words starting with vowels take longer to read.
 Each data point includes whether the word starts with a vowel or a consonant, the word itself, the participant id, and the response time you measured ("rt").
