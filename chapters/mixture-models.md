@@ -483,4 +483,6 @@ Notice that unlike the unbounded mixture model case above, we were able to use M
 <!--TODO: DPmem? Mention other non-parametrics? Include any examples?-->
 
 
+Reading & Discussion: [Readings]({{site.baseurl}}/readings/mixture-models.html)
+
 Test your knowledge: [Exercises]({{site.baseurl}}/exercises/mixture-models.html)
