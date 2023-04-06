@@ -6,7 +6,7 @@ title: Falling leaves
 ## How to do these exercises
 
 1. Introduce yourselves! If you've not met yet, give some background and a fun fact.
-2. Choose a driver -- this person will be typing and runing code for the group, and should share screen. (It's ok to switch the driver part way through.)
+2. Choose a driver -- this person will be typing and runing code for the group. (It's ok to switch the driver part way through.)
 3. Those who aren't driving should help navigate! Don't be passive, the driver needs your help.
 4. These exercises are designed to be more about discussion and sense-making than coding. Ask 'what if' and 'why does that happen'!
 5. Help each other learn. Keep everyone involved. Be kind!
