@@ -443,7 +443,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 ## Exercise 6: Casino game
 
 > Consider the following game.
-A machine randomly gives Bob a letter of the word "game" with and Bob has a different probability of winning depending on which letter he got:
+A machine randomly gives Bob a letter of the word "game" with different probabilities and Bob has a different probability of winning depending on which letter he got:
 >
 > | $$h$$ | $$p(h)$$ | $$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
 | ----- | -------- | ----------------------- |------------------------- |

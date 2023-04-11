@@ -26,7 +26,7 @@ Math.exp(logProb);
 ### b)
 
 I also have a biased coin, with $$P(\text{heads})=0.9$$.
-I hand you one of the coins (either biased or fair) without telling you which.
+I hand you one of the coins (either biased or fair) chosen uniformly randomly without telling you which.
 You flip it three times.
 
 Given that first two coin flips landed on heads, what is the posterior distribution for the next flip?
@@ -236,7 +236,7 @@ Write a model to reason about all 5 people (including me and Kelsey), and then u
 ## Exercise 6: Casino game
 
 Consider the following game.
-A machine randomly gives Bob a letter of the word "game" with and Bob has a different probability of winning depending on which letter he got:
+A machine randomly gives Bob a letter of the word "game" with different probabilities and Bob has a different probability of winning depending on which letter he got:
 
 | $$h$$ | $$p(h)$$ | $$p(\text{win}\mid h)$$ | $$p(h \mid \text{win})$$ |
 | ----- | -------- | ----------------------- |------------------------- |
