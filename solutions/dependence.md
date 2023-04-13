@@ -1,6 +1,6 @@
 ---
 layout: exercise
-title: Patterns of inference - solutions
+title: Dependence - solutions
 ---
 
 ## Exercise 1: Causal and statistical dependency.
@@ -84,3 +84,26 @@ var b = pass('bob', 'historyExam');
 ![](../assets/img/04_01_e.png)
 
 <!-- *Note:* Bayes nets often use plate notation for repeated structure across multiple entities (e.g. students and exams), but there is no standard notation for repeated structure when the repetitions are not nested. That is, `doesHomework` is memoized to `student` and `examFair` is memoized to `exam`. But for each `student`-`exam` pair we have a different value for `pass`. We can't represent that kind of shared structure in a Bayes net. -->
+
+## Exercise 2: Probabilistic programs without corresponding graphical models
+
+### a) 
+
+> Write another recursive probabilistic program to model some real-world phenomenon below:
+
+~~~~
+// falling leaf, but the change in y position can vary
+var fallingLeafWithPossibleUpdraft = function(x, y) {
+  if (y <= 0) {
+    // we are on the ground
+    return x
+  } else {
+    // the x and y change by a random amount
+    var xDelta = sample(Gaussian({"mu": 0, "sigma": 2}))
+    var yDelta = sample(Gaussian({"mu": -1, "sigma": 2}))
+    return fallingLeafWithPossibleUpdraft(x + xDelta, y + yDelta)
+  }
+}
+
+Infer({"model": function() { fallingLeafWithPossibleUpdraft(0, 10) }, "method": "forward"})
+~~~~
