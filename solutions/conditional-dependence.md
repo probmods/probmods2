@@ -172,3 +172,41 @@ viz.table(Infer({method: 'enumerate'}, function() {
   return cold;
 }));
 ~~~~
+
+## Exercise 2: Are they independent?
+
+### a)
+
+> Are A and B independent?
+
+Yes
+
+### b)
+
+> Are A and B independent?
+
+No
+
+### c)
+
+> Are A and C independent?
+
+No
+
+### d)
+
+> Are B and C independent?
+
+No
+
+### e)
+
+> Are B and C independent?
+
+Yes
+  
+### f)
+
+> Are A and B independent?
+
+No
