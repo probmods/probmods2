@@ -38,7 +38,6 @@ var data = [
 
 // Todo: sampleGroupPrototype takes a group and returns an object
 // with property / probability pairs. E.g. {antannae: 0.2, green: 0.3, blarghNoise: 0.9}
-// *Hint* lodash _.zipObject is useful for building dictionaries!
 var sampleGroupPrototype = mem(function(groupName) {
   // Your code here...
 })
@@ -62,7 +61,28 @@ viz.bar(properties, map(expectationOver(results, 'group2'), properties))
 
 ### b)
 
+Practice your javascript-fu. You probably wrote out the dictionary in `sampleGroupPrototype` by hand (`{antennae: var1, green: var2, ...}`). Use Google to read up on lodash _.zipObject, which makes it easier to put together dictionaries. Rewrite your code for (a) accordingly.
+
+~~~~
+ 
+~~~~
+
+### c) 
+
 Now imagine you hear a noise from inside a crater but you cannot see the alien that emitted it; this is a noisy observation. How can you use the model you learned above to make an educated guess about their other features?
+
+~~~~
+
+~~~~
+
+### d)
+
+Try rewriting your code for (c) to allow for an unbounded number of groups. You'll probably find that the effect on your guesses about the properties of the mystery alien isn't changed much. Why not?
+
+
+~~~~
+
+~~~~
 
 <!-- TODO: extend this with another part or two to get at perceptual regularization to the group mean (basically the perceptual magnet example from the chapter applied to stereotypes), and the effect of noisy vs clear traits on group assignment.
   -->
@@ -71,9 +91,9 @@ Now imagine you hear a noise from inside a crater but you cannot see the alien t
 
 This problem is adapted from Section 6.5 of [Lee \& Wagenmakers (2013)](https://faculty.washington.edu/jmiyamot/p548/leemd%20bayesian%20cog%20modeling%20-%20practical%20crs.pdf).
 
-Consider the practical challenge of detecting if people cheat on a test. For example, people who have been in a car accident may seek financial compensation from insurance companies by feigning cognitive impairment such as pronounced memory loss. When these people are confronted with a memory test that is intended to measure the extent of their impairment, they may deliberately under-perform. This behavior is called malingering, and it may be accompanied by performance much worse than that displayed by real amnesiacs. Sometimes, for example, malingerers may perform substantially below chance.
+In a psychology experiment, not all the subjects are necessarily doing their best. Some just want their payment or credit and to get out as quickly as possible. Consider the practical challenge of detecting which subjects are actually taking the task seriously. 
 
-Malingering is not always easy to detect, but is naturally addressed by a mixture model. Using this approach, it is possible to infer which of two categories -- those who malinger, and those who are truthful or bona fide -- each person belongs to, and quantify the confidence in each of these classifications.
+Malingering (not taking the task seriously) is not always easy to detect, but is naturally addressed by a mixture model. Using this approach, it is possible to infer which of two categories -- those who malinger, and those who are truthful or bona fide -- each person belongs to, and quantify the confidence in each of these classifications.
 We consider an experimental study on malingering, in which each of p = 22 participants completed a memory test (Ortega, Wagenmakers, Lee, Markowitsch, & Piefke, 2012). One group of participants was told to do their best. These are the bona fide participants. The other group of participants was told to under-perform by deliberately simulating amnesia. These are the malingerers. Out of a total of n = 45 test items, the participants get 45, 45, 44, 45, 44, 45, 45, 45, 45, 45, 30, 20, 6, 44, 44, 27, 25, 17, 14, 27, 35, and 30 correct. Because this was an experimental study, we know that the first 10 participants were bona fide and the next 12 were instructed to malinger.
 
 ### a)

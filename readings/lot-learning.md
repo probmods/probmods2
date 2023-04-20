@@ -13,7 +13,7 @@ This is a long paper. Focus on the first 11 pages (through and including Sec. 4.
 
 a) What stages do children go through in learning numbers?
 
-b) Why does the model go through several stages before finally learning the number system?
+b) Why does the model go through several stages before finally learning the number system? What aspects of the model allow it to recapitulate the same stages humans go through?
 
 ## Extras
 
