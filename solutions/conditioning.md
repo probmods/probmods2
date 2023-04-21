@@ -399,7 +399,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 ~~~~
 
 
-### c)
+### b)
 
 > My neighbour Kelsey, who has the same kind of sprinkler, tells me that her lawn was also wet that same morning.
 > What is the new posterior probability that it rained?
@@ -417,7 +417,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 ~~~~
 
 
-### d)
+### c)
 
 > To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning.
 > Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too.
