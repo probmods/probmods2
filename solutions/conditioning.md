@@ -195,7 +195,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 // intervention
 display("intervention");
 viz.table(Infer({method: "enumerate"}, function() {
-  var lungCancer = flip(0.1);
+  var lungCancer = flip(0.01);
   var cold = flip(0.2);
   var cough = true;
   return lungCancer;
