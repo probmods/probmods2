@@ -183,7 +183,7 @@ Conditioning on a causally downstream variable can inform us about what the valu
 // original
 display("original");
 viz.table(Infer({method: "enumerate"}, function() {
-  var lungCancer = flip(0.1);
+  var lungCancer = flip(0.01);
   var cold = flip(0.2);
   var cough = (
     (cold && flip(0.5)) ||
@@ -204,7 +204,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 // conditioning
 display("conditioning");
 viz.table(Infer({method: "enumerate"}, function() {
-  var lungCancer = flip(0.1);
+  var lungCancer = flip(0.01);
   var cold = flip(0.2);
   var cough = (
     (cold && flip(0.5)) ||
