@@ -183,7 +183,7 @@ Conditioning on a causally downstream variable can inform us about what the valu
 // original
 display("original");
 viz.table(Infer({method: "enumerate"}, function() {
-  var lungCancer = flip(0.1);
+  var lungCancer = flip(0.01);
   var cold = flip(0.2);
   var cough = (
     (cold && flip(0.5)) ||
@@ -195,7 +195,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 // intervention
 display("intervention");
 viz.table(Infer({method: "enumerate"}, function() {
-  var lungCancer = flip(0.1);
+  var lungCancer = flip(0.01);
   var cold = flip(0.2);
   var cough = true;
   return lungCancer;
@@ -204,7 +204,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 // conditioning
 display("conditioning");
 viz.table(Infer({method: "enumerate"}, function() {
-  var lungCancer = flip(0.1);
+  var lungCancer = flip(0.01);
   var cold = flip(0.2);
   var cough = (
     (cold && flip(0.5)) ||
@@ -399,7 +399,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 ~~~~
 
 
-### c)
+### b)
 
 > My neighbour Kelsey, who has the same kind of sprinkler, tells me that her lawn was also wet that same morning.
 > What is the new posterior probability that it rained?
@@ -417,7 +417,7 @@ viz.table(Infer({method: "enumerate"}, function() {
 ~~~~
 
 
-### d)
+### c)
 
 > To investigate further we poll a selection of our friends who live nearby, and ask if their grass was wet this morning.
 > Kevin and Manu and Josh, each with the same sprinkler, all agree that their lawns were wet too.
