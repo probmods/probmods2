@@ -38,7 +38,7 @@ var post = Infer({method: 'rejection', samples: 1000}, model);
 viz.auto(post);
 ~~~~
 
-### Exercise 1.1) 
+### Exercise 1.1 
 
 Try using MCMC with Metropolis-Hastings instead of rejection sampling.
 You'll notice that it does not fare as well as rejection sampling. Why not?
@@ -71,7 +71,7 @@ var post = Infer({method: 'rejection', samples: 1000}, model);
 viz.auto(post);
 ~~~~
 
-### Exercise 1.2)
+### Exercise 1.2
 
 Change the *model* to make MH successfully trace the curves.
 Your solution should result in a graph that clearly traces a heart-shaped figure -- though it need not do quite as well as rejection sampling.
