@@ -99,7 +99,7 @@ var post = Infer({method: 'forward'}, function() {
 viz(post);
 ~~~~
 
-### Exercise 2.1
+### Exercise 2.2
 
 > Some grocery stores have fresher produce than others.
 > Complete the function `makeStore` that returns the `makeBarrel` function, which works as it did in part Exercise 2.1.
