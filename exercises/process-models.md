@@ -62,6 +62,7 @@ var venusData = [
 var getModelRT = function(...) {
   // HINT: estimate the parameters by timing the model runtime by calling timeIt()
   ...
+  // sigma should be at least 1
   return Gaussian({mu: ..., sigma: ...});
 }
 

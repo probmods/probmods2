@@ -1,6 +1,6 @@
 ---
 layout: exercise
-title: Mixture models - exercises
+title: Mixture models - solutions
 ---
 
 ## Exercise 1. Social group reasoning
