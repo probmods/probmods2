@@ -67,7 +67,7 @@ viz.table(Infer({method:'enumerate'}, model));
 
 ## Exercise 2: Conditioning and Intervention
 
-In the earlier [Medical Diagnosis]({{site.baseurl}}/chapters/02-generative-models.html#example-causal-models-in-medical-diagnosis) section we suggested understanding the patterns of symptoms for a particular disease by changing the prior probability of the disease such that it is always true (also called the *do* operator).
+In the earlier [Medical Diagnosis]({{site.baseurl}}/chapters/generative-models.html#example-causal-models-in-medical-diagnosis) section we suggested understanding the patterns of symptoms for a particular disease by changing the prior probability of the disease such that it is always true (also called the *do* operator).
 
 ~~~~
 var lungCancer = flip(0.01);
