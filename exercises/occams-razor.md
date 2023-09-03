@@ -188,12 +188,12 @@ Now examine the sets `[3]`, `[3, 6, 9]`, and `[3, 5, 6, 7, 9]`.
 Sweep across all integers as testQueries to see the 'hotspots' of the model predictions.
 What do you observe? 
 
-#### d)
+### Exercise 1.4
 
 Look at some of the data in the large-scale replication of the number game [here](https://openpsychologydata.metajnl.com/articles/10.5334/jopd.19/).
 Can you think of an additional concept people might be using that we did not include in our model?
 
-#### e) Challenge! [Extra credit problem]
+### Exercise 1.5 (Challenge! [Extra credit problem])
 
 Can you replicate the results from the paper (reproduced in figure below) by adding in the other hypotheses from the paper?
 
